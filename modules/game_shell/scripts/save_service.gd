@@ -145,8 +145,12 @@ static func _migrate_v1(source: Dictionary) -> Dictionary:
 				next["completed_events"][event_id] = {"best_time_s":float(time), "completions":completions, "wins":wins}
 	return next
 
+static func _parse_json(text: String) -> Variant:
+	var parser := JSON.new()
+	return parser.data if parser.parse(text) == OK else null
+
 static func _decode(text: String):
-	var value: Variant = JSON.parse_string(text)
+	var value: Variant = _parse_json(text)
 	if not (value is Dictionary):
 		return null
 	var version: Variant = value.get("schema_version", 1)
@@ -166,13 +170,13 @@ func _read_candidate(candidate_path: String):
 
 func load() -> Dictionary:
 	last_error = ""
-	for candidate in [path, path + ".tmp", path + ".bak"]:
+	for candidate: String in [path, path + ".tmp", path + ".bak"]:
 		var loaded: Variant = _read_candidate(candidate)
 		if loaded is Dictionary:
 			data = loaded
 			var recovered := candidate != path
-			var original: Variant = JSON.parse_string(FileAccess.get_file_as_string(candidate))
-			var migrated := original is Dictionary and int(original.get("schema_version", 2)) == 1
+			var original: Variant = _parse_json(FileAccess.get_file_as_string(candidate))
+			var migrated := original is Dictionary and int(original.get("schema_version", 1)) == 1
 			last_status = "recovered_temp" if candidate.ends_with(".tmp") else ("recovered_backup" if recovered else ("migrated_v1" if migrated else "loaded"))
 			## Promote migration or recovery to canonical format, with validated backup.
 			if recovered or migrated:

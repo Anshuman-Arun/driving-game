@@ -1,40 +1,46 @@
-# Game shell test report — 2026-11-21
+# Game shell runtime QA
 
-## Verified in authoring environment
+Verified on November 21, 2026 with Godot 4.7.2 stable (`ed1daf0bf`) on Windows. The graphical test used Vulkan Forward+ on an NVIDIA GeForce RTX 4050 Laptop GPU. The baseline is PR #12 head `be89592`.
 
-- Repository and requirements inspected from connected GitHub: AGENTS, Game Design, Technical Architecture, Interfaces, and PRs for Core (#6), Art (#7), Racing (#5).
-- Only `modules/game_shell/` paths were written to `feat/game-shell`. Branch started from main commit `2f6d2a71f48eee09dadd16c86457b4daddc51f07`.
-- Source-controlled scenes, scripts, save migration/recovery, mock transitions and automated Godot test harness authored. GitHub content/branch writes confirmed.
+## Failures reproduced and corrected
 
-## Executed independent source and repository checks
+| Area | Finding and correction |
+| --- | --- |
+| Import | GDScript could not infer the types of the save candidate, garage unlock flag, and minimap marker. Explicit types restored clean import and runtime loading. Godot could print script errors even when a shell test returned exit code zero, so the logs were checked as well. |
+| Save recovery | Invalid JSON flooded the engine log during expected recovery. The save service now handles failed parses before schema validation. A versionless schema-1 profile now writes back its migrated schema-2 data. The runtime suite uses a dedicated profile. |
+| Settings | Display and slider controls now restore the saved value on write failure and show the error in Settings. Returning from fullscreen reapplies the saved window size. |
+| Garage | Rebuilding the view returned focus to the first car. The inspected row retains focus and the selection button stays near the top of the detail panel. Pausing while moving no longer bypasses the parked-car requirement. |
+| Layout and preview | The footer spacer took height away from scrollable panels. Focus now waits for layout and scroll follows the focused control. The countdown, live telemetry, and minimap are visible together. Preview lighting no longer washes out the cars and floor. |
 
-- GitHub comparison of `main...feat/game-shell`: **13 changed files, 13 within `modules/game_shell/`, zero ownership violations; 1,696 lines added** at the checkpointed scan (later fixes add a few more lines).
-- Enumerated **8 GDScript files plus the standalone scene**, checked relative preloads against the feature-branch Git tree: **zero unresolved references**.
-- Independent balanced-delimiter/source string scan over module GDScript: **zero structural errors detected**. This does **not** substitute for GDScript parsing.
-- Executed **16/16 targeted source-contract checks** against the committed files: eight UI routes; input mappings; v2 schema; seven settings; three cars; four events; temporary/backup/corrupt recovery branches; migration; race results; pause gating; standalone scene linkage; original visuals; authored tests; Forward+ renderer; no network dependency.
-- Authored `tests/run_tests.gd` contains **48 runtime assertions**; these remain **unexecuted** because the Godot binary is not available.
+## Results
 
-## Engine/runtime checks — not executable in this environment
+- Editor import completed without parser or runtime errors.
+- The original 48 GDScript assertions passed. Five more assertions covered versionless migration, the moving garage guard, and blocked setting writes. **53 checks, 0 failures.**
+- The standalone scene ran graphically at **1280×720, 1600×900, and 1920×1080**. The test exercised keyboard menu and garage focus, three-car progression, synthetic D-pad/A/B/Start events, pause and resume in free roam and during a race countdown, event discovery, result persistence, keyboard settings navigation, fullscreen/windowed switching, and corrupt-primary recovery. **30 screenshots, 0 failures.**
+- A second Godot process reopened the repaired profile and verified the selected car, graphics preset, sensitivity, and resolution. **0 failures.**
+- Reviewed the menu, garage, pause, events, countdown, results, settings, and recovered menu. Event and settings lists scroll with focus. The garage shows its primary selection controls before the preview and lower stats.
 
-The authoring container has **no `godot` or `godot4` binary**. Standard `git` cannot resolve `github.com` from that container, although the connected GitHub app can access and write the repository. Therefore this report **does not claim a Godot parser pass, imported scene pass, visual screenshot, interactive gameplay test, controller test or exported Windows build**.
+## Screenshots from the actual Godot viewport
 
-Run on a Godot 4.7.2 machine:
+- [1280×720 main menu](tests/screenshots/1280x720-menu.png)
+- [1280×720 race countdown, telemetry and map](tests/screenshots/1280x720-race-countdown.png)
+- [1600×900 three-car garage](tests/screenshots/1600x900-garage-unlocked.png)
+- [1920×1080 race results](tests/screenshots/1920x1080-results.png)
+- [1920×1080 settings with keyboard focus](tests/screenshots/1920x1080-settings-scrolled.png)
 
-```sh
-godot --headless --path modules/game_shell --editor --quit
+## Reproduce
+
+Run from the repository root with the Godot 4.7.2 console executable and an existing screenshot folder.
+
+```powershell
+godot --headless --path modules/game_shell --import --quit
 godot --headless --path modules/game_shell --script res://tests/run_tests.gd
-godot --path modules/game_shell
+godot --path modules/game_shell --fixed-fps 30 --script res://tests/visual_qa.gd -- --capture-dir <folder>
+godot --headless --path modules/game_shell --script res://tests/visual_qa.gd -- --verify-profile <printed-profile>
 ```
 
-The `tests/run_tests.gd` assertions are authored, **not claimed passing** until their real console output is recorded. They cover first-run defaults, locked selections, save/write/reload, persistence, invalid settings, progression unlocks/best times, backup/temp/corrupt recovery, schema-1 migration, pause/resume, mock stage progression, and actual UI callback paths.
+The last command uses the `RESTART PROFILE` path printed by the graphical test. The tests create isolated QA profiles and deliberately corrupt only their own fixtures.
 
-## Manual QA gates pending
+## Remaining verification and integration
 
-- Inspect all screens at 1280×720, 1600×900, 1920×1080 and a narrower viewport. Verify clipping/scroll/large fonts.
-- Navigate every screen with keyboard-only and a physical Xbox controller, including disconnect/reconnect, focus after selecting a dropdown, B/back and Start/pause.
-- Test actual fullscreen/windowed transitions, OS resolution changes, audio bus behavior (host must supply Music/SFX), and persistence after process restart.
-- Verify garage 3D render, selected car visual changes, schematic minimap refresh, race overlays, prompt readability and contrast.
-- Simulate read-only user directory, interrupted write and power loss to confirm backup paths on target Windows filesystem.
-- Host integration: real VehicleAdapter telemetry, authoritative race end, world map coordinates, GLB import, physics pause, Windows export, framerate.
-
-Do not merge based solely on source presence. The module is a functional implementation candidate pending actual Godot execution and QA.
+Physical controller and hotplug behavior, Windows export, and interruption or power loss at the filesystem level remain unverified. The standalone shell still uses mock telemetry and races. Root integration must wire the real vehicle and race state, world-map coordinates, GLB previews, audio buses, and host input/pause and save ownership. See [the integration handoff](INTEGRATION_NOTES.md).

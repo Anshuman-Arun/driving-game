@@ -35,11 +35,11 @@ func _ready() -> void:
 	camera.current = true
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-45, -32, 0)
-	sun.light_energy = 2.5
+	sun.light_energy = 1.8
 	world.add_child(sun)
 	var fill := OmniLight3D.new()
 	fill.position = Vector3(-3, 3.5, -4)
-	fill.light_energy = 950.0
+	fill.light_energy = 1.4
 	fill.omni_range = 13.0
 	world.add_child(fill)
 	turntable = Node3D.new()
