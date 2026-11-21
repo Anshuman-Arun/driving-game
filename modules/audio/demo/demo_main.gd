@@ -1,6 +1,7 @@
 extends Control
 ## Self-contained audition panel. Run modules/audio as a Godot project (F6/F5).
-var audio: Node
+var audio
+var _gear_spin: SpinBox
 var telemetry := {
 	"rpm": 950.0, "idle_rpm": 950.0, "max_rpm": 7100.0,
 	"throttle": 0.0, "load": 0.0, "speed_mps": 0.0,
@@ -14,7 +15,7 @@ var _readout: Label
 
 func _ready() -> void:
 	var base: String = get_script().resource_path.get_base_dir().get_base_dir()
-	var controller_script := load(base.path_join("audio_controller.gd"))
+	var controller_script = load(base.path_join("audio_controller.gd"))
 	audio = controller_script.new()
 	add_child(audio)
 	_make_interface()
@@ -64,6 +65,7 @@ func _make_interface() -> void:
 	gear.min_value = -1
 	gear.max_value = 6
 	gear.value = 1
+	_gear_spin = gear
 	gear.value_changed.connect(func(value: float) -> void:
 		telemetry["gear"] = int(value)
 		_push())
@@ -132,10 +134,14 @@ func _select_profile(index: int) -> void:
 func _event(event_name: String) -> void:
 	match event_name:
 		"gearshift":
-			telemetry["gear"] = int(telemetry["gear"]) + 1
-			if telemetry["gear"] > 6:
-				telemetry["gear"] = 1
-			_push()
+			var next_gear := int(telemetry["gear"]) + 1
+			if next_gear > 6:
+				next_gear = 1
+			if is_instance_valid(_gear_spin):
+				_gear_spin.value = next_gear # value_changed keeps telemetry + UI in sync
+			else:
+				telemetry["gear"] = next_gear
+				_push()
 		"suspension": audio.trigger_suspension(0.85)
 		"collision": audio.trigger_collision(0.85)
 
