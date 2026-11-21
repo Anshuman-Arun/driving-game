@@ -332,8 +332,17 @@ func despawn_agent(id: int) -> void:
 func spawn_near(position: Vector3, attempts: int = 36) -> int:
 	if not graph_valid or graph.lane_order.is_empty():
 		return -1
+	# Prefer usable travel roads after canonical controls are installed.
+	# Randomly choosing the many protected turn connectors would waste most
+	# attempts and starve otherwise safe local traffic density.
+	var candidates: Array[String] = []
+	for lane_id in graph.lane_order:
+		if not movement_junction.has(lane_id):
+			candidates.append(lane_id)
+	if candidates.is_empty():
+		candidates = graph.lane_order.duplicate()
 	for _i in range(attempts):
-		var lid: String = graph.lane_order[_rng.randi_range(0, graph.lane_order.size() - 1)]
+		var lid: String = candidates[_rng.randi_range(0, candidates.size() - 1)]
 		var length_m: float = graph.lane_length(lid)
 		if length_m < 15.0:
 			continue
