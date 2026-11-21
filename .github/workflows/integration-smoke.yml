@@ -1,0 +1,159 @@
+name: Temporary multi-branch Godot integration smoke
+
+on:
+  push:
+    branches: [feat/ci-expansion]
+  pull_request:
+    branches: [feat/ci-validation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  temporary-integration:
+    name: Stage paths, inspect resources, import and smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - name: Checkout CI scripts (exact workflow source)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: ci
+          persist-credentials: false
+      - name: Temporary root — corrected Core with PR 9 and PR 15
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: fix/steering-camera-smoothing
+          path: integrated
+          persist-credentials: false
+      - name: Authoritative World data
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/worldgen
+          path: staging/worldgen
+          persist-credentials: false
+      - name: Corrected World Runtime
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: fix/world-runtime-qa
+          path: staging/world-runtime
+          persist-credentials: false
+      - name: Corrected Game Shell
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: fix/game-shell-runtime-qa
+          path: staging/game-shell
+          persist-credentials: false
+      - name: Audio
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/audio
+          path: staging/audio
+          persist-credentials: false
+      - name: Production race routes
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/race-content
+          path: staging/race-content
+          persist-credentials: false
+      - name: Production racing module branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/production-racing-readiness
+          path: staging/racing
+          persist-credentials: false
+      - name: Traffic simulation
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/traffic-systems
+          path: staging/traffic
+          persist-credentials: false
+      - name: Curated art
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/art-pipeline
+          path: staging/art
+          persist-credentials: false
+      - name: Stage only owned paths — never merge PRs
+        id: stage
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ci/tools/ci/stage_integration.sh "$GITHUB_WORKSPACE/integrated" "$GITHUB_WORKSPACE/staging" "$GITHUB_WORKSPACE/ci-out"
+      - name: Static class and literal res-path preflight
+        id: static
+        if: steps.stage.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/tools/ci/check_integration.py integrated 2>&1 | tee ci-out/integration-static.log
+      - name: Install official SHA-verified Godot 4.7.2
+        if: steps.stage.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ci/tools/ci/install_godot.sh "$RUNNER_TEMP/godot/bin" 2>&1 | tee ci-out/install-godot.log
+      - name: Root Godot editor import (all temporarily staged scripts)
+        id: import
+        if: steps.stage.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          timeout 900 godot --headless --path integrated --editor --quit 2>&1 | tee ci-out/integration-import.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          if grep -Eiq '(^|[[:space:]])(SCRIPT ERROR:|ERROR:|Parse Error:|FAIL:|FAILED:)' ci-out/integration-import.log; then rc=1; fi
+          exit "$rc"
+      - name: Root Core physics smoke in the temporary combined tree
+        id: smoke
+        if: steps.stage.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          timeout 300 godot --headless --path integrated --script res://tests/core/smoke.gd 2>&1 | tee ci-out/integration-core-smoke.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          if grep -Eiq '(^|[[:space:]])(SCRIPT ERROR:|ERROR:|Parse Error:|FAIL:|FAILED:)' ci-out/integration-core-smoke.log; then rc=1; fi
+          exit "$rc"
+      - name: Record exact sources, gate outcomes and fail on actual errors
+        if: always()
+        shell: bash
+        env:
+          STAGE: "${{ steps.stage.outcome }}"
+          STATIC: "${{ steps.static.outcome }}"
+          IMPORT: "${{ steps.import.outcome }}"
+          SMOKE: "${{ steps.smoke.outcome }}"
+        run: |
+          set -euo pipefail
+          {
+            echo '## Disposable multi-branch integration (no PR merge)'
+            for dir in ci integrated staging/*; do
+              if [[ -d "$dir/.git" ]]; then
+                printf -- '- %s: \`%s\`\n' "$dir" "$(git -C "$dir" rev-parse HEAD)"
+              fi
+            done
+            echo
+            if [[ -f ci-out/INTEGRATION_SOURCES.md ]]; then cat ci-out/INTEGRATION_SOURCES.md; fi
+            printf '\n| Gate | Outcome |\n| --- | --- |\n'
+            printf '| temporary staging | %s |\n' "$STAGE"
+            printf '| duplicate class / static paths | %s |\n' "$STATIC"
+            printf '| Godot 4.7.2 root import | %s |\n' "$IMPORT"
+            printf '| root Core physics smoke | %s |\n' "$SMOKE"
+            echo
+            echo 'Failures identify integration blockers, not a gameplay pass. Headless tests do not evaluate visual/GPU/controller behavior.'
+            echo 'Evidence is in full job logs; artifact upload is disabled due to storage quota.'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$STAGE" != success || "$STATIC" != success || "$IMPORT" != success || "$SMOKE" != success ]]; then
+            echo "::error::Temporary integration has a real failure or an unexecuted gate; inspect logs."
+            exit 1
+          fi
