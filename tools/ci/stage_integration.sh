@@ -11,7 +11,7 @@ manifest="$out/INTEGRATION_SOURCES.md"
 test -f "$integrated/project.godot"
 
 printf '## Temporary multi-branch integration smoke\n\n' > "$manifest"
-printf 'Core QA base (fix/steering-camera-smoothing): \`%s\`\n\n' "$(git -C "$integrated" rev-parse HEAD)" >> "$manifest"
+printf 'Core QA base (fix/steering-camera-smoothing): `%s`\n\n' "$(git -C "$integrated" rev-parse HEAD)" >> "$manifest"
 printf '| Independent source | SHA | Staged path |\n| --- | --- | --- |\n' >> "$manifest"
 
 stage() {
@@ -26,7 +26,7 @@ stage() {
   mkdir -p "$(dirname "$dst")"
   cp -a "$src" "$dst"
   sha="$(git -C "$staging/$source" rev-parse HEAD)"
-  printf '| %s | \`%s\` | \`%s\` |\n' "$source" "$sha" "$path" >> "$manifest"
+  printf '| %s | `%s` | `%s` |\n' "$source" "$sha" "$path" >> "$manifest"
   echo "Staged $source@$sha -> $path"
 }
 
