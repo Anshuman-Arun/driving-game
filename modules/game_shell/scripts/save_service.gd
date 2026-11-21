@@ -7,7 +7,7 @@ const SCHEMA_VERSION := 2
 const DEFAULT_PATH := "user://aster_valley_save_v2.json"
 const GRAPHICS := ["low", "medium", "high"]
 const MODES := ["windowed", "fullscreen"]
-const RESOLUTIONS := ["1280x720", "1600x900", "1920x1080"]
+const RESOLUTIONS := ["1280x720", "1600x900", "1920x1080", "3440x1440"]
 
 var path: String
 var data: Dictionary = {}

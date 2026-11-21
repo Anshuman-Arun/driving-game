@@ -4,8 +4,12 @@ config_version=5
 
 [application]
 config/name="Aster Valley — Free Roam"
-run/main_scene="res://scenes/free_roam/aster_valley.tscn"
+run/main_scene="res://scenes/bootstrap/game.tscn"
 config/features=PackedStringArray("4.7", "GLTF", "Forward Plus")
+
+[aster_valley]
+
+visuals/scenery_enabled=true
 
 [display]
 window/size/viewport_width=1600

@@ -1,7 +1,11 @@
 extends Node3D
 ## Free roam boot using the canonical map and the Core vehicle implementation.
+## Optional presentation adapters may mount to the new chassis before camera rebinding.
+signal vehicle_spawned(body: Vehicle, car_id: String)
 
 const WorldRuntime = preload("res://modules/world_runtime/src/world_runtime.gd")
+const SceneryRuntime = preload("res://modules/scenery/src/scenery_runtime.gd")
+const CuratedCar = preload("curated_car_visual.gd")
 const ALDER_START := Vector3(-575.0, 0.0, 545.0)
 const JUNCTION_CLEARANCE_M := 26.0
 const SPAWN_HEIGHT_M := 0.58
@@ -9,13 +13,18 @@ const WHEEL_FOOTPRINT := [
 	Vector3(-0.88, 0.0, -1.36), Vector3(0.88, 0.0, -1.36),
 	Vector3(-0.88, 0.0, 1.35), Vector3(0.88, 0.0, 1.35),
 ]
-const SURFACE_GROUPS := {"terrain": "Grass", "asphalt": "Road", "gravel": "Dirt"}
+const PARKED_LIMIT_MPS := 4.0 / 3.6
 
 @onready var world: WorldRuntime = $WorldRuntime
 var vehicle_body: Vehicle
 var adapter: VehicleAdapter
 var camera: DrivingChaseCamera
 var load_ms := 0
+var active_vehicle_id := PlayerCarFactory.DEFAULT_CAR
+var shell_managed := false
+var scenery_enabled := false
+var scenery: SceneryRuntime
+var _pending_vehicle_id := ""
 
 var _controls := DriveInput.new()
 var _lane_spans: Array[PackedVector3Array] = []
@@ -33,12 +42,12 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
-	for node in world.generated_root.find_children("*", "StaticBody3D", true, false):
-		node.add_to_group(SURFACE_GROUPS[node.get_meta("world_surface")])
 	var bounds: Dictionary = world.get_world_metadata()["bounds"]
 	_bounds = Rect2(bounds["min_x"], bounds["min_z"],
 		bounds["max_x"] - bounds["min_x"], bounds["max_z"] - bounds["min_z"])
 	_collect_lane_spans(world.get_road_graph()["lanes"])
+	if scenery_enabled:
+		set_scenery_enabled(true)
 
 	# Let the physics server register the generated bodies before querying the road.
 	await get_tree().physics_frame
@@ -47,29 +56,46 @@ func _ready() -> void:
 		push_error("Aster Valley has no valid road spawn.")
 		get_tree().quit(1)
 		return
-	vehicle_body = PlayerCarFactory.create()
-	vehicle_body.process_mode = Node.PROCESS_MODE_PAUSABLE
-	vehicle_body.transform = start
-	add_child(vehicle_body)
-	adapter = VehicleAdapter.new(vehicle_body)
-	adapter.reset_to(start)
-
 	camera = DrivingChaseCamera.new()
 	camera.name = "ChaseCamera"
 	camera.process_mode = Node.PROCESS_MODE_PAUSABLE
-	add_child(camera)
-	# Preserve vertical framing and reveal more world at wider aspect ratios.
 	camera.keep_aspect = Camera3D.KEEP_HEIGHT
-	camera.setup(vehicle_body)
-	camera.far = 3000.0
+	add_child(camera)
+	_spawn_vehicle(active_vehicle_id, start)
 	load_ms = Time.get_ticks_msec() - started
 	print("Aster Valley ready in %d ms at %s" % [load_ms, start.origin])
+
+func set_scenery_enabled(enabled: bool) -> bool:
+	scenery_enabled = enabled
+	if not enabled:
+		if scenery != null:
+			remove_child(scenery)
+			scenery.queue_free()
+			scenery = null
+		return true
+	if scenery != null:
+		return true
+	if not is_node_ready():
+		return true
+	var layer := SceneryRuntime.new()
+	layer.name = "Scenery"
+	layer.generate_selective_colliders = false
+	add_child(layer)
+	if not layer.build_scenery(world):
+		scenery_enabled = false
+		remove_child(layer)
+		layer.queue_free()
+		return false
+	scenery = layer
+	return true
 
 func _process(_delta: float) -> void:
 	if adapter == null:
 		return
-	if Input.is_action_just_pressed("drive_pause"):
+	if not shell_managed and Input.is_action_just_pressed("drive_pause"):
 		get_tree().paused = not get_tree().paused
+	if shell_managed and get_tree().paused:
+		return
 	if Input.is_action_just_pressed("drive_reset"):
 		_reset_requested = true
 	if not get_tree().paused and Input.is_action_just_pressed("drive_camera"):
@@ -83,6 +109,13 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	if adapter == null:
+		return
+	if not _pending_vehicle_id.is_empty():
+		var next_id := _pending_vehicle_id
+		_pending_vehicle_id = ""
+		if next_id != active_vehicle_id and adapter.get_speed_mps() <= PARKED_LIMIT_MPS:
+			_spawn_vehicle(next_id, vehicle_body.transform)
+	if shell_managed and get_tree().paused:
 		return
 	_reset_cooldown = maxf(0.0, _reset_cooldown - delta)
 	var p := vehicle_body.global_position
@@ -99,6 +132,30 @@ func _physics_process(delta: float) -> void:
 		camera.cycle()
 	var input := _controls.sample()
 	adapter.set_drive_input(input["steer"], input["throttle"], input["brake"], input["handbrake"])
+
+func queue_vehicle_selection(car_id: String) -> void:
+	if not PlayerCarFactory.PRESETS.has(car_id):
+		return
+	if adapter == null:
+		active_vehicle_id = car_id
+	else:
+		_pending_vehicle_id = car_id
+
+func _spawn_vehicle(car_id: String, pose: Transform3D) -> void:
+	if vehicle_body != null:
+		remove_child(vehicle_body)
+		vehicle_body.queue_free()
+	vehicle_body = PlayerCarFactory.create(car_id)
+	active_vehicle_id = str(vehicle_body.get_meta("vehicle_id"))
+	vehicle_body.process_mode = Node.PROCESS_MODE_PAUSABLE
+	vehicle_body.transform = pose
+	add_child(vehicle_body)
+	adapter = VehicleAdapter.new(vehicle_body)
+	adapter.reset_to(pose)
+	CuratedCar.mount(vehicle_body, active_vehicle_id)
+	vehicle_spawned.emit(vehicle_body, active_vehicle_id)
+	camera.setup(vehicle_body)
+	camera.far = 3000.0
 
 func respawn() -> void:
 	var pose: Variant = find_road_pose(vehicle_body.global_position, -vehicle_body.global_basis.z)
@@ -170,6 +227,6 @@ func _cast_road(point: Vector3) -> Dictionary:
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty() or hit.normal.y < 0.94:
 		return {}
-	if hit.collider.is_in_group("Road") or hit.collider.is_in_group("Dirt"):
+	if hit.collider.get_meta("world_surface", "") in ["asphalt", "gravel"]:
 		return hit
 	return {}
