@@ -50,7 +50,7 @@ case "$track" in
     test -f "$worktree/project.godot"
     test -f "$worktree/tests/core/smoke.gd"
     run_required godot-import timeout 420 godot --headless --path "$worktree" --editor --quit
-    run_required godot-tests timeout 420 godot --headless --path "$worktree" --script res://tests/core/smoke.gd
+    run_required godot-tests timeout 180 godot --headless --path "$worktree" --script res://tests/core/smoke.gd
     ;;
   racing)
     test -f "$worktree/modules/racing/project.godot"
