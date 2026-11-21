@@ -101,6 +101,9 @@ func _test_validation() -> void:
 	def = catalog.get_event("north_ridge_climb")
 	def["laps"] = 2
 	_check(not e.start_event(def), "reject two-lap sprint")
+	def = catalog.get_event("alder_street_circuit")
+	def["laps"] = 1.5
+	_check(not e.start_event(def), "reject fractional circuit lap count")
 	var other = EventCatalog.new()
 	_check(not other.parse_text("garbage"), "reject invalid catalog JSON")
 	_check(not other.parse_text('{"schema_version":1,"events":[{"id":"a","kind":"sprint","lane_route":[],"checkpoints":[]},{"id":"a","kind":"sprint","lane_route":[],"checkpoints":[]}]}'), "reject repeated event ID")
@@ -378,6 +381,8 @@ func _test_ai_closed_course() -> void:
 		max_error = maxf(max_error, float(projection["distance_m"]))
 		e.update_racer_state("ai", car.global_position, car.get_drive_velocity())
 		e.tick(0.05)
+	var ai_result: Dictionary = e.get_racer("ai")
+	print("AI COURSE DIAGNOSTIC: finished=%s resets=%d invalid_laps=%d lap=%d gate=%d progress_m=%.2f max_error_m=%.2f speed_mps=%.2f" % [str(ai_result["finished"]), resets, ai_result["invalid_laps"], ai_result["lap"], ai_result["checkpoint_index"], float(ai_result["progress_m"]), max_error, car.speed_mps])
 	_check(e.get_racer("ai")["finished"], "AI completes representative closed course")
 	_check(resets <= 2, "AI needs at most two recoveries")
 	_check(max_error < 22.0, "AI stays within recovery corridor")
