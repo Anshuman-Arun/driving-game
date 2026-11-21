@@ -283,7 +283,10 @@ func _test_ai_closed_course() -> void:
 			ai.reset_tracking()
 			resets += 1
 			continue
-		_check(Adapter.apply(car, control), "kinematic car implements real adapter") if frame == 0 else Adapter.apply(car, control)
+		if frame == 0:
+			_check(Adapter.apply(car, control), "kinematic car implements real adapter")
+		else:
+			Adapter.apply(car, control)
 		car.advance(0.05)
 		var projection: Dictionary = e.route.project(car.global_position)
 		car.global_position.y = (projection["point"] as Vector3).y
