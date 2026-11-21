@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "events": [
+    {
+      "id": "alder_street_circuit",
+      "name": "Alder Street Circuit (local test)",
+      "kind": "circuit",
+      "lane_route": [
+        "town_north",
+        "town_east",
+        "town_south",
+        "town_west"
+      ],
+      "start_position": [
+        -100,
+        20,
+        -80
+      ],
+      "laps": 3,
+      "grid_seconds": 1,
+      "countdown_seconds": 3,
+      "finish_grace_seconds": 20,
+      "corridor_m": 18,
+      "checkpoints": [
+        {
+          "id": "town_cp1",
+          "center": [
+            40,
+            20,
+            -100
+          ],
+          "radius_m": 10
+        },
+        {
+          "id": "town_cp2",
+          "center": [
+            165,
+            20,
+            0
+          ],
+          "radius_m": 10
+        },
+        {
+          "id": "town_cp3",
+          "center": [
+            40,
+            20,
+            100
+          ],
+          "radius_m": 10
+        },
+        {
+          "id": "town_cp4",
+          "center": [
+            -165,
+            20,
+            0
+          ],
+          "radius_m": 10
+        }
+      ]
+    },
+    {
+      "id": "north_ridge_climb",
+      "name": "North Ridge Climb (local test)",
+      "kind": "sprint",
+      "lane_route": [
+        "ridge_a",
+        "ridge_b",
+        "ridge_c",
+        "ridge_d"
+      ],
+      "start_position": [
+        0,
+        20,
+        150
+      ],
+      "laps": 1,
+      "grid_seconds": 1,
+      "countdown_seconds": 3,
+      "corridor_m": 16,
+      "checkpoints": [
+        {
+          "id": "ridge_cp1",
+          "center": [
+            125,
+            23,
+            160
+          ],
+          "radius_m": 9
+        },
+        {
+          "id": "ridge_cp2",
+          "center": [
+            180,
+            31,
+            290
+          ],
+          "radius_m": 9
+        },
+        {
+          "id": "ridge_cp3",
+          "center": [
+            80,
+            41,
+            415
+          ],
+          "radius_m": 9
+        },
+        {
+          "id": "ridge_cp4",
+          "center": [
+            205,
+            52,
+            525
+          ],
+          "radius_m": 9
+        }
+      ]
+    }
+  ]
+}
