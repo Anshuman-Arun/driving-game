@@ -85,6 +85,11 @@ jobs:
         run: |
           set -euo pipefail
           bash ci/tools/ci/stage_integration.sh "$GITHUB_WORKSPACE/integrated" "$GITHUB_WORKSPACE/staging" "$GITHUB_WORKSPACE/ci-out"
+      - name: Pin Python 3.12.12 for static preflight
+        if: steps.stage.outcome == 'success'
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12.12"
       - name: Static class and literal res-path preflight
         id: static
         if: steps.stage.outcome == 'success'
