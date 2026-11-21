@@ -70,7 +70,7 @@ connector ends first. Independent reservation keys permit turns whose
 connector paths do not conflict while preserving exclusive legacy implicit
 merge/fixture controls. Active ownership is released on movement clearance,
 despawn or reset. Spawn protection prevents materializing an unreserved NPC
-inside a connector's live conflict region. Ordinary opposing travel lanes
+inside a connector's live conflict region. Stop-line positions are measured independently for each inbound approach against all turning paths, rather than assuming a shared 5 m location. Ordinary opposing travel lanes
 are deliberately *not* treated as conflict connectors.
 
 **Important test distinction:** The unchanged PR #22 stress runner counts
@@ -80,6 +80,27 @@ passing on distinct opposing directional travel lanes separated by about
 reservations; the runner must distinguish opposing lanes from genuine
 overlaps in its own separate, authorized content change. Its point-distance
 assertion has not been removed or disabled here.
+
+### Additional canonical geometry checks (source-level; not Godot)
+
+Independently evaluated the exact PR #3 lane polylines against the new 3D
+closest-segment logic and PR #22 authored control groups in a JavaScript
+geometry cross-check:
+
+- **66/66 controlled turning movements** have a calculable outgoing-lane
+  release target beyond their connector, including short connectors.
+- **26/26 per-approach stop positions** lie at least 4 m from all authored
+  turn centerlines for their own junction. Fixed 5 m stop lines were unsafe
+  at 14 approaches across Alder, Cedar, Ridge, Valley, and Pine.
+- The measured nonconflicting turn pairs are **4 at Alder** and **1 at
+  Ridge**. All other pairs at the six complex junctions have a closer
+  than 4 m centerline approach. Ordinary opposing travel lanes remain
+  outside this conflict table.
+- Geometry-indexing comparisons found no missing successor or required
+  release target beyond its outgoing travel lane.
+
+These are **source-level geometry calculations only**, not native GDScript
+execution, collision-free simulation claims, or physical-vehicle validation.
 
 ### Regression coverage and validation status
 
