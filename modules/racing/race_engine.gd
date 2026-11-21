@@ -424,6 +424,7 @@ func reset_racer(id: String) -> Dictionary:
 	var restart_s: float = float(r["start_s"]) if lap == 1 else 0.0
 	var p: Vector3 = r["start_position"] if lap == 1 else route.sample(0.0)
 	var tang: Vector2 = route.tangent(restart_s)
+	var forward: Vector3 = r["start_forward"] if lap == 1 else Vector3(tang.x, 0.0, tang.y).normalized()
 	r["position"] = p
 	r["pending_position"] = p
 	r["velocity"] = Vector3.ZERO
@@ -434,7 +435,8 @@ func reset_racer(id: String) -> Dictionary:
 	r["needs_reset"] = false
 	r["wrong_way"] = false
 	r["last_invalid_reason"] = ""
-	return {"position": p, "forward": Vector3(tang.x, 0.0, tang.y).normalized(), "lap": lap}
+	return {"position": p, "forward": forward, "lap": lap, "route_s_m": restart_s,
+		"transform": Transform3D(Basis.looking_at(forward, Vector3.UP), p)}
 
 func get_racer(id: String) -> Dictionary:
 	return racers[id].duplicate(true) if racers.has(id) else {}
