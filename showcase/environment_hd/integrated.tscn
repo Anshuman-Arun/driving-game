@@ -7,3 +7,7 @@ script = ExtResource("1_world")
 add_lighting = false
 render_terrain_visual = true
 render_road_visual = true
+
+enable_showcase_camera = false
+show_viewpoint_ui = false
+show_legacy_procedural_cliffs = false
