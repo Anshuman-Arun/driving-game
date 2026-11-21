@@ -226,6 +226,8 @@ func _clearance_regressions() -> void:
 	_check(VehicleClearance.diagnose(a, follower).get("kind") == "same_lane_rear_end", "same-lane rear-end clearance fails")
 	var distant: Dictionary = VehicleClearance.fixture(5.6, 0.0, 1.0, 0.0, "lane_pair_ab", 15.6)
 	_check(VehicleClearance.diagnose(a, distant).is_empty(), "safe same-lane headway passes")
+	var loopback: Dictionary = VehicleClearance.fixture(0.8, 0.0, -1.0, 0.0, "lane_pair_ab", 40.0)
+	_check(VehicleClearance.diagnose(a, loopback).get("kind") == "same_lane_body_overlap", "folded lane occupied by distant arc positions fails")
 	var crossing: Dictionary = VehicleClearance.fixture(1.0, 0.0, 0.0, 1.0, "turn_crossing", 3.0)
 	_check(VehicleClearance.diagnose(a, crossing).get("kind") == "turning_body_overlap", "crossing turn footprints fail")
 	var adjacent: Dictionary = VehicleClearance.fixture(0.0, 2.4, -1.0, 0.0, "lane_pair_ba", 10.0)
