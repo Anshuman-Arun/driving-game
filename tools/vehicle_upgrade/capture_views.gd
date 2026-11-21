@@ -94,8 +94,8 @@ func _capture() -> void:
 		_stage.add_child(car)
 		if model_name == "hd":
 			for wheel_key: String in WHEEL_POS.keys():
-				var pivot: Node3D = car.get_node_or_null("Wheel_" + wheel_key + "_Pivot")
-				var brake: Node3D = car.get_node_or_null("Brake_" + wheel_key)
+				var pivot: Node3D = car.get_node_or_null("Wheel_" + wheel_key + "_Pivot") as Node3D
+				var brake: Node3D = car.get_node_or_null("Brake_" + wheel_key) as Node3D
 				if pivot == null or brake == null:
 					push_error("Prepared wheel or brake hierarchy missing for " + wheel_key)
 					quit(2)
