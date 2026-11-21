@@ -1,0 +1,103 @@
+{
+  "schema_version": 2,
+  "coordinate_system": "Godot XYZ: east/up/south; Blender XYZ = x/-z/y",
+  "notes": "Fixed authored camera stations within canonical 553 m corridor; no generated offset placement. Compositions require inspection in actual renderers.",
+  "shots": [
+    {
+      "id": "01",
+      "name": "Road-level approach",
+      "camera": [
+        -646,
+        99,
+        -471
+      ],
+      "target": [
+        -628,
+        103,
+        -565
+      ],
+      "vertical_fov_deg": 50,
+      "description": "Low embankment framing the road as a leading line through forest; far bend visible"
+    },
+    {
+      "id": "02",
+      "name": "Roadside material study",
+      "camera": [
+        -641,
+        100.5,
+        -552
+      ],
+      "target": [
+        -623,
+        102.5,
+        -580
+      ],
+      "vertical_fov_deg": 43,
+      "description": "Low shoulder portrait: asphalt aggregate, broken edge paint and soil transition"
+    },
+    {
+      "id": "03",
+      "name": "Cedar canopy interior",
+      "camera": [
+        -578,
+        108.5,
+        -616
+      ],
+      "target": [
+        -582,
+        108.5,
+        -642
+      ],
+      "vertical_fov_deg": 56,
+      "description": "Near-tree parallax and uneven crowns against the shaded route"
+    },
+    {
+      "id": "04",
+      "name": "Road cut and verge",
+      "camera": [
+        -513,
+        116,
+        -681
+      ],
+      "target": [
+        -520,
+        113,
+        -701
+      ],
+      "vertical_fov_deg": 47,
+      "description": "Side-slope rock material on canonical terrain, road edge and shoulder"
+    },
+    {
+      "id": "05",
+      "name": "Ridge elevation study",
+      "camera": [
+        -385,
+        154,
+        -785
+      ],
+      "target": [
+        -580,
+        119,
+        -660
+      ],
+      "vertical_fov_deg": 41,
+      "description": "Elevated reverse view into the corridor, layered terrain and atmospheric recession"
+    },
+    {
+      "id": "06",
+      "name": "Late light at crest",
+      "camera": [
+        -378,
+        134,
+        -809
+      ],
+      "target": [
+        -342,
+        130,
+        -807
+      ],
+      "vertical_fov_deg": 49,
+      "description": "Crest-level cross light, tarmac reflection control and warm/cool separation"
+    }
+  ]
+}
