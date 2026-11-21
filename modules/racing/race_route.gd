@@ -118,6 +118,12 @@ func configure(graph: Dictionary, route_ids: Array, is_closed: bool) -> String:
 			var gap := point3(previous["points"].back()).distance_to(point3(lane["points"][0]))
 			if gap > CONNECT_TOLERANCE_M:
 				return "Disconnected route lanes: " + str(raw_id)
+			var incoming := point3(previous["points"].back()) - point3(previous["points"][previous["points"].size() - 2])
+			var outgoing := point3(lane["points"][1]) - point3(lane["points"][0])
+			var in_flat := Vector2(incoming.x, incoming.z).normalized()
+			var out_flat := Vector2(outgoing.x, outgoing.z).normalized()
+			if in_flat.dot(out_flat) < -0.65:
+				return "Incompatible lane heading at " + str(raw_id)
 		lane_ids.append(raw_id)
 		var speed := float(lane["speed_limit_kph"]) / 3.6
 		for raw_point in lane["points"]:
@@ -209,6 +215,9 @@ func corridor_clear(a: Vector3, b: Vector3, corridor_m: float, hint_s: float = -
 	var steps := maxi(1, ceili(a.distance_to(b) / 3.0))
 	for i in range(steps + 1):
 		var p := a.lerp(b, float(i) / float(steps))
-		if float(project(p, hint_s)["distance_m"]) > corridor_m:
+		var nearest: Dictionary = project(p, hint_s)
+		if float(nearest["distance_m"]) > corridor_m:
+			return false
+		if absf(p.y - (nearest["point"] as Vector3).y) > 8.0:
 			return false
 	return true
