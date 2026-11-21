@@ -1,0 +1,10 @@
+; Standalone module harness. The root Godot project is intentionally NOT touched.
+config_version=5
+
+[application]
+config/name="Aster Valley Racing - Independent Harness"
+run/main_scene="res://demo/racing_demo.tscn"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

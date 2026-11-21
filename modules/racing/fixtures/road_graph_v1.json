@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "units": "meters",
+  "coordinate_system": "godot_y_up",
+  "bounds": {
+    "min_x": -1000,
+    "max_x": 1000,
+    "min_z": -1000,
+    "max_z": 1000
+  },
+  "roads": [
+    {
+      "id": "alder_streets",
+      "name": "Alder Street Circuit Fixture",
+      "region": "alder_town",
+      "lane_ids": [
+        "town_north",
+        "town_east",
+        "town_south",
+        "town_west"
+      ]
+    },
+    {
+      "id": "north_ridge",
+      "name": "North Ridge Climb Fixture",
+      "region": "north_ridge",
+      "lane_ids": [
+        "ridge_a",
+        "ridge_b",
+        "ridge_c",
+        "ridge_d"
+      ]
+    }
+  ],
+  "lanes": [
+    {
+      "id": "town_north",
+      "road_id": "alder_streets",
+      "points": [
+        [
+          -100,
+          20,
+          -80
+        ],
+        [
+          -40,
+          20,
+          -100
+        ],
+        [
+          40,
+          20,
+          -100
+        ],
+        [
+          100,
+          20,
+          -80
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 62,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "town_east"
+      ]
+    },
+    {
+      "id": "town_east",
+      "road_id": "alder_streets",
+      "points": [
+        [
+          100,
+          20,
+          -80
+        ],
+        [
+          145,
+          20,
+          -50
+        ],
+        [
+          165,
+          20,
+          0
+        ],
+        [
+          145,
+          20,
+          50
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 62,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "town_south"
+      ]
+    },
+    {
+      "id": "town_south",
+      "road_id": "alder_streets",
+      "points": [
+        [
+          145,
+          20,
+          50
+        ],
+        [
+          100,
+          20,
+          80
+        ],
+        [
+          40,
+          20,
+          100
+        ],
+        [
+          -40,
+          20,
+          100
+        ],
+        [
+          -100,
+          20,
+          80
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 62,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "town_west"
+      ]
+    },
+    {
+      "id": "town_west",
+      "road_id": "alder_streets",
+      "points": [
+        [
+          -100,
+          20,
+          80
+        ],
+        [
+          -145,
+          20,
+          50
+        ],
+        [
+          -165,
+          20,
+          0
+        ],
+        [
+          -145,
+          20,
+          -50
+        ],
+        [
+          -100,
+          20,
+          -80
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 62,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "town_north"
+      ]
+    },
+    {
+      "id": "ridge_a",
+      "road_id": "north_ridge",
+      "points": [
+        [
+          0,
+          20,
+          150
+        ],
+        [
+          60,
+          21,
+          145
+        ],
+        [
+          125,
+          23,
+          160
+        ],
+        [
+          170,
+          25,
+          190
+        ]
+      ],
+      "width_m": 3.4,
+      "speed_limit_kph": 65,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "ridge_b"
+      ]
+    },
+    {
+      "id": "ridge_b",
+      "road_id": "north_ridge",
+      "points": [
+        [
+          170,
+          25,
+          190
+        ],
+        [
+          190,
+          27,
+          240
+        ],
+        [
+          180,
+          31,
+          290
+        ],
+        [
+          140,
+          35,
+          335
+        ]
+      ],
+      "width_m": 3.4,
+      "speed_limit_kph": 65,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "ridge_c"
+      ]
+    },
+    {
+      "id": "ridge_c",
+      "road_id": "north_ridge",
+      "points": [
+        [
+          140,
+          35,
+          335
+        ],
+        [
+          90,
+          38,
+          365
+        ],
+        [
+          80,
+          41,
+          415
+        ],
+        [
+          115,
+          44,
+          460
+        ]
+      ],
+      "width_m": 3.4,
+      "speed_limit_kph": 65,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "ridge_d"
+      ]
+    },
+    {
+      "id": "ridge_d",
+      "road_id": "north_ridge",
+      "points": [
+        [
+          115,
+          44,
+          460
+        ],
+        [
+          160,
+          48,
+          485
+        ],
+        [
+          205,
+          52,
+          525
+        ],
+        [
+          215,
+          56,
+          585
+        ]
+      ],
+      "width_m": 3.4,
+      "speed_limit_kph": 65,
+      "surface": "asphalt",
+      "next_lane_ids": []
+    }
+  ]
+}

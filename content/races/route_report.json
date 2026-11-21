@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "source_graph_git_blob_sha1": "9bba378d68879df3baed2c97a4885c0adde88406",
+  "reports": [
+    {
+      "id": "alder_street_circuit",
+      "route_length_m": 877.016,
+      "full_race_distance_m": 2631.049,
+      "laps": 3,
+      "kind": "circuit",
+      "lanes": [
+        "lane_alder_depot_ab",
+        "turn_depot_alder_depot_ab__depot_chapel_ab",
+        "lane_depot_chapel_ab",
+        "turn_chapel_depot_chapel_ab__chapel_alder_ab",
+        "lane_chapel_alder_ab",
+        "turn_alder_chapel_alder_ab__alder_depot_ab"
+      ],
+      "checkpoint_count": 10,
+      "statistics": {
+        "distance_m": 877.016,
+        "asphalt_m": 877.016,
+        "gravel_m": 0,
+        "ascent_m": 2.002,
+        "descent_m": 2.002,
+        "max_abs_grade_pct": 1.524,
+        "min_speed_limit_kph": 20,
+        "max_speed_limit_kph": 35
+      },
+      "pilot": {
+        "id": "alder_street_circuit",
+        "simulated_distance_m": 2629,
+        "completed_laps": 3,
+        "checkpoint_hits": 30,
+        "invalid_progress": 0
+      }
+    },
+    {
+      "id": "north_ridge_climb",
+      "route_length_m": 2393.639,
+      "full_race_distance_m": 2393.639,
+      "laps": 1,
+      "kind": "sprint",
+      "lanes": [
+        "lane_valley_lake_ba",
+        "turn_valley_valley_lake_ba__ridge_valley_ba",
+        "lane_ridge_valley_ba"
+      ],
+      "checkpoint_count": 18,
+      "statistics": {
+        "distance_m": 2393.639,
+        "asphalt_m": 2393.639,
+        "gravel_m": 0,
+        "ascent_m": 132.019,
+        "descent_m": 0.047,
+        "max_abs_grade_pct": 8.882,
+        "min_speed_limit_kph": 25,
+        "max_speed_limit_kph": 85
+      },
+      "pilot": {
+        "id": "north_ridge_climb",
+        "simulated_distance_m": 2392.5,
+        "completed_laps": 1,
+        "checkpoint_hits": 18,
+        "invalid_progress": 0
+      }
+    },
+    {
+      "id": "eastwater_lakeside_sprint",
+      "route_length_m": 2184.846,
+      "full_race_distance_m": 2184.846,
+      "laps": 1,
+      "kind": "sprint",
+      "lanes": [
+        "lane_valley_lake_ab",
+        "turn_lake_valley_lake_ab__lake_alder_ab",
+        "lane_lake_alder_ab"
+      ],
+      "checkpoint_count": 16,
+      "statistics": {
+        "distance_m": 2184.846,
+        "asphalt_m": 2184.846,
+        "gravel_m": 0,
+        "ascent_m": 10.212,
+        "descent_m": 38.176,
+        "max_abs_grade_pct": 7.727,
+        "min_speed_limit_kph": 25,
+        "max_speed_limit_kph": 90
+      },
+      "pilot": {
+        "id": "eastwater_lakeside_sprint",
+        "simulated_distance_m": 2183.5,
+        "completed_laps": 1,
+        "checkpoint_hits": 16,
+        "invalid_progress": 0
+      }
+    },
+    {
+      "id": "green_valley_tour",
+      "route_length_m": 4814.099,
+      "full_race_distance_m": 4814.099,
+      "laps": 1,
+      "kind": "circuit",
+      "lanes": [
+        "lane_alder_market_ab",
+        "turn_market_alder_market_ab__market_valley_ab",
+        "lane_market_valley_ab",
+        "turn_valley_market_valley_ab__ridge_valley_ba",
+        "lane_ridge_valley_ba",
+        "turn_ridge_ridge_valley_ba__cedar_ridge_ba",
+        "lane_cedar_ridge_ba",
+        "turn_cedar_cedar_ridge_ba__alder_cedar_ba",
+        "lane_alder_cedar_ba",
+        "turn_alder_alder_cedar_ba__alder_market_ab"
+      ],
+      "checkpoint_count": 34,
+      "statistics": {
+        "distance_m": 4814.099,
+        "asphalt_m": 4282.258,
+        "gravel_m": 531.841,
+        "ascent_m": 122.004,
+        "descent_m": 122.004,
+        "max_abs_grade_pct": 8.882,
+        "min_speed_limit_kph": 20,
+        "max_speed_limit_kph": 70
+      },
+      "pilot": {
+        "id": "green_valley_tour",
+        "simulated_distance_m": 4812.5,
+        "completed_laps": 1,
+        "checkpoint_hits": 34,
+        "invalid_progress": 0
+      }
+    }
+  ],
+  "tests": {
+    "graph_schema": "PASS",
+    "lane_connectivity": "PASS",
+    "closure": "PASS",
+    "checkpoint_order_and_anti_cut": "PASS",
+    "grid_geometry": "PASS",
+    "engine_semantics_pilot": "PASS",
+    "event_diversity": "PASS",
+    "caveat": "Independent JavaScript geometry/progress pilot, not Godot runtime execution."
+  }
+}
