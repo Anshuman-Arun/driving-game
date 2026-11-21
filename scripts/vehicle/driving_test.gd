@@ -6,6 +6,8 @@ var adapter: VehicleAdapter
 var camera: DrivingChaseCamera
 var controls := DriveInput.new()
 var _last_reset := -100.0
+var _reset_requested := false
+var _camera_requested := false
 var _elapsed := 0.0
 var _speed: Label
 var _gear: Label
@@ -32,11 +34,17 @@ func _ready() -> void:
 	_make_hud()
 
 func _physics_process(delta: float) -> void:
+	# Apply teleport and view changes on the physics clock before camera clearance sampling.
+	if _reset_requested:
+		_reset_requested = false
+		_reset_to_road()
+	if _camera_requested:
+		_camera_requested = false
+		camera.cycle()
 	if get_tree().paused:
 		return
-	var input := controls.sample(delta)
+	var input := controls.sample()
 	adapter.set_drive_input(input["steer"], input["throttle"], input["brake"], input["handbrake"])
-	camera.steer_hint = -input["steer"]
 	_elapsed += delta
 	# Recover from a tumble down the terrain edge without leaving an inert car.
 	if vehicle_body.global_position.y < -16.0 and _elapsed - _last_reset > 2.0:
@@ -46,9 +54,9 @@ func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("drive_pause"):
 		_toggle_pause()
 	if Input.is_action_just_pressed("drive_reset") and _elapsed - _last_reset >= 0.75:
-		_reset_to_road()
+		_reset_requested = true
 	if not get_tree().paused and Input.is_action_just_pressed("drive_camera"):
-		camera.cycle()
+		_camera_requested = true
 	if adapter != null:
 		_speed.text = "%03d" % roundi(adapter.get_speed_mps() * 3.6)
 		_gear.text = "km/h    •    GEAR " + adapter.get_gear_display()

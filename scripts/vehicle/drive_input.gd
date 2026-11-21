@@ -4,7 +4,6 @@ extends RefCounted
 ## Godot's action strengths retain analog triggers and left stick deflection.
 
 const DEADZONE := 0.16
-var _keyboard_steer := 0.0
 
 static func install() -> void:
 	for action in ["drive_throttle", "drive_brake", "drive_left", "drive_right", "drive_handbrake", "drive_reset", "drive_camera", "drive_pause"]:
@@ -47,25 +46,16 @@ static func _add_button(action: StringName, button: JoyButton) -> void:
 	event.button_index = button
 	InputMap.action_add_event(action, event)
 
-func sample(delta: float) -> Dictionary:
-	# A deflected stick bypasses keyboard steering smoothing, even when a key is held.
+func sample() -> Dictionary:
 	var steer := Input.get_axis("drive_right", "drive_left")
-	var analog_active := false
+	# Preserve raw stick deflection and its priority over keyboard steering.
 	for device in Input.get_connected_joypads():
 		var stick := Input.get_joy_axis(device, JOY_AXIS_LEFT_X)
 		if absf(stick) > DEADZONE:
 			steer = -stick  # Easy Vehicle Physics expects positive = left.
-			analog_active = true
 			break
-	if analog_active:
-		_keyboard_steer = steer
-	else:
-		var target := Input.get_action_strength("drive_left") - Input.get_action_strength("drive_right")
-		var rate := 4.2 if absf(target) > absf(_keyboard_steer) else 6.4
-		_keyboard_steer = move_toward(_keyboard_steer, target, rate * delta)
-		steer = _keyboard_steer
 	return {
-		"steer": clampf(steer, -1.0, 1.0),
+		"steer": steer,
 		"throttle": Input.get_action_strength("drive_throttle"),
 		"brake": Input.get_action_strength("drive_brake"),
 		"handbrake": Input.get_action_strength("drive_handbrake") > 0.35,

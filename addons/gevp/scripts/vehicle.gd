@@ -655,51 +655,36 @@ func process_braking(delta : float) -> void:
 	handbrake_force = handbrake_input * max_handbrake_force
 
 func process_steering(delta : float) -> void:
-	var steer_assist_engaged := false
 	var steering_slip := get_max_steering_slip_angle()
-	
-	## Adjust steering speed based on vehicle speed and max steering angle
-	var steer_speed_correction := steering_speed / (speed * steering_speed_decay) / max_steering_angle
-	
-	## If the steering input is opposite the current steering, apply countersteering speed instead
-	if signf(steering_input) != signf(steering_amount):
-		steer_speed_correction = countersteer_speed / (speed * steering_speed_decay)
-	
-	## Check steering slip threshold and reduce steering amount if crossed.
-	if absf(steering_slip) > steering_slip_assist:
-		steer_assist_engaged = true
-	
-	if (steering_input < steering_amount):
-		if not steer_assist_engaged or steering_slip < 0.0:
-			steering_amount -= steer_speed_correction * delta
-			if (steering_input > steering_amount):
-				steering_amount = steering_input
-		else:
-			steering_amount += steer_speed_correction * delta
-			if (steering_amount > 0.0):
-				steering_amount = 0.0
-	
-	elif (steering_input > steering_amount):
-		if not steer_assist_engaged or steering_slip > 0.0:
-			steering_amount += steer_speed_correction * delta
-			if (steering_input < steering_amount):
-				steering_amount = steering_input
-		else:
-			steering_amount -= steer_speed_correction * delta
-			if (steering_amount < 0.0):
-				steering_amount = 0.0
-	
+	var steer_assist_engaged := absf(steering_slip) > steering_slip_assist
+
+	## Cap low-speed response while keeping the original speed decay at higher speeds.
+	var speed_factor := maxf(1.0, speed * steering_speed_decay)
+	var steer_speed_correction := minf(steering_speed / maxf(max_steering_angle, 0.001) / speed_factor, 4.5)
+	var steer_target := steering_input
+	var returning := not is_zero_approx(steering_amount) and (
+		signf(steering_input) != signf(steering_amount) or absf(steering_input) < absf(steering_amount)
+	)
+	if returning:
+		steer_speed_correction = minf(countersteer_speed / speed_factor, 7.0)
+		if signf(steering_input) != signf(steering_amount):
+			steer_target = 0.0
+
+	## Limit steering into excess tire slip while allowing a commanded return to center.
+	if returning or not steer_assist_engaged or signf(steer_target - steering_amount) == signf(steering_slip):
+		steering_amount = move_toward(steering_amount, steer_target, steer_speed_correction * delta)
+	elif not is_equal_approx(steer_target, steering_amount):
+		steering_amount = move_toward(steering_amount, 0.0, steer_speed_correction * delta)
+
 	## Steering exponent adjustment
 	var steering_adjust := pow(absf(steering_amount), steering_exponent) * signf(steering_amount)
 	
 	## Correct steering toward the direction of travel for countersteer assist
 	var steer_correction := (1.0 - absf(steering_adjust)) * clampf(asin(local_velocity.normalized().x), -max_steering_angle, max_steering_angle) * countersteer_assist
 	
-	## Don't apply corrections at low velocity or reversing
-	if local_velocity.z > -0.5:
-		steer_correction = 0
-	else:
-		steer_correction = steer_correction / -max_steering_angle
+	## Blend in travel-direction assist as forward speed builds. Keep reverse unassisted.
+	var assist_weight := smoothstep(0.5, 3.0, -local_velocity.z)
+	steer_correction *= -assist_weight / maxf(max_steering_angle, 0.001)
 	
 	## Keeps steering corrections from getting stuck under certain circumstances
 	var steer_correction_amount := 1.0

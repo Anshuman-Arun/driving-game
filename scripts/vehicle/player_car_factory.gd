@@ -1,7 +1,7 @@
 class_name PlayerCarFactory
 extends RefCounted
 ## The Vela GT is an original, geometry-only fictional RWD coupe.
-## Physics are provided by unmodified DAShoe1 Easy Vehicle Physics Vehicle/Wheel.
+## Physics are provided by DAShoe1 Easy Vehicle Physics Vehicle/Wheel.
 const VehicleScript = preload("res://addons/gevp/scripts/vehicle.gd")
 const WheelScript = preload("res://addons/gevp/scripts/wheel.gd")
 
@@ -97,6 +97,8 @@ static func create() -> Vehicle:
 			wheel.vehicle = car
 			var pivot := Node3D.new()
 			pivot.name = "WheelVisual"
+			# GEVP animates suspension travel and wheel spin on render frames.
+			pivot.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 			wheel.add_child(pivot)
 			wheel.wheel_node = pivot
 			var rubber := MeshInstance3D.new()
