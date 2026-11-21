@@ -37,3 +37,27 @@ A separate static fixture/geometry analysis found two roads, eight directed lane
 - Temporary town and ridge fixtures are not production-length events and use module-local lane IDs.
 
 This PR remains draft/unmerged. The validated scope is standalone **headless Godot 4.7.2 racing module execution**, not full-game acceptance.
+
+
+## Production-readiness addendum — 2026-11-21
+
+**New branch:** `feat/production-racing-readiness` (created from `feat/racing-systems`, only `modules/racing/` writes). The previously verified **156 GDScript checks** belong to the parent racing commit and are not a claim about this new branch. The original `tests/run_tests.gd` is unchanged.
+
+**Read-only data inspected:** World #3 canonical graph blob `9bba378d68879df3baed2c97a4885c0adde88406` (104 directed lanes) and Race Content #10 event JSON blob `53f4af72609e3fc033bf90813c3d898b20f6798a`. An independent JavaScript source-data geometry audit was executed against these exact GitHub files. Measured directed-route lengths from the source polylines (XZ):
+
+| Event | Lane IDs | Laps | Gates per lap | Measured lap distance | Authored grid offsets |
+|---|---:|---:|---:|---:|---|
+| Alder Street Circuit | 6 | 3 | 10 | 877.016326 m | 7, 17, 27, 37 m |
+| North Ridge Climb | 3 | 1 | 18 | 2393.638867 m | 7, 17, 27, 37 m |
+| Eastwater Lakeside Sprint | 3 | 1 | 16 | 2184.845651 m | 7, 17, 27, 37 m |
+| Green Valley Tour | 10 | 1 | 34 | 4814.098819 m | 7, 17, 27, 37 m |
+
+For each event, all authored starting positions projected onto their claimed route arclength within **0.0004 m** and all headings aligned with the sampled tangent (`dot > 0.9999`). Gate centers projected onto route lines within approximately **0.0006 m**. All 80 gate positions were checked against their respective route data, and each event's first gate is approximately 68 m along the route, after the final 37 m grid slot. These are independent **source-data geometry checks**, not engine tests.
+
+**New runtime test suites (added, not yet executed in this environment):**
+- `tests/run_grid_tests.gd`: isolated four-car 7/17/27/37 m regression using existing miniature fixture; checks countdown, grid order, 3-lap circuit completion and ordered gates, invalid grid rejection, collision/reset invariants, full restart and legacy compatibility.
+- `tests/run_production_tests.gd`: requires graph and events via `--graph=...` and `--events=...` CLI flags; rejects missing inputs. Calls **actual EventCatalog, RaceRoute, RaceEngine, RacerAI GDScript** for each of the four production events, checks sequence, starting transforms, gates, countdown, race completion, restart, anti-teleport reset, AI guidance and results.
+
+**Execution status:** The environment running this branch's GitHub connector has no Godot binary, and its container cannot resolve the private GitHub host. The pre-existing CI run was on **another branch/commit**, not these code changes. Therefore the four exact Godot 4.7.2 commands in README.md have **not** been executed on this branch. Do **not** count the new GDScript tests as passing until a native Godot 4.7.2 run or a correctly targeted CI workflow produces clean logs. No physical car, viewport, Windows build, gamepad or world-collision verification was performed.
+
+**Next verification:** stage the two real external JSON sources as documented in README.md; run editor parser/import, original 156-check suite, new grid regression and all-four-event production harness using Godot 4.7.2, fix any concrete GDScript failure under `modules/racing/`, then integrate with the physics/world host and tune cars against rendered junction colliders.
