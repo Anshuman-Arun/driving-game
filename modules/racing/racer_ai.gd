@@ -77,7 +77,8 @@ func compute_controls(position: Vector3, forward: Vector3, speed_mps: float, del
 	var theta := atan2(heading.cross(aim), heading.dot(aim))
 	var pursuit_curvature := 2.0 * sin(theta) / maxf(to_point.length(), 1.0)
 	var steering_angle := atan(wheelbase_m * pursuit_curvature)
-	var steer := clampf(steering_angle / max_steer_angle_rad, -1.0, 1.0)
+	# Godot yaw increases clockwise in world XZ, opposite the sign of Vector2.cross.
+	var steer := clampf(-steering_angle / max_steer_angle_rad, -1.0, 1.0)
 	var target_speed := _speed_plan(s, speed)
 	if absf(theta) > 1.2:
 		target_speed = minf(target_speed, 6.0)
