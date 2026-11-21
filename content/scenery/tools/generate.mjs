@@ -187,12 +187,13 @@ export function generate(meta,graph,bytes) {
  waterCells.sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
  if(waterCells.length<100)throw Error("Cannot derive connected flooded region from real terrain");
  const provenance={world_pr:3,art_pr:7,road_git_blob:"9bba378d68879df3baed2c97a4885c0adde88406",terrain_git_blob:"d951ce11a831dad5430b4c7157e2296f73c6b151",art_manifest_git_blob:"7c67ab03c29169c48432b36df6ae7a429a8decee"};
- const report={},counts={};let total=0,triangles=0,batches=0,surfaceBatches=0;
+ const report={},counts={};let total=0,triangles=0,batches=0,surfaceBatches=0,globalSurfaceGroups=new Set();
  for(const r of meta.regions){const list=packs[r.id],byAsset={},groups=new Set();let tri=0;
   for(const q of list){byAsset[q.asset]=(byAsset[q.asset]||0)+1;tri+=assets[q.asset].tri;groups.add(Math.floor(q.position[0]/128)+","+Math.floor(q.position[2]/128)+"|"+q.asset);}
   report[r.id]={count:list.length,by_asset:byAsset,near_mesh_triangles_estimate:tri,minimum_asset_cell_batches:groups.size};
   let sur=0;for(const item of groups){const name=item.split("|")[1];sur+=assets[name].surfaces;}
   report[r.id].near_mesh_component_draw_batches_estimate=sur;
+  for(const group of groups)globalSurfaceGroups.add(group);
   total+=list.length;triangles+=tri;batches+=groups.size;surfaceBatches+=sur;counts[r.id]=list.length;
  }
  // Preview plans are generated from the same real heightfield, all 16 centerlines and committed placements.
@@ -222,7 +223,7 @@ export function generate(meta,graph,bytes) {
   files["content/scenery/previews/"+r.id+".svg"]=preview(r);
  }
  const manifest={schema_version:1,seed:seed0,coordinate_system:"godot_y_up",units:"meters",region_definitions:meta.regions,landmark_definitions:meta.landmarks,sources:provenance,assets,region_packs:regionIds.map(id=>({id,path:"content/scenery/packs/"+id+".json",count:packs[id].length})),lake:{water_level_m:lakeLevel,source_basin_floor_m:meta.heightfield.min_height_m,source_seed_xz:[800,500],grid_spacing_m:s,origin_x:ox,origin_z:oz,cell_count:waterCells.length,mask_path:"content/scenery/lake/water_cells_v1.json",note:"Flood only four-corner submerged quads in the connected low basin; decorative, non-colliding."}};
- const metrics={schema_version:1,seed:seed0,source:provenance,source_road_corridors:travel.length,source_turn_paths:turns.length,source_r16_samples:W*H,total_objects:total,near_mesh_triangles_estimate:triangles,minimum_asset_cell_batches:batches,full_world_near_mesh_component_draw_batches_estimate:surfaceBatches,regions:report,lake:{water_height_m:lakeLevel,quads:waterCells.length,triangles:2*waterCells.length},rejects:rejected,landmark_ids:[...landmarkIds].sort(),culling:{cell_size_m:128,near_m:170,far_m:450,presets:["low","medium","high"]},caveat:"Minimum theoretical one-surface draw batches and source-asset triangle arithmetic, not measured GPU performance; some scene assets contain multiple surfaces."};
+ const metrics={schema_version:1,seed:seed0,source:provenance,source_road_corridors:travel.length,source_turn_paths:turns.length,source_r16_samples:W*H,total_objects:total,near_mesh_triangles_estimate:triangles,minimum_asset_cell_batches:batches,full_world_near_mesh_component_draw_batches_estimate:[...globalSurfaceGroups].reduce((sum,k)=>sum+assets[k.split("|")[1]].surfaces,0),regions:report,lake:{water_height_m:lakeLevel,quads:waterCells.length,triangles:2*waterCells.length},rejects:rejected,landmark_ids:[...landmarkIds].sort(),culling:{cell_size_m:128,near_m:170,far_m:450,presets:["low","medium","high"]},caveat:"Minimum theoretical one-surface draw batches and source-asset triangle arithmetic, not measured GPU performance; some scene assets contain multiple surfaces."};
  files["content/scenery/manifest.json"]=JSON.stringify(manifest,null,2)+"\n";
  files["content/scenery/lake/water_cells_v1.json"]=JSON.stringify({schema_version:1,water_height_m:lakeLevel,origin_x:ox,origin_z:oz,spacing_m:s,cells:waterCells})+"\n";
  files["content/scenery/metrics.json"]=JSON.stringify(metrics,null,2)+"\n";
