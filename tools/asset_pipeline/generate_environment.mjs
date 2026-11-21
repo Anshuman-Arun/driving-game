@@ -9,7 +9,11 @@ function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[
 function unit(a){return mult(a,1/(Math.sqrt(dot(a,a))||1))}
 function scene(id){return {id,parts:[]}}
 function part(s,n,m){let p={name:n,material:m,triangles:[]};s.parts.push(p);return p}
-function tri(p,a,b,c){p.triangles.push([a,b,c])}
+function tri(p,a,b,c){
+ // Keep authored vertices stable across libm implementations used by Node runtimes.
+ const q=v=>v.map(x=>{const r=Math.round(x*1e6)/1e6;return r===0?0:r});
+ p.triangles.push([q(a),q(b),q(c)]);
+}
 function quad(p,a,b,c,d){tri(p,a,b,c);tri(p,a,c,d)}
 function box(s,n,o,size,m){let p=part(s,n,m),[x,y,z]=o,[a,b,c]=size.map(k=>k/2);const v=[[x-a,y-b,z-c],[x+a,y-b,z-c],[x+a,y+b,z-c],[x-a,y+b,z-c],[x-a,y-b,z+c],[x+a,y-b,z+c],[x+a,y+b,z+c],[x-a,y+b,z+c]];
  for(let [i,j,k,l] of [[0,1,2,3],[4,7,6,5],[0,3,7,4],[1,5,6,2],[3,2,6,7],[0,4,5,1]])quad(p,v[i],v[j],v[k],v[l])}
@@ -51,7 +55,7 @@ function create(id){let s=scene(id);
  return s}
 function base64(a){const c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",o=[];for(let i=0;i<a.length;i+=3){const x=a[i],y=i+1<a.length?a[i+1]:0,z=i+2<a.length?a[i+2]:0;o.push(c[x>>2],c[((x&3)<<4)|(y>>4)],i+1<a.length?c[((y&15)<<2)|(z>>6)]:"=",i+2<a.length?c[z&63]:"=")}return o.join("")}
 function exportGltf(s){const bytes=[],views=[],acc=[],meshes=[],nodes=[{name:"AssetRoot",children:[]}],dv=new DataView(new ArrayBuffer(4));
- const u8=v=>bytes.push(v&255),u16=v=>{u8(v);u8(v>>8)},f32=v=>{dv.setFloat32(0,v,true);for(let i=0;i<4;i++)u8(dv.getUint8(i))},pad=()=>{while(bytes.length%4)u8(0)};
+ const u8=v=>bytes.push(v&255),u16=v=>{u8(v);u8(v>>8)},f32=v=>{const q=Math.round(v*1e6)/1e6;dv.setFloat32(0,q===0?0:q,true);for(let i=0;i<4;i++)u8(dv.getUint8(i))},pad=()=>{while(bytes.length%4)u8(0)};
  const view=(o,target)=>{views.push({buffer:0,byteOffset:o,byteLength:bytes.length-o,target});return views.length-1};
  const accessor=(v,n,typ,component,min,max)=>{let a={bufferView:v,componentType:component,count:n,type:typ};if(min)a.min=min;if(max)a.max=max;acc.push(a);return acc.length-1};
  let triangles=0;
