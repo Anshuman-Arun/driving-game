@@ -268,6 +268,16 @@ func _test_ai_controls() -> void:
 	var left: Dictionary = ai.compute_controls(p + normal * 4.0, forward, 10.0, 0.016)
 	var right: Dictionary = ai.compute_controls(p - normal * 4.0, forward, 10.0, 0.016)
 	_check(left["steer"] * right["steer"] < 0.0, "steering corrects opposite sides of driving line")
+	_check(left["steer"] > 0.0 and right["steer"] < 0.0, "steering yaw sign turns toward line from both sides")
+	var yaw_car = KinematicCar.new()
+	yaw_car.teleport_to(p, forward)
+	var car_heading: Vector3 = -yaw_car.global_transform.basis.z
+	_check(car_heading.dot(forward.normalized()) > 0.999, "demo car faces the supplied road tangent")
+	yaw_car.speed_mps = 8.0
+	yaw_car.set_drive_input(0.5, 0.2, 0.0, false)
+	yaw_car.advance(0.1)
+	var turned_heading: Vector3 = -yaw_car.global_transform.basis.z
+	_check(Vector2(forward.x, forward.z).cross(Vector2(turned_heading.x, turned_heading.z)) < 0.0, "positive Godot yaw is clockwise in XZ")
 	var baseline: Dictionary = ai.compute_controls(p, forward, 15.0, 0.016)
 	var with_obstacle: Dictionary = ai.compute_controls(p, forward, 15.0, 0.016, [{"distance_m": 12.0, "lateral_m": 0.0}])
 	_check(with_obstacle["target_speed_mps"] < baseline["target_speed_mps"], "obstacle lowers target speed")
