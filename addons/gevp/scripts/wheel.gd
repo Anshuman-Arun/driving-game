@@ -24,6 +24,7 @@ var ackermann := 0.15
 var contact_patch := 0.2
 var braking_grip_multiplier := 1.4
 var surface_type := ""
+var surface_grip_blend_time := 0.0
 var tire_stiffnesses := { "Road" : 5.0, "Dirt" : 0.5, "Grass" : 0.5 }
 var coefficient_of_friction := { "Road" : 2.0, "Dirt" : 1.4, "Grass" : 1.0 }
 var rolling_resistance := { "Road" : 1.0, "Dirt" : 2.0, "Grass" : 4.0 }
@@ -91,11 +92,14 @@ func initialize() -> void:
 	set_target_position(Vector3.DOWN * (spring_length + tire_radius))
 	vehicle = get_parent()
 	max_spring_length = spring_length
-	current_cof = coefficient_of_friction[surface_type]
-	current_rolling_resistance = rolling_resistance[surface_type]
-	current_lateral_grip_assist = lateral_grip_assist[surface_type]
-	current_longitudinal_grip_ratio = longitudinal_grip_ratio[surface_type]
-	current_tire_stiffness = 1000000.0 + 8000000.0 * tire_stiffnesses[surface_type]
+	_update_surface_grip(1.0)
+
+func _update_surface_grip(weight: float) -> void:
+	current_cof = lerpf(current_cof, coefficient_of_friction[surface_type], weight)
+	current_rolling_resistance = lerpf(current_rolling_resistance, rolling_resistance[surface_type], weight)
+	current_lateral_grip_assist = lerpf(current_lateral_grip_assist, lateral_grip_assist[surface_type], weight)
+	current_longitudinal_grip_ratio = lerpf(current_longitudinal_grip_ratio, longitudinal_grip_ratio[surface_type], weight)
+	current_tire_stiffness = lerpf(current_tire_stiffness, 1000000.0 + 8000000.0 * tire_stiffnesses[surface_type], weight)
 
 func steer(input : float, max_steering_angle : float):
 	input *= steering_ratio
@@ -157,15 +161,17 @@ func process_forces(opposite_compression : float, braking : bool, delta : float)
 		last_collider = get_collider()
 		last_collision_point = get_collision_point()
 		last_collision_normal = get_collision_normal()
-		var surface_groups : Array[StringName] = last_collider.get_groups()
-		if surface_groups.size() > 0:
-			if surface_type != surface_groups[0]:
-				surface_type = surface_groups[0]
-				current_cof = coefficient_of_friction[surface_type]
-				current_rolling_resistance = rolling_resistance[surface_type]
-				current_lateral_grip_assist = lateral_grip_assist[surface_type]
-				current_longitudinal_grip_ratio = longitudinal_grip_ratio[surface_type]
-				current_tire_stiffness = 1000000.0 + 8000000.0 * tire_stiffnesses[surface_type]
+		var surface_groups: Array[StringName] = last_collider.get_groups()
+		for group in surface_groups:
+			if not coefficient_of_friction.has(group):
+				continue
+			var changed_surface: bool = surface_type != group
+			surface_type = group
+			if surface_grip_blend_time > 0.0:
+				_update_surface_grip(1.0 - exp(-delta / surface_grip_blend_time))
+			elif changed_surface:
+				_update_surface_grip(1.0)
+			break
 	else:
 		last_collider = null
 	

@@ -28,6 +28,7 @@ static func create() -> Vehicle:
 	car.center_of_gravity_height_offset = -0.22
 	car.inertia_multiplier = 1.35
 	car.max_steering_angle = deg_to_rad(34.0)
+	car.steering_exponent = 1.75
 	car.steering_speed = 5.0
 	car.countersteer_speed = 10.0
 	car.steering_speed_decay = 0.13
@@ -95,6 +96,7 @@ static func create() -> Vehicle:
 			wheel.exclude_parent = true
 			wheel.collision_mask = 1
 			wheel.vehicle = car
+			wheel.surface_grip_blend_time = 0.08
 			var pivot := Node3D.new()
 			pivot.name = "WheelVisual"
 			# GEVP animates suspension travel and wheel spin on render frames.

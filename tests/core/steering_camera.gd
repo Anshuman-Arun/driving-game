@@ -44,6 +44,7 @@ func _run() -> void:
 	game.free()
 	await physics_frame
 	await _moving_steering()
+	await _surface_transition()
 	await _frame_pacing()
 	var args := OS.get_cmdline_user_args()
 	var capture := args.find("--capture-dir")
@@ -138,6 +139,61 @@ func _moving_steering() -> void:
 	car.queue_free()
 	track.queue_free()
 	await process_frame
+
+
+func _surface_transition() -> void:
+	var track := Node3D.new()
+	root.add_child(track)
+	_surface_strip(track, 0.0, 12.0, "Road")
+	_surface_strip(track, -12.0, 12.0, "Grass")
+	_surface_strip(track, -62.0, 88.0, "Road")
+	var car := PlayerCarFactory.create()
+	root.add_child(car)
+	var adapter := VehicleAdapter.new(car)
+	adapter.reset_to(Transform3D(Basis.IDENTITY, Vector3.UP * 0.58))
+	await _step(72)
+	car.linear_velocity = Vector3.FORWARD * (60.0 / 3.6)
+	var wheel: Wheel = car.front_left_wheel
+	var previous_grip := wheel.current_cof
+	var previous_yaw_rate := car.angular_velocity.y
+	var peak_grip_step := 0.0
+	var reentry_yaw_step := 0.0
+	var crossed_grass := false
+	var reentry_ticks := -1
+	for tick in 285:
+		await physics_frame
+		var peak := absf(wheel.current_cof - previous_grip)
+		peak_grip_step = maxf(peak_grip_step, peak)
+		previous_grip = wheel.current_cof
+		if wheel.surface_type == "Grass":
+			crossed_grass = true
+		elif crossed_grass and reentry_ticks < 0:
+			reentry_ticks = 0
+		if reentry_ticks >= 0:
+			if reentry_ticks < 12:
+				reentry_yaw_step = maxf(reentry_yaw_step, absf(car.angular_velocity.y - previous_yaw_rate))
+			reentry_ticks += 1
+		previous_yaw_rate = car.angular_velocity.y
+		adapter.set_drive_input(0.22 if crossed_grass and reentry_ticks < 24 else 0.0, 0.0, 0.0, false)
+	print("SURFACE reentry ticks=%d peak grip step=%.3f yaw-rate step=%.3f rad/s final grip=%.3f" % [
+		reentry_ticks, peak_grip_step, reentry_yaw_step, wheel.current_cof])
+	_check(reentry_ticks > 35, "steers from road to grass and back to road")
+	_check(peak_grip_step < 0.18, "effective tire grip does not jump at a surface boundary")
+	_check(absf(wheel.current_cof - 2.9) < 0.02, "full road grip returns after reentry")
+	car.queue_free()
+	track.queue_free()
+	await process_frame
+
+func _surface_strip(track: Node3D, center_z: float, length: float, surface: String) -> void:
+	var body := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(180.0, 1.0, length)
+	shape.shape = box
+	body.position = Vector3(0.0, -0.5, center_z)
+	body.add_to_group(surface)
+	body.add_child(shape)
+	track.add_child(body)
 
 # A separate straight-line fixture isolates physics/render timing from steering and suspension.
 func _frame_pacing() -> void:

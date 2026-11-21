@@ -19,11 +19,15 @@ Near zero speed a direct 0.60 analog command moved normalized steering by **0.60
 | Measured entry km/h | Normalized steering range, base → fix | Peak chassis yaw per tick, base → fix |
 | ---: | --- | --- |
 | 0.2 | [0.000, 0.840] → [−0.450, 0.900] | 0.002° → 0.002° |
-| 19.3 | [0.000, 0.840] → [−0.450, 0.900] | 0.424° → 0.444° |
-| 57.8 | [0.000, 0.770] → [−0.338, 0.718] | 0.598° → 0.547° |
-| 115.9 | [0.000, 0.622] → [−0.134, 0.410] | 0.399° → 0.383° |
+| 19.3 | [0.000, 0.840] → [−0.450, 0.900] | 0.424° → 0.430° |
+| 57.8 | [0.000, 0.770] → [−0.338, 0.752] | 0.598° → 0.534° |
+| 115.9 | [0.000, 0.622] → [−0.134, 0.410] | 0.399° → 0.371° |
 
 All views follow the interpolated chassis on render frames. Chase clearance uses a physics-tick ray, with immediate retraction and gradual extension. Planar speed drives the filtered FOV and forward look-ahead. In the 83 FPS pedal test, chase FOV went from 70.00° at launch to 72.38° after acceleration and 71.67° after braking, with a maximum measured frame change of 0.033°. The hood stayed attached to the interpolated chassis. The chase camera sat 2.45 m behind the car with a wall starting at 2.8 m and recovered to 6.19 m after the obstruction moved.
+
+## Hands-on follow-up and road reentry
+
+A physical-keyboard drive on PR #15 confirmed the camera improvement and reported that steering still felt sensitive when drifting off the road and then reentering. A level road/grass/road test at approximately 60 km/h isolated an instantaneous tire-coefficient change of 1.450. The Vela GT now blends contacted surface grip over time. The same test measures a maximum step of 0.143 and settled road grip of 2.900. Peak yaw-rate change during the measured reentry window was 0.004 rad/s in both runs. The Vela GT steering curve also applies less angle to partial steering while preserving maximum lock. This fixture isolates grip and does not model a physical bump at the terrain join.
 
 ## Reproduction
 
@@ -32,7 +36,7 @@ Run from the patched checkout using the console executable on Windows.
 ```powershell
 godot --headless --path . --import --quit
 godot --headless --path . --fixed-fps 60 --script res://tests/core/smoke.gd
-foreach ($fps in 30, 83, 144) {
+foreach ($fps in 30, 60, 83, 144) {
     godot --headless --path . --fixed-fps $fps --script res://tests/core/steering_camera.gd
 }
 ```
@@ -45,4 +49,4 @@ For a Forward+ run, create a capture directory and run this command with its pat
 godot --path . --resolution 960x540 --fixed-fps 60 --script res://tests/core/steering_camera.gd -- --capture-dir <existing-directory>
 ```
 
-The scripted graphical drive on an RTX 4050 Laptop GPU exercised acceleration, braking, A/D pulses, respawn, and all three views. The captures allow inspection of camera placement and clipping. The headless tests also covered reverse gear and forward exit, a moving handbrake turn, body and camera collisions, rollover reset, and pause. Hands-on keyboard and physical Xbox-style controller playtests remain pending for subjective steering feel and hardware input.
+The scripted graphical drive on an RTX 4050 Laptop GPU exercised acceleration, braking, A/D pulses, respawn, and all three views. The captures allow inspection of camera placement and clipping. The headless tests also covered reverse gear and forward exit, a moving handbrake turn, body and camera collisions, rollover reset, and pause. A second hands-on run is needed to confirm subjective feel after the road-reentry tuning. Physical Xbox-style controller hardware remains unverified.
