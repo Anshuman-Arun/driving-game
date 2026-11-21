@@ -52,7 +52,7 @@ This PR remains draft/unmerged. The validated scope is standalone **headless God
 | Eastwater Lakeside Sprint | 3 | 1 | 16 | 2184.845651 m | 7, 17, 27, 37 m |
 | Green Valley Tour | 10 | 1 | 34 | 4814.098819 m | 7, 17, 27, 37 m |
 
-For each event, all authored starting positions projected onto their claimed route arclength within **0.0004 m** and all headings aligned with the sampled tangent (`dot > 0.9999`). Gate centers projected onto route lines within approximately **0.0006 m**. All 80 gate positions were checked against their respective route data, and each event's first gate is approximately 68 m along the route, after the final 37 m grid slot. These are independent **source-data geometry checks**, not engine tests.
+For each event, all authored starting positions projected onto their claimed route arclength within **0.0004 m** and all headings aligned with the sampled tangent (`dot > 0.9999`). Gate centers projected onto route lines within approximately **0.0006 m**. All 78 gate positions (10 + 18 + 16 + 34) were checked against their respective route data, and each event's first gate is approximately 68 m along the route, after the final 37 m grid slot. These are independent **source-data geometry checks**, not engine tests.
 
 **New runtime test suites (added, not yet executed in this environment):**
 - `tests/run_grid_tests.gd`: isolated four-car 7/17/27/37 m regression using existing miniature fixture; checks countdown, grid order, 3-lap circuit completion and ordered gates, invalid grid rejection, collision/reset invariants, full restart and legacy compatibility.
