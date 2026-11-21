@@ -43,3 +43,24 @@ Performed through the connected GitHub repository and the dependency-free JavaSc
 - Updated the alternate generator's CLI to write/check only supplementary GLBs and supplementary previews. It **no longer overwrites** the primary `MANIFEST.json`, shared materials, or primary previews during its default `node tools/asset_pipeline/generate.js` operation.
 
 **Remaining evidence gap:** `node tools/asset_pipeline/generate.js --check` and the other standalone Node CLI tools were not executed from a complete local checkout in this environment; the equivalent pure generator was executed in JavaScript with source and Git-SHA verification. Godot 4.7.2 and Blender are not installed here, so Godot native import, visual scene correctness, animation in a controller, collision, and FPS are **not verified**. Use the commands above after the art PR merges into the actual game project.
+
+
+## PR #7 Art CI repair — verified 2026-11-21
+
+Source: [GitHub Actions run 44947002599, attempt 11, Art job 136984126530](https://github.com/Anshuman-Arun/driving-game/actions/runs/44947002599). Tested branch tip before this documentation update: `e5def09f4f95d876226f7dff884033a63186e9fe`.
+
+**Result: PASS — all required Art gates.** The CI job used Node.js 22.16.0, Python 3.12.12 and official checksum-verified Godot 4.7.2, and reported `PASS: required art validation (headless/data only)`. Executed commands/gates:
+
+- `node tools/asset_pipeline/validate.mjs`: passed structure and manifest expectations.
+- `python ci/tools/ci/check_art_manifest.py <worktree>`: passed; 70 manifest records, 49 models, 32,702 triangles, zero third-party sources and complete license evidence.
+- `node tools/asset_pipeline/generate.js --check`: 25 supplemental models, 50 outputs, **0 mismatches**.
+- `node tools/asset_pipeline/render_previews.mjs`, `node tools/asset_pipeline/generate_environment.mjs` and `node tools/asset_pipeline/generate_textures.mjs`: all completed.
+- `git diff --quiet -- assets/curated`: passed **after regeneration**, proving no tracked-file drift.
+- Second `node tools/asset_pipeline/validate.mjs`: passed.
+- `timeout 420 godot --headless --path <worktree> --editor --quit`: passed; no Godot import, parser or runtime errors.
+
+Remediation: corrected the missing PNG IHDR height byte and added stronger chunk validation; regenerated all fourteen textures directly from the corrected deterministic generator; quantized procedural geometry for repeatable GLB/glTF and preview outputs; regenerated owned source-derived files; and added a scoped `assets/curated/.gitattributes` exception so complete tracked art GLBs are not misinterpreted as Git LFS pointers. After an intermediate verification exposed eight malformed uploaded GLBs, they were corrected and independently blob-hash checked before the successful final run.
+
+All changes stayed inside `assets/curated/` and `tools/asset_pipeline/`. Original primary vehicle models, retained vehicle source assets, PBR material presets and rights/license notices were unchanged. No branch was merged.
+
+**Limits:** CI establishes headless asset import and data/structure/reproducibility checks, not appearance in a game scene, gameplay vehicle integration, collision behavior, art-direction review or Windows performance. GitHub refused optional CI archive upload due to Actions artifact-storage quota; the successful job's full logs and summary remain in the Actions run.
