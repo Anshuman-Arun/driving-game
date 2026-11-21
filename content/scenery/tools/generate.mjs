@@ -18,26 +18,26 @@ export function generate(meta,graph,bytes) {
  const random=()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)/4294967296};
  const range=(a,b)=>a+(b-a)*random(),normal=()=>Math.sqrt(-2*Math.log(Math.max(1e-10,random())))*Math.cos(2*Math.PI*random());
  const assets={
-  pine:{path:"assets/curated/models/environment/pine_tree_lod0.glb",lod:"assets/curated/models/environment/pine_tree_lod1.glb",tri:108,lod_tri:57,r:2.5,slope:28,road:12,turn:20,draw:470,kind:"natural"},
-  broadleaf:{path:"assets/curated/models/environment/broadleaf_tree.glb",tri:960,r:3.2,slope:20,road:13,turn:21,draw:240,kind:"natural"},
-  shrub:{path:"assets/curated/models/environment/shrub_cluster.glb",tri:924,r:1.6,slope:32,road:9.5,turn:18,draw:145,kind:"natural"},
-  boulder:{path:"assets/curated/models/environment/boulder.glb",tri:224,r:2.8,slope:42,road:11,turn:21,draw:440,kind:"natural"},
-  rock:{path:"assets/curated/models/environment/rock_cluster.glb",tri:528,r:2.2,slope:39,road:10.5,turn:20,draw:300,kind:"natural"},
-  guardrail:{path:"assets/curated/models/environment/guardrail_4m.glb",tri:192,r:1.8,slope:40,road:5.0,turn:25,draw:200,kind:"roadside"},
-  barrier:{path:"assets/curated/models/environment/concrete_barrier.glb",tri:48,r:1.9,slope:32,road:5.2,turn:25,draw:180,kind:"roadside"},
-  fence:{path:"assets/curated/models/environment/wood_fence.glb",tri:60,r:1.8,slope:24,road:8.5,turn:22,draw:210,kind:"roadside"},
-  bollard:{path:"assets/curated/models/environment/bollard.glb",tri:60,r:.6,slope:22,road:6.0,turn:23,draw:150,kind:"roadside"},
-  warning:{path:"assets/curated/models/environment/warning_sign.glb",tri:64,r:.8,slope:25,road:6.1,turn:25,draw:180,kind:"roadside"},
-  lamp:{path:"assets/curated/models/environment/street_lamp.glb",tri:84,r:.9,slope:17,road:6.3,turn:25,draw:210,kind:"roadside"},
-  hay:{path:"assets/curated/models/environment/hay_bale.glb",tri:36,r:1.2,slope:15,road:12,turn:25,draw:160,kind:"rural"},
-  house:{path:"content/scenery/models/town_house.gltf",tri:240,r:7.4,slope:12,road:16,turn:31,draw:280,kind:"architecture"},
-  barn:{path:"content/scenery/models/barn.gltf",tri:200,r:8.8,slope:13,road:18,turn:32,draw:350,kind:"architecture"},
-  garage:{path:"content/scenery/models/garage.gltf",tri:250,r:8,slope:11,road:11,turn:26,draw:340,kind:"landmark"},
-  windmill:{path:"content/scenery/models/windmill.gltf",tri:350,r:7.4,slope:15,road:16,turn:28,draw:800,kind:"landmark"},
-  arch:{path:"content/scenery/models/stone_arch.gltf",tri:90,r:4.2,slope:24,road:10.2,turn:27,draw:310,kind:"landmark"},
-  overlook:{path:"content/scenery/models/overlook.gltf",tri:180,r:6.5,slope:21,road:12,turn:28,draw:310,kind:"landmark"},
-  pier:{path:"content/scenery/models/pier.gltf",tri:250,r:6.5,slope:16,road:11,turn:26,draw:360,kind:"landmark"},
-  quarry:{path:"content/scenery/models/quarry_hopper.gltf",tri:280,r:9,slope:25,road:16,turn:30,draw:550,kind:"landmark"}
+  pine:{path:"assets/curated/models/environment/pine_tree_lod0.glb",lod:"assets/curated/models/environment/pine_tree_lod1.glb",tri:108,surfaces:7,lod_tri:57,lod_surfaces:4,r:2.5,slope:28,road:12,turn:20,draw:470,kind:"natural"},
+  broadleaf:{path:"assets/curated/models/environment/broadleaf_tree.glb",tri:960,surfaces:8,r:3.2,slope:20,road:13,turn:21,draw:240,kind:"natural"},
+  shrub:{path:"assets/curated/models/environment/shrub_cluster.glb",tri:924,surfaces:7,r:1.6,slope:32,road:9.5,turn:18,draw:145,kind:"natural"},
+  boulder:{path:"assets/curated/models/environment/boulder.glb",tri:224,surfaces:1,r:2.8,slope:42,road:11,turn:21,draw:440,kind:"natural"},
+  rock:{path:"assets/curated/models/environment/rock_cluster.glb",tri:528,surfaces:4,r:2.2,slope:39,road:10.5,turn:20,draw:300,kind:"natural"},
+  guardrail:{path:"assets/curated/models/environment/guardrail_4m.glb",tri:192,surfaces:10,r:1.8,slope:40,road:5.0,turn:25,draw:200,kind:"roadside"},
+  barrier:{path:"assets/curated/models/environment/concrete_barrier.glb",tri:48,surfaces:4,r:1.9,slope:32,road:5.2,turn:25,draw:180,kind:"roadside"},
+  fence:{path:"assets/curated/models/environment/wood_fence.glb",tri:60,surfaces:5,r:1.8,slope:24,road:8.5,turn:22,draw:210,kind:"roadside"},
+  bollard:{path:"assets/curated/models/environment/bollard.glb",tri:60,surfaces:3,r:.6,slope:22,road:6.0,turn:23,draw:150,kind:"roadside"},
+  warning:{path:"assets/curated/models/environment/warning_sign.glb",tri:64,surfaces:4,r:.8,slope:25,road:6.1,turn:25,draw:180,kind:"roadside"},
+  lamp:{path:"assets/curated/models/environment/street_lamp.glb",tri:84,surfaces:3,r:.9,slope:17,road:6.3,turn:25,draw:210,kind:"roadside"},
+  hay:{path:"assets/curated/models/environment/hay_bale.glb",tri:36,surfaces:3,r:1.2,slope:15,road:12,turn:25,draw:160,kind:"rural"},
+  house:{path:"content/scenery/models/town_house.gltf",tri:366,surfaces:8,r:7.4,slope:12,road:16,turn:31,draw:280,kind:"architecture"},
+  barn:{path:"content/scenery/models/barn.gltf",tri:150,surfaces:8,r:8.8,slope:13,road:18,turn:32,draw:350,kind:"architecture"},
+  garage:{path:"content/scenery/models/garage.gltf",tri:288,surfaces:8,r:8,slope:11,road:11,turn:26,draw:340,kind:"landmark"},
+  windmill:{path:"content/scenery/models/windmill.gltf",tri:168,surfaces:7,r:7.4,slope:15,road:16,turn:28,draw:800,kind:"landmark"},
+  arch:{path:"content/scenery/models/stone_arch.gltf",tri:72,surfaces:3,r:4.2,slope:24,road:10.2,turn:27,draw:310,kind:"landmark"},
+  overlook:{path:"content/scenery/models/overlook.gltf",tri:204,surfaces:3,r:6.5,slope:21,road:12,turn:28,draw:310,kind:"landmark"},
+  pier:{path:"content/scenery/models/pier.gltf",tri:204,surfaces:3,r:6.5,slope:16,road:11,turn:26,draw:360,kind:"landmark"},
+  quarry:{path:"content/scenery/models/quarry_hopper.gltf",tri:252,surfaces:7,r:9,slope:25,road:16,turn:30,draw:550,kind:"landmark"}
  };
  const travel=graph.lanes.filter(l=>l.id.startsWith("lane_")&&l.id.endsWith("_ab")),turns=graph.lanes.filter(l=>l.id.startsWith("turn_"));
  if(travel.length!==16||turns.length!==72)throw Error("Expected 16 corridors and 72 junction turns");
@@ -63,7 +63,7 @@ export function generate(meta,graph,bytes) {
   return {road,turn,junction};
  }
  const packs=Object.fromEntries(regionIds.map(id=>[id,[]])),located=[],grid=new Map(),landmarkIds=new Set();
- const rejected={bounds:0,road:0,turn:0,junction:0,slope:0,water:0,landmark:0,spacing:0,no_location:0};
+ const rejected={bounds:0,road:0,turn:0,junction:0,slope:0,water:0,landmark:0,spacing:0,no_location:0,foundation:0};
  function add(region,asset,x,z,o={}){
   const a=assets[asset],r=meta.regions.find(q=>q.id===region);if(!r||!a)throw Error("Invalid region/asset");
   const sc=o.scale??1,foot=a.r*sc;
@@ -71,6 +71,12 @@ export function generate(meta,graph,bytes) {
   const h=height(x,z),sl=slope(x,z);
   if(sl>(o.slope_limit??a.slope)){rejected.slope++;return false;}
   if(region==="eastwater_lake"&&asset!=="pier"&&h<lakeLevel+1.8){rejected.water++;return false;}
+  if(a.kind==="architecture"||a.kind==="landmark"){
+   const limit=asset==="house"?1.20:asset==="barn"?1.50:asset==="garage"?1.50:asset==="windmill"?2.00:asset==="arch"?2.05:asset==="quarry"?2.50:asset==="pier"?3.60:1.50;
+   let relief=0;
+   for(const [cx,cz] of [[foot,0],[-foot,0],[0,foot],[0,-foot],[foot*.7,foot*.7],[foot*.7,-foot*.7],[-foot*.7,foot*.7],[-foot*.7,-foot*.7]])relief=Math.max(relief,Math.abs(height(x+cx,z+cz)-h));
+   if(relief>limit){rejected.foundation++;return false;}
+  }
   const d=roadDistance(x,z);
   if(d.road<(o.road_limit??a.road)+Math.max(0,foot-a.r)*.35){rejected.road++;return false;}
   if(d.turn<(o.turn_limit??a.turn)+Math.max(0,foot-a.r)*.35){rejected.turn++;return false;}
@@ -181,11 +187,13 @@ export function generate(meta,graph,bytes) {
  waterCells.sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
  if(waterCells.length<100)throw Error("Cannot derive connected flooded region from real terrain");
  const provenance={world_pr:3,art_pr:7,road_git_blob:"9bba378d68879df3baed2c97a4885c0adde88406",terrain_git_blob:"d951ce11a831dad5430b4c7157e2296f73c6b151",art_manifest_git_blob:"7c67ab03c29169c48432b36df6ae7a429a8decee"};
- const report={},counts={};let total=0,triangles=0,batches=0;
+ const report={},counts={};let total=0,triangles=0,batches=0,surfaceBatches=0;
  for(const r of meta.regions){const list=packs[r.id],byAsset={},groups=new Set();let tri=0;
   for(const q of list){byAsset[q.asset]=(byAsset[q.asset]||0)+1;tri+=assets[q.asset].tri;groups.add(Math.floor(q.position[0]/128)+","+Math.floor(q.position[2]/128)+"|"+q.asset);}
   report[r.id]={count:list.length,by_asset:byAsset,near_mesh_triangles_estimate:tri,minimum_asset_cell_batches:groups.size};
-  total+=list.length;triangles+=tri;batches+=groups.size;counts[r.id]=list.length;
+  let sur=0;for(const item of groups){const name=item.split("|")[1];sur+=assets[name].surfaces;}
+  report[r.id].near_mesh_component_draw_batches_estimate=sur;
+  total+=list.length;triangles+=tri;batches+=groups.size;surfaceBatches+=sur;counts[r.id]=list.length;
  }
  // Preview plans are generated from the same real heightfield, all 16 centerlines and committed placements.
  function preview(r){
@@ -214,7 +222,7 @@ export function generate(meta,graph,bytes) {
   files["content/scenery/previews/"+r.id+".svg"]=preview(r);
  }
  const manifest={schema_version:1,seed:seed0,coordinate_system:"godot_y_up",units:"meters",region_definitions:meta.regions,landmark_definitions:meta.landmarks,sources:provenance,assets,region_packs:regionIds.map(id=>({id,path:"content/scenery/packs/"+id+".json",count:packs[id].length})),lake:{water_level_m:lakeLevel,source_basin_floor_m:meta.heightfield.min_height_m,source_seed_xz:[800,500],grid_spacing_m:s,origin_x:ox,origin_z:oz,cell_count:waterCells.length,mask_path:"content/scenery/lake/water_cells_v1.json",note:"Flood only four-corner submerged quads in the connected low basin; decorative, non-colliding."}};
- const metrics={schema_version:1,seed:seed0,source:provenance,source_road_corridors:travel.length,source_turn_paths:turns.length,source_r16_samples:W*H,total_objects:total,near_mesh_triangles_estimate:triangles,minimum_asset_cell_batches:batches,regions:report,lake:{water_height_m:lakeLevel,quads:waterCells.length,triangles:2*waterCells.length},rejects:rejected,landmark_ids:[...landmarkIds].sort(),culling:{cell_size_m:128,near_m:170,far_m:450,presets:["low","medium","high"]},caveat:"Minimum theoretical one-surface draw batches and source-asset triangle arithmetic, not measured GPU performance; some scene assets contain multiple surfaces."};
+ const metrics={schema_version:1,seed:seed0,source:provenance,source_road_corridors:travel.length,source_turn_paths:turns.length,source_r16_samples:W*H,total_objects:total,near_mesh_triangles_estimate:triangles,minimum_asset_cell_batches:batches,full_world_near_mesh_component_draw_batches_estimate:surfaceBatches,regions:report,lake:{water_height_m:lakeLevel,quads:waterCells.length,triangles:2*waterCells.length},rejects:rejected,landmark_ids:[...landmarkIds].sort(),culling:{cell_size_m:128,near_m:170,far_m:450,presets:["low","medium","high"]},caveat:"Minimum theoretical one-surface draw batches and source-asset triangle arithmetic, not measured GPU performance; some scene assets contain multiple surfaces."};
  files["content/scenery/manifest.json"]=JSON.stringify(manifest,null,2)+"\n";
  files["content/scenery/lake/water_cells_v1.json"]=JSON.stringify({schema_version:1,water_height_m:lakeLevel,origin_x:ox,origin_z:oz,spacing_m:s,cells:waterCells})+"\n";
  files["content/scenery/metrics.json"]=JSON.stringify(metrics,null,2)+"\n";
