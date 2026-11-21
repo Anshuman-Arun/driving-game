@@ -58,6 +58,7 @@ func reset_to(pose: Transform3D) -> void:
 	vehicle.throttle_amount = 0.0
 	vehicle.brake_amount = 0.0
 	vehicle.steering_amount = 0.0
+	vehicle.true_steering_amount = 0.0
 	vehicle.clutch_amount = 0.0
 	vehicle.current_gear = 0
 	vehicle.requested_gear = 0
@@ -66,6 +67,7 @@ func reset_to(pose: Transform3D) -> void:
 	vehicle.motor_rpm = vehicle.idle_rpm
 	vehicle.last_shift_delta_time = vehicle.delta_time - vehicle.shift_time
 	for wheel in vehicle.wheel_array:
+		wheel.steer(0.0, vehicle.max_steering_angle)
 		wheel.spin = 0.0
 		wheel.previous_compression = 0.0
 		wheel.previous_global_position = wheel.global_position
