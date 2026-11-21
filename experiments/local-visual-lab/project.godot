@@ -1,0 +1,27 @@
+; Engine configuration file.
+; Standalone Aster Valley Local Visual Lab (Godot 4.7.2 Forward+)
+
+config_version=5
+
+[application]
+
+config/name="Aster Valley Local Visual Lab"
+config/description="Standalone Godot 4.7.2 Forward+ rendering benchmark and visual prototype for Aster Valley."
+run/main_scene="res://scenes/visual_lab.tscn"
+config/features=PackedStringArray("4.7", "Forward Plus")
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/mode=0
+window/vsync/vsync_mode=0
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+anti_aliasing/quality/msaa_3d=1
+lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
+lights_and_shadows/positional_shadow/atlas_size=2048
+environment/defaults/default_clear_color=Color(0.12, 0.16, 0.22, 1)

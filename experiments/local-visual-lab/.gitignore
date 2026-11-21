@@ -1,0 +1,7 @@
+# Godot local cache
+.godot/
+*.import
+*.tmp
+
+# Raw temporary captures (curated screenshots are committed explicitly)
+captures_tmp/

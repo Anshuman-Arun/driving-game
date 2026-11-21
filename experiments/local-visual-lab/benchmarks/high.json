@@ -1,0 +1,148 @@
+{
+  "engine_version": "4.7.2-stable (official)",
+  "flythrough": {
+    "avg_draw_calls": 147,
+    "avg_fps": 52.5,
+    "avg_frame_ms": 19.05,
+    "avg_objects": 147,
+    "avg_primitives": 1846821,
+    "avg_render_cpu_ms": 1.2,
+    "avg_render_gpu_ms": 18.94,
+    "frames": 180,
+    "id": "FLYTHROUGH",
+    "label": "Repeatable Road-to-Lake Flythrough",
+    "low_1pct_fps": 30.7,
+    "p99_frame_ms": 32.53,
+    "video_mem_mb": 957.1
+  },
+  "flythrough_frames": 180,
+  "measure_frames": 120,
+  "preset": "High",
+  "preset_state": {
+    "glow": true,
+    "grass_ratio": 1.0,
+    "msaa_mode": 2,
+    "sdfgi": true,
+    "shadow_distance": 320.0,
+    "shadow_splits": 2,
+    "ssao": true,
+    "ssil": true,
+    "ssr": true,
+    "taa": true,
+    "volumetric_fog": true
+  },
+  "renderer_adapter": "NVIDIA GeForce RTX 4050 Laptop GPU",
+  "renderer_api": "1.4.325",
+  "renderer_vendor": "NVIDIA",
+  "resolution": "1920x1080",
+  "screenshots": [
+    "high_vp1_lakeside_hero.png",
+    "high_vp2_pine_corridor.png",
+    "high_vp3_overlook_vista.png",
+    "high_vp4_shoreline_detail.png",
+    "high_flythrough_mid.png"
+  ],
+  "viewpoints": [
+    {
+      "avg_draw_calls": 185,
+      "avg_fps": 60.9,
+      "avg_frame_ms": 16.41,
+      "avg_objects": 185,
+      "avg_primitives": 1849410,
+      "avg_render_cpu_ms": 1.02,
+      "avg_render_gpu_ms": 16.27,
+      "camera_pos": [
+        8.54,
+        17.86,
+        32.34
+      ],
+      "camera_target": [
+        -5.49,
+        20.49,
+        -29.42
+      ],
+      "frames": 120,
+      "id": "VP1_Lakeside_Hero",
+      "label": "VP1: Lakeside Hero Curve",
+      "low_1pct_fps": 44.7,
+      "p99_frame_ms": 22.37,
+      "video_mem_mb": 955.7
+    },
+    {
+      "avg_draw_calls": 185,
+      "avg_fps": 57.7,
+      "avg_frame_ms": 17.34,
+      "avg_objects": 185,
+      "avg_primitives": 1849410,
+      "avg_render_cpu_ms": 0.9,
+      "avg_render_gpu_ms": 17.21,
+      "camera_pos": [
+        -46.34,
+        15.52,
+        -112.15
+      ],
+      "camera_target": [
+        -37.84,
+        20.59,
+        -48.0
+      ],
+      "frames": 120,
+      "id": "VP2_Pine_Corridor",
+      "label": "VP2: Pine Canopy Road",
+      "low_1pct_fps": 45.0,
+      "p99_frame_ms": 22.21,
+      "video_mem_mb": 957.1
+    },
+    {
+      "avg_draw_calls": 208,
+      "avg_fps": 60.8,
+      "avg_frame_ms": 16.45,
+      "avg_objects": 208,
+      "avg_primitives": 1851474,
+      "avg_render_cpu_ms": 0.98,
+      "avg_render_gpu_ms": 16.32,
+      "camera_pos": [
+        -4.33,
+        27.27,
+        5.27
+      ],
+      "camera_target": [
+        12.57,
+        20.99,
+        -48.78
+      ],
+      "frames": 120,
+      "id": "VP3_Overlook_Vista",
+      "label": "VP3: Overlook Panoramic Vista",
+      "low_1pct_fps": 45.1,
+      "p99_frame_ms": 22.15,
+      "video_mem_mb": 957.1
+    },
+    {
+      "avg_draw_calls": 170,
+      "avg_fps": 59.6,
+      "avg_frame_ms": 16.77,
+      "avg_objects": 170,
+      "avg_primitives": 1848414,
+      "avg_render_cpu_ms": 1.07,
+      "avg_render_gpu_ms": 16.64,
+      "camera_pos": [
+        51.05,
+        2.35,
+        22.0
+      ],
+      "camera_target": [
+        2.12,
+        10.5,
+        -34.0
+      ],
+      "frames": 120,
+      "id": "VP4_Shoreline_Detail",
+      "label": "VP4: Shoreline & Reflection Detail",
+      "low_1pct_fps": 43.5,
+      "p99_frame_ms": 22.98,
+      "video_mem_mb": 957.1
+    }
+  ],
+  "warmup_frames": 36
+}
