@@ -257,11 +257,6 @@ func _advance_racer(id: String, delta: float, elapsed_before: float) -> void:
 	var lap: int = r["lap"]
 	var index: int = r["checkpoint_index"]
 	var lap_offset: float = float(lap - 1) * route.length_m
-	for later_index in range(index + 1, checkpoints.size()):
-		var later: Dictionary = checkpoints[later_index]
-		if progress >= lap_offset + float(later["s"]) - float(later["radius_m"]) * 0.5 and _hits_gate(a, b, later):
-			_invalidate(id, "out_of_order_checkpoint")
-			return
 	while index < checkpoints.size():
 		var cp: Dictionary = checkpoints[index]
 		var target: float = lap_offset + float(cp["s"])
@@ -272,10 +267,17 @@ func _advance_racer(id: String, delta: float, elapsed_before: float) -> void:
 			index += 1
 			r["checkpoint_index"] = index
 			checkpoint_passed.emit(id, cp["id"], lap)
-		elif progress > target + radius + 2.0:
-			_invalidate(id, "missed_checkpoint")
-			return
 		else:
+			# A coarse tick may cross several checkpoints in order; test the
+			# expected gate first, THEN classify contact with a later gate.
+			for later_index in range(index + 1, checkpoints.size()):
+				var later: Dictionary = checkpoints[later_index]
+				if progress >= lap_offset + float(later["s"]) - float(later["radius_m"]) * 0.5 and _hits_gate(a, b, later):
+					_invalidate(id, "out_of_order_checkpoint")
+					return
+			if progress > target + radius + 2.0:
+				_invalidate(id, "missed_checkpoint")
+			return
 			break
 	var finish_threshold := float(lap) * route.length_m - FINISH_TOLERANCE_M
 	if progress >= finish_threshold:
