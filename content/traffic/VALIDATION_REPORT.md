@@ -1,21 +1,46 @@
 # Verification evidence — world traffic content v1
 
-## Verified from World PR #3 and Traffic PR #4
+## Canonical, read-only sources
 
-Source snapshot from World PR #3: road_graph_v1.json, Git blob SHA 9bba378d68879df3baed2c97a4885c0adde88406. Traffic API read directly from Traffic PR #4's traffic_simulation.gd and road_graph.gd. Both dependency PRs were open/unmerged during authoring.
+- World PR #3 `feat/worldgen` Git commit `306d0be4a1fe72d8c529a1ab2b44e29a911da3a4`; road-graph blob `9bba378d68879df3baed2c97a4885c0adde88406`.
+- Traffic PR #4 `feat/traffic-systems` Git commit `487efc69a0564a32ac150e5bf6d811838ecf6cbe` (original simulator used by expanded CI).
+- Simulator agent's separate `fix/traffic-junction-safety` branch commit `da5f5dde0066eb3ab29cb05af739cf5970fe7468` is **not tested by this CI**. Its code is never copied into this PR.
+- Source is [PR #22](https://github.com/Anshuman-Arun/driving-game/pull/22), write scope `content/traffic/` only. All PRs remain unmerged.
 
-| Test / inspection | Actually executed? | Result |
-|---|---|---|
-| Read graph and enumerate physical/connector topology with connected GitHub tool + JavaScript assertions | Yes | **309/309 checks passed** on initially authored inventory of 11 nodes, 32 travel lanes, 72 turns, and 22 implicit merges |
-| Exact directed topology audit after 2-way crossing correction | Yes | **315/315 fresh connector-side checks passed**; 11 nodes, 8 active controls, 3 pass-throughs, 26 controlled incoming travel lanes, and 22 implicit merge zones inspected |
-| Geometric intersection audit from canonical 3D connector polylines | Yes | Crossings found and written to conflict_audit_v1.json; Overlook and Orchard each have four opposing-path XZ crossings at near-identical height |
-| Regenerated visual top-down control preview from World data | Yes | SVG source produced from actual 104 directed lanes; manually adjusted label/control color for two extra crossing yield sites |
-| Node CLI script tests/validate_content.js executed on Node with a local canonical graph | **No** | Reproducible command supplied; requires temp export/merged World PR file in executing checkout |
-| Godot 4.7.2 root editor import | **No** | Godot executable unavailable and main does not yet include dependency source |
-| Native GDScript smoke/full scenarios | **No** | Must run after World and Traffic branches integrated; explicitly pending |
-| Actual collision shapes, car-to-car physics, controller feel, Windows FPS | **No** | Requires root game world and manual/engine integration |
+## Real executed CI evidence
 
-**No native runtime PASS claim is made.** The 309 initial checks are source-level connector-side assertions, not execution of the committed Node test file. The later topological and geometry checks use the actual remote canonical JSON. The native tests also exercise additional Overlook/Orchard 5/20-density hotspots and are authored to detect (rather than hide) global point overlaps and long waits.
+Runner: [Expanded CI run 44955678724](https://github.com/Anshuman-Arun/driving-game/actions/runs/44955678724), rerun attempt 2 (traffic job `137009652546`), Node 22.16.0 and Godot 4.7.2.stable.official.ed1daf0bf. The runner checked out the live content branch and staged the world and original traffic simulator as **read-only dependencies**, not as commits in this branch.
+
+| Executable gate | Result against original simulator |
+|---|---|
+| `node content/traffic/tests/validate_content.js <canonical World graph>` | **PASS**, topology/content audit, **14 negative mutations** and SVG provenance; 11 real nodes, 8 controls, 22 implicit merges, unchanged canonical lane IDs |
+| Godot `--headless --editor --quit` import | **PASS** in disposable standalone traffic-native project |
+| Godot native `--smoke` (15 seconds/case) | **PASS**, **24/24 cases**, **67 pass / 0 fail** checks; deterministic replay included |
+| Godot native `--full` (90 seconds/case) | **FAIL**, **33 of 72 cases** have real modeled occupancy or persistent queues; **130 pass / 33 fail** checks; replay deterministic |
+
+The first expanded CI attempt ran an older content commit and failed the static `multi-approach control junction_overlook` assertion plus old blanket `<3.6m` point-gap checks. Its static topology mismatch is fixed in the branch. A subsequent content-only change labels same-lane folded-geometry physical overlap separately from same-lane rear-end headway and adds a dedicated regression fixture; a third CI rerun was initiated to verify this diagnostic refinement. **Do not report a pass for the simulator safety/full gate.**
+
+## Real 90-second scenario failures vs harmless lane proximity
+
+The helper `tests/vehicle_clearance.gd` compares conservative **4.5 m × 1.85 m** XZ oriented rectangles (four SAT axes), **1.7 m vertical** occupancy, and **5.0 m same-directed-lane arc headway**. The simulator provides state positions/tangents; this is an explicit approximate body-occupancy test, not a rigid-body collision measurement. Opposing road lane centerlines ~3.4 m apart produce many Euclidean point gaps below the old 3.6 m rule **without** footprints touching. Those close pair-tick samples are counted, not automatically failed. Same-lane headway, body contact on turns, converging merge contact, grade-consistent different-lane body overlap, and waits/held reservations over 30 seconds remain hard failures.
+
+| Scenario site | 90 s cases failed / run | Benign close pair-tick samples | Distinct modeled body conflicts | Other hard failures |
+|---|---:|---:|---|---|
+| Alder town | **6 / 12** | 1,524 | 32 turning, 3 cross-lane, 2 merging | None |
+| Cedar woods | **8 / 12** | 507 | 18 turning, 4 same-lane occupancy | None |
+| North Ridge | **0 / 12** | 107 | 0 | None |
+| Green Valley | **8 / 12** | 1,207 | 48 turning, 12 cross-lane, 4 merging, 3 same-lane occupancy | None |
+| Eastwater Lake | **8 / 12** | 915 | 23 turning, 11 merging, 2 same-lane occupancy | None |
+| Overlook crossing | **0 / 6** | 265 | 0 | None |
+| Orchard crossing | **3 / 6** | 813 | 0 | Queue wait exceeded 30 s (max ~48.63 s) |
+| **Total** | **33 / 72** | **5,338** | **162** distinct body-overlap pair/type events | **3** queue-failing cases |
+
+`Benign close` counts are pair-timeslice samples, not distinct vehicle pairs and not all located at the junction itself. Body conflict counts are de-duplicated per agent ID pair and conflict type **within each scenario**, not unique physical crash incidents across seeds. The first full rerun records 121 turning + 15 cross-lane + 17 merging + 9 same-lane body/headway conflict events. Different density and seed replays can revisit the same geometry; these metrics do not prove crash frequency in gameplay.
+
+Representative verified cases: Alder's chapel-to-market turn overlaps a depot lane at ~4.253 m center distance (long body diagonal), Cedar's hairpin/return connector can occupy itself with cars at far-separated arc coordinates (not necessarily a rear-end), Valley turning movements intersect outgoing/approaching lanes, Lake's different turn paths overlap, and Orchard traffic develops >30-second queues at high density. Ridge and Overlook passed their native 90-second cases despite close opposite-lane center points.
+
+**Interpretation:** The point-gap false positives are now filtered by actual modeled body geometry; the 33 full failures must not be waived. The original short common reservation release at multi-arm nodes and long-held Orchard yield are likely contributors, but the simulator owner must verify whether the isolated repair removes every conflict and queue. In the absence of a successful full rerun against the repaired simulator, this pack is **not integration-safe/collision-certified**.
+
 
 ## Candidate crossing conflicts from real connector geometry
 
@@ -35,8 +60,12 @@ Pairs count **different inbound and different outgoing travel lanes** whose turn
 | Depot | 0 | 0 | none |
 | Chapel | 0 | 0 | none |
 
-**Blocking risk:** The six multi-arm nodes have centerline conflicts after the common short reservation clearance, yet setting clearance to reach the far crossing would exceed at least one short turn and risk permanent lock. Only simulator API/algorithm changes can solve this completely. Avoid certifying no-intersection-overlap until native tests and an improved reservation model pass.
+**Original simulator blocker:** The six multi-arm nodes have centerline conflicts after the common short reservation clearance, yet setting clearance to reach the far crossing would exceed at least one short turn and risk permanent lock. Only simulator API/algorithm changes can solve this completely. Avoid certifying no-intersection-overlap until native tests and an improved reservation model pass.
 
-## Manual/natively executed follow-up
+## Unresolved dependency and precise next verification
 
-After World PR #3 and Traffic PR #4 are integrated in a throwaway branch/check-out: run the Node validator and both Godot commands in INTEGRATION_NOTES.md; collect per-region density peaks, waits, overlaps and logs. Review traffic at Alder, Valley, Ridge, and long opposing crossings at Overlook/Orchard. Use the real collisions/visual layer for chassis contact and performance separately. Do not merge until reviewer understands and accepts the uncovered intersection-conflict limitation.
+The expanded CI workflow on `feat/ci-expansion` currently hardcodes a checkout of `feat/traffic-systems` for traffic-native tests. It **does not** stage `fix/traffic-junction-safety`, so we cannot truthfully claim it verified the simulator owner's patch. Staging a different simulator checkout would require a CI-owner change (outside the exclusive `content/traffic/` scope), or a **disposable uncommitted integration workspace** in which the fix branch is used as a read-only source. Do not modify `modules/traffic/`, `data/world/` or `.github/workflows/` in this PR.
+
+Re-execute the same Node check, Godot 4.7.2 editor import, 15-second smoke (24 seeded scenarios × two deterministic replays) and 90-second full (72 seeded scenarios × two replays) with the repaired simulator. Review every modeled body conflict, lane transition, queue >=30 seconds, reservation hold >=30 seconds and replay discrepancy before declaring green. Real chassis contact, dynamic vehicle graphics, player driving, Windows export and FPS remain **unverified**; these kinematic rectangles are diagnostic proxies only.
+
+Ownership policy supersedes the general `AGENTS.md` recommendation to edit `docs/PROJECT_STATUS.md`: the integration owner must update shared status and stage the repaired simulator, not this content-only PR.
