@@ -1,0 +1,649 @@
+{
+  "schema_version": 1,
+  "source_graph_git_blob_sha": "9bba378d68879df3baed2c97a4885c0adde88406",
+  "method": "Exact XZ segment intersections of turn centerlines, filtered for |height delta| <= 2.5 m; exclude pairs sharing incoming or outgoing travel lane. Candidate geometric conflicts only; not swept-vehicle collisions.",
+  "notes": [
+    "A long turn can cross another well beyond a short connector's required reservation release: content-only safety is insufficient.",
+    "Overlook and Orchard are degree-two nodes with four actual crossings each, serialized by a late-release yield definition.",
+    "A pass_through row can have geometric crossings only if the geometry changes; such a row must be reauthored before integration.",
+    "The simulator lacks a per-turn conflict matrix; resolving late conflicts requires simulation evolution."
+  ],
+  "nodes": [
+    {
+      "junction_id": "junction_alder",
+      "mode": "stop",
+      "turn_pairs_crossing": 82,
+      "centerline_crossings": 130,
+      "turn_pairs_with_crossing_after_release": 69,
+      "furthest_crossing_arc_s_m": 64.12,
+      "clearance_m": 8.5,
+      "examples": [
+        {
+          "a": "turn_alder_alder_cedar_ba__alder_depot_ab",
+          "b": "turn_alder_alder_depot_ba__alder_cedar_ab",
+          "max_s_m": 56.97,
+          "crossings": [
+            {
+              "first_s": 7.929,
+              "second_s": 4.635,
+              "xyz": [
+                -623.5,
+                40,
+                563.26
+              ]
+            },
+            {
+              "first_s": 19.221,
+              "second_s": 15.348,
+              "xyz": [
+                -615.85,
+                40,
+                570.54
+              ]
+            },
+            {
+              "first_s": 44.526,
+              "second_s": 46.316,
+              "xyz": [
+                -610.75,
+                40.05,
+                553.53
+              ]
+            },
+            {
+              "first_s": 55.748,
+              "second_s": 56.974,
+              "xyz": [
+                -621.1,
+                40,
+                555.35
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_alder_alder_cedar_ba__alder_depot_ab",
+          "b": "turn_alder_alder_depot_ba__alder_market_ab",
+          "max_s_m": 6.66,
+          "crossings": [
+            {
+              "first_s": 6.655,
+              "second_s": 4.146,
+              "xyz": [
+                -623.8,
+                40,
+                562.03
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_alder_alder_cedar_ba__alder_depot_ab",
+          "b": "turn_alder_alder_depot_ba__chapel_alder_ba",
+          "max_s_m": 7.86,
+          "crossings": [
+            {
+              "first_s": 7.862,
+              "second_s": 4.593,
+              "xyz": [
+                -623.52,
+                40,
+                563.2
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "junction_id": "junction_cedar",
+      "mode": "yield",
+      "turn_pairs_crossing": 6,
+      "centerline_crossings": 7,
+      "turn_pairs_with_crossing_after_release": 5,
+      "furthest_crossing_arc_s_m": 54.7,
+      "clearance_m": 7.5,
+      "examples": [
+        {
+          "a": "turn_cedar_alder_cedar_ab__cedar_pine_ab",
+          "b": "turn_cedar_cedar_pine_ba__cedar_ridge_ab",
+          "max_s_m": 54.67,
+          "crossings": [
+            {
+              "first_s": 11.543,
+              "second_s": 54.667,
+              "xyz": [
+                -693.59,
+                91.98,
+                -315.07
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_cedar_alder_cedar_ab__cedar_ridge_ab",
+          "b": "turn_cedar_cedar_pine_ba__alder_cedar_ba",
+          "max_s_m": 7.43,
+          "crossings": [
+            {
+              "first_s": 7.43,
+              "second_s": 7.244,
+              "xyz": [
+                -699.23,
+                92,
+                -318.36
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_cedar_alder_cedar_ab__cedar_ridge_ab",
+          "b": "turn_cedar_cedar_ridge_ba__cedar_pine_ab",
+          "max_s_m": 9.31,
+          "crossings": [
+            {
+              "first_s": 9.312,
+              "second_s": 8.323,
+              "xyz": [
+                -698.25,
+                92,
+                -319.97
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "junction_id": "junction_ridge",
+      "mode": "stop",
+      "turn_pairs_crossing": 27,
+      "centerline_crossings": 44,
+      "turn_pairs_with_crossing_after_release": 23,
+      "furthest_crossing_arc_s_m": 65.5,
+      "clearance_m": 9,
+      "examples": [
+        {
+          "a": "turn_ridge_cedar_ridge_ab__pine_ridge_ba",
+          "b": "turn_ridge_pine_ridge_ab__cedar_ridge_ba",
+          "max_s_m": 65.5,
+          "crossings": [
+            {
+              "first_s": 10.466,
+              "second_s": 2.132,
+              "xyz": [
+                166.33,
+                161.98,
+                -674.99
+              ]
+            },
+            {
+              "first_s": 24.967,
+              "second_s": 16.047,
+              "xyz": [
+                178.61,
+                161.98,
+                -670.81
+              ]
+            },
+            {
+              "first_s": 43.802,
+              "second_s": 53.634,
+              "xyz": [
+                179.32,
+                161.99,
+                -686.32
+              ]
+            },
+            {
+              "first_s": 55.848,
+              "second_s": 65.497,
+              "xyz": [
+                168.24,
+                162,
+                -685.18
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_ridge_cedar_ridge_ab__pine_ridge_ba",
+          "b": "turn_ridge_pine_ridge_ab__ridge_overlook_ab",
+          "max_s_m": 10.19,
+          "crossings": [
+            {
+              "first_s": 10.192,
+              "second_s": 2.188,
+              "xyz": [
+                166.25,
+                161.98,
+                -675.25
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_ridge_cedar_ridge_ab__pine_ridge_ba",
+          "b": "turn_ridge_pine_ridge_ab__ridge_valley_ab",
+          "max_s_m": 10.47,
+          "crossings": [
+            {
+              "first_s": 10.472,
+              "second_s": 2.133,
+              "xyz": [
+                166.34,
+                161.98,
+                -674.99
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "junction_id": "junction_valley",
+      "mode": "stop",
+      "turn_pairs_crossing": 28,
+      "centerline_crossings": 48,
+      "turn_pairs_with_crossing_after_release": 23,
+      "furthest_crossing_arc_s_m": 63.74,
+      "clearance_m": 7.5,
+      "examples": [
+        {
+          "a": "turn_valley_market_valley_ab__pine_valley_ba",
+          "b": "turn_valley_pine_valley_ab__market_valley_ba",
+          "max_s_m": 56.78,
+          "crossings": [
+            {
+              "first_s": 4.947,
+              "second_s": 6.79,
+              "xyz": [
+                44.91,
+                67.99,
+                174.49
+              ]
+            },
+            {
+              "first_s": 15.754,
+              "second_s": 18.055,
+              "xyz": [
+                55.46,
+                67.98,
+                173.47
+              ]
+            },
+            {
+              "first_s": 45.867,
+              "second_s": 44.363,
+              "xyz": [
+                45.37,
+                68,
+                158.8
+              ]
+            },
+            {
+              "first_s": 56.783,
+              "second_s": 55.752,
+              "xyz": [
+                40.66,
+                68,
+                168.41
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_valley_market_valley_ab__pine_valley_ba",
+          "b": "turn_valley_pine_valley_ab__valley_lake_ab",
+          "max_s_m": 7.05,
+          "crossings": [
+            {
+              "first_s": 5.243,
+              "second_s": 7.048,
+              "xyz": [
+                45.19,
+                67.99,
+                174.41
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_valley_market_valley_ab__pine_valley_ba",
+          "b": "turn_valley_ridge_valley_ab__valley_lake_ab",
+          "max_s_m": 61.64,
+          "crossings": [
+            {
+              "first_s": 5.184,
+              "second_s": 61.636,
+              "xyz": [
+                45.14,
+                67.99,
+                174.42
+              ]
+            },
+            {
+              "first_s": 52.223,
+              "second_s": 9.448,
+              "xyz": [
+                42.32,
+                68,
+                164.21
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "junction_id": "junction_lake",
+      "mode": "yield",
+      "turn_pairs_crossing": 9,
+      "centerline_crossings": 31,
+      "turn_pairs_with_crossing_after_release": 9,
+      "furthest_crossing_arc_s_m": 64.47,
+      "clearance_m": 9.5,
+      "examples": [
+        {
+          "a": "turn_lake_lake_alder_ba__orchard_lake_ba",
+          "b": "turn_lake_orchard_lake_ab__lake_alder_ab",
+          "max_s_m": 56.41,
+          "crossings": [
+            {
+              "first_s": 2.776,
+              "second_s": 9.841,
+              "xyz": [
+                696.1,
+                30,
+                453.73
+              ]
+            },
+            {
+              "first_s": 12.593,
+              "second_s": 56.41,
+              "xyz": [
+                698.06,
+                30.02,
+                444.53
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_lake_lake_alder_ba__orchard_lake_ba",
+          "b": "turn_lake_orchard_lake_ab__valley_lake_ba",
+          "max_s_m": 57.47,
+          "crossings": [
+            {
+              "first_s": 1.926,
+              "second_s": 10.437,
+              "xyz": [
+                695.52,
+                30,
+                454.34
+              ]
+            },
+            {
+              "first_s": 11.297,
+              "second_s": 57.465,
+              "xyz": [
+                698.37,
+                30.01,
+                445.79
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_lake_lake_alder_ba__orchard_lake_ba",
+          "b": "turn_lake_valley_lake_ab__lake_alder_ab",
+          "max_s_m": 52.3,
+          "crossings": [
+            {
+              "first_s": 3.806,
+              "second_s": 5.319,
+              "xyz": [
+                696.72,
+                30,
+                452.91
+              ]
+            },
+            {
+              "first_s": 13.546,
+              "second_s": 52.298,
+              "xyz": [
+                697.75,
+                30.02,
+                443.64
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "junction_id": "junction_pine",
+      "mode": "yield",
+      "turn_pairs_crossing": 4,
+      "centerline_crossings": 7,
+      "turn_pairs_with_crossing_after_release": 4,
+      "furthest_crossing_arc_s_m": 60.46,
+      "clearance_m": 7.5,
+      "examples": [
+        {
+          "a": "turn_pine_cedar_pine_ab__pine_ridge_ab",
+          "b": "turn_pine_pine_ridge_ba__cedar_pine_ba",
+          "max_s_m": 60.46,
+          "crossings": [
+            {
+              "first_s": 3.418,
+              "second_s": 8.782,
+              "xyz": [
+                -434.44,
+                82,
+                -42.88
+              ]
+            },
+            {
+              "first_s": 15.118,
+              "second_s": 21.1,
+              "xyz": [
+                -438.68,
+                82,
+                -32.33
+              ]
+            },
+            {
+              "first_s": 48.938,
+              "second_s": 43.849,
+              "xyz": [
+                -421.58,
+                81.98,
+                -32.26
+              ]
+            },
+            {
+              "first_s": 60.456,
+              "second_s": 55.937,
+              "xyz": [
+                -425.55,
+                82.01,
+                -42.73
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_pine_cedar_pine_ab__pine_valley_ab",
+          "b": "turn_pine_pine_ridge_ba__cedar_pine_ba",
+          "max_s_m": 8.09,
+          "crossings": [
+            {
+              "first_s": 3.411,
+              "second_s": 8.09,
+              "xyz": [
+                -433.8,
+                82,
+                -43.14
+              ]
+            }
+          ]
+        },
+        {
+          "a": "turn_pine_pine_ridge_ba__cedar_pine_ba",
+          "b": "turn_pine_pine_valley_ba__pine_ridge_ab",
+          "max_s_m": 55.93,
+          "crossings": [
+            {
+              "first_s": 55.932,
+              "second_s": 8.047,
+              "xyz": [
+                -425.55,
+                82.01,
+                -42.73
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "junction_id": "junction_market",
+      "mode": "pass_through",
+      "turn_pairs_crossing": 0,
+      "centerline_crossings": 0,
+      "turn_pairs_with_crossing_after_release": 0,
+      "furthest_crossing_arc_s_m": 0,
+      "clearance_m": null,
+      "examples": []
+    },
+    {
+      "junction_id": "junction_overlook",
+      "mode": "yield",
+      "turn_pairs_crossing": 1,
+      "centerline_crossings": 4,
+      "turn_pairs_with_crossing_after_release": 0,
+      "furthest_crossing_arc_s_m": 62.41,
+      "clearance_m": 64.5,
+      "examples": [
+        {
+          "a": "turn_overlook_overlook_orchard_ba__ridge_overlook_ba",
+          "b": "turn_overlook_ridge_overlook_ab__overlook_orchard_ab",
+          "max_s_m": 62.41,
+          "crossings": [
+            {
+              "first_s": 9.927,
+              "second_s": 3.301,
+              "xyz": [
+                609.42,
+                122,
+                -265.35
+              ]
+            },
+            {
+              "first_s": 21.817,
+              "second_s": 14.793,
+              "xyz": [
+                598.77,
+                121.99,
+                -262.51
+              ]
+            },
+            {
+              "first_s": 42.946,
+              "second_s": 50.084,
+              "xyz": [
+                607.12,
+                121.99,
+                -248.22
+              ]
+            },
+            {
+              "first_s": 55.875,
+              "second_s": 62.409,
+              "xyz": [
+                614.88,
+                121.99,
+                -257.12
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "junction_id": "junction_orchard",
+      "mode": "yield",
+      "turn_pairs_crossing": 1,
+      "centerline_crossings": 4,
+      "turn_pairs_with_crossing_after_release": 0,
+      "furthest_crossing_arc_s_m": 60.13,
+      "clearance_m": 63,
+      "examples": [
+        {
+          "a": "turn_orchard_orchard_lake_ba__overlook_orchard_ba",
+          "b": "turn_orchard_overlook_orchard_ab__orchard_lake_ab",
+          "max_s_m": 60.13,
+          "crossings": [
+            {
+              "first_s": 8.598,
+              "second_s": 3.47,
+              "xyz": [
+                454.51,
+                60.01,
+                77.28
+              ]
+            },
+            {
+              "first_s": 21.076,
+              "second_s": 15.254,
+              "xyz": [
+                446.8,
+                60,
+                68.78
+              ]
+            },
+            {
+              "first_s": 44.032,
+              "second_s": 48.776,
+              "xyz": [
+                439.56,
+                60,
+                84.38
+              ]
+            },
+            {
+              "first_s": 55.949,
+              "second_s": 60.131,
+              "xyz": [
+                450.61,
+                59.99,
+                85.07
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "junction_id": "junction_depot",
+      "mode": "pass_through",
+      "turn_pairs_crossing": 0,
+      "centerline_crossings": 0,
+      "turn_pairs_with_crossing_after_release": 0,
+      "furthest_crossing_arc_s_m": 0,
+      "clearance_m": null,
+      "examples": []
+    },
+    {
+      "junction_id": "junction_chapel",
+      "mode": "pass_through",
+      "turn_pairs_crossing": 0,
+      "centerline_crossings": 0,
+      "turn_pairs_with_crossing_after_release": 0,
+      "furthest_crossing_arc_s_m": 0,
+      "clearance_m": null,
+      "examples": []
+    }
+  ]
+}
