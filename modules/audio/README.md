@@ -1,0 +1,57 @@
+# Aster Valley · Original Offline Audio System
+
+This is a self-contained Godot **4.7.2** audio module. It requires no add-ons, network access, proprietary recordings, or global audio buses. The standalone module project uses Godot's lightweight GL Compatibility renderer; the main game can continue to use Forward+.
+
+## What's implemented
+
+- Three original synthetic drivetrains: `vela_gt` (rounded six-cylinder character), `orion_rs` (bright high-revving four-cylinder character), `kestrel_xr` (low/throaty eight-cylinder character). Each has low/mid/high seamless-periodic PCM engine layers with speed/RPM pitch and throttle/load crossfading. Engine braking/overrun and short gearshift attenuation/transient are modeled.
+- Asphalt, dirt/gravel and grass rolling, low/high grip tire squeal/skid, wind versus speed, countryside beds, gearbox shifts, collisions, and suspension-thump one-shots.
+- `AsterAudioController` takes ordinary telemetry dictionaries and optionally samples the current `Vehicle` / `Wheel` implementation in PR #6 through `AsterAudioTelemetry`. Supports alternative vehicles via `update_telemetry()` without importing vehicle scripts. No shared-code modifications.
+- A self-contained graphical test bench with RPM, throttle, load, speed, slip, grip, gear, handbrake, contact, surface and car-profile controls, and manual events.
+
+## Audition the standalone demo
+
+```bash
+# Run from the full repository checkout; no root game project is required.
+godot --path modules/audio --editor
+godot --path modules/audio
+```
+
+Choose a car, drag RPM/load/throttle sliders, then try speed, road surface, lateral slip and handbrake. Gear changes automatically produce a short shift transient; the event buttons exercise gearshift, suspension and collision. Turn off ground contact to hear rolling and tire skid disappear. The demo does not require PR #6 to be merged.
+
+## Integration (future integrator; PR #6 is still separate)
+
+After merging the core branch and this module, add from the *vehicle-owning* code (not in this branch):
+
+```gdscript
+var audio_script = load("res://modules/audio/audio_controller.gd")
+var vehicle_audio = audio_script.new()
+add_child(vehicle_audio)
+vehicle_audio.set_profile("vela_gt")  # or "orion_rs" / "kestrel_xr"
+vehicle_audio.bind_gevp_vehicle(vehicle_body)
+```
+
+PR #6 exposes `motor_rpm`, `idle_rpm`, `max_rpm`, `throttle_input`, `brake_input`, `current_gear`, `handbrake_input`, `linear_velocity` and `wheel_array`. Wheels expose `surface_type`, `slip_vector`, `spring_current_length`, and `is_colliding()`. The bridge normalizes `Road→asphalt`, `Dirt→gravel`, `Grass→grass`, estimates grip/slip, and watches compressed suspension. Binding also attaches to `RigidBody3D.body_entered`; PR #6's factory enables `contact_monitor` and 8 reported contacts. If a different vehicle body is used, supply telemetry dictionaries directly and call `trigger_suspension(strength)` / `trigger_collision(strength)` from its physics/contact events.
+
+`update_telemetry()` contract: `rpm`/`idle_rpm`/`max_rpm` as RPM; `speed_mps` (not km/h); `throttle`,`load`,`grip`,`lateral_slip` in `[0,1]`; `gear` integer; `surface` in `asphalt|gravel|grass`; `handbrake`,`on_ground`,`engine_braking` booleans. Unspecified fields have defaults. `compute_targets(Dictionary, String)` is a pure static function to enable deterministic audio-logic smoke tests.
+
+## Rebuild and tests
+
+```bash
+python modules/audio/tools/synthesize.py
+python -m unittest discover -s modules/audio/tests -v
+godot --headless --path modules/audio --editor --quit
+godot --headless --path modules/audio --script res://tests/godot_smoke.gd
+```
+
+The generator uses only the Python standard library and fixed mathematical frequencies/phases. Outputs 20 distinct **22,050 Hz, mono, signed 16-bit PCM WAV** files (nine engine layers, eight looped effects, three one-shots). No downloading. Deterministic tests assert sample-by-sample regeneration, headroom, minimum loop duration, seam slope and profile distinctions. Engine loops and background beds are periodic with integer-frequency components over an integer number of seconds, avoiding hard splice points. Godot loops use `AudioStreamWAV.LOOP_FORWARD`.
+
+**Validation performed in the authoring environment:** Python assets regenerated; 2 Python test cases passed on 20 WAVs. **Not run:** Godot 4.7.2 project import, live audio output, headphones/speakers listening, Windows playback or integration, because no Godot executable/audio playback device was available here. Do those before audio mix acceptance. No claim of measured loudness, performance or runtime safety on Windows.
+
+## Provenance & license
+
+Every file in `assets/` is **original mathematical synthesis** authored for Aster Valley with `tools/synthesize.py` (including original, synthetic bird-like ambience). No sampled recordings, existing soundtrack, external audio packs or proprietary game media. This original audio is released under **CC0-1.0** by its author for unrestricted redistribution and modification; generator/controller source is supplied under the repository's applicable license (if any). Sound presets and this local provenance register can be mirrored to the shared asset ledger by the eventual integrator; no shared docs were modified in this branch.
+
+## Design / limitations
+
+The controller models player/listener-centered **2D** sound, not positional 3D audio for remote traffic; for NPCs use per-vehicle AudioStreamPlayer3D routing and budget voices. Peak checks protect individual WAV sources, but a device's complete game mix still needs listening/limiter calibration. Avoid exposing global sound buses from this module, because doing so would break exclusive path ownership. Engine character is expressive synthesis rather than a physical cylinder-by-cylinder acoustic simulator.
