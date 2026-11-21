@@ -31,7 +31,7 @@ func reset_tracking() -> void:
 
 func _corner_speed(s: float) -> float:
 	var k: float = route.curvature(s, 8.0)
-	return minf(preferred_speed_mps, sqrt(lateral_accel_mps2 / maxf(k, 0.0001)), route.speed_limit(s))
+	return minf(minf(preferred_speed_mps, sqrt(lateral_accel_mps2 / maxf(k, 0.0001))), route.speed_limit(s))
 
 func _speed_plan(s: float, speed: float) -> float:
 	var target := _corner_speed(s)
@@ -91,7 +91,7 @@ func compute_controls(position: Vector3, forward: Vector3, speed_mps: float, del
 		if d < 0.0 or lateral > 2.8:
 			continue
 		var clearance := maxf(0.0, d - 5.0)
-		target_speed = minf(target_speed, clearance / 1.3, sqrt(2.0 * comfortable_brake_mps2 * clearance))
+		target_speed = minf(minf(target_speed, clearance / 1.3), sqrt(2.0 * comfortable_brake_mps2 * clearance))
 	var error := target_speed - speed
 	var throttle := clampf(error / 5.0 + 0.22, 0.0, 1.0)
 	var brake := 0.0
