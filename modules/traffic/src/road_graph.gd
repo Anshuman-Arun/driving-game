@@ -163,11 +163,11 @@ func get_pose(lane_id: String, s: float) -> Dictionary:
 	var blend_distance := minf(2.5, seg_length * 0.4)
 	if seg > 0 and distance - lengths[seg] < blend_distance:
 		var prev: Vector3 = (points[seg] - points[seg - 1]).normalized()
-		var k := 0.5 + 0.5 * (distance - lengths[seg]) / blend_distance
+		var k: float = 0.5 + 0.5 * (distance - lengths[seg]) / blend_distance
 		tangent = prev.lerp(tangent, k).normalized()
 	if seg + 2 < points.size() and lengths[seg + 1] - distance < blend_distance:
 		var following: Vector3 = (points[seg + 2] - points[seg + 1]).normalized()
-		var k := 0.5 - 0.5 * (lengths[seg + 1] - distance) / blend_distance
+		var k: float = 0.5 - 0.5 * (lengths[seg + 1] - distance) / blend_distance
 		tangent = tangent.lerp(following, k).normalized()
 	return {"position": pos, "tangent": tangent, "lane_id": lane_id, "distance_m": distance}
 
