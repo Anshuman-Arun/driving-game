@@ -39,7 +39,9 @@ func _physics_process(delta: float) -> void:
 	# Avoid pitching with vehicle roll; the horizon remains level on rough ground.
 	if global_position.distance_squared_to(focus) > 0.05:
 		var goal := global_transform.looking_at(focus, Vector3.UP)
-		global_transform.basis = global_transform.basis.slerp(goal.basis, 1.0 - exp(-9.0 * delta)).orthonormalized()
+		var updated := global_transform
+		updated.basis = updated.basis.slerp(goal.basis, 1.0 - exp(-9.0 * delta)).orthonormalized()
+		global_transform = updated
 	var speed := target.linear_velocity.length()
 	fov = lerpf(fov, 70.0 + 13.0 * clampf(speed / 45.0, 0.0, 1.0), 1.0 - exp(-2.6 * delta))
 

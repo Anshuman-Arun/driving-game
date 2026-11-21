@@ -8,8 +8,13 @@ func _init(body: Vehicle) -> void:
 
 func set_drive_input(steer: float, throttle: float, brake: float, handbrake: bool) -> void:
 	vehicle.steering_input = clampf(steer, -1.0, 1.0)
-	vehicle.throttle_input = clampf(throttle, 0.0, 1.0)
-	vehicle.brake_input = clampf(brake, 0.0, 1.0)
+	if vehicle.current_gear == -1:
+		# GEVP reverse uses swapped pedals, as in its shipped controller.
+		vehicle.throttle_input = clampf(brake, 0.0, 1.0)
+		vehicle.brake_input = clampf(throttle, 0.0, 1.0)
+	else:
+		vehicle.throttle_input = clampf(throttle, 0.0, 1.0)
+		vehicle.brake_input = clampf(brake, 0.0, 1.0)
 	vehicle.handbrake_input = 1.0 if handbrake else 0.0
 	vehicle.clutch_input = 0.0
 
