@@ -140,6 +140,10 @@ func configure(graph: Dictionary, route_ids: Array, is_closed: bool) -> String:
 			return "Circuit route does not connect last lane to first"
 		if points.back().distance_to(points[0]) > CONNECT_TOLERANCE_M:
 			return "Circuit endpoints are disconnected"
+		var tail := points.back() - points[points.size() - 2]
+		var head := points[1] - points[0]
+		if Vector2(tail.x, tail.z).normalized().dot(Vector2(head.x, head.z).normalized()) < -0.65:
+			return "Circuit closure has incompatible heading"
 		if points.back().distance_to(points[0]) >= 0.001:
 			speed_segments.append(float(first_lane["speed_limit_kph"]) / 3.6)
 			points.append(points[0])
