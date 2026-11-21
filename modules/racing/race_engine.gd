@@ -74,7 +74,12 @@ func start_event(definition: Dictionary) -> bool:
 	if kind != "sprint" and kind != "circuit":
 		return _fail("Event kind must be sprint or circuit")
 	var raw_laps: Variant = definition.get("laps")
-	if typeof(raw_laps) != TYPE_INT or int(raw_laps) < 1 or (kind == "sprint" and int(raw_laps) != 1):
+	# JSON.parse_string represents integer literals as floating-point numbers.
+	# Accept those only when exactly integral; reject fractional/invalid lap counts.
+	if not RaceRoute._number(raw_laps):
+		return _fail("Sprint requires one lap; circuit requires positive integer laps")
+	var laps_value: float = float(raw_laps)
+	if laps_value < 1.0 or laps_value != floorf(laps_value) or (kind == "sprint" and laps_value != 1.0):
 		return _fail("Sprint requires one lap; circuit requires positive integer laps")
 	if not (definition.get("lane_route") is Array):
 		return _fail("Missing lane_route")
