@@ -1,4 +1,4 @@
 .world_source/
-.art_source/
-.models/
+staged_art/
+staged_models/
 .godot/
