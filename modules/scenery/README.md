@@ -37,10 +37,10 @@ The root project needs the authored scenery assets and World PR #3 metadata/road
 var script_resource: Script = load("res://modules/scenery/src/scenery_runtime.gd")
 var scenery: Node3D = script_resource.new()
 scenery.name = "Scenery"
-scenery.build_on_ready = false
+scenery.set("build_on_ready", false)
 world_root.add_child(scenery)
-if not scenery.build_scenery(world_runtime):
-    push_error(scenery.error_message)
+if not bool(scenery.call("build_scenery", world_runtime)):
+    push_error(str(scenery.get("error_message")))
 ~~~
 
 To inspect without WorldRuntime, call build_scenery(null, absolute_content_directory, absolute_world_data_directory). In the integrated root project the engine loads curated models from res://assets/curated/ and local new models from res://content/scenery/models/. The standalone inspector instead uses the gitignored staged source copies. Set camera_path if the viewport's current Camera3D is not the primary driving camera.
