@@ -9,16 +9,16 @@
 
 ## Real executed CI evidence
 
-Runner: [Expanded CI run 44955678724](https://github.com/Anshuman-Arun/driving-game/actions/runs/44955678724), rerun attempt 2 (traffic job `137009652546`), Node 22.16.0 and Godot 4.7.2.stable.official.ed1daf0bf. The runner checked out the live content branch and staged the world and original traffic simulator as **read-only dependencies**, not as commits in this branch.
+Runner: [Expanded CI run 44955678724](https://github.com/Anshuman-Arun/driving-game/actions/runs/44955678724), rerun attempt 3 (traffic job `137010949792`, content SHA `be3aab6d9f53235822f72afa7e68b6de847a9ea1`), Node 22.16.0 and Godot 4.7.2.stable.official.ed1daf0bf. The runner checked out the live content branch and staged the world and original traffic simulator as **read-only dependencies**, not as commits in this branch.
 
 | Executable gate | Result against original simulator |
 |---|---|
 | `node content/traffic/tests/validate_content.js <canonical World graph>` | **PASS**, topology/content audit, **14 negative mutations** and SVG provenance; 11 real nodes, 8 controls, 22 implicit merges, unchanged canonical lane IDs |
 | Godot `--headless --editor --quit` import | **PASS** in disposable standalone traffic-native project |
-| Godot native `--smoke` (15 seconds/case) | **PASS**, **24/24 cases**, **67 pass / 0 fail** checks; deterministic replay included |
-| Godot native `--full` (90 seconds/case) | **FAIL**, **33 of 72 cases** have real modeled occupancy or persistent queues; **130 pass / 33 fail** checks; replay deterministic |
+| Godot native `--smoke` (15 seconds/case) | **PASS**, **24/24 cases**, **68 pass / 0 fail** checks; deterministic replay included |
+| Godot native `--full` (90 seconds/case) | **FAIL**, **33 of 72 cases** have real modeled occupancy or persistent queues; **131 pass / 33 fail** checks; replay deterministic |
 
-The first expanded CI attempt ran an older content commit and failed the static `multi-approach control junction_overlook` assertion plus old blanket `<3.6m` point-gap checks. Its static topology mismatch is fixed in the branch. A subsequent content-only change labels same-lane folded-geometry physical overlap separately from same-lane rear-end headway and adds a dedicated regression fixture; a third CI rerun was initiated to verify this diagnostic refinement. **Do not report a pass for the simulator safety/full gate.**
+The first expanded CI attempt ran an older content commit and failed the static `multi-approach control junction_overlook` assertion plus old blanket `<3.6m` point-gap checks. Its static topology mismatch is fixed in the branch. The third CI rerun passed the additional folded-lane geometry regression and verified the revised diagnostic classification; its full suite still fails 33 of 72 scenarios against the original simulator. **Do not report a pass for the simulator safety/full gate.**
 
 ## Real 90-second scenario failures vs harmless lane proximity
 
@@ -35,7 +35,7 @@ The helper `tests/vehicle_clearance.gd` compares conservative **4.5 m × 1.85 m*
 | Orchard crossing | **3 / 6** | 813 | 0 | Queue wait exceeded 30 s (max ~48.63 s) |
 | **Total** | **33 / 72** | **5,338** | **162** distinct body-overlap pair/type events | **3** queue-failing cases |
 
-`Benign close` counts are pair-timeslice samples, not distinct vehicle pairs and not all located at the junction itself. Body conflict counts are de-duplicated per agent ID pair and conflict type **within each scenario**, not unique physical crash incidents across seeds. The first full rerun records 121 turning + 15 cross-lane + 17 merging + 9 same-lane body/headway conflict events. Different density and seed replays can revisit the same geometry; these metrics do not prove crash frequency in gameplay.
+`Benign close` counts are pair-timeslice samples, not distinct vehicle pairs and not all located at the junction itself. Body conflict counts are de-duplicated per agent ID pair and conflict type **within each scenario**, not unique physical crash incidents across seeds. The final full rerun records 121 turning + 15 cross-lane + 17 merging + 9 same-lane **body occupancy** events; the arc-based rear-end guard is independently tested. These same-lane body hits can occur across spatially folded connectors and should not be mislabeled as rear-end incidents. Different density and seed replays can revisit the same geometry; these metrics do not prove crash frequency in gameplay.
 
 Representative verified cases: Alder's chapel-to-market turn overlaps a depot lane at ~4.253 m center distance (long body diagonal), Cedar's hairpin/return connector can occupy itself with cars at far-separated arc coordinates (not necessarily a rear-end), Valley turning movements intersect outgoing/approaching lanes, Lake's different turn paths overlap, and Orchard traffic develops >30-second queues at high density. Ridge and Overlook passed their native 90-second cases despite close opposite-lane center points.
 
