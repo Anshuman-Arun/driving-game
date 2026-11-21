@@ -5,11 +5,12 @@ extends SceneTree
 ## godot --headless --path . --script res://content/traffic/tests/run_world_scenarios.gd -- --full
 const TrafficSimulation = preload("res://modules/traffic/src/traffic_simulation.gd")
 const TrafficContentLoader = preload("res://content/traffic/traffic_content_loader.gd")
+const VehicleClearance = preload("res://content/traffic/tests/vehicle_clearance.gd")
 const GRAPH_FILE := "res://data/world/road_graph_v1.json"
 const PACK_FILE := "res://content/traffic/controls_v1.json"
 const SCENARIOS_FILE := "res://content/traffic/scenarios_v1.json"
 const DT := 1.0 / 30.0
-const MIN_POINT_SEPARATION_M := 3.6
+const LEGACY_POINT_THRESHOLD_M := 3.6  # Diagnostic only; never a collision rule.
 const MAX_WAIT_S := 30.0
 const MAX_RESERVATION_S := 30.0
 
@@ -79,6 +80,7 @@ func _run() -> void:
 	bad = pack_data.duplicate(true)
 	bad["junctions"][0]["mode"] = "signal"
 	_check(not loader.validate_pack(bad, invalid_sim), "unsupported all-green signal configuration rejected")
+	_clearance_regressions()
 	var full: bool = OS.get_cmdline_user_args().has("--full")
 	var duration_s: float = float(scenario_data["duration_s"]) if full else 15.0
 	var seeds: Array = scenario_data["seeds"] if full else [scenario_data["seeds"][0]]
@@ -95,12 +97,13 @@ func _run() -> void:
 				var label: String = "%s population=%d seed=%d" % [str(region["id"]), int(population), int(seed)]
 				var ok: bool = bool(first.get("ok", false)) and bool(second.get("ok", false))
 				_check(ok, label + " safety/directed routing")
-				_check(first.get("fingerprint") == second.get("fingerprint"), label + " seed replay deterministic")
+				_check(first.get("fingerprint") == second.get("fingerprint") and first.get("errors") == second.get("errors") and first.get("conflicts") == second.get("conflicts"), label + " seed replay deterministic")
 				if not ok:
 					printerr("CASE FAILURE ", label, " first=", first.get("errors", []), " second=", second.get("errors", []))
 					failed_cases += 1
 				print("CASE METRICS ", label, " peak_active=", first.get("peak_active"),
-					" min_point_gap_m=", first.get("min_gap_m"), " max_wait_s=", first.get("max_wait_s"),
+					" min_point_gap_m=", first.get("min_gap_m"), " benign_close_samples=", first.get("benign_close_samples"),
+					" genuine_conflicts=", first.get("conflicts"), " max_wait_s=", first.get("max_wait_s"),
 					" max_held_s=", first.get("max_held_s"), " transitions=", first.get("transitions"))
 				total_cases += 1
 	print("WORLD TRAFFIC TESTS: %d pass, %d fail; %d cases, %d failed cases, mode=%s" % [
@@ -124,6 +127,9 @@ func _case(region: Dictionary, population: int, seed_value: int, duration_s: flo
 	var waits: Dictionary = {}
 	var holds: Dictionary = {}
 	var errors: Array[String] = []
+	var conflicts: Dictionary = {}
+	var conflict_events: Dictionary = {}
+	var benign_close_samples := 0
 	var fingerprint: int = 1
 	var minimum_gap := INF
 	var max_wait := 0.0
@@ -180,9 +186,20 @@ func _case(region: Dictionary, population: int, seed_value: int, duration_s: flo
 				var b: Dictionary = states[j]
 				var d: float = a["position"].distance_to(b["position"])
 				minimum_gap = minf(minimum_gap, d)
-				if d < MIN_POINT_SEPARATION_M:
-					_add_error(errors, "point-agent overlap (<3.6 m) near %s / %s" % [
-						str(a["lane_id"]), str(b["lane_id"])])
+				var finding: Dictionary = VehicleClearance.diagnose(a, b)
+				if finding.is_empty():
+					if d < LEGACY_POINT_THRESHOLD_M:
+						benign_close_samples += 1
+					continue
+				var kind: String = str(finding["kind"])
+				var pair_key: String = "%d:%d:%s" % [int(a["id"]), int(b["id"]), kind]
+				if conflict_events.has(pair_key):
+					continue
+				conflict_events[pair_key] = true
+				conflicts[kind] = int(conflicts.get(kind, 0)) + 1
+				_add_error(errors, "%s: agents %d/%d at %s / %s, center=%.3fm, s=%.2f/%.2f" % [
+					kind, int(a["id"]), int(b["id"]), str(a["lane_id"]), str(b["lane_id"]),
+					d, float(a["s"]), float(b["s"])])
 		if tick % 300 == 0 and not sim.reservations.is_empty():
 			for jid in sim.reservations:
 				if not sim.agents.has(sim.reservations[jid]):
@@ -191,10 +208,35 @@ func _case(region: Dictionary, population: int, seed_value: int, duration_s: flo
 		_add_error(errors, "density spawn failed throughout scenario")
 	# Sparse local geography can mean fewer than requested 20 agents within 175m.
 	# Report the realized peak; do not silently count requested density as achieved.
-	return {"ok": errors.is_empty(), "errors": errors,
-		"fingerprint": fingerprint, "min_gap_m": minimum_gap if minimum_gap < INF else -1.0,
+	return {"ok": errors.is_empty(), "errors": errors, "conflicts": conflicts,
+		"benign_close_samples": benign_close_samples, "fingerprint": fingerprint,
+		"min_gap_m": minimum_gap if minimum_gap < INF else -1.0,
 		"max_wait_s": max_wait, "max_held_s": max_held,
 		"peak_active": peak_active, "transitions": total_transitions}
+
+
+func _clearance_regressions() -> void:
+	# Independent fixtures: do not suppress opposing, turning or merge collisions.
+	var a: Dictionary = VehicleClearance.fixture(0.0, 0.0, 1.0, 0.0, "lane_pair_ab", 10.0)
+	var opposing: Dictionary = VehicleClearance.fixture(0.0, 3.4, -1.0, 0.0, "lane_pair_ba", 10.0)
+	_check(VehicleClearance.diagnose(a, opposing).is_empty(), "legal 3.4m separated opposite lanes")
+	var intruder: Dictionary = VehicleClearance.fixture(0.0, 1.2, -1.0, 0.0, "lane_pair_ba", 10.0)
+	_check(not VehicleClearance.diagnose(a, intruder).is_empty(), "opposite-direction intrusion still fails")
+	var follower: Dictionary = VehicleClearance.fixture(4.8, 0.0, 1.0, 0.0, "lane_pair_ab", 14.8)
+	_check(VehicleClearance.diagnose(a, follower).get("kind") == "same_lane_rear_end", "same-lane rear-end clearance fails")
+	var distant: Dictionary = VehicleClearance.fixture(5.6, 0.0, 1.0, 0.0, "lane_pair_ab", 15.6)
+	_check(VehicleClearance.diagnose(a, distant).is_empty(), "safe same-lane headway passes")
+	var crossing: Dictionary = VehicleClearance.fixture(1.0, 0.0, 0.0, 1.0, "turn_crossing", 3.0)
+	_check(VehicleClearance.diagnose(a, crossing).get("kind") == "turning_body_overlap", "crossing turn footprints fail")
+	var adjacent: Dictionary = VehicleClearance.fixture(0.0, 2.4, -1.0, 0.0, "lane_pair_ba", 10.0)
+	_check(VehicleClearance.diagnose(a, adjacent).is_empty(), "separated parallel footprints pass")
+	var raised: Dictionary = VehicleClearance.fixture(0.0, 0.0, -1.0, 0.0, "lane_upper", 10.0, 4.0)
+	_check(VehicleClearance.diagnose(a, raised).is_empty(), "grade-separated overlapping XZ paths pass")
+	var merge_a: Dictionary = VehicleClearance.fixture(0.0, 0.0, 1.0, 0.0, "turn_merge_a", 3.0, 0.0, "lane_exit")
+	var merge_b: Dictionary = VehicleClearance.fixture(1.0, 1.0, 1.0, 0.0, "turn_merge_b", 3.0, 0.0, "lane_exit")
+	_check(VehicleClearance.diagnose(merge_a, merge_b).get("kind") == "unsafe_merge_body_overlap", "overlapping merge bodies fail")
+	var bad_heading: Dictionary = VehicleClearance.fixture(0.0, 0.0, 0.0, 0.0, "lane_unknown", 2.0)
+	_check(VehicleClearance.diagnose(a, bad_heading).get("kind") == "invalid_heading", "degenerate pose cannot silently pass")
 
 
 func _add_error(errors: Array[String], message: String) -> void:
