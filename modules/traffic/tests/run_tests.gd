@@ -27,6 +27,7 @@ func _run() -> void:
 	_test_graph()
 	_test_validation()
 	_test_spawn_and_follow()
+	_test_density_lifecycle()
 	_test_signal_and_stop()
 	_test_obstacle()
 	_test_merge_and_dead_end()
@@ -122,6 +123,21 @@ func _test_spawn_and_follow() -> void:
 	sim.set_player_state(Vector3(-55, 1, 2), 2.2)
 	_check(sim.spawn_agent("eb_in", 35.0) == -1, "no traffic spawn on player")
 	_check(sim.get_control_output(follower).has("throttle"), "vehicle adapter command has normalized drive inputs")
+
+
+func _test_density_lifecycle() -> void:
+	var sim = _simulation()
+	var manual_id: int = sim.spawn_agent("eb_in", 15.0)
+	_check(manual_id > 0, "explicitly managed NPC spawns with zero auto density")
+	for _i in range(90):
+		sim.step(DT, Vector3.ZERO)
+	_check(not sim.get_state(manual_id).is_empty(), "automatic density maintenance preserves manual NPCs")
+	var auto_id: int = sim.spawn_near(Vector3.ZERO, 100)
+	_check(auto_id > 0, "automatic spawn produces density-managed NPC")
+	for _i in range(60):
+		sim.step(DT, Vector3.ZERO)
+	_check(sim.get_state(auto_id).is_empty() and not sim.get_state(manual_id).is_empty(),
+		"zero auto density removes only automatically spawned NPCs")
 
 
 func _test_signal_and_stop() -> void:
