@@ -28,6 +28,7 @@ func _initialize() -> void:
 	_check(catalog.load_file("res://fixtures/events_v1.json"), "event catalog loads")
 	_test_validation()
 	_test_lifecycle_and_clock()
+	_test_standings_timeout_and_quit()
 	_test_sprint_results()
 	_test_circuit_laps()
 	_test_wrong_way_and_teleport()
@@ -80,6 +81,9 @@ func _test_validation() -> void:
 	bad["lanes"][0]["next_lane_ids"] = ["missing_lane"]
 	_check(not RaceRoute.validate_road_graph(bad).is_empty(), "reject unknown lane reference")
 	bad = graph.duplicate(true)
+	bad["lanes"][1]["id"] = bad["lanes"][0]["id"]
+	_check(not RaceRoute.validate_road_graph(bad).is_empty(), "reject duplicate lane ID")
+	bad = graph.duplicate(true)
 	bad["lanes"][0]["width_m"] = -1
 	_check(not RaceRoute.validate_road_graph(bad).is_empty(), "reject negative width")
 	var e = RaceEngine.new()
@@ -91,6 +95,9 @@ func _test_validation() -> void:
 	def = catalog.get_event("alder_street_circuit")
 	def["checkpoints"].reverse()
 	_check(not e.start_event(def), "reject wrong checkpoint order")
+	def = catalog.get_event("alder_street_circuit")
+	def["checkpoints"][1]["center"] = def["checkpoints"][0]["center"].duplicate()
+	_check(not e.start_event(def), "reject overlapping checkpoint gates")
 	def = catalog.get_event("north_ridge_climb")
 	def["laps"] = 2
 	_check(not e.start_event(def), "reject two-lap sprint")
@@ -123,6 +130,28 @@ func _test_lifecycle_and_clock() -> void:
 	_check(e.start_event(catalog.get_event("north_ridge_climb")), "start new race after abort")
 	e.quit_event()
 	e.return_to_free_roam()
+
+func _test_standings_timeout_and_quit() -> void:
+	var e = _engine("north_ridge_climb")
+	var ranks: Array[Dictionary] = e.standings()
+	_check(ranks[0]["id"] == "a" and ranks[1]["id"] == "b", "standings break exact progress tie by racer ID")
+	_drive(e, "b", 0.0, 60.0)
+	ranks = e.standings()
+	_check(ranks[0]["id"] == "b" and ranks[0]["position"] == 1, "leader changes on validated progress")
+	_check(e.quit_event(), "active event may be aborted")
+	_check(e.return_to_free_roam(), "abort returns cleanly to free roam")
+	var timeout = RaceEngine.new()
+	_check(timeout.load_road_graph(graph), "timeout graph loaded")
+	_check(timeout.register_racer("a"), "timeout racer registered")
+	var definition: Dictionary = catalog.get_event("north_ridge_climb")
+	definition["grid_seconds"] = 0
+	definition["countdown_seconds"] = 0
+	definition["max_race_seconds"] = 0.05
+	_check(timeout.start_event(definition), "timeout event starts")
+	timeout.tick(0.2)
+	_check(timeout.state == RaceEngine.State.FINISHED, "race timeout transitions to FINISHED")
+	_check(not timeout.get_racer("a")["finished"], "timeout does not invent a finisher")
+	_check(timeout.show_results() and timeout.return_to_free_roam(), "timeout results return cleanly")
 
 func _test_sprint_results() -> void:
 	var e = _engine("north_ridge_climb")
@@ -255,6 +284,10 @@ func _test_coarse_ticks_collision_and_altitude() -> void:
 	e.update_racer_state("a", airborne, Vector3.ZERO)
 	e.tick(0.1)
 	_check(e.needs_reset("a"), "vertical route shortcut rejected")
+	e.reset_racer("a")
+	e.update_racer_state("a", Vector3(2000, 20, 0), Vector3.ZERO)
+	e.tick(0.1)
+	_check(e.needs_reset("a") and e.get_racer("a")["last_invalid_reason"] == "out_of_bounds", "out-of-world reset detected")
 
 func _test_ai_controls() -> void:
 	var ai = RacerAI.new()
@@ -282,6 +315,8 @@ func _test_ai_controls() -> void:
 	var with_obstacle: Dictionary = ai.compute_controls(p, forward, 15.0, 0.016, [{"distance_m": 12.0, "lateral_m": 0.0}])
 	_check(with_obstacle["target_speed_mps"] < baseline["target_speed_mps"], "obstacle lowers target speed")
 	_check(with_obstacle["brake"] >= baseline["brake"], "obstacle does not decrease braking")
+	var off_lane: Dictionary = ai.compute_controls(p, forward, 15.0, 0.016, [{"distance_m": 12.0, "lateral_m": 10.0}])
+	_check(is_equal_approx(off_lane["target_speed_mps"], baseline["target_speed_mps"]), "off-lane obstacles ignored")
 	var offroad: Dictionary = ai.compute_controls(Vector3(900, 20, 900), forward, 4.0, 0.016)
 	_check(offroad["needs_reset"], "AI reports grossly off-route condition")
 	var straight_speed := ai._corner_speed(75.0)
