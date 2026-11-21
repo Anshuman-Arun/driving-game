@@ -17,6 +17,7 @@ var event: Dictionary = {}
 var route: RefCounted
 var checkpoints: Array[Dictionary] = []
 var racers: Dictionary = {}
+var starting_grid: Array[Dictionary] = []
 var elapsed_seconds: float = 0.0
 var grid_remaining: float = 0.0
 var countdown_remaining: float = 0.0
@@ -120,13 +121,79 @@ func start_event(definition: Dictionary) -> bool:
 	for optional in ["grid_seconds", "countdown_seconds", "finish_grace_seconds", "max_race_seconds", "max_speed_mps", "corridor_m", "collision_reset_speed_mps"]:
 		if definition.has(optional) and (not RaceRoute._number(definition[optional]) or float(definition[optional]) < 0.0):
 			return _fail("Invalid event parameter: " + optional)
+	# The production catalog supplies each registered car's route-relative pose.
+	# Legacy fixture events omit start_grid and retain the original zero-meter start.
+	var prepared_grid: Array[Dictionary] = []
+	if definition.has("start_grid"):
+		var raw_grid: Variant = definition["start_grid"]
+		if not (raw_grid is Array) or raw_grid.size() != racers.size():
+			return _fail("start_grid must contain exactly one entry per registered racer")
+		var used_ids: Dictionary = {}
+		for raw_slot in raw_grid:
+			if not (raw_slot is Dictionary) or not (raw_slot.get("id") is String):
+				return _fail("Invalid start_grid slot")
+			var racer_id: String = str(raw_slot["id"])
+			if not racers.has(racer_id) or used_ids.has(racer_id):
+				return _fail("Unknown or repeated start_grid racer: " + racer_id)
+			if not RaceRoute.valid_point(raw_slot.get("position")) or not RaceRoute.valid_point(raw_slot.get("forward")):
+				return _fail("Invalid start_grid position or forward: " + racer_id)
+			if not RaceRoute._number(raw_slot.get("route_s_m")):
+				return _fail("Invalid start_grid route_s_m: " + racer_id)
+			var arc: float = float(raw_slot["route_s_m"])
+			if arc < 0.0 or arc >= candidate.length_m or arc >= float(prepared[0]["s"]) - float(prepared[0]["radius_m"]) - 2.0:
+				return _fail("start_grid must precede first checkpoint: " + racer_id)
+			var pos: Vector3 = RaceRoute.point3(raw_slot["position"])
+			var heading: Vector3 = RaceRoute.point3(raw_slot["forward"])
+			var flat_heading := Vector2(heading.x, heading.z)
+			if flat_heading.length() < 0.9 or flat_heading.length() > 1.1 or absf(heading.y) > 0.2:
+				return _fail("start_grid requires a horizontal unit heading: " + racer_id)
+			if pos.distance_to(candidate.sample(arc)) > 2.0:
+				return _fail("start_grid position differs from route_s_m: " + racer_id)
+			var tangent: Vector2 = candidate.tangent(arc)
+			if flat_heading.normalized().dot(tangent) < 0.85:
+				return _fail("start_grid heading opposes route: " + racer_id)
+			var projected: Dictionary = candidate.project(pos, arc)
+			if absf(float(projected["s"]) - arc) > 2.0:
+				return _fail("start_grid projects onto the wrong route segment: " + racer_id)
+			prepared_grid.append({"id": racer_id, "position": pos, "forward": Vector3(flat_heading.x, 0.0, flat_heading.y).normalized(), "route_s_m": arc})
+			used_ids[racer_id] = true
+	else:
+		var ids: Array = racers.keys()
+		ids.sort()
+		var initial_heading: Vector2 = candidate.tangent(0.0)
+		for racer_id in ids:
+			prepared_grid.append({"id": racer_id, "position": candidate.sample(0.0),
+				"forward": Vector3(initial_heading.x, 0.0, initial_heading.y).normalized(), "route_s_m": 0.0})
 	route = candidate
 	event = definition.duplicate(true)
 	checkpoints = prepared
+	starting_grid = prepared_grid
 	_restart_racers()
 	last_error = ""
 	_set_state(State.GRID)
 	return true
+
+func _start_slot(id: String) -> Dictionary:
+	for slot in starting_grid:
+		if slot["id"] == id:
+			return slot
+	return {}
+
+func get_starting_pose(id: String) -> Dictionary:
+	## Host-facing physical spawn, with -Z in the direction of travel.
+	var slot: Dictionary = _start_slot(id)
+	if slot.is_empty():
+		return {}
+	var result: Dictionary = slot.duplicate(true)
+	result["transform"] = Transform3D(Basis.looking_at(slot["forward"], Vector3.UP), slot["position"])
+	return result
+
+func get_starting_grid() -> Array[Dictionary]:
+	## Authored order is preserved; legacy events produce deterministic ID order.
+	var result: Array[Dictionary] = []
+	for slot in starting_grid:
+		result.append(get_starting_pose(str(slot["id"])))
+	return result
 
 func _restart_racers() -> void:
 	elapsed_seconds = 0.0
@@ -136,15 +203,34 @@ func _restart_racers() -> void:
 	countdown_remaining = float(event.get("countdown_seconds", 3.0))
 	for id in racers.keys():
 		var is_player: bool = racers[id].get("is_player", false)
-		var start: Vector3 = route.sample(0.0)
+		var slot: Dictionary = _start_slot(id)
+		var start: Vector3 = slot["position"]
+		var arc: float = float(slot["route_s_m"])
 		racers[id] = {
 			"id": id, "is_player": is_player,
+			"start_position": start, "start_forward": slot["forward"], "start_s": arc,
 			"position": start, "pending_position": start, "velocity": Vector3.ZERO,
-			"route_s": 0.0, "continuous_s": 0.0, "progress_m": 0.0,
+			"route_s": arc, "continuous_s": arc, "progress_m": arc,
 			"lap": 1, "checkpoint_index": 0, "invalid_laps": 0,
 			"needs_reset": false, "last_invalid_reason": "", "wrong_way": false,
 			"finished": false, "finish_time": INF
 		}
+
+func synchronize_racer_spawn(id: String, position: Vector3) -> bool:
+	## Pre-race physical placement only. Never changes progress or bypasses
+	## racing teleport/anti-cut checks. The host must hold cars during countdown.
+	if not racers.has(id) or not (state in [State.GRID, State.COUNTDOWN]):
+		return _fail("Spawn synchronization is only available on GRID or COUNTDOWN")
+	if not (is_finite(position.x) and is_finite(position.y) and is_finite(position.z)):
+		return _fail("Non-finite physical spawn: " + id)
+	var r: Dictionary = racers[id]
+	if position.distance_to(r["start_position"]) > 2.5:
+		return _fail("Physical spawn differs from authored grid: " + id)
+	r["position"] = position
+	r["pending_position"] = position
+	r["velocity"] = Vector3.ZERO
+	last_error = ""
+	return true
 
 func restart_event() -> bool:
 	if event.is_empty() or state == State.IDLE or state == State.FREE_ROAM:
@@ -162,6 +248,8 @@ func update_racer_state(id: String, position: Vector3, velocity: Vector3) -> boo
 	for value in [position.x, position.y, position.z, velocity.x, velocity.y, velocity.z]:
 		if not is_finite(value):
 			return _fail("Non-finite racer position or velocity: " + id)
+	if state == State.GRID or state == State.COUNTDOWN:
+		return synchronize_racer_spawn(id, position)
 	r["pending_position"] = position
 	r["velocity"] = velocity
 	last_error = ""
@@ -333,13 +421,14 @@ func reset_racer(id: String) -> Dictionary:
 	if r["finished"]:
 		return {}
 	var lap: int = r["lap"]
-	var p: Vector3 = route.sample(0.0)
-	var tang: Vector2 = route.tangent(0.0)
+	var restart_s: float = float(r["start_s"]) if lap == 1 else 0.0
+	var p: Vector3 = r["start_position"] if lap == 1 else route.sample(0.0)
+	var tang: Vector2 = route.tangent(restart_s)
 	r["position"] = p
 	r["pending_position"] = p
 	r["velocity"] = Vector3.ZERO
-	r["route_s"] = 0.0
-	r["continuous_s"] = float(lap - 1) * route.length_m
+	r["route_s"] = restart_s
+	r["continuous_s"] = float(lap - 1) * route.length_m + restart_s
 	r["progress_m"] = r["continuous_s"]
 	r["checkpoint_index"] = 0
 	r["needs_reset"] = false
@@ -349,6 +438,13 @@ func reset_racer(id: String) -> Dictionary:
 
 func get_racer(id: String) -> Dictionary:
 	return racers[id].duplicate(true) if racers.has(id) else {}
+
+func get_results() -> Dictionary:
+	## Authoritative classified results, only after the event has ended.
+	if not (state in [State.FINISHED, State.RESULTS]):
+		return {}
+	return {"event_id": event.get("id", ""), "elapsed_seconds": elapsed_seconds,
+		"standings": standings(), "state": state}
 
 func standings() -> Array[Dictionary]:
 	var list: Array[Dictionary] = []
