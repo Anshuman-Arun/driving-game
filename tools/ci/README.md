@@ -4,7 +4,7 @@ This directory and `.github/workflows/` are the **only** files owned by the CI b
 
 ## Workflows and branch isolation
 
-`validate-workstreams.yml` creates **five separate matrix job instances**. Each checks out the CI scripts from this PR and independently checks out the feature branch below into `worktree/` (never from `main`):
+`validate-workstreams.yml` runs on pushes to `main` and `feat/ci-validation`, and on pull requests targeting `main` (not just changes to CI scripts). It creates **five separate matrix job instances**. Each checks out the CI scripts from this PR and independently checks out the feature branch below into `worktree/` (never from `main`):
 
 | Job | Checked-out branch | Fatal validation gates |
 | --- | --- | --- |
