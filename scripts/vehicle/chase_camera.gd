@@ -15,9 +15,12 @@ var _previous_speed := 0.0
 var _clearance := 1.0
 var _previous_clearance := 1.0
 var _snap_pending := true
+var _hood_mount := Transform3D(Basis.IDENTITY, HOOD_MOUNT)
 
 func setup(car: RigidBody3D) -> void:
 	target = car
+	var hood := car.get_node_or_null("CameraMounts/Hood") as Marker3D
+	_hood_mount = hood.transform if hood != null else Transform3D(Basis.IDENTITY, HOOD_MOUNT)
 	# The camera writes render-frame transforms in world space.
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	top_level = true
@@ -91,11 +94,12 @@ func _place_camera(pose: Transform3D, yaw: float, speed: float, clearance: float
 	var base_fov := 76.0 if mode == 2 else 70.0
 	fov = base_fov + 13.0 * clampf(speed / 45.0, 0.0, 1.0)
 	if mode == 2:
-		var mount := pose * HOOD_MOUNT
-		var focus := pose * HOOD_FOCUS
-		var up := pose.basis.y.lerp(Vector3.UP, 0.65).normalized()
+		var view := pose * _hood_mount
+		var mount := view.origin
+		var focus := view * (HOOD_FOCUS - HOOD_MOUNT)
+		var up := view.basis.y.lerp(Vector3.UP, 0.65).normalized()
 		if absf(up.dot(mount.direction_to(focus))) > 0.98:
-			up = pose.basis.y
+			up = view.basis.y
 		global_transform = Transform3D(Basis.IDENTITY, mount).looking_at(focus, up)
 		return
 	var pivot := pose.origin + CHASE_PIVOT

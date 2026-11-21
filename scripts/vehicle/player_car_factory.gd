@@ -1,13 +1,24 @@
 class_name PlayerCarFactory
 extends RefCounted
-## The Vela GT is an original, geometry-only fictional RWD coupe.
+## Core vehicle presets share a temporary visual and collision envelope.
 ## Physics are provided by DAShoe1 Easy Vehicle Physics Vehicle/Wheel.
 const VehicleScript = preload("res://addons/gevp/scripts/vehicle.gd")
 const WheelScript = preload("res://addons/gevp/scripts/wheel.gd")
 
-static func create() -> Vehicle:
+const DEFAULT_CAR := "vela_gt"
+const PRESETS := {
+	"vela_gt": {"name": "VelaGT", "mass": 1390.0, "torque": 480.0, "final_drive": 3.6, "front_split": 0.0, "paint": Color(0.075, 0.21, 0.41)},
+	"orion_rs": {"name": "OrionRS", "mass": 1190.0, "torque": 380.0, "final_drive": 3.9, "front_split": 0.0, "paint": Color(0.08, 0.45, 0.34)},
+	"kestrel_xr": {"name": "KestrelXR", "mass": 1540.0, "torque": 575.0, "final_drive": 3.3, "front_split": 0.35, "paint": Color(0.33, 0.22, 0.52)},
+}
+
+static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
+	if not PRESETS.has(car_id):
+		car_id = DEFAULT_CAR
+	var preset: Dictionary = PRESETS[car_id]
 	var car: Vehicle = VehicleScript.new()
-	car.name = "VelaGT"
+	car.name = preset["name"]
+	car.set_meta("vehicle_id", car_id)
 	car.collision_layer = 2
 	car.collision_mask = 1
 	car.contact_monitor = true
@@ -17,12 +28,12 @@ static func create() -> Vehicle:
 	car.angular_damp = 0.10
 
 	# Simcade starting tune derived from GEVP's simcade example, re-authored for Vela GT.
-	car.vehicle_mass = 1390.0
-	car.max_torque = 480.0
+	car.vehicle_mass = preset["mass"]
+	car.max_torque = preset["torque"]
 	car.max_rpm = 7100.0
 	car.idle_rpm = 950.0
-	car.final_drive = 3.6
-	car.front_torque_split = 0.0  # rear wheel drive
+	car.final_drive = preset["final_drive"]
+	car.front_torque_split = preset["front_split"]
 	car.automatic_transmission = true
 	car.front_weight_distribution = 0.52
 	car.center_of_gravity_height_offset = -0.22
@@ -68,24 +79,27 @@ static func create() -> Vehicle:
 	collider.position = Vector3(0, 0.17, 0)
 	car.add_child(collider)
 
-	var blue := _material(Color(0.075, 0.21, 0.41), 0.34, 0.42)
+	var fallback := Node3D.new()
+	fallback.name = "FallbackBody"
+	car.add_child(fallback)
+	var paint := _material(preset["paint"], 0.34, 0.42)
 	var dark := _material(Color(0.015, 0.025, 0.040), 0.65, 0.0)
 	var glass := _material(Color(0.042, 0.10, 0.15), 0.15, 0.2)
 	var rim := _material(Color(0.52, 0.58, 0.63), 0.31, 0.65)
 	var light := _material(Color(0.96, 0.93, 0.73), 0.2, 0.0)
 	var red := _material(Color(0.72, 0.06, 0.035), 0.24, 0.0)
-	_box(car, "SculptedBody", Vector3(1.91, 0.36, 4.25), Vector3(0, 0.23, 0.0), blue)
-	_box(car, "Nose", Vector3(1.77, 0.16, 1.15), Vector3(0, 0.29, -1.49), blue)
-	_box(car, "Cabin", Vector3(1.55, 0.40, 2.00), Vector3(0, 0.64, 0.16), glass)
-	_box(car, "Roof", Vector3(1.43, 0.09, 1.18), Vector3(0, 0.88, 0.23), blue)
-	_box(car, "FrontGrille", Vector3(1.36, 0.16, 0.06), Vector3(0, 0.19, -2.13), dark)
-	_box(car, "RearDiffuser", Vector3(1.46, 0.18, 0.08), Vector3(0, 0.18, 2.11), dark)
+	_box(fallback, "SculptedBody", Vector3(1.91, 0.36, 4.25), Vector3(0, 0.23, 0.0), paint)
+	_box(fallback, "Nose", Vector3(1.77, 0.16, 1.15), Vector3(0, 0.29, -1.49), paint)
+	_box(fallback, "Cabin", Vector3(1.55, 0.40, 2.00), Vector3(0, 0.64, 0.16), glass)
+	_box(fallback, "Roof", Vector3(1.43, 0.09, 1.18), Vector3(0, 0.88, 0.23), paint)
+	_box(fallback, "FrontGrille", Vector3(1.36, 0.16, 0.06), Vector3(0, 0.19, -2.13), dark)
+	_box(fallback, "RearDiffuser", Vector3(1.46, 0.18, 0.08), Vector3(0, 0.18, 2.11), dark)
 	for side in [-1.0, 1.0]:
-		_box(car, "Headlamp", Vector3(0.32, 0.11, 0.12), Vector3(side * 0.72, 0.36, -2.08), light)
-		_box(car, "TailLamp", Vector3(0.36, 0.12, 0.09), Vector3(side * 0.70, 0.36, 2.10), red)
-		_box(car, "SideSkirt", Vector3(0.12, 0.14, 2.15), Vector3(side * 0.94, 0.06, 0.02), dark)
-		_box(car, "Mirror", Vector3(0.24, 0.10, 0.31), Vector3(side * 0.83, 0.66, -0.49), blue)
-	_box(car, "SpoilerBlade", Vector3(1.70, 0.075, 0.32), Vector3(0, 0.63, 1.98), dark)
+		_box(fallback, "Headlamp", Vector3(0.32, 0.11, 0.12), Vector3(side * 0.72, 0.36, -2.08), light)
+		_box(fallback, "TailLamp", Vector3(0.36, 0.12, 0.09), Vector3(side * 0.70, 0.36, 2.10), red)
+		_box(fallback, "SideSkirt", Vector3(0.12, 0.14, 2.15), Vector3(side * 0.94, 0.06, 0.02), dark)
+		_box(fallback, "Mirror", Vector3(0.24, 0.10, 0.31), Vector3(side * 0.83, 0.66, -0.49), paint)
+	_box(fallback, "SpoilerBlade", Vector3(1.70, 0.075, 0.32), Vector3(0, 0.63, 1.98), dark)
 	for front in [true, false]:
 		for left in [true, false]:
 			var wheel = WheelScript.new()
@@ -132,7 +146,18 @@ static func create() -> Vehicle:
 			else:
 				car.rear_right_wheel = wheel
 			car.add_child(wheel)
+	var mounts := Node3D.new()
+	mounts.name = "CameraMounts"
+	car.add_child(mounts)
+	_marker(mounts, "Hood", Vector3(0.0, 0.86, -0.92))
+	_marker(mounts, "Cockpit", Vector3(-0.34, 0.94, -0.05))
 	return car
+
+static func _marker(parent: Node3D, label: String, offset: Vector3) -> void:
+	var mount := Marker3D.new()
+	mount.name = label
+	mount.position = offset
+	parent.add_child(mount)
 
 static func _material(color: Color, roughness: float, metallic: float) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()

@@ -40,7 +40,7 @@ func _run() -> void:
 	if _graphical:
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	var started := Time.get_ticks_msec()
-	var main: PackedScene = load(ProjectSettings.get_setting("application/run/main_scene"))
+	var main: PackedScene = load("res://scenes/free_roam/aster_valley.tscn")
 	scene = main.instantiate()
 	root.add_child(scene)
 	await _step(100)
@@ -56,9 +56,10 @@ func _run() -> void:
 		and report["physical_corridors"] == 16 and report["junction_pads"] == 11,
 		"canonical full world and every corridor and junction loaded")
 	var bodies := scene.find_children("*", "StaticBody3D", true, false)
-	_check(bodies.size() == 283 and bodies.size() == report["static_colliders"]
-		and scene.find_children("*", "CollisionShape3D", true, false).size() == 284,
-		"one collider per terrain chunk, corridor and pad plus the Vela chassis")
+	_check(report["shoulder_colliders"] == 27 and bodies.size() == 310
+		and bodies.size() == report["static_colliders"]
+		and scene.find_children("*", "CollisionShape3D", true, false).size() == 311,
+		"one collider per terrain chunk, deck, shoulder or skirt plus the Vela chassis")
 	for body in bodies:
 		if not body.has_meta("world_surface") or body.get_child_count() != 1:
 			_check(false, "all generated collisions come from the tagged World Runtime")
@@ -97,6 +98,7 @@ func _run() -> void:
 	var edge_stats: Dictionary = await _drive(edge, 7.2, "04-road-grass-road")
 	_check(edge_stats.get("grass", false) and edge_stats.get("road_reentry", false),
 		"wheel contacts transition from actual asphalt to grass and back")
+	_check(edge_stats.get("shoulder", false), "Vela wheels hit the separate dirt shoulder")
 	_check(edge_stats.get("grip_step", INF) <= 0.15, "road reentry retains bounded tire grip steps")
 
 	var route_end := car.global_position
@@ -213,6 +215,7 @@ func _drive(path: PackedVector3Array, speed: float, name: String) -> Dictionary:
 	var grass := false
 	var dirt := false
 	var road_reentry := false
+	var shoulder := false
 	_contact_image = null
 	var contact_capture_queued := false
 	if _graphical:
@@ -251,8 +254,10 @@ func _drive(path: PackedVector3Array, speed: float, name: String) -> Dictionary:
 			var wheel: Wheel = car.wheel_array[i]
 			peak_grip_step = maxf(peak_grip_step, absf(wheel.current_cof - prior_grip[i]))
 			prior_grip[i] = wheel.current_cof
-			if wheel.is_colliding() and str(wheel.get_collider().name).begins_with("Junction_"):
-				pad = true
+			if wheel.is_colliding():
+				var collider: StaticBody3D = wheel.get_collider()
+				pad = pad or str(collider.name).begins_with("Junction_")
+				shoulder = shoulder or (collider.get_meta("world_surface", "") == "shoulder" and wheel.surface_type == "Dirt")
 		if _graphical and not _capture_dir.is_empty() and not contact_capture_queued:
 			if (name.begins_with("02") and pad) or (name.begins_with("04") and _contacts("Grass") >= 3):
 				contact_capture_queued = true
@@ -274,7 +279,7 @@ func _drive(path: PackedVector3Array, speed: float, name: String) -> Dictionary:
 		_check(_contact_image.save_png(_capture_dir.path_join(name + "-contact.png")) == OK,
 			"screenshot during contact " + name)
 	await _capture(name)
-	return {"pad": pad, "dirt": dirt, "grass": grass, "road_reentry": road_reentry,
+	return {"pad": pad, "dirt": dirt, "grass": grass, "road_reentry": road_reentry, "shoulder": shoulder,
 		"gain": gain, "grip_step": peak_grip_step}
 
 func _set_controls(steer: float, speed_error: float) -> void:

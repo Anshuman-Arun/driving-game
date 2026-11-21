@@ -2,7 +2,7 @@
 
 ## What boots
 
-The root Godot project opens `scenes/free_roam/aster_valley.tscn`. This scene calls the existing World Runtime in full-world mode and creates one Vela GT using the corrected Core factory, adapter, input, and chase/hood camera. World build uses the original coordinate system and canonical files in `data/world/`.
+The root Game Shell launches `scenes/free_roam/aster_valley.tscn` when you choose Play. See the [garage integration follow-up](GARAGE_WORLD_QA.md) for the current menu, profiles, and separate shoulder collisions. The measurements below describe the earlier PR #20 baseline. This scene calls the existing World Runtime in full-world mode and creates one Vela GT using the corrected Core factory, adapter, input, and chase/hood camera. World build uses the original coordinate system and canonical files in `data/world/`.
 
 The World Runtime exposes each collider's source surface as metadata. The scene translates asphalt, gravel, and terrain into the matching GEVP groups. One road or pad body still covers its deck and shoulders. The per-wheel grip blend from Core handles changes between colliders. Spawn and respawn project onto the canonical travel lanes, reserve 26 m from lane endpoints, and ray-check the center and all four wheel positions. Out-of-map recovery uses the same lane search. The prototype remains individually launchable at `res://scenes/bootstrap/main.tscn`.
 

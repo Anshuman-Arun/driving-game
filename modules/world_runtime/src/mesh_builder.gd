@@ -30,7 +30,7 @@ func build(parent: Node3D, world: Variant, all_chunks: bool, focus_xz: Vector2,
 		"terrain_chunks": 0, "terrain_vertices": 0, "terrain_triangles": 0,
 		"physical_corridors": 0, "road_triangles": 0, "road_vertices": 0,
 		"junction_pads": 0, "junction_triangles": 0, "junction_vertices": 0,
-		"static_colliders": 0, "mesh_surface_count": 0,
+		"static_colliders": 0, "shoulder_colliders": 0, "mesh_surface_count": 0,
 		"turn_paths_covered": 0, "generation_ms": 0,
 		"estimated_vertex_bytes": 0
 	}
@@ -106,17 +106,40 @@ func _attach_mesh(parent: Node3D, label: String, mesh: ArrayMesh, material_count
 	instance.mesh = mesh
 	parent.add_child(instance)
 	stats["mesh_surface_count"] += material_count
-	if make_colliders:
-		var body := StaticBody3D.new()
-		body.name = label + "_Collision"
-		body.set_meta("world_surface", surface)
-		parent.add_child(body)
-		var shape := CollisionShape3D.new()
-		shape.shape = mesh.create_trimesh_shape()
-		if shape.shape is ConcavePolygonShape3D:
-			shape.shape.backface_collision = true
-		body.add_child(shape)
-		stats["static_colliders"] += 1
+	if not make_colliders:
+		return
+	if mesh.get_surface_count() == 1:
+		_attach_collider(parent, label + "_Collision", mesh.create_trimesh_shape(), surface)
+		return
+
+	# The road/pad mesh has two unindexed surfaces. Give each triangle to exactly
+	# one collider so each wheel ray gets the correct grip at the shoulder.
+	_attach_collider(parent, label + "_Collision", _surface_shape(mesh, 0), surface)
+	_attach_collider(parent, label + "_Shoulder_Collision", _surface_shape(mesh, 1), "shoulder")
+	stats["shoulder_colliders"] += 1
+
+func _surface_shape(mesh: ArrayMesh, surface_index: int) -> ConcavePolygonShape3D:
+	var shape := ConcavePolygonShape3D.new()
+	var arrays := mesh.surface_get_arrays(surface_index)
+	shape.set_faces(arrays[Mesh.ARRAY_VERTEX])
+	return shape
+
+func _attach_collider(parent: Node3D, label: String, geometry: ConcavePolygonShape3D, surface: String) -> void:
+	var body := StaticBody3D.new()
+	body.name = label
+	body.set_meta("world_surface", surface)
+	var group := "Dirt"
+	if surface == "terrain":
+		group = "Grass"
+	elif surface == "asphalt":
+		group = "Road"
+	body.add_to_group(group)
+	parent.add_child(body)
+	var collider := CollisionShape3D.new()
+	geometry.backface_collision = true
+	collider.shape = geometry
+	body.add_child(collider)
+	stats["static_colliders"] += 1
 
 func _terrain_normal(ix: int, iz: int) -> Vector3:
 	var sx: float = source.height_index(ix - 1, iz) - source.height_index(ix + 1, iz)

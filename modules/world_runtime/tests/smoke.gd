@@ -35,8 +35,8 @@ func _execute() -> void:
 		_fail("No junction pads generated.")
 		return
 	if world.report["static_colliders"] != (world.report["terrain_chunks"] +
-		world.report["physical_corridors"] + world.report["junction_pads"]):
-		_fail("Each generated mesh must have an independent collider.")
+		world.report["physical_corridors"] + world.report["junction_pads"] + world.report["shoulder_colliders"]):
+		_fail("Each generated surface must have one collision shape.")
 		return
 	for ix in [0, 32, 64, 200, 500]:
 		for iz in [0, 32, 64, 200, 500]:
@@ -217,7 +217,7 @@ func _execute() -> void:
 		"terrain_chunks", "terrain_vertices", "terrain_triangles",
 		"physical_corridors", "road_vertices", "road_triangles",
 		"junction_pads", "junction_vertices", "junction_triangles",
-		"static_colliders", "turn_paths_covered"
+		"static_colliders", "shoulder_colliders", "turn_paths_covered"
 	]
 	for key in deterministic_keys:
 		if first_report[key] != world.report[key]:
