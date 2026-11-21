@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/prototypes/driving_test.tscn" id="1_test"]
+
+[node name="AsterValley" type="Node3D"]
+
+[node name="DrivingTest" parent="." instance=ExtResource("1_test")]
