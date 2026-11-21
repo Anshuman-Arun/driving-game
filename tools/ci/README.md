@@ -18,7 +18,7 @@ A test failure, missing expected file, missing branch, required engine download/
 
 The standard Linux x86_64 Godot 4.7.2 stable editor is downloaded only from `godotengine/godot-builds` and checked against the official release SHA-256 `cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4`. Node 22.16.0, Python 3.12.12 and Actions dependencies are pinned. Jobs run on `ubuntu-24.04`.
 
-All command output is streamed to the Actions log and to named `ci-out/*.log` files; `SUMMARY.md` is added to the Actions job summary. Uploads run even on failure and are retained for 14 days. Initial checkout/setup failures have Actions step logs even if no artifact is yet present.
+All command output is streamed to the Actions log and to named `ci-out/*.log` files; `SUMMARY.md` is added to the Actions job summary. Uploads run even on failure and are retained for 14 days **when repository storage quota permits**. On artifact-upload failure (the repository currently reports a full quota), the upload is best-effort so it does not mask a passing or failing validation gate; the workflow issues an explicit warning and appends log tails to the job summary. Full command output remains in the Actions job logs. Initial checkout/setup failures also have Actions step logs.
 
 ## Manually rerun on a selected existing branch
 

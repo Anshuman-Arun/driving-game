@@ -89,10 +89,27 @@ jobs:
             printf '### NOT EXECUTED\n\nBranch checkout or dependency setup failed before tests ran. Inspect job logs.\n' >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Retain logs and evidence
+        id: upload
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: manual-${{ inputs.track }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ci-out/
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Warn and surface logs when artifact storage is unavailable
+        if: always() && steps.upload.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "::warning::Artifact upload failed; GitHub Actions job logs and the job summary remain available. Test status is unaffected."
+          {
+            printf '### Artifact upload unavailable\n\nGitHub rejected the log archive (repository storage quota may be full). Full command output is retained in this Actions job log.\n\n'
+            for file in ci-out/*.log; do
+              [[ -f "$file" ]] || continue
+              printf '#### %s — last 35 lines\n\n' "$(basename "$file")"
+              tail -n 35 "$file" | sed 's/^/    /'
+              printf '\n'
+            done
+          } >> "$GITHUB_STEP_SUMMARY"

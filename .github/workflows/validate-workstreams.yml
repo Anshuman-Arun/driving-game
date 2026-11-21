@@ -100,10 +100,27 @@ jobs:
             printf '### ${{ matrix.track }}: NOT EXECUTED\n\nCheckout, dependency setup or download failed before tests started. See step logs.\n\nHeadless success never establishes visual or controller correctness.\n' >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Retain failure and success evidence
+        id: upload
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: validation-${{ matrix.track }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ci-out/
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Warn and surface logs when artifact storage is unavailable
+        if: always() && steps.upload.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "::warning::Artifact upload failed; GitHub Actions job logs and the job summary remain available. Test status is unaffected."
+          {
+            printf '### Artifact upload unavailable\n\nGitHub rejected the log archive (repository storage quota may be full). Full command output is retained in this Actions job log.\n\n'
+            for file in ci-out/*.log; do
+              [[ -f "$file" ]] || continue
+              printf '#### %s — last 35 lines\n\n' "$(basename "$file")"
+              tail -n 35 "$file" | sed 's/^/    /'
+              printf '\n'
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
