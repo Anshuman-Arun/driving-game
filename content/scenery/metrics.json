@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "seed": 20261121,
+  "source": {
+    "world_pr": 3,
+    "art_pr": 7,
+    "race_pr": 10,
+    "race_head_sha": "4bd2857019ebf7f4e11a358c6dfdb5b7127bc420",
+    "road_git_blob": "9bba378d68879df3baed2c97a4885c0adde88406",
+    "terrain_git_blob": "d951ce11a831dad5430b4c7157e2296f73c6b151",
+    "art_manifest_git_blob": "7c67ab03c29169c48432b36df6ae7a429a8decee"
+  },
+  "source_road_corridors": 16,
+  "source_turn_paths": 72,
+  "source_r16_samples": 251001,
+  "source_race_exclusion_zones": 102,
+  "total_objects": 2791,
+  "near_mesh_triangles_estimate": 1064164,
+  "minimum_asset_cell_batches": 348,
+  "full_world_near_mesh_component_draw_batches_estimate": 1857,
+  "regions": {
+    "alder_town": {
+      "count": 200,
+      "by_asset": {
+        "garage": 1,
+        "house": 23,
+        "lamp": 52,
+        "bollard": 13,
+        "shrub": 85,
+        "broadleaf": 26
+      },
+      "near_mesh_triangles_estimate": 117354,
+      "minimum_asset_cell_batches": 33,
+      "near_mesh_component_draw_batches_estimate": 210
+    },
+    "cedar_woods": {
+      "count": 892,
+      "by_asset": {
+        "arch": 1,
+        "rock": 127,
+        "pine": 511,
+        "shrub": 90,
+        "boulder": 120,
+        "warning": 17,
+        "quarry": 1,
+        "barrier": 25
+      },
+      "near_mesh_triangles_estimate": 234896,
+      "minimum_asset_cell_batches": 99,
+      "near_mesh_component_draw_batches_estimate": 512
+    },
+    "north_ridge": {
+      "count": 725,
+      "by_asset": {
+        "overlook": 1,
+        "pine": 163,
+        "boulder": 289,
+        "rock": 125,
+        "guardrail": 137,
+        "warning": 10
+      },
+      "near_mesh_triangles_estimate": 175488,
+      "minimum_asset_cell_batches": 93,
+      "near_mesh_component_draw_batches_estimate": 440
+    },
+    "green_valley": {
+      "count": 561,
+      "by_asset": {
+        "windmill": 1,
+        "barn": 3,
+        "shrub": 173,
+        "broadleaf": 204,
+        "hay": 72,
+        "pine": 47,
+        "fence": 61
+      },
+      "near_mesh_triangles_estimate": 367638,
+      "minimum_asset_cell_batches": 73,
+      "near_mesh_component_draw_batches_estimate": 466
+    },
+    "eastwater_lake": {
+      "count": 413,
+      "by_asset": {
+        "pier": 1,
+        "rock": 146,
+        "pine": 82,
+        "broadleaf": 10,
+        "shrub": 57,
+        "boulder": 81,
+        "fence": 19,
+        "warning": 17
+      },
+      "near_mesh_triangles_estimate": 168788,
+      "minimum_asset_cell_batches": 50,
+      "near_mesh_component_draw_batches_estimate": 241
+    }
+  },
+  "lake": {
+    "water_height_m": 5.35,
+    "quads": 5143,
+    "triangles": 10286
+  },
+  "rejects": {
+    "bounds": 1434,
+    "road": 676,
+    "turn": 28,
+    "junction": 0,
+    "slope": 1255,
+    "water": 848,
+    "landmark": 3,
+    "spacing": 1425,
+    "no_location": 76,
+    "foundation": 19,
+    "race_gate": 23
+  },
+  "landmark_ids": [
+    "alder_garage",
+    "eastwater_pier",
+    "old_quarry",
+    "pine_arch",
+    "ridge_lookout",
+    "valley_windmill"
+  ],
+  "culling": {
+    "cell_size_m": 128,
+    "near_m": 170,
+    "far_m": 450,
+    "presets": [
+      "low",
+      "medium",
+      "high"
+    ]
+  },
+  "caveat": "Minimum theoretical one-surface draw batches and source-asset triangle arithmetic, not measured GPU performance; some scene assets contain multiple surfaces."
+}

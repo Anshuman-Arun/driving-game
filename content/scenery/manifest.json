@@ -1,0 +1,383 @@
+{
+  "schema_version": 1,
+  "seed": 20261121,
+  "coordinate_system": "godot_y_up",
+  "units": "meters",
+  "region_definitions": [
+    {
+      "id": "alder_town",
+      "name": "Alder Town",
+      "center": [
+        -620,
+        560
+      ],
+      "radius_m": 310,
+      "description": "Garage, civic square, compact town streets"
+    },
+    {
+      "id": "cedar_woods",
+      "name": "Cedar Woods",
+      "center": [
+        -700,
+        -320
+      ],
+      "radius_m": 450,
+      "description": "Dense conifers and enclosed technical curves"
+    },
+    {
+      "id": "north_ridge",
+      "name": "North Ridge",
+      "center": [
+        230,
+        -650
+      ],
+      "radius_m": 590,
+      "description": "High mountain terrain, switchbacks, crest"
+    },
+    {
+      "id": "green_valley",
+      "name": "Green Valley",
+      "center": [
+        45,
+        170
+      ],
+      "radius_m": 440,
+      "description": "Fields, orchard and fast flowing roads"
+    },
+    {
+      "id": "eastwater_lake",
+      "name": "Eastwater Lake",
+      "center": [
+        700,
+        450
+      ],
+      "radius_m": 335,
+      "description": "Lakeside driving and shoreline viewpoints"
+    }
+  ],
+  "landmark_definitions": [
+    {
+      "id": "alder_garage",
+      "name": "Alder Garage",
+      "x": -645,
+      "z": 575,
+      "kind": "garage",
+      "y": 39.935
+    },
+    {
+      "id": "pine_arch",
+      "name": "Cedar Stone Arch",
+      "x": -690,
+      "z": -330,
+      "kind": "landmark",
+      "y": 92.025
+    },
+    {
+      "id": "ridge_lookout",
+      "name": "Starfall Overlook",
+      "x": 620,
+      "z": -265,
+      "kind": "scenic_overlook",
+      "y": 121.98
+    },
+    {
+      "id": "valley_windmill",
+      "name": "Green Valley Windmill",
+      "x": 70,
+      "z": 180,
+      "kind": "landmark",
+      "y": 67.885
+    },
+    {
+      "id": "eastwater_pier",
+      "name": "Eastwater Pier",
+      "x": 725,
+      "z": 465,
+      "kind": "lake",
+      "y": 23.519
+    },
+    {
+      "id": "old_quarry",
+      "name": "Old Quarry",
+      "x": -170,
+      "z": -430,
+      "kind": "landmark",
+      "y": 125.18
+    }
+  ],
+  "sources": {
+    "world_pr": 3,
+    "art_pr": 7,
+    "race_pr": 10,
+    "race_head_sha": "4bd2857019ebf7f4e11a358c6dfdb5b7127bc420",
+    "road_git_blob": "9bba378d68879df3baed2c97a4885c0adde88406",
+    "terrain_git_blob": "d951ce11a831dad5430b4c7157e2296f73c6b151",
+    "art_manifest_git_blob": "7c67ab03c29169c48432b36df6ae7a429a8decee"
+  },
+  "assets": {
+    "pine": {
+      "path": "assets/curated/models/environment/pine_tree_lod0.glb",
+      "lod": "assets/curated/models/environment/pine_tree_lod1.glb",
+      "tri": 108,
+      "surfaces": 7,
+      "lod_tri": 57,
+      "lod_surfaces": 4,
+      "r": 2.5,
+      "slope": 28,
+      "road": 12,
+      "turn": 20,
+      "draw": 470,
+      "kind": "natural"
+    },
+    "broadleaf": {
+      "path": "assets/curated/models/environment/broadleaf_tree.glb",
+      "tri": 960,
+      "surfaces": 8,
+      "r": 3.2,
+      "slope": 20,
+      "road": 13,
+      "turn": 21,
+      "draw": 240,
+      "kind": "natural"
+    },
+    "shrub": {
+      "path": "assets/curated/models/environment/shrub_cluster.glb",
+      "tri": 924,
+      "surfaces": 7,
+      "r": 1.6,
+      "slope": 32,
+      "road": 9.5,
+      "turn": 18,
+      "draw": 145,
+      "kind": "natural"
+    },
+    "boulder": {
+      "path": "assets/curated/models/environment/boulder.glb",
+      "tri": 224,
+      "surfaces": 1,
+      "r": 2.8,
+      "slope": 42,
+      "road": 11,
+      "turn": 21,
+      "draw": 440,
+      "kind": "natural"
+    },
+    "rock": {
+      "path": "assets/curated/models/environment/rock_cluster.glb",
+      "tri": 528,
+      "surfaces": 4,
+      "r": 2.2,
+      "slope": 39,
+      "road": 10.5,
+      "turn": 20,
+      "draw": 300,
+      "kind": "natural"
+    },
+    "guardrail": {
+      "path": "assets/curated/models/environment/guardrail_4m.glb",
+      "tri": 192,
+      "surfaces": 10,
+      "r": 1.8,
+      "slope": 40,
+      "road": 5,
+      "turn": 25,
+      "draw": 200,
+      "kind": "roadside"
+    },
+    "barrier": {
+      "path": "assets/curated/models/environment/concrete_barrier.glb",
+      "tri": 48,
+      "surfaces": 4,
+      "r": 1.9,
+      "slope": 32,
+      "road": 5.2,
+      "turn": 25,
+      "draw": 180,
+      "kind": "roadside"
+    },
+    "fence": {
+      "path": "assets/curated/models/environment/wood_fence.glb",
+      "tri": 60,
+      "surfaces": 5,
+      "r": 1.8,
+      "slope": 24,
+      "road": 8.5,
+      "turn": 22,
+      "draw": 210,
+      "kind": "roadside"
+    },
+    "bollard": {
+      "path": "assets/curated/models/environment/bollard.glb",
+      "tri": 60,
+      "surfaces": 3,
+      "r": 0.6,
+      "slope": 22,
+      "road": 6,
+      "turn": 23,
+      "draw": 150,
+      "kind": "roadside"
+    },
+    "warning": {
+      "path": "assets/curated/models/environment/warning_sign.glb",
+      "tri": 64,
+      "surfaces": 4,
+      "r": 0.8,
+      "slope": 25,
+      "road": 6.1,
+      "turn": 25,
+      "draw": 180,
+      "kind": "roadside"
+    },
+    "lamp": {
+      "path": "assets/curated/models/environment/street_lamp.glb",
+      "tri": 84,
+      "surfaces": 3,
+      "r": 0.9,
+      "slope": 17,
+      "road": 6.3,
+      "turn": 25,
+      "draw": 210,
+      "kind": "roadside"
+    },
+    "hay": {
+      "path": "assets/curated/models/environment/hay_bale.glb",
+      "tri": 36,
+      "surfaces": 3,
+      "r": 1.2,
+      "slope": 15,
+      "road": 12,
+      "turn": 25,
+      "draw": 160,
+      "kind": "rural"
+    },
+    "house": {
+      "path": "content/scenery/models/town_house.gltf",
+      "tri": 366,
+      "surfaces": 8,
+      "r": 7.4,
+      "slope": 12,
+      "road": 16,
+      "turn": 31,
+      "draw": 280,
+      "kind": "architecture"
+    },
+    "barn": {
+      "path": "content/scenery/models/barn.gltf",
+      "tri": 150,
+      "surfaces": 8,
+      "r": 8.8,
+      "slope": 13,
+      "road": 18,
+      "turn": 32,
+      "draw": 350,
+      "kind": "architecture"
+    },
+    "garage": {
+      "path": "content/scenery/models/garage.gltf",
+      "tri": 288,
+      "surfaces": 8,
+      "r": 8,
+      "slope": 11,
+      "road": 11,
+      "turn": 26,
+      "draw": 340,
+      "kind": "landmark"
+    },
+    "windmill": {
+      "path": "content/scenery/models/windmill.gltf",
+      "tri": 168,
+      "surfaces": 7,
+      "r": 7.4,
+      "slope": 15,
+      "road": 16,
+      "turn": 28,
+      "draw": 800,
+      "kind": "landmark"
+    },
+    "arch": {
+      "path": "content/scenery/models/stone_arch.gltf",
+      "tri": 72,
+      "surfaces": 3,
+      "r": 4.2,
+      "slope": 24,
+      "road": 10.2,
+      "turn": 27,
+      "draw": 310,
+      "kind": "landmark"
+    },
+    "overlook": {
+      "path": "content/scenery/models/overlook.gltf",
+      "tri": 204,
+      "surfaces": 3,
+      "r": 6.5,
+      "slope": 21,
+      "road": 12,
+      "turn": 28,
+      "draw": 310,
+      "kind": "landmark"
+    },
+    "pier": {
+      "path": "content/scenery/models/pier.gltf",
+      "tri": 204,
+      "surfaces": 3,
+      "r": 6.5,
+      "slope": 16,
+      "road": 11,
+      "turn": 26,
+      "draw": 360,
+      "kind": "landmark"
+    },
+    "quarry": {
+      "path": "content/scenery/models/quarry_hopper.gltf",
+      "tri": 252,
+      "surfaces": 7,
+      "r": 9,
+      "slope": 25,
+      "road": 16,
+      "turn": 30,
+      "draw": 550,
+      "kind": "landmark"
+    }
+  },
+  "region_packs": [
+    {
+      "id": "alder_town",
+      "path": "content/scenery/packs/alder_town.json",
+      "count": 200
+    },
+    {
+      "id": "cedar_woods",
+      "path": "content/scenery/packs/cedar_woods.json",
+      "count": 892
+    },
+    {
+      "id": "north_ridge",
+      "path": "content/scenery/packs/north_ridge.json",
+      "count": 725
+    },
+    {
+      "id": "green_valley",
+      "path": "content/scenery/packs/green_valley.json",
+      "count": 561
+    },
+    {
+      "id": "eastwater_lake",
+      "path": "content/scenery/packs/eastwater_lake.json",
+      "count": 413
+    }
+  ],
+  "lake": {
+    "water_level_m": 5.35,
+    "source_basin_floor_m": 5,
+    "source_seed_xz": [
+      800,
+      500
+    ],
+    "grid_spacing_m": 4,
+    "origin_x": -1000,
+    "origin_z": -1000,
+    "cell_count": 5143,
+    "mask_path": "content/scenery/lake/water_cells_v1.json",
+    "note": "Flood only four-corner submerged quads in the connected low basin; decorative, non-colliding."
+  }
+}

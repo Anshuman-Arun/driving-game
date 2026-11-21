@@ -1,0 +1,10 @@
+; Aster Valley Scenery — isolated inspection project. Root game is untouched.
+config_version=5
+
+[application]
+config/name="Aster Valley Scenery Inspection"
+run/main_scene="res://demo/main.tscn"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

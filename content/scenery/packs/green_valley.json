@@ -1,0 +1,8992 @@
+{
+ "schema_version": 1,
+ "seed": 20261121,
+ "region": "green_valley",
+ "source": {
+  "world_pr": 3,
+  "art_pr": 7,
+  "race_pr": 10,
+  "race_head_sha": "4bd2857019ebf7f4e11a358c6dfdb5b7127bc420",
+  "road_git_blob": "9bba378d68879df3baed2c97a4885c0adde88406",
+  "terrain_git_blob": "d951ce11a831dad5430b4c7157e2296f73c6b151",
+  "art_manifest_git_blob": "7c67ab03c29169c48432b36df6ae7a429a8decee"
+ },
+ "placements": [
+  {
+   "id": "green_valley_0001",
+   "asset": "windmill",
+   "position": [
+    86,
+    65.69,
+    180
+   ],
+   "yaw_deg": 0,
+   "scale": 1,
+   "terrain_offset_m": 0,
+   "slope_deg": 13.36,
+   "road_clearance_m": 25.95,
+   "district": "",
+   "tag": "landmark"
+  },
+  {
+   "id": "green_valley_0002",
+   "asset": "barn",
+   "position": [
+    -235,
+    40.375,
+    290
+   ],
+   "yaw_deg": 60.89,
+   "scale": 0.973,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.39,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "farmstead"
+  },
+  {
+   "id": "green_valley_0003",
+   "asset": "barn",
+   "position": [
+    390,
+    31.265,
+    170
+   ],
+   "yaw_deg": 221.26,
+   "scale": 1.08,
+   "terrain_offset_m": 0,
+   "slope_deg": 3.28,
+   "road_clearance_m": 99.45,
+   "district": "",
+   "tag": "farmstead"
+  },
+  {
+   "id": "green_valley_0004",
+   "asset": "barn",
+   "position": [
+    150,
+    31.288,
+    415
+   ],
+   "yaw_deg": 130.08,
+   "scale": 0.947,
+   "terrain_offset_m": 0,
+   "slope_deg": 8.11,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "farmstead"
+  },
+  {
+   "id": "green_valley_0005",
+   "asset": "shrub",
+   "position": [
+    -168.525,
+    57.37,
+    29.617
+   ],
+   "yaw_deg": 172.69,
+   "scale": 1.314,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.64,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0006",
+   "asset": "shrub",
+   "position": [
+    -236.462,
+    59.414,
+    71.979
+   ],
+   "yaw_deg": 345.9,
+   "scale": 1.088,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 24.21,
+   "road_clearance_m": 58.5,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0007",
+   "asset": "broadleaf",
+   "position": [
+    -124.983,
+    47.812,
+    126.377
+   ],
+   "yaw_deg": 241.79,
+   "scale": 0.738,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.2,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0008",
+   "asset": "shrub",
+   "position": [
+    -189.014,
+    52.97,
+    86.073
+   ],
+   "yaw_deg": 68.03,
+   "scale": 0.965,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.05,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0009",
+   "asset": "shrub",
+   "position": [
+    -183.234,
+    62.811,
+    133.035
+   ],
+   "yaw_deg": 303.59,
+   "scale": 1.397,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 30.62,
+   "road_clearance_m": 43.33,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0010",
+   "asset": "hay",
+   "position": [
+    -119.354,
+    52.849,
+    59.212
+   ],
+   "yaw_deg": 34.77,
+   "scale": 1.003,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.56,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0011",
+   "asset": "broadleaf",
+   "position": [
+    -193.993,
+    57.026,
+    37.609
+   ],
+   "yaw_deg": 196.72,
+   "scale": 0.825,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.53,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0012",
+   "asset": "shrub",
+   "position": [
+    -199.933,
+    54.236,
+    90.881
+   ],
+   "yaw_deg": 312.89,
+   "scale": 0.997,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 14.29,
+   "road_clearance_m": 66.76,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0013",
+   "asset": "broadleaf",
+   "position": [
+    -245.198,
+    76.263,
+    116.254
+   ],
+   "yaw_deg": 95.91,
+   "scale": 0.745,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.96,
+   "road_clearance_m": 18.67,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0014",
+   "asset": "hay",
+   "position": [
+    -139.307,
+    60.453,
+    -1.704
+   ],
+   "yaw_deg": 92.8,
+   "scale": 1.052,
+   "terrain_offset_m": 0,
+   "slope_deg": 9.08,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0015",
+   "asset": "broadleaf",
+   "position": [
+    -164.524,
+    51.159,
+    96.557
+   ],
+   "yaw_deg": 120.46,
+   "scale": 1.326,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0016",
+   "asset": "shrub",
+   "position": [
+    -181.02,
+    56.396,
+    47.342
+   ],
+   "yaw_deg": 299.48,
+   "scale": 1.31,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0017",
+   "asset": "broadleaf",
+   "position": [
+    -175.182,
+    51.549,
+    98.141
+   ],
+   "yaw_deg": 4.22,
+   "scale": 1.369,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.19,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0018",
+   "asset": "hay",
+   "position": [
+    -86.561,
+    52.555,
+    70.777
+   ],
+   "yaw_deg": 98.26,
+   "scale": 1.391,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0019",
+   "asset": "broadleaf",
+   "position": [
+    -202.656,
+    57.752,
+    29.273
+   ],
+   "yaw_deg": 311.05,
+   "scale": 0.854,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.38,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0020",
+   "asset": "shrub",
+   "position": [
+    -166.275,
+    50.966,
+    109.087
+   ],
+   "yaw_deg": 321.29,
+   "scale": 1.426,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.54,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0021",
+   "asset": "shrub",
+   "position": [
+    -147.604,
+    54.775,
+    63.771
+   ],
+   "yaw_deg": 16.63,
+   "scale": 0.876,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.69,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0022",
+   "asset": "broadleaf",
+   "position": [
+    -147.714,
+    50.122,
+    111.036
+   ],
+   "yaw_deg": 352.53,
+   "scale": 1.32,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.17,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0023",
+   "asset": "shrub",
+   "position": [
+    -266.243,
+    62.399,
+    44.745
+   ],
+   "yaw_deg": 156.93,
+   "scale": 1.223,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 18.06,
+   "road_clearance_m": 60.56,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0024",
+   "asset": "hay",
+   "position": [
+    -195.237,
+    53.786,
+    93.23
+   ],
+   "yaw_deg": 2.29,
+   "scale": 0.952,
+   "terrain_offset_m": 0,
+   "slope_deg": 13,
+   "road_clearance_m": 67.81,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0025",
+   "asset": "hay",
+   "position": [
+    -220.334,
+    54.554,
+    58.701
+   ],
+   "yaw_deg": 30.3,
+   "scale": 0.726,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.64,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0026",
+   "asset": "hay",
+   "position": [
+    -228.342,
+    75.793,
+    135.082
+   ],
+   "yaw_deg": 51.08,
+   "scale": 0.713,
+   "terrain_offset_m": 0,
+   "slope_deg": 2.7,
+   "road_clearance_m": 14.45,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0027",
+   "asset": "shrub",
+   "position": [
+    -129.535,
+    55.291,
+    41.264
+   ],
+   "yaw_deg": 242.67,
+   "scale": 1.306,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.58,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0028",
+   "asset": "broadleaf",
+   "position": [
+    -106.715,
+    47.657,
+    137.075
+   ],
+   "yaw_deg": 226.74,
+   "scale": 1.409,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 0.41,
+   "road_clearance_m": 80.82,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0029",
+   "asset": "shrub",
+   "position": [
+    -240.617,
+    66.704,
+    88.384
+   ],
+   "yaw_deg": 149.27,
+   "scale": 1.202,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 28.7,
+   "road_clearance_m": 43.18,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0030",
+   "asset": "broadleaf",
+   "position": [
+    -192.162,
+    56.48,
+    45.832
+   ],
+   "yaw_deg": 271.22,
+   "scale": 0.86,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.93,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0031",
+   "asset": "broadleaf",
+   "position": [
+    -102.613,
+    53.558,
+    55.73
+   ],
+   "yaw_deg": 335.35,
+   "scale": 1.338,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.9,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0032",
+   "asset": "shrub",
+   "position": [
+    -247.028,
+    74.876,
+    160.695
+   ],
+   "yaw_deg": 303.46,
+   "scale": 1.063,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.94,
+   "road_clearance_m": 17.24,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0033",
+   "asset": "broadleaf",
+   "position": [
+    -143.59,
+    49.428,
+    119.266
+   ],
+   "yaw_deg": 331.93,
+   "scale": 0.773,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.41,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0034",
+   "asset": "shrub",
+   "position": [
+    -132.502,
+    56.986,
+    26.259
+   ],
+   "yaw_deg": 271.95,
+   "scale": 1.156,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.15,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0035",
+   "asset": "shrub",
+   "position": [
+    -78.711,
+    51.287,
+    81.841
+   ],
+   "yaw_deg": 355.85,
+   "scale": 1.027,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.98,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0036",
+   "asset": "broadleaf",
+   "position": [
+    -142.52,
+    50.801,
+    98.487
+   ],
+   "yaw_deg": 67.84,
+   "scale": 0.824,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.44,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0037",
+   "asset": "shrub",
+   "position": [
+    -197.973,
+    73.77,
+    150.885
+   ],
+   "yaw_deg": 76.79,
+   "scale": 0.903,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.14,
+   "road_clearance_m": 20.23,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0038",
+   "asset": "broadleaf",
+   "position": [
+    -154.31,
+    50.36,
+    116.855
+   ],
+   "yaw_deg": 338.02,
+   "scale": 1.146,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.81,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0039",
+   "asset": "shrub",
+   "position": [
+    -181.532,
+    59.572,
+    11.806
+   ],
+   "yaw_deg": 331.66,
+   "scale": 1.439,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.95,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0040",
+   "asset": "broadleaf",
+   "position": [
+    -149.765,
+    51.15,
+    130.053
+   ],
+   "yaw_deg": 101.2,
+   "scale": 1.249,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.97,
+   "road_clearance_m": 64.98,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0041",
+   "asset": "broadleaf",
+   "position": [
+    -115.192,
+    50.72,
+    99.884
+   ],
+   "yaw_deg": 322.89,
+   "scale": 1.219,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0042",
+   "asset": "broadleaf",
+   "position": [
+    -50.495,
+    50.332,
+    79.086
+   ],
+   "yaw_deg": 170.76,
+   "scale": 0.906,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.98,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0043",
+   "asset": "broadleaf",
+   "position": [
+    -222.863,
+    66.541,
+    -41.286
+   ],
+   "yaw_deg": 183.37,
+   "scale": 0.841,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.55,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0044",
+   "asset": "broadleaf",
+   "position": [
+    -221.97,
+    56.501,
+    43.983
+   ],
+   "yaw_deg": 84.03,
+   "scale": 1.323,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.33,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0045",
+   "asset": "shrub",
+   "position": [
+    -124.651,
+    51.912,
+    89.438
+   ],
+   "yaw_deg": 190.5,
+   "scale": 0.849,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.19,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0046",
+   "asset": "broadleaf",
+   "position": [
+    -137.988,
+    53.628,
+    63.743
+   ],
+   "yaw_deg": 250.9,
+   "scale": 1.027,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.27,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0047",
+   "asset": "shrub",
+   "position": [
+    -254.227,
+    62.602,
+    16.404
+   ],
+   "yaw_deg": 4.76,
+   "scale": 1.451,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.13,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0048",
+   "asset": "broadleaf",
+   "position": [
+    -110.169,
+    61.621,
+    -10.27
+   ],
+   "yaw_deg": 264.93,
+   "scale": 1.016,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.42,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0049",
+   "asset": "broadleaf",
+   "position": [
+    -100.95,
+    51.447,
+    91.239
+   ],
+   "yaw_deg": 125.66,
+   "scale": 0.894,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.73,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0050",
+   "asset": "shrub",
+   "position": [
+    -119.242,
+    56.716,
+    26.942
+   ],
+   "yaw_deg": 270.45,
+   "scale": 1.34,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.43,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0051",
+   "asset": "shrub",
+   "position": [
+    -168.99,
+    60.147,
+    7.109
+   ],
+   "yaw_deg": 17.99,
+   "scale": 1.238,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.93,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0052",
+   "asset": "broadleaf",
+   "position": [
+    -18.997,
+    56.046,
+    22.503
+   ],
+   "yaw_deg": 64.45,
+   "scale": 0.732,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.36,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0053",
+   "asset": "broadleaf",
+   "position": [
+    -93.093,
+    53.763,
+    55.259
+   ],
+   "yaw_deg": 261.94,
+   "scale": 1.056,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.96,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0054",
+   "asset": "hay",
+   "position": [
+    -115.524,
+    47.93,
+    141.322
+   ],
+   "yaw_deg": 173.49,
+   "scale": 0.788,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.79,
+   "road_clearance_m": 73.05,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0055",
+   "asset": "shrub",
+   "position": [
+    -113.363,
+    53.721,
+    51.322
+   ],
+   "yaw_deg": 105.23,
+   "scale": 0.715,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.59,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0056",
+   "asset": "broadleaf",
+   "position": [
+    -174.017,
+    57.297,
+    31.825
+   ],
+   "yaw_deg": 107.1,
+   "scale": 1.066,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.14,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0057",
+   "asset": "broadleaf",
+   "position": [
+    -131.865,
+    48.151,
+    124.812
+   ],
+   "yaw_deg": 216.69,
+   "scale": 1.408,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.02,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0058",
+   "asset": "hay",
+   "position": [
+    -146.055,
+    52.042,
+    84.943
+   ],
+   "yaw_deg": 148.55,
+   "scale": 1.161,
+   "terrain_offset_m": 0,
+   "slope_deg": 7,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0059",
+   "asset": "broadleaf",
+   "position": [
+    -56.229,
+    52.434,
+    55.142
+   ],
+   "yaw_deg": 135.12,
+   "scale": 0.892,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.98,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0060",
+   "asset": "shrub",
+   "position": [
+    -68.4,
+    49.52,
+    92.961
+   ],
+   "yaw_deg": 293.87,
+   "scale": 0.791,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.64,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0061",
+   "asset": "shrub",
+   "position": [
+    -140.571,
+    51.925,
+    85.979
+   ],
+   "yaw_deg": 269.39,
+   "scale": 1.134,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.3,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0062",
+   "asset": "shrub",
+   "position": [
+    -83.295,
+    47.268,
+    146.579
+   ],
+   "yaw_deg": 91.21,
+   "scale": 1.168,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.3,
+   "road_clearance_m": 76.84,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0063",
+   "asset": "broadleaf",
+   "position": [
+    -216.699,
+    54.268,
+    73.864
+   ],
+   "yaw_deg": 221.94,
+   "scale": 1.084,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.13,
+   "road_clearance_m": 69.55,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0064",
+   "asset": "shrub",
+   "position": [
+    -179.745,
+    57.529,
+    30.655
+   ],
+   "yaw_deg": 210.75,
+   "scale": 0.765,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0065",
+   "asset": "broadleaf",
+   "position": [
+    -134.227,
+    52.504,
+    76.317
+   ],
+   "yaw_deg": 294.27,
+   "scale": 1.296,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.7,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0066",
+   "asset": "broadleaf",
+   "position": [
+    -257.464,
+    59.836,
+    33.985
+   ],
+   "yaw_deg": 204.94,
+   "scale": 1.295,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.91,
+   "road_clearance_m": 74.44,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0067",
+   "asset": "shrub",
+   "position": [
+    -200.662,
+    54.377,
+    68.67
+   ],
+   "yaw_deg": 56.07,
+   "scale": 0.794,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.83,
+   "road_clearance_m": 83.67,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0068",
+   "asset": "broadleaf",
+   "position": [
+    -136.37,
+    52.952,
+    70.674
+   ],
+   "yaw_deg": 215.6,
+   "scale": 0.984,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.32,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0069",
+   "asset": "broadleaf",
+   "position": [
+    -110.062,
+    52.083,
+    78.409
+   ],
+   "yaw_deg": 233.98,
+   "scale": 1.24,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.51,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0070",
+   "asset": "hay",
+   "position": [
+    -156.617,
+    55.674,
+    60.066
+   ],
+   "yaw_deg": 333.37,
+   "scale": 0.739,
+   "terrain_offset_m": 0,
+   "slope_deg": 3.99,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0071",
+   "asset": "hay",
+   "position": [
+    -171.753,
+    56.088,
+    53.823
+   ],
+   "yaw_deg": 222.4,
+   "scale": 1.419,
+   "terrain_offset_m": 0,
+   "slope_deg": 2.87,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0072",
+   "asset": "broadleaf",
+   "position": [
+    -116.095,
+    48.373,
+    118.317
+   ],
+   "yaw_deg": 11.53,
+   "scale": 1.005,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.65,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0073",
+   "asset": "hay",
+   "position": [
+    -200.851,
+    56.403,
+    44.511
+   ],
+   "yaw_deg": 69.31,
+   "scale": 1.476,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.55,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0074",
+   "asset": "shrub",
+   "position": [
+    -127.74,
+    52.157,
+    83.806
+   ],
+   "yaw_deg": 99.86,
+   "scale": 1.379,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0075",
+   "asset": "broadleaf",
+   "position": [
+    -184.766,
+    55.68,
+    59.899
+   ],
+   "yaw_deg": 307.62,
+   "scale": 1.355,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.85,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0076",
+   "asset": "broadleaf",
+   "position": [
+    -195.99,
+    55.313,
+    60.541
+   ],
+   "yaw_deg": 16.23,
+   "scale": 1.018,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.53,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0077",
+   "asset": "broadleaf",
+   "position": [
+    -158.256,
+    52.389,
+    83.359
+   ],
+   "yaw_deg": 48.12,
+   "scale": 0.857,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.03,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0078",
+   "asset": "broadleaf",
+   "position": [
+    -94.054,
+    47.723,
+    131.107
+   ],
+   "yaw_deg": 275.56,
+   "scale": 1.068,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.15,
+   "road_clearance_m": 91.39,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0079",
+   "asset": "shrub",
+   "position": [
+    -157.858,
+    50.452,
+    110.942
+   ],
+   "yaw_deg": 115.44,
+   "scale": 1.36,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.86,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0080",
+   "asset": "broadleaf",
+   "position": [
+    -152.621,
+    55.739,
+    54.57
+   ],
+   "yaw_deg": 205.04,
+   "scale": 0.949,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.75,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0081",
+   "asset": "hay",
+   "position": [
+    -245.667,
+    76.553,
+    122.591
+   ],
+   "yaw_deg": 83.9,
+   "scale": 1.298,
+   "terrain_offset_m": 0,
+   "slope_deg": 2.58,
+   "road_clearance_m": 13.45,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0082",
+   "asset": "shrub",
+   "position": [
+    -256.154,
+    70.415,
+    83.268
+   ],
+   "yaw_deg": 46.91,
+   "scale": 0.822,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 26.38,
+   "road_clearance_m": 37.27,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0083",
+   "asset": "broadleaf",
+   "position": [
+    -157.733,
+    50.984,
+    95.289
+   ],
+   "yaw_deg": 354.65,
+   "scale": 0.953,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.35,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0084",
+   "asset": "shrub",
+   "position": [
+    -156.837,
+    56.596,
+    35.599
+   ],
+   "yaw_deg": 209.04,
+   "scale": 0.748,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.91,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0085",
+   "asset": "shrub",
+   "position": [
+    -94.077,
+    53.659,
+    168.558
+   ],
+   "yaw_deg": 22.59,
+   "scale": 0.752,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 26.2,
+   "road_clearance_m": 55.35,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0086",
+   "asset": "shrub",
+   "position": [
+    -192.096,
+    61.976,
+    122.927
+   ],
+   "yaw_deg": 294.4,
+   "scale": 1.432,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 30.02,
+   "road_clearance_m": 46.32,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0087",
+   "asset": "broadleaf",
+   "position": [
+    -228.202,
+    61.021,
+    11.423
+   ],
+   "yaw_deg": 130.83,
+   "scale": 1.039,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.99,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0088",
+   "asset": "broadleaf",
+   "position": [
+    -147.577,
+    55.167,
+    58.507
+   ],
+   "yaw_deg": 20.34,
+   "scale": 0.747,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.55,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0089",
+   "asset": "shrub",
+   "position": [
+    -186.232,
+    54.611,
+    108.086
+   ],
+   "yaw_deg": 337.71,
+   "scale": 0.794,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 21.04,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0090",
+   "asset": "hay",
+   "position": [
+    -156.23,
+    53.069,
+    79.351
+   ],
+   "yaw_deg": 315.28,
+   "scale": 1.209,
+   "terrain_offset_m": 0,
+   "slope_deg": 9.7,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0091",
+   "asset": "hay",
+   "position": [
+    -163.07,
+    56.892,
+    34.602
+   ],
+   "yaw_deg": 217,
+   "scale": 0.858,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0092",
+   "asset": "broadleaf",
+   "position": [
+    -78.165,
+    50.762,
+    88.328
+   ],
+   "yaw_deg": 193.11,
+   "scale": 0.952,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.72,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0093",
+   "asset": "shrub",
+   "position": [
+    -107.596,
+    58.022,
+    14.703
+   ],
+   "yaw_deg": 191.68,
+   "scale": 1.356,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.59,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0094",
+   "asset": "shrub",
+   "position": [
+    -200.199,
+    70.623,
+    136.708
+   ],
+   "yaw_deg": 26.95,
+   "scale": 1.338,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 25.19,
+   "road_clearance_m": 30.29,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0095",
+   "asset": "shrub",
+   "position": [
+    -162.53,
+    55.062,
+    66.721
+   ],
+   "yaw_deg": 350.21,
+   "scale": 0.898,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.64,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0096",
+   "asset": "broadleaf",
+   "position": [
+    -250.257,
+    61.07,
+    21.688
+   ],
+   "yaw_deg": 159.51,
+   "scale": 0.73,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.14,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0097",
+   "asset": "shrub",
+   "position": [
+    235.942,
+    65.523,
+    -27.583
+   ],
+   "yaw_deg": 182.27,
+   "scale": 0.87,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.2,
+   "road_clearance_m": 53.89,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0098",
+   "asset": "pine",
+   "position": [
+    229.709,
+    71.326,
+    -3.507
+   ],
+   "yaw_deg": 144.26,
+   "scale": 1.254,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.12,
+   "road_clearance_m": 32.27,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0099",
+   "asset": "broadleaf",
+   "position": [
+    229.471,
+    67.933,
+    -22.943
+   ],
+   "yaw_deg": 76.26,
+   "scale": 1.015,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 18.24,
+   "road_clearance_m": 46.08,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0100",
+   "asset": "shrub",
+   "position": [
+    255.859,
+    65.034,
+    14.409
+   ],
+   "yaw_deg": 350.96,
+   "scale": 0.727,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 28.43,
+   "road_clearance_m": 41.08,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0101",
+   "asset": "shrub",
+   "position": [
+    252.909,
+    61.004,
+    -19.637
+   ],
+   "yaw_deg": 274.58,
+   "scale": 0.814,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.83,
+   "road_clearance_m": 60.19,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0102",
+   "asset": "pine",
+   "position": [
+    244.335,
+    72.706,
+    34.462
+   ],
+   "yaw_deg": 131.79,
+   "scale": 1.102,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.34,
+   "road_clearance_m": 21.19,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0103",
+   "asset": "shrub",
+   "position": [
+    263.34,
+    59.636,
+    4.769
+   ],
+   "yaw_deg": 27.79,
+   "scale": 1.445,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 24.76,
+   "road_clearance_m": 55.99,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0104",
+   "asset": "pine",
+   "position": [
+    236.556,
+    66.924,
+    -14.952
+   ],
+   "yaw_deg": 126.14,
+   "scale": 1.021,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 20.66,
+   "road_clearance_m": 45.22,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0105",
+   "asset": "shrub",
+   "position": [
+    215.822,
+    73.501,
+    -11.969
+   ],
+   "yaw_deg": 279.8,
+   "scale": 0.955,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.04,
+   "road_clearance_m": 28.76,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0106",
+   "asset": "shrub",
+   "position": [
+    228.499,
+    67.031,
+    -41.226
+   ],
+   "yaw_deg": 34.19,
+   "scale": 1.085,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.43,
+   "road_clearance_m": 59.03,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0107",
+   "asset": "shrub",
+   "position": [
+    327.468,
+    59.722,
+    -29.212
+   ],
+   "yaw_deg": 106.68,
+   "scale": 0.9,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.97,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0108",
+   "asset": "shrub",
+   "position": [
+    236.163,
+    68.891,
+    -5.418
+   ],
+   "yaw_deg": 23.91,
+   "scale": 1.136,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 21.79,
+   "road_clearance_m": 38.25,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0109",
+   "asset": "pine",
+   "position": [
+    313.206,
+    53.358,
+    -1.834
+   ],
+   "yaw_deg": 131.03,
+   "scale": 1.249,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.63,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0110",
+   "asset": "shrub",
+   "position": [
+    218.279,
+    74.526,
+    1.003
+   ],
+   "yaw_deg": 139.61,
+   "scale": 1.456,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.28,
+   "road_clearance_m": 21.02,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0111",
+   "asset": "shrub",
+   "position": [
+    242.916,
+    71.233,
+    18.42
+   ],
+   "yaw_deg": 245.72,
+   "scale": 1.305,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.63,
+   "road_clearance_m": 28.09,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0112",
+   "asset": "broadleaf",
+   "position": [
+    239.609,
+    73.252,
+    29.521
+   ],
+   "yaw_deg": 66.56,
+   "scale": 1.353,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.94,
+   "road_clearance_m": 19.31,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0113",
+   "asset": "shrub",
+   "position": [
+    218.486,
+    71.032,
+    -23.248
+   ],
+   "yaw_deg": 299.45,
+   "scale": 1.297,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 17.12,
+   "road_clearance_m": 38.92,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0114",
+   "asset": "broadleaf",
+   "position": [
+    172.466,
+    76.867,
+    -59.437
+   ],
+   "yaw_deg": 323.2,
+   "scale": 1.124,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.09,
+   "road_clearance_m": 36.98,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0115",
+   "asset": "shrub",
+   "position": [
+    290.371,
+    50.463,
+    10.943
+   ],
+   "yaw_deg": 320.52,
+   "scale": 1.177,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.18,
+   "road_clearance_m": 73.15,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0116",
+   "asset": "pine",
+   "position": [
+    208.026,
+    71.719,
+    -37.794
+   ],
+   "yaw_deg": 356.99,
+   "scale": 0.831,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.58,
+   "road_clearance_m": 43.09,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0117",
+   "asset": "shrub",
+   "position": [
+    244.946,
+    72.893,
+    43.482
+   ],
+   "yaw_deg": 321.85,
+   "scale": 1.281,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.17,
+   "road_clearance_m": 18.46,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0118",
+   "asset": "shrub",
+   "position": [
+    216.311,
+    69.498,
+    -46.141
+   ],
+   "yaw_deg": 276.78,
+   "scale": 0.839,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.99,
+   "road_clearance_m": 54.81,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0119",
+   "asset": "pine",
+   "position": [
+    257.678,
+    68.093,
+    37.301
+   ],
+   "yaw_deg": 289.48,
+   "scale": 1.317,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 27.78,
+   "road_clearance_m": 32.38,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0120",
+   "asset": "broadleaf",
+   "position": [
+    273.133,
+    58.803,
+    -25.164
+   ],
+   "yaw_deg": 293.23,
+   "scale": 1.011,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 14.29,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0121",
+   "asset": "shrub",
+   "position": [
+    292.363,
+    58.358,
+    -25.319
+   ],
+   "yaw_deg": 332.09,
+   "scale": 1.361,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 14.53,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0122",
+   "asset": "pine",
+   "position": [
+    181.704,
+    74.131,
+    24.584
+   ],
+   "yaw_deg": 354.59,
+   "scale": 1.254,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.01,
+   "road_clearance_m": 21.24,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0123",
+   "asset": "broadleaf",
+   "position": [
+    231.266,
+    73.583,
+    14.462
+   ],
+   "yaw_deg": 287.57,
+   "scale": 0.84,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.97,
+   "road_clearance_m": 21.32,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0124",
+   "asset": "shrub",
+   "position": [
+    243.595,
+    71.849,
+    23.645
+   ],
+   "yaw_deg": 348.57,
+   "scale": 1.076,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 17.92,
+   "road_clearance_m": 25.79,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0125",
+   "asset": "broadleaf",
+   "position": [
+    296.116,
+    53.593,
+    -5.312
+   ],
+   "yaw_deg": 240.54,
+   "scale": 1.07,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.04,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0126",
+   "asset": "shrub",
+   "position": [
+    212.375,
+    73.007,
+    -20.46
+   ],
+   "yaw_deg": 133.82,
+   "scale": 1.355,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.48,
+   "road_clearance_m": 32.78,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0127",
+   "asset": "pine",
+   "position": [
+    204.124,
+    71.452,
+    72.495
+   ],
+   "yaw_deg": 28.98,
+   "scale": 1.331,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.51,
+   "road_clearance_m": 14.02,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0128",
+   "asset": "broadleaf",
+   "position": [
+    268.269,
+    63.88,
+    -43.51
+   ],
+   "yaw_deg": 316.03,
+   "scale": 1.452,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.2,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0129",
+   "asset": "shrub",
+   "position": [
+    203.226,
+    74.084,
+    37.022
+   ],
+   "yaw_deg": 62.83,
+   "scale": 1.453,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.04,
+   "road_clearance_m": 14.65,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0130",
+   "asset": "pine",
+   "position": [
+    160.754,
+    84.025,
+    -109.496
+   ],
+   "yaw_deg": 301.32,
+   "scale": 0.973,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.88,
+   "road_clearance_m": 65.64,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0131",
+   "asset": "shrub",
+   "position": [
+    227.636,
+    69.298,
+    -17.833
+   ],
+   "yaw_deg": 28.4,
+   "scale": 1.313,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.17,
+   "road_clearance_m": 41.1,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0132",
+   "asset": "shrub",
+   "position": [
+    202.392,
+    72.504,
+    -60.921
+   ],
+   "yaw_deg": 129.35,
+   "scale": 0.841,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.87,
+   "road_clearance_m": 57.26,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0133",
+   "asset": "pine",
+   "position": [
+    244.699,
+    63.702,
+    -18.335
+   ],
+   "yaw_deg": 137.29,
+   "scale": 1.423,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.14,
+   "road_clearance_m": 53.35,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0134",
+   "asset": "shrub",
+   "position": [
+    253.72,
+    69.245,
+    71.094
+   ],
+   "yaw_deg": 102.55,
+   "scale": 1.321,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 25.43,
+   "road_clearance_m": 27.6,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0135",
+   "asset": "pine",
+   "position": [
+    258.098,
+    61.786,
+    -35.471
+   ],
+   "yaw_deg": 45.26,
+   "scale": 1.355,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.47,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0136",
+   "asset": "broadleaf",
+   "position": [
+    227.742,
+    70.366,
+    -11.769
+   ],
+   "yaw_deg": 232.42,
+   "scale": 1.147,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.53,
+   "road_clearance_m": 36.75,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0137",
+   "asset": "broadleaf",
+   "position": [
+    289.835,
+    55.558,
+    -13.828
+   ],
+   "yaw_deg": 299.27,
+   "scale": 0.727,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.27,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0138",
+   "asset": "broadleaf",
+   "position": [
+    188.833,
+    76.779,
+    -17.788
+   ],
+   "yaw_deg": 147.33,
+   "scale": 0.734,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.55,
+   "road_clearance_m": 15.43,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0139",
+   "asset": "shrub",
+   "position": [
+    216.782,
+    70.419,
+    -30.843
+   ],
+   "yaw_deg": 72.52,
+   "scale": 0.725,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.78,
+   "road_clearance_m": 43.5,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0140",
+   "asset": "pine",
+   "position": [
+    176.95,
+    76.105,
+    11.32
+   ],
+   "yaw_deg": 356.68,
+   "scale": 1.135,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.47,
+   "road_clearance_m": 14.45,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0141",
+   "asset": "shrub",
+   "position": [
+    227.541,
+    74.132,
+    -78.219
+   ],
+   "yaw_deg": 249.03,
+   "scale": 1.018,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0142",
+   "asset": "broadleaf",
+   "position": [
+    297.616,
+    67.415,
+    -56.766
+   ],
+   "yaw_deg": 286.55,
+   "scale": 1.408,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 17.12,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0143",
+   "asset": "shrub",
+   "position": [
+    251.335,
+    63.242,
+    -40.062
+   ],
+   "yaw_deg": 353.63,
+   "scale": 1.378,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.19,
+   "road_clearance_m": 73.53,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0144",
+   "asset": "shrub",
+   "position": [
+    308.963,
+    50.563,
+    12.803
+   ],
+   "yaw_deg": 225.97,
+   "scale": 1.214,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.27,
+   "road_clearance_m": 89.03,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0145",
+   "asset": "shrub",
+   "position": [
+    183.757,
+    77.082,
+    -28.57
+   ],
+   "yaw_deg": 149.24,
+   "scale": 1.118,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.7,
+   "road_clearance_m": 20.46,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0146",
+   "asset": "shrub",
+   "position": [
+    197.457,
+    73.81,
+    -39.073
+   ],
+   "yaw_deg": 276.76,
+   "scale": 1.179,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.55,
+   "road_clearance_m": 37.29,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0147",
+   "asset": "pine",
+   "position": [
+    207.561,
+    74.85,
+    -14.11
+   ],
+   "yaw_deg": 332.24,
+   "scale": 0.911,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.43,
+   "road_clearance_m": 24.83,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0148",
+   "asset": "shrub",
+   "position": [
+    244.9,
+    72.534,
+    62.397
+   ],
+   "yaw_deg": 166.6,
+   "scale": 1.389,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.05,
+   "road_clearance_m": 16.82,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0149",
+   "asset": "pine",
+   "position": [
+    251.569,
+    64.679,
+    3.489
+   ],
+   "yaw_deg": 100.12,
+   "scale": 1.195,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 25.94,
+   "road_clearance_m": 43.97,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0150",
+   "asset": "shrub",
+   "position": [
+    278.185,
+    53.725,
+    7.078
+   ],
+   "yaw_deg": 235.15,
+   "scale": 1.039,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 18.45,
+   "road_clearance_m": 65.18,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0151",
+   "asset": "shrub",
+   "position": [
+    137.286,
+    55.472,
+    71.118
+   ],
+   "yaw_deg": 38.09,
+   "scale": 1.383,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.51,
+   "road_clearance_m": 51.27,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0152",
+   "asset": "shrub",
+   "position": [
+    226.064,
+    74.22,
+    13.113
+   ],
+   "yaw_deg": 59.26,
+   "scale": 0.88,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.69,
+   "road_clearance_m": 18.24,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0153",
+   "asset": "shrub",
+   "position": [
+    226.705,
+    74.152,
+    23.357
+   ],
+   "yaw_deg": 293.39,
+   "scale": 1.322,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.51,
+   "road_clearance_m": 12.16,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0154",
+   "asset": "shrub",
+   "position": [
+    232.566,
+    72.183,
+    75.907
+   ],
+   "yaw_deg": 284.33,
+   "scale": 1.376,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.78,
+   "road_clearance_m": 10.19,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0155",
+   "asset": "shrub",
+   "position": [
+    236.303,
+    66.366,
+    -47.776
+   ],
+   "yaw_deg": 236.82,
+   "scale": 1.13,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.38,
+   "road_clearance_m": 69.1,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0156",
+   "asset": "shrub",
+   "position": [
+    284.438,
+    50.69,
+    34.183
+   ],
+   "yaw_deg": 272.88,
+   "scale": 0.951,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 26.73,
+   "road_clearance_m": 59.04,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0157",
+   "asset": "shrub",
+   "position": [
+    281.59,
+    60.77,
+    -33.289
+   ],
+   "yaw_deg": 149.78,
+   "scale": 0.857,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.56,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0158",
+   "asset": "shrub",
+   "position": [
+    215.643,
+    77.668,
+    -89.695
+   ],
+   "yaw_deg": 109.51,
+   "scale": 0.897,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0159",
+   "asset": "shrub",
+   "position": [
+    219.756,
+    71.472,
+    -18.394
+   ],
+   "yaw_deg": 123.35,
+   "scale": 1.019,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 17.61,
+   "road_clearance_m": 36.16,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0160",
+   "asset": "broadleaf",
+   "position": [
+    217.65,
+    71.089,
+    -64.605
+   ],
+   "yaw_deg": 120.6,
+   "scale": 0.864,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.66,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0161",
+   "asset": "pine",
+   "position": [
+    139.799,
+    74.964,
+    -1.426
+   ],
+   "yaw_deg": 51.5,
+   "scale": 1.425,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 20.55,
+   "road_clearance_m": 28.48,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0162",
+   "asset": "pine",
+   "position": [
+    222.687,
+    74.428,
+    8.622
+   ],
+   "yaw_deg": 0.98,
+   "scale": 0.833,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.3,
+   "road_clearance_m": 18.81,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0163",
+   "asset": "broadleaf",
+   "position": [
+    272.11,
+    60.691,
+    -32.263
+   ],
+   "yaw_deg": 36.36,
+   "scale": 0.881,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.16,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0164",
+   "asset": "shrub",
+   "position": [
+    241.105,
+    65.149,
+    -43.956
+   ],
+   "yaw_deg": 263.39,
+   "scale": 1.422,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.79,
+   "road_clearance_m": 69.44,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0165",
+   "asset": "shrub",
+   "position": [
+    285.204,
+    50.406,
+    39.42
+   ],
+   "yaw_deg": 44.72,
+   "scale": 1.346,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 27.76,
+   "road_clearance_m": 58.55,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0166",
+   "asset": "shrub",
+   "position": [
+    324.412,
+    62.282,
+    -38.767
+   ],
+   "yaw_deg": 275.74,
+   "scale": 1.473,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.86,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0167",
+   "asset": "broadleaf",
+   "position": [
+    266.678,
+    69.479,
+    -62.285
+   ],
+   "yaw_deg": 130.42,
+   "scale": 1.26,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.29,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0168",
+   "asset": "shrub",
+   "position": [
+    237.918,
+    72.576,
+    65.544
+   ],
+   "yaw_deg": 51.73,
+   "scale": 0.8,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.6,
+   "road_clearance_m": 10.86,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0169",
+   "asset": "broadleaf",
+   "position": [
+    210.968,
+    72.51,
+    54.019
+   ],
+   "yaw_deg": 317.17,
+   "scale": 1.039,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.72,
+   "road_clearance_m": 17.04,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0170",
+   "asset": "shrub",
+   "position": [
+    260.25,
+    63.247,
+    16.992
+   ],
+   "yaw_deg": 316.05,
+   "scale": 0.978,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 29.88,
+   "road_clearance_m": 45.06,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0171",
+   "asset": "shrub",
+   "position": [
+    253.849,
+    64.915,
+    9.533
+   ],
+   "yaw_deg": 359.25,
+   "scale": 0.849,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 27,
+   "road_clearance_m": 42.17,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0172",
+   "asset": "pine",
+   "position": [
+    223.616,
+    74.369,
+    19.226
+   ],
+   "yaw_deg": 264.82,
+   "scale": 1.256,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.58,
+   "road_clearance_m": 12.41,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0173",
+   "asset": "shrub",
+   "position": [
+    302.866,
+    49.79,
+    15.521
+   ],
+   "yaw_deg": 200.9,
+   "scale": 1.218,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.94,
+   "road_clearance_m": 82.36,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0174",
+   "asset": "shrub",
+   "position": [
+    304.577,
+    57.125,
+    -20.363
+   ],
+   "yaw_deg": 185.85,
+   "scale": 1.224,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.65,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0175",
+   "asset": "broadleaf",
+   "position": [
+    194.448,
+    74.571,
+    -70.585
+   ],
+   "yaw_deg": 137.76,
+   "scale": 1.402,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.63,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0176",
+   "asset": "shrub",
+   "position": [
+    244.327,
+    75.4,
+    -84.849
+   ],
+   "yaw_deg": 300.86,
+   "scale": 1.217,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.4,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0177",
+   "asset": "shrub",
+   "position": [
+    201.885,
+    72.287,
+    -48.446
+   ],
+   "yaw_deg": 313.8,
+   "scale": 1.254,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.12,
+   "road_clearance_m": 47.33,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0178",
+   "asset": "broadleaf",
+   "position": [
+    209.539,
+    75.143,
+    -7.53
+   ],
+   "yaw_deg": 120.09,
+   "scale": 1.233,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.8,
+   "road_clearance_m": 21.25,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0179",
+   "asset": "broadleaf",
+   "position": [
+    206.732,
+    73.922,
+    -22.726
+   ],
+   "yaw_deg": 357.07,
+   "scale": 1.204,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.91,
+   "road_clearance_m": 30.78,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0180",
+   "asset": "pine",
+   "position": [
+    294.296,
+    45.687,
+    49.734
+   ],
+   "yaw_deg": 159.72,
+   "scale": 0.796,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 22.34,
+   "road_clearance_m": 66.01,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0181",
+   "asset": "shrub",
+   "position": [
+    287.488,
+    62.138,
+    -38.703
+   ],
+   "yaw_deg": 317.67,
+   "scale": 0.946,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0182",
+   "asset": "pine",
+   "position": [
+    145.839,
+    53.663,
+    50.528
+   ],
+   "yaw_deg": 280.71,
+   "scale": 0.885,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.37,
+   "road_clearance_m": 64.45,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0183",
+   "asset": "broadleaf",
+   "position": [
+    183.08,
+    76.632,
+    -36.704
+   ],
+   "yaw_deg": 173.58,
+   "scale": 1.27,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.75,
+   "road_clearance_m": 26.29,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0184",
+   "asset": "pine",
+   "position": [
+    179.907,
+    71.691,
+    31.489
+   ],
+   "yaw_deg": 232.94,
+   "scale": 1.363,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 23.15,
+   "road_clearance_m": 27.53,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0185",
+   "asset": "broadleaf",
+   "position": [
+    352.577,
+    27.393,
+    258.982
+   ],
+   "yaw_deg": 100.39,
+   "scale": 1.193,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.99,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0186",
+   "asset": "hay",
+   "position": [
+    352.426,
+    34.275,
+    158.357
+   ],
+   "yaw_deg": 276.75,
+   "scale": 1.141,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.84,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0187",
+   "asset": "shrub",
+   "position": [
+    351.376,
+    29.872,
+    221.733
+   ],
+   "yaw_deg": 273.2,
+   "scale": 1.148,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.16,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0188",
+   "asset": "shrub",
+   "position": [
+    390.916,
+    26.62,
+    211.378
+   ],
+   "yaw_deg": 288.41,
+   "scale": 0.709,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0189",
+   "asset": "shrub",
+   "position": [
+    345.304,
+    29.534,
+    253.088
+   ],
+   "yaw_deg": 127.78,
+   "scale": 1.021,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.36,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0190",
+   "asset": "broadleaf",
+   "position": [
+    331.93,
+    33.75,
+    196.874
+   ],
+   "yaw_deg": 75.15,
+   "scale": 0.871,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.22,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0191",
+   "asset": "broadleaf",
+   "position": [
+    371.353,
+    30.451,
+    183.821
+   ],
+   "yaw_deg": 253.62,
+   "scale": 0.729,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.38,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0192",
+   "asset": "broadleaf",
+   "position": [
+    324.799,
+    28.689,
+    299.801
+   ],
+   "yaw_deg": 145.05,
+   "scale": 1.016,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0193",
+   "asset": "hay",
+   "position": [
+    404.418,
+    28.754,
+    197.086
+   ],
+   "yaw_deg": 321.93,
+   "scale": 1.393,
+   "terrain_offset_m": 0,
+   "slope_deg": 10.42,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0194",
+   "asset": "broadleaf",
+   "position": [
+    343.049,
+    28.595,
+    267.744
+   ],
+   "yaw_deg": 40.64,
+   "scale": 1.331,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.29,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0195",
+   "asset": "hay",
+   "position": [
+    351.111,
+    27.046,
+    267.126
+   ],
+   "yaw_deg": 64.22,
+   "scale": 0.987,
+   "terrain_offset_m": 0,
+   "slope_deg": 13.42,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0196",
+   "asset": "broadleaf",
+   "position": [
+    368.064,
+    27.783,
+    221.264
+   ],
+   "yaw_deg": 313.41,
+   "scale": 1.058,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.72,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0197",
+   "asset": "shrub",
+   "position": [
+    331.825,
+    30.791,
+    264.022
+   ],
+   "yaw_deg": 274.69,
+   "scale": 1.356,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.83,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0198",
+   "asset": "shrub",
+   "position": [
+    309.071,
+    34.538,
+    235.754
+   ],
+   "yaw_deg": 152.85,
+   "scale": 1.11,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.88,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0199",
+   "asset": "shrub",
+   "position": [
+    357.024,
+    28.368,
+    232.693
+   ],
+   "yaw_deg": 101.12,
+   "scale": 1.356,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.81,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0200",
+   "asset": "hay",
+   "position": [
+    347.241,
+    30.128,
+    235.468
+   ],
+   "yaw_deg": 54.17,
+   "scale": 0.936,
+   "terrain_offset_m": 0,
+   "slope_deg": 10.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0201",
+   "asset": "shrub",
+   "position": [
+    338.295,
+    31.611,
+    221.696
+   ],
+   "yaw_deg": 29.07,
+   "scale": 0.848,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0202",
+   "asset": "hay",
+   "position": [
+    340.394,
+    30.807,
+    249.263
+   ],
+   "yaw_deg": 193.66,
+   "scale": 1.196,
+   "terrain_offset_m": 0,
+   "slope_deg": 9.61,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0203",
+   "asset": "shrub",
+   "position": [
+    371.673,
+    22.349,
+    273.484
+   ],
+   "yaw_deg": 359.26,
+   "scale": 0.815,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.01,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0204",
+   "asset": "hay",
+   "position": [
+    341.187,
+    35.401,
+    158.735
+   ],
+   "yaw_deg": 69.29,
+   "scale": 1.356,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.77,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0205",
+   "asset": "shrub",
+   "position": [
+    365.477,
+    25.055,
+    251.812
+   ],
+   "yaw_deg": 339.39,
+   "scale": 1.101,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.09,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0206",
+   "asset": "shrub",
+   "position": [
+    262.969,
+    38.645,
+    159.628
+   ],
+   "yaw_deg": 79.42,
+   "scale": 1.019,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.94,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0207",
+   "asset": "broadleaf",
+   "position": [
+    346.185,
+    29.899,
+    245.343
+   ],
+   "yaw_deg": 236.87,
+   "scale": 0.76,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.74,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0208",
+   "asset": "broadleaf",
+   "position": [
+    312.277,
+    35.821,
+    210.779
+   ],
+   "yaw_deg": 106.23,
+   "scale": 0.808,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.08,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0209",
+   "asset": "shrub",
+   "position": [
+    331.893,
+    32.208,
+    236.401
+   ],
+   "yaw_deg": 125.29,
+   "scale": 1.199,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.36,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0210",
+   "asset": "broadleaf",
+   "position": [
+    399.375,
+    17.032,
+    290.92
+   ],
+   "yaw_deg": 246.27,
+   "scale": 0.87,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.07,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0211",
+   "asset": "broadleaf",
+   "position": [
+    357.437,
+    27.692,
+    241.122
+   ],
+   "yaw_deg": 154.84,
+   "scale": 1.353,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.91,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0212",
+   "asset": "broadleaf",
+   "position": [
+    386.091,
+    29.595,
+    189.369
+   ],
+   "yaw_deg": 115.46,
+   "scale": 1.285,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.33,
+   "road_clearance_m": 113.95,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0213",
+   "asset": "broadleaf",
+   "position": [
+    367.742,
+    22.563,
+    278.153
+   ],
+   "yaw_deg": 149.33,
+   "scale": 0.723,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.12,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0214",
+   "asset": "broadleaf",
+   "position": [
+    353.769,
+    26.013,
+    271.079
+   ],
+   "yaw_deg": 26.79,
+   "scale": 1.248,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.21,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0215",
+   "asset": "broadleaf",
+   "position": [
+    386.89,
+    22.824,
+    245.517
+   ],
+   "yaw_deg": 108.17,
+   "scale": 1.372,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.39,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0216",
+   "asset": "broadleaf",
+   "position": [
+    282.881,
+    37.118,
+    260.972
+   ],
+   "yaw_deg": 170.47,
+   "scale": 1.075,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.11,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0217",
+   "asset": "shrub",
+   "position": [
+    387.386,
+    35.155,
+    133.117
+   ],
+   "yaw_deg": 115.97,
+   "scale": 1.093,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.36,
+   "road_clearance_m": 81.35,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0218",
+   "asset": "hay",
+   "position": [
+    326.503,
+    34.958,
+    180.094
+   ],
+   "yaw_deg": 138.08,
+   "scale": 0.713,
+   "terrain_offset_m": 0,
+   "slope_deg": 3.6,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0219",
+   "asset": "broadleaf",
+   "position": [
+    378.123,
+    27.044,
+    217.732
+   ],
+   "yaw_deg": 26.21,
+   "scale": 1.074,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.34,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0220",
+   "asset": "hay",
+   "position": [
+    361.184,
+    25.821,
+    254.701
+   ],
+   "yaw_deg": 207.21,
+   "scale": 1.349,
+   "terrain_offset_m": 0,
+   "slope_deg": 13.35,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0221",
+   "asset": "broadleaf",
+   "position": [
+    313.661,
+    34.995,
+    197.273
+   ],
+   "yaw_deg": 100.2,
+   "scale": 0.714,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.75,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0222",
+   "asset": "broadleaf",
+   "position": [
+    263.132,
+    38.653,
+    191.704
+   ],
+   "yaw_deg": 44.35,
+   "scale": 1.459,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.5,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0223",
+   "asset": "hay",
+   "position": [
+    329.97,
+    30.838,
+    268.111
+   ],
+   "yaw_deg": 320.98,
+   "scale": 1.311,
+   "terrain_offset_m": 0,
+   "slope_deg": 9.39,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0224",
+   "asset": "shrub",
+   "position": [
+    397.509,
+    18.557,
+    273.986
+   ],
+   "yaw_deg": 13.91,
+   "scale": 1.122,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.18,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0225",
+   "asset": "broadleaf",
+   "position": [
+    332.107,
+    32.837,
+    215.04
+   ],
+   "yaw_deg": 116.11,
+   "scale": 0.967,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.52,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0226",
+   "asset": "shrub",
+   "position": [
+    326.173,
+    33.159,
+    229.202
+   ],
+   "yaw_deg": 94.8,
+   "scale": 0.892,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.29,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0227",
+   "asset": "broadleaf",
+   "position": [
+    327.932,
+    32.149,
+    246.428
+   ],
+   "yaw_deg": 244.91,
+   "scale": 1.144,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.68,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0228",
+   "asset": "broadleaf",
+   "position": [
+    395.703,
+    24.088,
+    229.266
+   ],
+   "yaw_deg": 187.38,
+   "scale": 1.414,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.31,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0229",
+   "asset": "broadleaf",
+   "position": [
+    339.732,
+    28.262,
+    277.604
+   ],
+   "yaw_deg": 37.38,
+   "scale": 1.174,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.86,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0230",
+   "asset": "shrub",
+   "position": [
+    308.128,
+    33.746,
+    261.338
+   ],
+   "yaw_deg": 139.21,
+   "scale": 1.318,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.2,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0231",
+   "asset": "shrub",
+   "position": [
+    369.732,
+    29.14,
+    202.451
+   ],
+   "yaw_deg": 55.51,
+   "scale": 0.966,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.84,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0232",
+   "asset": "hay",
+   "position": [
+    376.536,
+    26.502,
+    224.911
+   ],
+   "yaw_deg": 311.81,
+   "scale": 0.825,
+   "terrain_offset_m": 0,
+   "slope_deg": 9.18,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0233",
+   "asset": "shrub",
+   "position": [
+    384.938,
+    28.639,
+    197.623
+   ],
+   "yaw_deg": 356.64,
+   "scale": 1.255,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.64,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0234",
+   "asset": "broadleaf",
+   "position": [
+    399.704,
+    16.121,
+    312.335
+   ],
+   "yaw_deg": 231.6,
+   "scale": 0.961,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.79,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0235",
+   "asset": "broadleaf",
+   "position": [
+    365.428,
+    28.895,
+    212.096
+   ],
+   "yaw_deg": 209.43,
+   "scale": 1.415,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.66,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0236",
+   "asset": "shrub",
+   "position": [
+    308.018,
+    33.052,
+    283.945
+   ],
+   "yaw_deg": 189.28,
+   "scale": 1.128,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0237",
+   "asset": "hay",
+   "position": [
+    340.211,
+    32.179,
+    208.509
+   ],
+   "yaw_deg": 347.98,
+   "scale": 1.036,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.99,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0238",
+   "asset": "broadleaf",
+   "position": [
+    397.798,
+    28.327,
+    199.278
+   ],
+   "yaw_deg": 234.07,
+   "scale": 1.332,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0239",
+   "asset": "shrub",
+   "position": [
+    357.831,
+    27.057,
+    248.101
+   ],
+   "yaw_deg": 268.62,
+   "scale": 1.362,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.92,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0240",
+   "asset": "hay",
+   "position": [
+    347.001,
+    32.281,
+    198.134
+   ],
+   "yaw_deg": 108.34,
+   "scale": 1.216,
+   "terrain_offset_m": 0,
+   "slope_deg": 8.4,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0241",
+   "asset": "broadleaf",
+   "position": [
+    340.396,
+    35.697,
+    151.393
+   ],
+   "yaw_deg": 1.3,
+   "scale": 0.94,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0242",
+   "asset": "shrub",
+   "position": [
+    344.84,
+    26.677,
+    284.011
+   ],
+   "yaw_deg": 101.07,
+   "scale": 1.411,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.51,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0243",
+   "asset": "shrub",
+   "position": [
+    413.484,
+    19.933,
+    253.971
+   ],
+   "yaw_deg": 295.6,
+   "scale": 1.189,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.62,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0244",
+   "asset": "hay",
+   "position": [
+    308.081,
+    36.288,
+    218.806
+   ],
+   "yaw_deg": 346.9,
+   "scale": 1.166,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.78,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0245",
+   "asset": "broadleaf",
+   "position": [
+    381.833,
+    21.71,
+    263.201
+   ],
+   "yaw_deg": 187.04,
+   "scale": 0.984,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.05,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0246",
+   "asset": "hay",
+   "position": [
+    390.783,
+    20.897,
+    260.902
+   ],
+   "yaw_deg": 343.86,
+   "scale": 1.079,
+   "terrain_offset_m": 0,
+   "slope_deg": 8.82,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0247",
+   "asset": "hay",
+   "position": [
+    385.801,
+    26.822,
+    213.559
+   ],
+   "yaw_deg": 327.76,
+   "scale": 1.347,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.98,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0248",
+   "asset": "hay",
+   "position": [
+    402.718,
+    16.695,
+    294.531
+   ],
+   "yaw_deg": 274.59,
+   "scale": 0.794,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.09,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0249",
+   "asset": "broadleaf",
+   "position": [
+    374.786,
+    24.64,
+    241.235
+   ],
+   "yaw_deg": 225.65,
+   "scale": 1.28,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.64,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0250",
+   "asset": "broadleaf",
+   "position": [
+    431.319,
+    17.261,
+    272.278
+   ],
+   "yaw_deg": 70.6,
+   "scale": 1.021,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.77,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0251",
+   "asset": "broadleaf",
+   "position": [
+    419.749,
+    30.711,
+    184.906
+   ],
+   "yaw_deg": 128.62,
+   "scale": 0.742,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.72,
+   "road_clearance_m": 86,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0252",
+   "asset": "broadleaf",
+   "position": [
+    329.338,
+    26.106,
+    318.571
+   ],
+   "yaw_deg": 155.02,
+   "scale": 1.092,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.46,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0253",
+   "asset": "hay",
+   "position": [
+    326.706,
+    33.813,
+    215.291
+   ],
+   "yaw_deg": 216.41,
+   "scale": 1.243,
+   "terrain_offset_m": 0,
+   "slope_deg": 9.68,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0254",
+   "asset": "shrub",
+   "position": [
+    305.85,
+    32.166,
+    322.462
+   ],
+   "yaw_deg": 140.26,
+   "scale": 1.434,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 21.66,
+   "road_clearance_m": 61.26,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0255",
+   "asset": "shrub",
+   "position": [
+    274.296,
+    37.223,
+    232.823
+   ],
+   "yaw_deg": 19.02,
+   "scale": 0.711,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.28,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0256",
+   "asset": "shrub",
+   "position": [
+    340.297,
+    32.441,
+    204.077
+   ],
+   "yaw_deg": 281.64,
+   "scale": 1.25,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.81,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0257",
+   "asset": "shrub",
+   "position": [
+    330.741,
+    36.478,
+    138.745
+   ],
+   "yaw_deg": 30.53,
+   "scale": 1.233,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.1,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0258",
+   "asset": "broadleaf",
+   "position": [
+    374.181,
+    23.781,
+    250.28
+   ],
+   "yaw_deg": 317.17,
+   "scale": 1.11,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.11,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0259",
+   "asset": "shrub",
+   "position": [
+    364.745,
+    21.842,
+    290.33
+   ],
+   "yaw_deg": 276.63,
+   "scale": 1.22,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.42,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0260",
+   "asset": "broadleaf",
+   "position": [
+    324.378,
+    34.219,
+    209.737
+   ],
+   "yaw_deg": 67.46,
+   "scale": 0.746,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.27,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0261",
+   "asset": "hay",
+   "position": [
+    317.112,
+    34.616,
+    227.346
+   ],
+   "yaw_deg": 339.43,
+   "scale": 1.318,
+   "terrain_offset_m": 0,
+   "slope_deg": 9.07,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0262",
+   "asset": "broadleaf",
+   "position": [
+    413.139,
+    23.878,
+    225.943
+   ],
+   "yaw_deg": 285.66,
+   "scale": 1.188,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.35,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0263",
+   "asset": "hay",
+   "position": [
+    384.578,
+    24.93,
+    230.695
+   ],
+   "yaw_deg": 73.48,
+   "scale": 0.717,
+   "terrain_offset_m": 0,
+   "slope_deg": 9.12,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0264",
+   "asset": "broadleaf",
+   "position": [
+    363.394,
+    36.655,
+    121.973
+   ],
+   "yaw_deg": 252.82,
+   "scale": 1.23,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.95,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0265",
+   "asset": "hay",
+   "position": [
+    300.817,
+    34.878,
+    254.056
+   ],
+   "yaw_deg": 2.2,
+   "scale": 0.899,
+   "terrain_offset_m": 0,
+   "slope_deg": 9.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0266",
+   "asset": "broadleaf",
+   "position": [
+    392.691,
+    20.054,
+    265.804
+   ],
+   "yaw_deg": 314.7,
+   "scale": 1.017,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0267",
+   "asset": "shrub",
+   "position": [
+    334.941,
+    34.194,
+    186.979
+   ],
+   "yaw_deg": 187.87,
+   "scale": 1.337,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.75,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0268",
+   "asset": "hay",
+   "position": [
+    327.736,
+    33.939,
+    204.277
+   ],
+   "yaw_deg": 143.06,
+   "scale": 0.932,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.71,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0269",
+   "asset": "broadleaf",
+   "position": [
+    300.942,
+    36.484,
+    219.076
+   ],
+   "yaw_deg": 228.58,
+   "scale": 0.779,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.6,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0270",
+   "asset": "broadleaf",
+   "position": [
+    368.041,
+    31.083,
+    179.139
+   ],
+   "yaw_deg": 176.51,
+   "scale": 1.106,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.69,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0271",
+   "asset": "hay",
+   "position": [
+    340.761,
+    30.254,
+    255.633
+   ],
+   "yaw_deg": 64.42,
+   "scale": 1.089,
+   "terrain_offset_m": 0,
+   "slope_deg": 10.71,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0272",
+   "asset": "shrub",
+   "position": [
+    349.619,
+    24.71,
+    294.316
+   ],
+   "yaw_deg": 259.25,
+   "scale": 0.916,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0273",
+   "asset": "shrub",
+   "position": [
+    342.806,
+    32.827,
+    196.416
+   ],
+   "yaw_deg": 263.62,
+   "scale": 1.286,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.76,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0274",
+   "asset": "broadleaf",
+   "position": [
+    301.58,
+    36.06,
+    200.718
+   ],
+   "yaw_deg": 121.57,
+   "scale": 1.023,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.27,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0275",
+   "asset": "broadleaf",
+   "position": [
+    405.493,
+    24.982,
+    218.601
+   ],
+   "yaw_deg": 165.82,
+   "scale": 1.283,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.7,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0276",
+   "asset": "hay",
+   "position": [
+    286.574,
+    37.931,
+    156.966
+   ],
+   "yaw_deg": 328.21,
+   "scale": 1.45,
+   "terrain_offset_m": 0,
+   "slope_deg": 2.3,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0277",
+   "asset": "shrub",
+   "position": [
+    370.141,
+    26.046,
+    234.442
+   ],
+   "yaw_deg": 274.6,
+   "scale": 1.183,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.28,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0278",
+   "asset": "hay",
+   "position": [
+    394.295,
+    18.13,
+    283.05
+   ],
+   "yaw_deg": 338.13,
+   "scale": 1.012,
+   "terrain_offset_m": 0,
+   "slope_deg": 8.65,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0279",
+   "asset": "broadleaf",
+   "position": [
+    311.041,
+    33.271,
+    256.253
+   ],
+   "yaw_deg": 276.32,
+   "scale": 0.856,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.12,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0280",
+   "asset": "broadleaf",
+   "position": [
+    350.376,
+    22.778,
+    313.108
+   ],
+   "yaw_deg": 335.38,
+   "scale": 1.027,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.99,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0281",
+   "asset": "shrub",
+   "position": [
+    362.216,
+    31.971,
+    175.291
+   ],
+   "yaw_deg": 116.9,
+   "scale": 0.734,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.63,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0282",
+   "asset": "shrub",
+   "position": [
+    -77.621,
+    59.847,
+    256.395
+   ],
+   "yaw_deg": 294.25,
+   "scale": 1.443,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 20.15,
+   "road_clearance_m": 31.85,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0283",
+   "asset": "shrub",
+   "position": [
+    -89.682,
+    61.407,
+    337.746
+   ],
+   "yaw_deg": 294.83,
+   "scale": 0.833,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.67,
+   "road_clearance_m": 16.38,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0284",
+   "asset": "shrub",
+   "position": [
+    -133.121,
+    60.54,
+    333.139
+   ],
+   "yaw_deg": 19.96,
+   "scale": 1.157,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.06,
+   "road_clearance_m": 17.29,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0285",
+   "asset": "hay",
+   "position": [
+    -105.397,
+    62.422,
+    309.353
+   ],
+   "yaw_deg": 141.46,
+   "scale": 0.942,
+   "terrain_offset_m": 0,
+   "slope_deg": 3.1,
+   "road_clearance_m": 14.81,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0286",
+   "asset": "shrub",
+   "position": [
+    -120.081,
+    56.197,
+    296.174
+   ],
+   "yaw_deg": 238.27,
+   "scale": 0.935,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 27.98,
+   "road_clearance_m": 34.51,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0287",
+   "asset": "broadleaf",
+   "position": [
+    -13.9,
+    37.157,
+    354.806
+   ],
+   "yaw_deg": 61.86,
+   "scale": 1.427,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.18,
+   "road_clearance_m": 82.31,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0288",
+   "asset": "broadleaf",
+   "position": [
+    -150.717,
+    57.545,
+    336.746
+   ],
+   "yaw_deg": 57.07,
+   "scale": 1.419,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.77,
+   "road_clearance_m": 26.77,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0289",
+   "asset": "broadleaf",
+   "position": [
+    0.634,
+    36.205,
+    330.388
+   ],
+   "yaw_deg": 45.26,
+   "scale": 0.726,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.72,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0290",
+   "asset": "shrub",
+   "position": [
+    -95.138,
+    43.915,
+    386.449
+   ],
+   "yaw_deg": 211.17,
+   "scale": 1.383,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 31.62,
+   "road_clearance_m": 47.51,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0291",
+   "asset": "shrub",
+   "position": [
+    -76.745,
+    59.66,
+    334.826
+   ],
+   "yaw_deg": 275.51,
+   "scale": 0.867,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 22.52,
+   "road_clearance_m": 23.47,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0292",
+   "asset": "shrub",
+   "position": [
+    -99,
+    31.077,
+    436.605
+   ],
+   "yaw_deg": 107.33,
+   "scale": 1.274,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.51,
+   "road_clearance_m": 82.01,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0293",
+   "asset": "hay",
+   "position": [
+    4.994,
+    36.193,
+    336.559
+   ],
+   "yaw_deg": 313.19,
+   "scale": 0.961,
+   "terrain_offset_m": 0,
+   "slope_deg": 2.56,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0294",
+   "asset": "broadleaf",
+   "position": [
+    -22.42,
+    36.911,
+    363.263
+   ],
+   "yaw_deg": 293.81,
+   "scale": 0.963,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.47,
+   "road_clearance_m": 82.12,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0295",
+   "asset": "broadleaf",
+   "position": [
+    -2.726,
+    36.908,
+    322.166
+   ],
+   "yaw_deg": 273.28,
+   "scale": 1.384,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.84,
+   "road_clearance_m": 69.52,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0296",
+   "asset": "shrub",
+   "position": [
+    -67.018,
+    61.845,
+    319.459
+   ],
+   "yaw_deg": 85.21,
+   "scale": 1,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 17.15,
+   "road_clearance_m": 19.6,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0297",
+   "asset": "hay",
+   "position": [
+    15.681,
+    36.186,
+    386.935
+   ],
+   "yaw_deg": 128.03,
+   "scale": 1.233,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.64,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0298",
+   "asset": "hay",
+   "position": [
+    32.861,
+    35.537,
+    297.799
+   ],
+   "yaw_deg": 165.77,
+   "scale": 1.113,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.71,
+   "road_clearance_m": 76.85,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0299",
+   "asset": "broadleaf",
+   "position": [
+    -9.062,
+    37.232,
+    327.235
+   ],
+   "yaw_deg": 37.81,
+   "scale": 0.804,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.71,
+   "road_clearance_m": 67.1,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0300",
+   "asset": "shrub",
+   "position": [
+    -53.085,
+    54.432,
+    327.177
+   ],
+   "yaw_deg": 304.36,
+   "scale": 1.032,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 31.7,
+   "road_clearance_m": 34.96,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0301",
+   "asset": "shrub",
+   "position": [
+    -102.176,
+    53.089,
+    372.957
+   ],
+   "yaw_deg": 48.82,
+   "scale": 1.111,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 29.77,
+   "road_clearance_m": 32.88,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0302",
+   "asset": "shrub",
+   "position": [
+    -86.956,
+    58.931,
+    345.175
+   ],
+   "yaw_deg": 203.63,
+   "scale": 0.979,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 22.87,
+   "road_clearance_m": 23.58,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0303",
+   "asset": "shrub",
+   "position": [
+    -37.227,
+    44.531,
+    333.48
+   ],
+   "yaw_deg": 82.12,
+   "scale": 1.395,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 29.96,
+   "road_clearance_m": 50.72,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0304",
+   "asset": "shrub",
+   "position": [
+    -116.987,
+    61.288,
+    313.401
+   ],
+   "yaw_deg": 169.57,
+   "scale": 0.975,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.14,
+   "road_clearance_m": 20.13,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0305",
+   "asset": "shrub",
+   "position": [
+    60.68,
+    33.676,
+    398.778
+   ],
+   "yaw_deg": 30.72,
+   "scale": 0.743,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.59,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0306",
+   "asset": "shrub",
+   "position": [
+    -93.261,
+    62.932,
+    291.468
+   ],
+   "yaw_deg": 243.57,
+   "scale": 1.025,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.72,
+   "road_clearance_m": 18.73,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0307",
+   "asset": "shrub",
+   "position": [
+    -70.186,
+    32.391,
+    433.669
+   ],
+   "yaw_deg": 357.08,
+   "scale": 1.154,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.84,
+   "road_clearance_m": 99.05,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0308",
+   "asset": "shrub",
+   "position": [
+    -22.745,
+    36.925,
+    357.641
+   ],
+   "yaw_deg": 177.88,
+   "scale": 1.118,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.43,
+   "road_clearance_m": 77.95,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0309",
+   "asset": "hay",
+   "position": [
+    -72.566,
+    64.397,
+    273.38
+   ],
+   "yaw_deg": 168.37,
+   "scale": 1.361,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.02,
+   "road_clearance_m": 16.45,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0310",
+   "asset": "broadleaf",
+   "position": [
+    -126.016,
+    58.454,
+    376.035
+   ],
+   "yaw_deg": 102.35,
+   "scale": 0.96,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.16,
+   "road_clearance_m": 18.84,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0311",
+   "asset": "hay",
+   "position": [
+    43.83,
+    35.297,
+    304.794
+   ],
+   "yaw_deg": 10.32,
+   "scale": 0.914,
+   "terrain_offset_m": 0,
+   "slope_deg": 1.56,
+   "road_clearance_m": 89.64,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0312",
+   "asset": "broadleaf",
+   "position": [
+    -2.577,
+    36.367,
+    337.637
+   ],
+   "yaw_deg": 277.5,
+   "scale": 1.349,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.85,
+   "road_clearance_m": 78.67,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0313",
+   "asset": "broadleaf",
+   "position": [
+    -12.092,
+    36.882,
+    386.773
+   ],
+   "yaw_deg": 26.89,
+   "scale": 1.176,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.51,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0314",
+   "asset": "shrub",
+   "position": [
+    23.98,
+    35.532,
+    301.097
+   ],
+   "yaw_deg": 253.24,
+   "scale": 0.787,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.71,
+   "road_clearance_m": 72.64,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0315",
+   "asset": "broadleaf",
+   "position": [
+    -40.706,
+    34.714,
+    405.093
+   ],
+   "yaw_deg": 102.94,
+   "scale": 0.799,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.83,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0316",
+   "asset": "hay",
+   "position": [
+    -32.519,
+    36.683,
+    358.282
+   ],
+   "yaw_deg": 205.72,
+   "scale": 1.305,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.71,
+   "road_clearance_m": 71.42,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0317",
+   "asset": "hay",
+   "position": [
+    -35.991,
+    35.616,
+    389.26
+   ],
+   "yaw_deg": 286.45,
+   "scale": 1.146,
+   "terrain_offset_m": 0,
+   "slope_deg": 3.51,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0318",
+   "asset": "hay",
+   "position": [
+    -103.401,
+    61.236,
+    346.139
+   ],
+   "yaw_deg": 43.24,
+   "scale": 1.105,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.78,
+   "road_clearance_m": 12.72,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0319",
+   "asset": "broadleaf",
+   "position": [
+    -13.348,
+    37.431,
+    376.117
+   ],
+   "yaw_deg": 308.3,
+   "scale": 1.414,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.15,
+   "road_clearance_m": 97.59,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0320",
+   "asset": "shrub",
+   "position": [
+    -26.79,
+    44.006,
+    323.352
+   ],
+   "yaw_deg": 26.52,
+   "scale": 1.478,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 30.11,
+   "road_clearance_m": 51.18,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0321",
+   "asset": "shrub",
+   "position": [
+    -40.407,
+    42.511,
+    341.878
+   ],
+   "yaw_deg": 98.71,
+   "scale": 1.304,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 28.13,
+   "road_clearance_m": 54.3,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0322",
+   "asset": "shrub",
+   "position": [
+    -64.909,
+    34.149,
+    389.748
+   ],
+   "yaw_deg": 188.71,
+   "scale": 0.769,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.38,
+   "road_clearance_m": 73.03,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0323",
+   "asset": "shrub",
+   "position": [
+    -42.593,
+    41.391,
+    346.755
+   ],
+   "yaw_deg": 252.27,
+   "scale": 1.145,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 27.02,
+   "road_clearance_m": 56.15,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0324",
+   "asset": "shrub",
+   "position": [
+    -19.867,
+    38.058,
+    335.74
+   ],
+   "yaw_deg": 311.1,
+   "scale": 0.953,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.13,
+   "road_clearance_m": 64.76,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0325",
+   "asset": "shrub",
+   "position": [
+    -123.092,
+    61.189,
+    325.113
+   ],
+   "yaw_deg": 5.92,
+   "scale": 0.847,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.5,
+   "road_clearance_m": 16.08,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0326",
+   "asset": "hay",
+   "position": [
+    18.205,
+    35.499,
+    340.465
+   ],
+   "yaw_deg": 74.3,
+   "scale": 0.958,
+   "terrain_offset_m": 0,
+   "slope_deg": 3.51,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0327",
+   "asset": "shrub",
+   "position": [
+    -47.875,
+    42.475,
+    348.753
+   ],
+   "yaw_deg": 102.59,
+   "scale": 0.958,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 29.03,
+   "road_clearance_m": 53.79,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0328",
+   "asset": "shrub",
+   "position": [
+    -60.788,
+    63.721,
+    304.367
+   ],
+   "yaw_deg": 163.19,
+   "scale": 1.21,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.98,
+   "road_clearance_m": 13.54,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0329",
+   "asset": "shrub",
+   "position": [
+    -103.281,
+    60.647,
+    350.489
+   ],
+   "yaw_deg": 254.02,
+   "scale": 0.955,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.39,
+   "road_clearance_m": 15.93,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0330",
+   "asset": "shrub",
+   "position": [
+    -28.422,
+    61.61,
+    286.771
+   ],
+   "yaw_deg": 194.87,
+   "scale": 0.729,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 25.99,
+   "road_clearance_m": 24.72,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0331",
+   "asset": "hay",
+   "position": [
+    14.758,
+    36.667,
+    372.879
+   ],
+   "yaw_deg": 1.14,
+   "scale": 1.124,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.88,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0332",
+   "asset": "shrub",
+   "position": [
+    -53.197,
+    58.538,
+    317.629
+   ],
+   "yaw_deg": 231.17,
+   "scale": 1.126,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 28.23,
+   "road_clearance_m": 28.22,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0333",
+   "asset": "broadleaf",
+   "position": [
+    -113.14,
+    61.824,
+    317.825
+   ],
+   "yaw_deg": 108.83,
+   "scale": 0.772,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.95,
+   "road_clearance_m": 14.28,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0334",
+   "asset": "hay",
+   "position": [
+    7.19,
+    37.534,
+    371.099
+   ],
+   "yaw_deg": 284.23,
+   "scale": 1.164,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.27,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0335",
+   "asset": "shrub",
+   "position": [
+    -4.26,
+    37.321,
+    356.363
+   ],
+   "yaw_deg": 58.16,
+   "scale": 0.805,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.73,
+   "road_clearance_m": 90.32,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0336",
+   "asset": "broadleaf",
+   "position": [
+    23.011,
+    35.584,
+    376.958
+   ],
+   "yaw_deg": 274.25,
+   "scale": 0.796,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0337",
+   "asset": "shrub",
+   "position": [
+    42.226,
+    35.246,
+    371.382
+   ],
+   "yaw_deg": 160.11,
+   "scale": 1.412,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.56,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0338",
+   "asset": "hay",
+   "position": [
+    -86.092,
+    31.397,
+    435.194
+   ],
+   "yaw_deg": 306.8,
+   "scale": 0.995,
+   "terrain_offset_m": 0,
+   "slope_deg": 3.44,
+   "road_clearance_m": 89.49,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0339",
+   "asset": "hay",
+   "position": [
+    42,
+    36.012,
+    282.128
+   ],
+   "yaw_deg": 72.9,
+   "scale": 1.222,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.36,
+   "road_clearance_m": 72.81,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0340",
+   "asset": "broadleaf",
+   "position": [
+    33.542,
+    34.952,
+    329.13
+   ],
+   "yaw_deg": 8.36,
+   "scale": 0.732,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.33,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0341",
+   "asset": "broadleaf",
+   "position": [
+    -71.373,
+    61.559,
+    323.997
+   ],
+   "yaw_deg": 256.34,
+   "scale": 1.075,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 17.13,
+   "road_clearance_m": 19.67,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0342",
+   "asset": "shrub",
+   "position": [
+    4.795,
+    38.453,
+    306.591
+   ],
+   "yaw_deg": 26.77,
+   "scale": 1.193,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 22.67,
+   "road_clearance_m": 63.3,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0343",
+   "asset": "shrub",
+   "position": [
+    43.026,
+    35.093,
+    331.444
+   ],
+   "yaw_deg": 205.44,
+   "scale": 1.191,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.91,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0344",
+   "asset": "shrub",
+   "position": [
+    30.994,
+    35.355,
+    314.882
+   ],
+   "yaw_deg": 296.43,
+   "scale": 0.834,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.33,
+   "road_clearance_m": 87.19,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0345",
+   "asset": "shrub",
+   "position": [
+    -41.425,
+    59.469,
+    304.31
+   ],
+   "yaw_deg": 171.74,
+   "scale": 1.074,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 28.68,
+   "road_clearance_m": 27.43,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0346",
+   "asset": "shrub",
+   "position": [
+    9.668,
+    35.85,
+    332.949
+   ],
+   "yaw_deg": 224.27,
+   "scale": 1.213,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.95,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0347",
+   "asset": "broadleaf",
+   "position": [
+    -75.925,
+    62.744,
+    320.521
+   ],
+   "yaw_deg": 15.86,
+   "scale": 1.081,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.68,
+   "road_clearance_m": 13.99,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0348",
+   "asset": "shrub",
+   "position": [
+    -107.895,
+    58.462,
+    288.597
+   ],
+   "yaw_deg": 187.01,
+   "scale": 1.419,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 25.67,
+   "road_clearance_m": 31.19,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0349",
+   "asset": "shrub",
+   "position": [
+    -12.641,
+    44.321,
+    308.658
+   ],
+   "yaw_deg": 306.23,
+   "scale": 1.398,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 31.46,
+   "road_clearance_m": 51.24,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0350",
+   "asset": "shrub",
+   "position": [
+    46.594,
+    35.513,
+    360.225
+   ],
+   "yaw_deg": 61.99,
+   "scale": 1.368,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.91,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0351",
+   "asset": "hay",
+   "position": [
+    -25.552,
+    35.285,
+    409.219
+   ],
+   "yaw_deg": 121.58,
+   "scale": 1.158,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.42,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0352",
+   "asset": "shrub",
+   "position": [
+    36.365,
+    34.507,
+    407.553
+   ],
+   "yaw_deg": 121.4,
+   "scale": 1.274,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.09,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0353",
+   "asset": "broadleaf",
+   "position": [
+    34.754,
+    35.368,
+    310.761
+   ],
+   "yaw_deg": 211.65,
+   "scale": 0.718,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.08,
+   "road_clearance_m": 87.11,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0354",
+   "asset": "broadleaf",
+   "position": [
+    -117.877,
+    59.227,
+    367.204
+   ],
+   "yaw_deg": 190.77,
+   "scale": 0.747,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.79,
+   "road_clearance_m": 17.91,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0355",
+   "asset": "shrub",
+   "position": [
+    -35.664,
+    39.601,
+    345.777
+   ],
+   "yaw_deg": 68.69,
+   "scale": 1.218,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 22.21,
+   "road_clearance_m": 60.42,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0356",
+   "asset": "broadleaf",
+   "position": [
+    -39.81,
+    63.178,
+    291.945
+   ],
+   "yaw_deg": 181.85,
+   "scale": 0.932,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.06,
+   "road_clearance_m": 20.04,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0357",
+   "asset": "broadleaf",
+   "position": [
+    -134.994,
+    58.837,
+    379.341
+   ],
+   "yaw_deg": 82.54,
+   "scale": 1.174,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.54,
+   "road_clearance_m": 15.26,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0358",
+   "asset": "shrub",
+   "position": [
+    -52.629,
+    62.998,
+    303.16
+   ],
+   "yaw_deg": 184.5,
+   "scale": 1.183,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.93,
+   "road_clearance_m": 18.56,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0359",
+   "asset": "hay",
+   "position": [
+    -10.463,
+    36.922,
+    347.002
+   ],
+   "yaw_deg": 250.51,
+   "scale": 0.939,
+   "terrain_offset_m": 0,
+   "slope_deg": 2.49,
+   "road_clearance_m": 79.35,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0360",
+   "asset": "broadleaf",
+   "position": [
+    -54.157,
+    33.525,
+    422.539
+   ],
+   "yaw_deg": 347.97,
+   "scale": 0.761,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0361",
+   "asset": "hay",
+   "position": [
+    -29.115,
+    37.271,
+    351.091
+   ],
+   "yaw_deg": 122.69,
+   "scale": 1.13,
+   "terrain_offset_m": 0,
+   "slope_deg": 8.97,
+   "road_clearance_m": 68.82,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0362",
+   "asset": "shrub",
+   "position": [
+    -107.229,
+    62.01,
+    318.014
+   ],
+   "yaw_deg": 356.18,
+   "scale": 0.818,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.63,
+   "road_clearance_m": 9.98,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0363",
+   "asset": "hay",
+   "position": [
+    -40.126,
+    65.094,
+    280.865
+   ],
+   "yaw_deg": 77.86,
+   "scale": 0.941,
+   "terrain_offset_m": 0,
+   "slope_deg": 3.87,
+   "road_clearance_m": 12.17,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0364",
+   "asset": "hay",
+   "position": [
+    -8.128,
+    35.291,
+    429.643
+   ],
+   "yaw_deg": 200.84,
+   "scale": 0.755,
+   "terrain_offset_m": 0,
+   "slope_deg": 3.52,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0365",
+   "asset": "shrub",
+   "position": [
+    -23.408,
+    36.568,
+    380.094
+   ],
+   "yaw_deg": 252.69,
+   "scale": 1.246,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.38,
+   "road_clearance_m": 93.22,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0366",
+   "asset": "shrub",
+   "position": [
+    -94.366,
+    59.872,
+    347.872
+   ],
+   "yaw_deg": 341.13,
+   "scale": 1.237,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 18.25,
+   "road_clearance_m": 20.29,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0367",
+   "asset": "shrub",
+   "position": [
+    -127.356,
+    57.586,
+    308.924
+   ],
+   "yaw_deg": 112.74,
+   "scale": 1.397,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 24.27,
+   "road_clearance_m": 30.61,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0368",
+   "asset": "shrub",
+   "position": [
+    48.975,
+    35.447,
+    339.165
+   ],
+   "yaw_deg": 163.36,
+   "scale": 1.248,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.02,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0369",
+   "asset": "shrub",
+   "position": [
+    -144.865,
+    59.269,
+    338.667
+   ],
+   "yaw_deg": 235.32,
+   "scale": 0.882,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.74,
+   "road_clearance_m": 21.37,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0370",
+   "asset": "shrub",
+   "position": [
+    -66.821,
+    35.324,
+    384.134
+   ],
+   "yaw_deg": 352.28,
+   "scale": 0.895,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.11,
+   "road_clearance_m": 68.53,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0371",
+   "asset": "hay",
+   "position": [
+    51.278,
+    35.578,
+    335.352
+   ],
+   "yaw_deg": 211.16,
+   "scale": 1.004,
+   "terrain_offset_m": 0,
+   "slope_deg": 2.73,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0372",
+   "asset": "shrub",
+   "position": [
+    -67.849,
+    63.572,
+    306.728
+   ],
+   "yaw_deg": 239.21,
+   "scale": 0.913,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.51,
+   "road_clearance_m": 10.12,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0373",
+   "asset": "broadleaf",
+   "position": [
+    -68.543,
+    63.212,
+    257.767
+   ],
+   "yaw_deg": 229.92,
+   "scale": 1.158,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 18.24,
+   "road_clearance_m": 24.34,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0374",
+   "asset": "hay",
+   "position": [
+    11.769,
+    35.895,
+    320.492
+   ],
+   "yaw_deg": 169.34,
+   "scale": 0.851,
+   "terrain_offset_m": 0,
+   "slope_deg": 2.36,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0375",
+   "asset": "shrub",
+   "position": [
+    -135.775,
+    57.657,
+    319.188
+   ],
+   "yaw_deg": 151.97,
+   "scale": 1.419,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 22.5,
+   "road_clearance_m": 29.17,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0376",
+   "asset": "shrub",
+   "position": [
+    7.531,
+    36.298,
+    346.787
+   ],
+   "yaw_deg": 238.47,
+   "scale": 1.001,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.31,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0377",
+   "asset": "shrub",
+   "position": [
+    -71.864,
+    40.65,
+    372.782
+   ],
+   "yaw_deg": 279.77,
+   "scale": 1.267,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 29.74,
+   "road_clearance_m": 53.83,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0378",
+   "asset": "shrub",
+   "position": [
+    -38.08,
+    37.328,
+    356.425
+   ],
+   "yaw_deg": 31.98,
+   "scale": 1.427,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 14.36,
+   "road_clearance_m": 66.15,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0379",
+   "asset": "shrub",
+   "position": [
+    -44.01,
+    38.546,
+    356.124
+   ],
+   "yaw_deg": 342.18,
+   "scale": 0.756,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 21.33,
+   "road_clearance_m": 61.72,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0380",
+   "asset": "shrub",
+   "position": [
+    -102.605,
+    61.793,
+    296.024
+   ],
+   "yaw_deg": 171.39,
+   "scale": 1.166,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 14.75,
+   "road_clearance_m": 22.21,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0381",
+   "asset": "shrub",
+   "position": [
+    -56.946,
+    41.931,
+    357.608
+   ],
+   "yaw_deg": 79.82,
+   "scale": 1.474,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 29.58,
+   "road_clearance_m": 53.57,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0382",
+   "asset": "broadleaf",
+   "position": [
+    -32.773,
+    34.741,
+    410.921
+   ],
+   "yaw_deg": 19.69,
+   "scale": 0.871,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.9,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0383",
+   "asset": "hay",
+   "position": [
+    -123.042,
+    59.944,
+    365.532
+   ],
+   "yaw_deg": 27.01,
+   "scale": 0.781,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.38,
+   "road_clearance_m": 13.15,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0384",
+   "asset": "hay",
+   "position": [
+    19.74,
+    35.724,
+    395.706
+   ],
+   "yaw_deg": 45.83,
+   "scale": 0.768,
+   "terrain_offset_m": 0,
+   "slope_deg": 2.46,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0385",
+   "asset": "pine",
+   "position": [
+    136.417,
+    30.371,
+    425.392
+   ],
+   "yaw_deg": 215.74,
+   "scale": 0.886,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.05,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0386",
+   "asset": "pine",
+   "position": [
+    177.451,
+    29.432,
+    427.112
+   ],
+   "yaw_deg": 168.72,
+   "scale": 0.887,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.76,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0387",
+   "asset": "broadleaf",
+   "position": [
+    107.564,
+    26.66,
+    469.829
+   ],
+   "yaw_deg": 100.52,
+   "scale": 0.874,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0388",
+   "asset": "pine",
+   "position": [
+    139.687,
+    27.889,
+    466.634
+   ],
+   "yaw_deg": 303.91,
+   "scale": 1.142,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.85,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0389",
+   "asset": "hay",
+   "position": [
+    187.964,
+    29.966,
+    415.446
+   ],
+   "yaw_deg": 77.68,
+   "scale": 1.425,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.59,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0390",
+   "asset": "pine",
+   "position": [
+    171.25,
+    30.908,
+    411.454
+   ],
+   "yaw_deg": 101.75,
+   "scale": 0.748,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.01,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0391",
+   "asset": "broadleaf",
+   "position": [
+    150.346,
+    28.485,
+    439.236
+   ],
+   "yaw_deg": 173.86,
+   "scale": 1.187,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.91,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0392",
+   "asset": "broadleaf",
+   "position": [
+    155.766,
+    28.668,
+    435.146
+   ],
+   "yaw_deg": 164.1,
+   "scale": 1.443,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.6,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0393",
+   "asset": "hay",
+   "position": [
+    138.184,
+    29.616,
+    432.398
+   ],
+   "yaw_deg": 249.28,
+   "scale": 0.926,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.13,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0394",
+   "asset": "broadleaf",
+   "position": [
+    115.821,
+    31.71,
+    416.061
+   ],
+   "yaw_deg": 240.78,
+   "scale": 0.831,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.9,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0395",
+   "asset": "broadleaf",
+   "position": [
+    130.291,
+    27.684,
+    477.362
+   ],
+   "yaw_deg": 214.63,
+   "scale": 1.276,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.56,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0396",
+   "asset": "broadleaf",
+   "position": [
+    103.565,
+    33.743,
+    397.938
+   ],
+   "yaw_deg": 247.46,
+   "scale": 1.226,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.16,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0397",
+   "asset": "pine",
+   "position": [
+    148.959,
+    27.394,
+    473.068
+   ],
+   "yaw_deg": 170.57,
+   "scale": 1.008,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.31,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0398",
+   "asset": "broadleaf",
+   "position": [
+    129.91,
+    27.89,
+    470.9
+   ],
+   "yaw_deg": 282.34,
+   "scale": 0.778,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.11,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0399",
+   "asset": "pine",
+   "position": [
+    168.505,
+    28.431,
+    444.615
+   ],
+   "yaw_deg": 229.8,
+   "scale": 0.876,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.27,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0400",
+   "asset": "broadleaf",
+   "position": [
+    138.445,
+    28.311,
+    456.149
+   ],
+   "yaw_deg": 289.34,
+   "scale": 0.873,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.5,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0401",
+   "asset": "pine",
+   "position": [
+    143.504,
+    28.621,
+    441.682
+   ],
+   "yaw_deg": 312,
+   "scale": 0.986,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.73,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0402",
+   "asset": "broadleaf",
+   "position": [
+    128.978,
+    28.827,
+    449.171
+   ],
+   "yaw_deg": 223.64,
+   "scale": 0.926,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.9,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0403",
+   "asset": "pine",
+   "position": [
+    73.362,
+    33.676,
+    397.9
+   ],
+   "yaw_deg": 202.28,
+   "scale": 1.359,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.14,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0404",
+   "asset": "hay",
+   "position": [
+    178.193,
+    30.34,
+    414.984
+   ],
+   "yaw_deg": 143.04,
+   "scale": 1.261,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.74,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0405",
+   "asset": "pine",
+   "position": [
+    122.198,
+    35.011,
+    362.086
+   ],
+   "yaw_deg": 148.4,
+   "scale": 1.152,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.95,
+   "road_clearance_m": 71.53,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0406",
+   "asset": "broadleaf",
+   "position": [
+    220.98,
+    28.1,
+    430.606
+   ],
+   "yaw_deg": 303.13,
+   "scale": 0.864,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.32,
+   "road_clearance_m": 72.03,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0407",
+   "asset": "broadleaf",
+   "position": [
+    179.263,
+    28.833,
+    437.546
+   ],
+   "yaw_deg": 255.77,
+   "scale": 1.239,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.25,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0408",
+   "asset": "broadleaf",
+   "position": [
+    133.608,
+    34.275,
+    379.41
+   ],
+   "yaw_deg": 154.77,
+   "scale": 1.183,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.8,
+   "road_clearance_m": 75.79,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0409",
+   "asset": "pine",
+   "position": [
+    194.302,
+    27.862,
+    447.668
+   ],
+   "yaw_deg": 217.13,
+   "scale": 1.324,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.8,
+   "road_clearance_m": 99.29,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0410",
+   "asset": "pine",
+   "position": [
+    90.132,
+    26.709,
+    458.512
+   ],
+   "yaw_deg": 249.91,
+   "scale": 0.727,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.93,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0411",
+   "asset": "broadleaf",
+   "position": [
+    167.158,
+    27.779,
+    464.993
+   ],
+   "yaw_deg": 6.91,
+   "scale": 0.801,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.54,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0412",
+   "asset": "broadleaf",
+   "position": [
+    121.988,
+    34.097,
+    387.578
+   ],
+   "yaw_deg": 254.1,
+   "scale": 0.873,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0413",
+   "asset": "broadleaf",
+   "position": [
+    134.102,
+    29.121,
+    440.913
+   ],
+   "yaw_deg": 238.15,
+   "scale": 0.743,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.28,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0414",
+   "asset": "pine",
+   "position": [
+    129.942,
+    32.523,
+    407.295
+   ],
+   "yaw_deg": 65.5,
+   "scale": 0.931,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.29,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0415",
+   "asset": "broadleaf",
+   "position": [
+    178.522,
+    31.428,
+    403.56
+   ],
+   "yaw_deg": 30.53,
+   "scale": 1.074,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.51,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0416",
+   "asset": "broadleaf",
+   "position": [
+    154.785,
+    32.8,
+    397.995
+   ],
+   "yaw_deg": 330.45,
+   "scale": 0.755,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.14,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0417",
+   "asset": "pine",
+   "position": [
+    225.033,
+    25.046,
+    465.04
+   ],
+   "yaw_deg": 65.79,
+   "scale": 1.34,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0418",
+   "asset": "pine",
+   "position": [
+    69.523,
+    35.486,
+    375.104
+   ],
+   "yaw_deg": 306.33,
+   "scale": 0.837,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.21,
+   "road_clearance_m": 116.1,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0419",
+   "asset": "pine",
+   "position": [
+    123.06,
+    33.03,
+    402.598
+   ],
+   "yaw_deg": 203,
+   "scale": 0.955,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0420",
+   "asset": "hay",
+   "position": [
+    124.837,
+    28.435,
+    459.186
+   ],
+   "yaw_deg": 322.27,
+   "scale": 1.312,
+   "terrain_offset_m": 0,
+   "slope_deg": 2.87,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0421",
+   "asset": "broadleaf",
+   "position": [
+    214.877,
+    30.722,
+    416.752
+   ],
+   "yaw_deg": 10.32,
+   "scale": 1.207,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 18.78,
+   "road_clearance_m": 62.38,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0422",
+   "asset": "pine",
+   "position": [
+    169.435,
+    38.002,
+    382.013
+   ],
+   "yaw_deg": 72.94,
+   "scale": 0.783,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 27.14,
+   "road_clearance_m": 55.88,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0423",
+   "asset": "broadleaf",
+   "position": [
+    170.011,
+    28.962,
+    433.962
+   ],
+   "yaw_deg": 0.71,
+   "scale": 0.988,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.46,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0424",
+   "asset": "broadleaf",
+   "position": [
+    192.014,
+    27.27,
+    481.208
+   ],
+   "yaw_deg": 70.95,
+   "scale": 1.246,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.51,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0425",
+   "asset": "pine",
+   "position": [
+    149.107,
+    28.975,
+    432.116
+   ],
+   "yaw_deg": 137.04,
+   "scale": 1.045,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.45,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0426",
+   "asset": "hay",
+   "position": [
+    119.881,
+    31.145,
+    422.15
+   ],
+   "yaw_deg": 190.25,
+   "scale": 1.098,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.44,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0427",
+   "asset": "pine",
+   "position": [
+    108.891,
+    31.263,
+    418.453
+   ],
+   "yaw_deg": 293.85,
+   "scale": 1.008,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0428",
+   "asset": "broadleaf",
+   "position": [
+    133.215,
+    33.909,
+    387.233
+   ],
+   "yaw_deg": 53.58,
+   "scale": 1.179,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.31,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0429",
+   "asset": "hay",
+   "position": [
+    201.861,
+    28.4,
+    441.274
+   ],
+   "yaw_deg": 114.67,
+   "scale": 0.848,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.91,
+   "road_clearance_m": 90.14,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0430",
+   "asset": "pine",
+   "position": [
+    173.745,
+    27.437,
+    477.695
+   ],
+   "yaw_deg": 21.47,
+   "scale": 1.168,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 0.39,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0431",
+   "asset": "hay",
+   "position": [
+    165.134,
+    29.415,
+    428.154
+   ],
+   "yaw_deg": 250.27,
+   "scale": 1.188,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.44,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0432",
+   "asset": "broadleaf",
+   "position": [
+    108.46,
+    29.691,
+    429.471
+   ],
+   "yaw_deg": 327.49,
+   "scale": 1.298,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.84,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0433",
+   "asset": "pine",
+   "position": [
+    108.901,
+    27.811,
+    450.348
+   ],
+   "yaw_deg": 237.12,
+   "scale": 1.097,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.8,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0434",
+   "asset": "broadleaf",
+   "position": [
+    182.452,
+    29.519,
+    424.437
+   ],
+   "yaw_deg": 180.9,
+   "scale": 1.139,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.53,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0435",
+   "asset": "broadleaf",
+   "position": [
+    200.178,
+    26.463,
+    464.346
+   ],
+   "yaw_deg": 243.5,
+   "scale": 0.893,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.57,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0436",
+   "asset": "pine",
+   "position": [
+    183.535,
+    27.702,
+    453.589
+   ],
+   "yaw_deg": 359.21,
+   "scale": 1.192,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.05,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0437",
+   "asset": "broadleaf",
+   "position": [
+    169.968,
+    33.13,
+    395.004
+   ],
+   "yaw_deg": 358.16,
+   "scale": 1.142,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.39,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0438",
+   "asset": "broadleaf",
+   "position": [
+    178.834,
+    27.309,
+    473.943
+   ],
+   "yaw_deg": 86.95,
+   "scale": 0.719,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.82,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0439",
+   "asset": "pine",
+   "position": [
+    147.6,
+    35.037,
+    378.656
+   ],
+   "yaw_deg": 15.32,
+   "scale": 0.809,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.27,
+   "road_clearance_m": 66.35,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0440",
+   "asset": "hay",
+   "position": [
+    92.736,
+    32.137,
+    413.679
+   ],
+   "yaw_deg": 75.19,
+   "scale": 0.918,
+   "terrain_offset_m": 0,
+   "slope_deg": 9.82,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0441",
+   "asset": "pine",
+   "position": [
+    124.771,
+    32.441,
+    408.912
+   ],
+   "yaw_deg": 357.41,
+   "scale": 1.227,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.45,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0442",
+   "asset": "hay",
+   "position": [
+    164.613,
+    28.26,
+    453.069
+   ],
+   "yaw_deg": 226.73,
+   "scale": 0.922,
+   "terrain_offset_m": 0,
+   "slope_deg": 1.49,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0443",
+   "asset": "hay",
+   "position": [
+    113.515,
+    28.389,
+    448.234
+   ],
+   "yaw_deg": 104.34,
+   "scale": 0.746,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.6,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0444",
+   "asset": "broadleaf",
+   "position": [
+    151.021,
+    26.61,
+    486.143
+   ],
+   "yaw_deg": 43.51,
+   "scale": 0.864,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0445",
+   "asset": "broadleaf",
+   "position": [
+    115.972,
+    27.293,
+    472.97
+   ],
+   "yaw_deg": 9.66,
+   "scale": 1.389,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.77,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0446",
+   "asset": "pine",
+   "position": [
+    141.147,
+    34.764,
+    376.147
+   ],
+   "yaw_deg": 31.4,
+   "scale": 0.995,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.35,
+   "road_clearance_m": 68.46,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0447",
+   "asset": "hay",
+   "position": [
+    130.656,
+    31.262,
+    420.235
+   ],
+   "yaw_deg": 292.17,
+   "scale": 0.7,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.39,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0448",
+   "asset": "broadleaf",
+   "position": [
+    156.826,
+    28.035,
+    460.133
+   ],
+   "yaw_deg": 330.88,
+   "scale": 1.1,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.45,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0449",
+   "asset": "pine",
+   "position": [
+    175.343,
+    55.885,
+    349.865
+   ],
+   "yaw_deg": 210.99,
+   "scale": 0.94,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 25.91,
+   "road_clearance_m": 26.55,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0450",
+   "asset": "pine",
+   "position": [
+    104.894,
+    34.756,
+    367.807
+   ],
+   "yaw_deg": 282.1,
+   "scale": 0.861,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.15,
+   "road_clearance_m": 86.39,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0451",
+   "asset": "pine",
+   "position": [
+    144.464,
+    28.854,
+    436.569
+   ],
+   "yaw_deg": 92.92,
+   "scale": 1.284,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.7,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "green_valley_0452",
+   "asset": "broadleaf",
+   "position": [
+    -117.257,
+    71.269,
+    -69.072
+   ],
+   "yaw_deg": 97.95,
+   "scale": 0.931,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.74,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0453",
+   "asset": "broadleaf",
+   "position": [
+    -103.466,
+    71.664,
+    -69.168
+   ],
+   "yaw_deg": 162.85,
+   "scale": 1.009,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.5,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0454",
+   "asset": "broadleaf",
+   "position": [
+    -87.438,
+    72.305,
+    -71.406
+   ],
+   "yaw_deg": 186.3,
+   "scale": 1.039,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.13,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0455",
+   "asset": "broadleaf",
+   "position": [
+    -72.671,
+    72.071,
+    -70.928
+   ],
+   "yaw_deg": 45.27,
+   "scale": 1.118,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 14,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0456",
+   "asset": "broadleaf",
+   "position": [
+    -57.813,
+    72.366,
+    -71.452
+   ],
+   "yaw_deg": 14.64,
+   "scale": 1.059,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.88,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0457",
+   "asset": "broadleaf",
+   "position": [
+    -47.881,
+    72.856,
+    -70.69
+   ],
+   "yaw_deg": 196.42,
+   "scale": 1.101,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.07,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0458",
+   "asset": "broadleaf",
+   "position": [
+    -127.834,
+    69.043,
+    -56.919
+   ],
+   "yaw_deg": 78.97,
+   "scale": 1.045,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.74,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0459",
+   "asset": "broadleaf",
+   "position": [
+    -114.416,
+    68.832,
+    -54.603
+   ],
+   "yaw_deg": 327.04,
+   "scale": 0.997,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.57,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0460",
+   "asset": "broadleaf",
+   "position": [
+    -102.228,
+    69.389,
+    -55.62
+   ],
+   "yaw_deg": 296.22,
+   "scale": 0.939,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.1,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0461",
+   "asset": "broadleaf",
+   "position": [
+    -72.528,
+    69.261,
+    -57.05
+   ],
+   "yaw_deg": 27.84,
+   "scale": 1.061,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.65,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0462",
+   "asset": "broadleaf",
+   "position": [
+    -59.518,
+    69.073,
+    -56.585
+   ],
+   "yaw_deg": 140.6,
+   "scale": 1.059,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.52,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0463",
+   "asset": "broadleaf",
+   "position": [
+    -129.126,
+    66.374,
+    -43.448
+   ],
+   "yaw_deg": 57.49,
+   "scale": 0.949,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.16,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0464",
+   "asset": "broadleaf",
+   "position": [
+    -117.938,
+    66.34,
+    -42.141
+   ],
+   "yaw_deg": 167.33,
+   "scale": 0.974,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.95,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0465",
+   "asset": "broadleaf",
+   "position": [
+    -101.804,
+    67.444,
+    -41.959
+   ],
+   "yaw_deg": 208.85,
+   "scale": 0.914,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.8,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0466",
+   "asset": "broadleaf",
+   "position": [
+    -71.987,
+    67.463,
+    -42.028
+   ],
+   "yaw_deg": 321.45,
+   "scale": 0.985,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.65,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0467",
+   "asset": "broadleaf",
+   "position": [
+    -59.518,
+    67.489,
+    -43.361
+   ],
+   "yaw_deg": 180.69,
+   "scale": 1.027,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.46,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0468",
+   "asset": "broadleaf",
+   "position": [
+    -47.045,
+    66.971,
+    -40.477
+   ],
+   "yaw_deg": 173.56,
+   "scale": 0.944,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.27,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0469",
+   "asset": "broadleaf",
+   "position": [
+    -130.865,
+    63.775,
+    -28.844
+   ],
+   "yaw_deg": 313.95,
+   "scale": 0.899,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.84,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0470",
+   "asset": "broadleaf",
+   "position": [
+    -115.399,
+    64.288,
+    -29.45
+   ],
+   "yaw_deg": 120.61,
+   "scale": 0.939,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.3,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0471",
+   "asset": "broadleaf",
+   "position": [
+    -104.145,
+    64.816,
+    -26.241
+   ],
+   "yaw_deg": 270.92,
+   "scale": 1.024,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.74,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0472",
+   "asset": "broadleaf",
+   "position": [
+    -86.277,
+    65.759,
+    -27.824
+   ],
+   "yaw_deg": 195.82,
+   "scale": 1.078,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.5,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0473",
+   "asset": "broadleaf",
+   "position": [
+    -75.643,
+    65.767,
+    -29.23
+   ],
+   "yaw_deg": 34.49,
+   "scale": 1.104,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0474",
+   "asset": "broadleaf",
+   "position": [
+    -58.516,
+    65.078,
+    -26.867
+   ],
+   "yaw_deg": 83.14,
+   "scale": 0.897,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.42,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0475",
+   "asset": "broadleaf",
+   "position": [
+    -129.186,
+    61.623,
+    -14.765
+   ],
+   "yaw_deg": 324.87,
+   "scale": 1.001,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.74,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0476",
+   "asset": "broadleaf",
+   "position": [
+    -102.445,
+    63.229,
+    -15.759
+   ],
+   "yaw_deg": 4.94,
+   "scale": 1.064,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0477",
+   "asset": "broadleaf",
+   "position": [
+    -90.071,
+    63.729,
+    -15.47
+   ],
+   "yaw_deg": 24.59,
+   "scale": 0.953,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.3,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0478",
+   "asset": "broadleaf",
+   "position": [
+    -73.952,
+    63.409,
+    -14.306
+   ],
+   "yaw_deg": 102.17,
+   "scale": 0.993,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.43,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0479",
+   "asset": "broadleaf",
+   "position": [
+    -60.36,
+    63.197,
+    -13.946
+   ],
+   "yaw_deg": 306.09,
+   "scale": 0.984,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.18,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0480",
+   "asset": "broadleaf",
+   "position": [
+    -44.657,
+    62.441,
+    -15.421
+   ],
+   "yaw_deg": 250.21,
+   "scale": 1.02,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.18,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0481",
+   "asset": "broadleaf",
+   "position": [
+    -131.625,
+    59.448,
+    0.68
+   ],
+   "yaw_deg": 60.45,
+   "scale": 0.933,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.62,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0482",
+   "asset": "broadleaf",
+   "position": [
+    -117.629,
+    59.431,
+    0.066
+   ],
+   "yaw_deg": 284.59,
+   "scale": 0.96,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.8,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0483",
+   "asset": "broadleaf",
+   "position": [
+    -102.519,
+    60.83,
+    -0.696
+   ],
+   "yaw_deg": 131.42,
+   "scale": 0.952,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.08,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0484",
+   "asset": "broadleaf",
+   "position": [
+    -89.453,
+    61.201,
+    0.364
+   ],
+   "yaw_deg": 340.95,
+   "scale": 0.933,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.38,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0485",
+   "asset": "broadleaf",
+   "position": [
+    -74.303,
+    61.513,
+    -1.584
+   ],
+   "yaw_deg": 353.04,
+   "scale": 1.111,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.03,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0486",
+   "asset": "broadleaf",
+   "position": [
+    -58.072,
+    61.306,
+    -1.602
+   ],
+   "yaw_deg": 356.65,
+   "scale": 0.925,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.49,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0487",
+   "asset": "broadleaf",
+   "position": [
+    -45.205,
+    60.05,
+    -0.325
+   ],
+   "yaw_deg": 23.81,
+   "scale": 1.004,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.66,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0488",
+   "asset": "broadleaf",
+   "position": [
+    297.499,
+    32.306,
+    315.573
+   ],
+   "yaw_deg": 228.33,
+   "scale": 0.941,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.56,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0489",
+   "asset": "broadleaf",
+   "position": [
+    326.513,
+    26.804,
+    313.652
+   ],
+   "yaw_deg": 156.38,
+   "scale": 1.019,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.64,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0490",
+   "asset": "broadleaf",
+   "position": [
+    342.78,
+    23.924,
+    316.72
+   ],
+   "yaw_deg": 59.67,
+   "scale": 0.883,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.38,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0491",
+   "asset": "broadleaf",
+   "position": [
+    356.305,
+    21.455,
+    313.634
+   ],
+   "yaw_deg": 61.61,
+   "scale": 0.953,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0492",
+   "asset": "broadleaf",
+   "position": [
+    372.299,
+    18.313,
+    315.963
+   ],
+   "yaw_deg": 146.83,
+   "scale": 1.034,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.29,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0493",
+   "asset": "broadleaf",
+   "position": [
+    341.335,
+    24.807,
+    329.93
+   ],
+   "yaw_deg": 223.86,
+   "scale": 0.883,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.23,
+   "road_clearance_m": 66.31,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0494",
+   "asset": "broadleaf",
+   "position": [
+    358.449,
+    20.866,
+    330.156
+   ],
+   "yaw_deg": 204.43,
+   "scale": 0.904,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 14.79,
+   "road_clearance_m": 71.21,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0495",
+   "asset": "broadleaf",
+   "position": [
+    369.56,
+    18.805,
+    330.333
+   ],
+   "yaw_deg": 271.48,
+   "scale": 0.941,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.32,
+   "road_clearance_m": 74.16,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0496",
+   "asset": "broadleaf",
+   "position": [
+    271.593,
+    54.222,
+    358.736
+   ],
+   "yaw_deg": 177.25,
+   "scale": 0.961,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.72,
+   "road_clearance_m": 14.49,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0497",
+   "asset": "broadleaf",
+   "position": [
+    283.262,
+    52.479,
+    355.841
+   ],
+   "yaw_deg": 150.86,
+   "scale": 0.917,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 15.87,
+   "road_clearance_m": 21.79,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0498",
+   "asset": "broadleaf",
+   "position": [
+    300.847,
+    51.779,
+    369.235
+   ],
+   "yaw_deg": 56.99,
+   "scale": 1.072,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.27,
+   "road_clearance_m": 15.84,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0499",
+   "asset": "broadleaf",
+   "position": [
+    313.266,
+    50.719,
+    372.548
+   ],
+   "yaw_deg": 235.93,
+   "scale": 1.071,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.65,
+   "road_clearance_m": 16.95,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0500",
+   "asset": "broadleaf",
+   "position": [
+    325.86,
+    48.273,
+    369.996
+   ],
+   "yaw_deg": 117.65,
+   "scale": 1.034,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.33,
+   "road_clearance_m": 23.42,
+   "district": "",
+   "tag": "orchard_rows"
+  },
+  {
+   "id": "green_valley_0501",
+   "asset": "fence",
+   "position": [
+    -345.852,
+    80.557,
+    30.942
+   ],
+   "yaw_deg": 224.12,
+   "scale": 0.989,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.11,
+   "road_clearance_m": 17.01,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0502",
+   "asset": "fence",
+   "position": [
+    -338.471,
+    80.268,
+    38.02
+   ],
+   "yaw_deg": 225.24,
+   "scale": 0.963,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.67,
+   "road_clearance_m": 17.3,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0503",
+   "asset": "fence",
+   "position": [
+    -331.373,
+    80.076,
+    45.582
+   ],
+   "yaw_deg": 225.85,
+   "scale": 0.987,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.19,
+   "road_clearance_m": 16.88,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0504",
+   "asset": "fence",
+   "position": [
+    -323.914,
+    79.835,
+    52.481
+   ],
+   "yaw_deg": 227.22,
+   "scale": 1.063,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.28,
+   "road_clearance_m": 17.02,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0505",
+   "asset": "fence",
+   "position": [
+    -316.129,
+    79.52,
+    59.26
+   ],
+   "yaw_deg": 227.98,
+   "scale": 1.044,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.76,
+   "road_clearance_m": 17.27,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0506",
+   "asset": "fence",
+   "position": [
+    -308.793,
+    79.198,
+    66.169
+   ],
+   "yaw_deg": 229.68,
+   "scale": 1.015,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.91,
+   "road_clearance_m": 16.92,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0507",
+   "asset": "fence",
+   "position": [
+    -300.941,
+    78.884,
+    72.821
+   ],
+   "yaw_deg": 230.56,
+   "scale": 1.026,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.31,
+   "road_clearance_m": 16.85,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0508",
+   "asset": "fence",
+   "position": [
+    -292.788,
+    78.583,
+    79.477
+   ],
+   "yaw_deg": 230.56,
+   "scale": 1.044,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.15,
+   "road_clearance_m": 16.87,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0509",
+   "asset": "fence",
+   "position": [
+    -284.558,
+    78.203,
+    86.08
+   ],
+   "yaw_deg": 230.47,
+   "scale": 0.942,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.84,
+   "road_clearance_m": 17.01,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0510",
+   "asset": "fence",
+   "position": [
+    -276.295,
+    77.867,
+    92.622
+   ],
+   "yaw_deg": 230.43,
+   "scale": 1.016,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.33,
+   "road_clearance_m": 17.23,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0511",
+   "asset": "fence",
+   "position": [
+    -268.187,
+    77.529,
+    99.312
+   ],
+   "yaw_deg": 230.47,
+   "scale": 0.977,
+   "terrain_offset_m": 0,
+   "slope_deg": 6,
+   "road_clearance_m": 17.23,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0512",
+   "asset": "fence",
+   "position": [
+    -260.195,
+    77.171,
+    106.084
+   ],
+   "yaw_deg": 230.66,
+   "scale": 1.058,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.92,
+   "road_clearance_m": 17.08,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0513",
+   "asset": "fence",
+   "position": [
+    -252.131,
+    76.831,
+    112.789
+   ],
+   "yaw_deg": 230.81,
+   "scale": 0.96,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.91,
+   "road_clearance_m": 16.99,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0514",
+   "asset": "fence",
+   "position": [
+    -235.85,
+    76.063,
+    125.874
+   ],
+   "yaw_deg": 231.42,
+   "scale": 1.017,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.96,
+   "road_clearance_m": 17.02,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0515",
+   "asset": "fence",
+   "position": [
+    -219.312,
+    75.255,
+    138.522
+   ],
+   "yaw_deg": 232.28,
+   "scale": 1.013,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.38,
+   "road_clearance_m": 17.28,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0516",
+   "asset": "fence",
+   "position": [
+    -211.349,
+    74.93,
+    145.111
+   ],
+   "yaw_deg": 233.02,
+   "scale": 0.993,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.01,
+   "road_clearance_m": 16.87,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0517",
+   "asset": "fence",
+   "position": [
+    -202.977,
+    74.522,
+    151.299
+   ],
+   "yaw_deg": 233.45,
+   "scale": 1.022,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.97,
+   "road_clearance_m": 16.93,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0518",
+   "asset": "fence",
+   "position": [
+    -194.415,
+    74.094,
+    156.977
+   ],
+   "yaw_deg": 234.42,
+   "scale": 0.939,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.19,
+   "road_clearance_m": 17.39,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0519",
+   "asset": "fence",
+   "position": [
+    -186.06,
+    73.732,
+    163.13
+   ],
+   "yaw_deg": 234.97,
+   "scale": 1.018,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.68,
+   "road_clearance_m": 17.2,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0520",
+   "asset": "fence",
+   "position": [
+    -177.706,
+    73.359,
+    168.948
+   ],
+   "yaw_deg": 236.25,
+   "scale": 1.048,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.09,
+   "road_clearance_m": 17.12,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0521",
+   "asset": "fence",
+   "position": [
+    -169.114,
+    72.993,
+    174.669
+   ],
+   "yaw_deg": 237.01,
+   "scale": 1.034,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.79,
+   "road_clearance_m": 17.07,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0522",
+   "asset": "fence",
+   "position": [
+    -160.532,
+    72.696,
+    179.908
+   ],
+   "yaw_deg": 238.76,
+   "scale": 0.941,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.71,
+   "road_clearance_m": 17.2,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0523",
+   "asset": "fence",
+   "position": [
+    -151.917,
+    72.337,
+    185.482
+   ],
+   "yaw_deg": 239.77,
+   "scale": 1.032,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.14,
+   "road_clearance_m": 16.81,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0524",
+   "asset": "fence",
+   "position": [
+    -143.244,
+    71.945,
+    190.179
+   ],
+   "yaw_deg": 242.27,
+   "scale": 1.017,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.17,
+   "road_clearance_m": 16.91,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0525",
+   "asset": "fence",
+   "position": [
+    -134.111,
+    71.548,
+    194.516
+   ],
+   "yaw_deg": 243.83,
+   "scale": 1.004,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.45,
+   "road_clearance_m": 17.18,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0526",
+   "asset": "fence",
+   "position": [
+    -125.427,
+    71.226,
+    198.327
+   ],
+   "yaw_deg": 247.67,
+   "scale": 1.038,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.57,
+   "road_clearance_m": 17.3,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0527",
+   "asset": "fence",
+   "position": [
+    -116.295,
+    70.944,
+    202.064
+   ],
+   "yaw_deg": 250.1,
+   "scale": 1.028,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.05,
+   "road_clearance_m": 17.1,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0528",
+   "asset": "fence",
+   "position": [
+    -107.937,
+    70.668,
+    204.584
+   ],
+   "yaw_deg": 256.76,
+   "scale": 0.987,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.07,
+   "road_clearance_m": 17.1,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0529",
+   "asset": "fence",
+   "position": [
+    -98.91,
+    70.325,
+    206.458
+   ],
+   "yaw_deg": 261.61,
+   "scale": 1.015,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.83,
+   "road_clearance_m": 16.95,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0530",
+   "asset": "fence",
+   "position": [
+    -90.764,
+    70.041,
+    206.764
+   ],
+   "yaw_deg": 270.45,
+   "scale": 1.011,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.02,
+   "road_clearance_m": 17.16,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0531",
+   "asset": "fence",
+   "position": [
+    -81.264,
+    69.782,
+    206.706
+   ],
+   "yaw_deg": 274.3,
+   "scale": 0.977,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.43,
+   "road_clearance_m": 16.81,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0532",
+   "asset": "fence",
+   "position": [
+    -72.589,
+    69.528,
+    205.346
+   ],
+   "yaw_deg": 280.87,
+   "scale": 0.998,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.4,
+   "road_clearance_m": 16.97,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0533",
+   "asset": "fence",
+   "position": [
+    -63.118,
+    69.264,
+    202.895
+   ],
+   "yaw_deg": 283.64,
+   "scale": 1.032,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.66,
+   "road_clearance_m": 17.35,
+   "district": "",
+   "tag": "farm_boundary"
+  },
+  {
+   "id": "green_valley_0534",
+   "asset": "fence",
+   "position": [
+    -238.846,
+    53.833,
+    458.263
+   ],
+   "yaw_deg": 125.48,
+   "scale": 1.059,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.31,
+   "road_clearance_m": 13.6,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0535",
+   "asset": "fence",
+   "position": [
+    -231.479,
+    54.114,
+    453.021
+   ],
+   "yaw_deg": 125.67,
+   "scale": 1.069,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.43,
+   "road_clearance_m": 13.61,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0536",
+   "asset": "fence",
+   "position": [
+    -224.236,
+    54.451,
+    447.602
+   ],
+   "yaw_deg": 125.87,
+   "scale": 0.978,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.05,
+   "road_clearance_m": 13.45,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0537",
+   "asset": "fence",
+   "position": [
+    -216.595,
+    54.713,
+    442.721
+   ],
+   "yaw_deg": 126.09,
+   "scale": 1.033,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.98,
+   "road_clearance_m": 14,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0538",
+   "asset": "fence",
+   "position": [
+    -209.385,
+    55.096,
+    437.136
+   ],
+   "yaw_deg": 126.55,
+   "scale": 0.986,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.39,
+   "road_clearance_m": 13.77,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0539",
+   "asset": "fence",
+   "position": [
+    -202.208,
+    55.451,
+    431.597
+   ],
+   "yaw_deg": 126.82,
+   "scale": 0.982,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.18,
+   "road_clearance_m": 13.61,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0540",
+   "asset": "fence",
+   "position": [
+    -194.746,
+    55.791,
+    426.437
+   ],
+   "yaw_deg": 127.09,
+   "scale": 1.031,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.6,
+   "road_clearance_m": 13.97,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0541",
+   "asset": "fence",
+   "position": [
+    -187.752,
+    56.19,
+    420.508
+   ],
+   "yaw_deg": 127.7,
+   "scale": 1.054,
+   "terrain_offset_m": 0,
+   "slope_deg": 4.93,
+   "road_clearance_m": 13.5,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0542",
+   "asset": "fence",
+   "position": [
+    -180.59,
+    56.564,
+    414.923
+   ],
+   "yaw_deg": 128.04,
+   "scale": 1.023,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.03,
+   "road_clearance_m": 13.48,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0543",
+   "asset": "fence",
+   "position": [
+    -173.147,
+    56.928,
+    409.682
+   ],
+   "yaw_deg": 128.4,
+   "scale": 0.966,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.65,
+   "road_clearance_m": 13.96,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0544",
+   "asset": "fence",
+   "position": [
+    -166.133,
+    57.324,
+    403.882
+   ],
+   "yaw_deg": 128.8,
+   "scale": 1.044,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.62,
+   "road_clearance_m": 13.82,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0545",
+   "asset": "fence",
+   "position": [
+    -158.947,
+    57.723,
+    398.088
+   ],
+   "yaw_deg": 129.68,
+   "scale": 0.941,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.82,
+   "road_clearance_m": 13.88,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0546",
+   "asset": "fence",
+   "position": [
+    -151.886,
+    58.125,
+    392.303
+   ],
+   "yaw_deg": 130.18,
+   "scale": 0.96,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.89,
+   "road_clearance_m": 13.97,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0547",
+   "asset": "fence",
+   "position": [
+    -145.087,
+    58.542,
+    386.193
+   ],
+   "yaw_deg": 130.71,
+   "scale": 0.958,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.73,
+   "road_clearance_m": 13.74,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0548",
+   "asset": "fence",
+   "position": [
+    -131.185,
+    59.347,
+    374.066
+   ],
+   "yaw_deg": 132.43,
+   "scale": 0.99,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.39,
+   "road_clearance_m": 13.9,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0549",
+   "asset": "fence",
+   "position": [
+    -117.806,
+    60.201,
+    361.704
+   ],
+   "yaw_deg": 133.27,
+   "scale": 0.999,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.48,
+   "road_clearance_m": 13.95,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0550",
+   "asset": "fence",
+   "position": [
+    -111.329,
+    60.643,
+    355.204
+   ],
+   "yaw_deg": 133.94,
+   "scale": 0.968,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.12,
+   "road_clearance_m": 13.72,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0551",
+   "asset": "fence",
+   "position": [
+    -98.309,
+    61.458,
+    342.585
+   ],
+   "yaw_deg": 134.49,
+   "scale": 0.951,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.25,
+   "road_clearance_m": 13.75,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0552",
+   "asset": "fence",
+   "position": [
+    -85.64,
+    62.311,
+    329.575
+   ],
+   "yaw_deg": 135.14,
+   "scale": 0.967,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.7,
+   "road_clearance_m": 13.46,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0553",
+   "asset": "fence",
+   "position": [
+    -72.577,
+    63.031,
+    317.067
+   ],
+   "yaw_deg": 135.49,
+   "scale": 1.017,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.64,
+   "road_clearance_m": 13.96,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0554",
+   "asset": "fence",
+   "position": [
+    -53.721,
+    64.166,
+    297.564
+   ],
+   "yaw_deg": 136.05,
+   "scale": 0.972,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.64,
+   "road_clearance_m": 13.89,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0555",
+   "asset": "fence",
+   "position": [
+    -47.434,
+    64.506,
+    291.047
+   ],
+   "yaw_deg": 136.28,
+   "scale": 1.04,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.83,
+   "road_clearance_m": 13.91,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0556",
+   "asset": "fence",
+   "position": [
+    -41.457,
+    64.859,
+    284.284
+   ],
+   "yaw_deg": 136.38,
+   "scale": 1.009,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.32,
+   "road_clearance_m": 13.56,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0557",
+   "asset": "fence",
+   "position": [
+    -35.069,
+    65.167,
+    277.913
+   ],
+   "yaw_deg": 136.48,
+   "scale": 1.001,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.76,
+   "road_clearance_m": 13.8,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0558",
+   "asset": "fence",
+   "position": [
+    -28.805,
+    65.465,
+    271.432
+   ],
+   "yaw_deg": 136.55,
+   "scale": 0.953,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.86,
+   "road_clearance_m": 13.88,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0559",
+   "asset": "fence",
+   "position": [
+    -22.728,
+    65.784,
+    264.743
+   ],
+   "yaw_deg": 136.71,
+   "scale": 0.946,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.4,
+   "road_clearance_m": 13.71,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0560",
+   "asset": "fence",
+   "position": [
+    -16.714,
+    66.098,
+    258.03
+   ],
+   "yaw_deg": 136.78,
+   "scale": 0.973,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.78,
+   "road_clearance_m": 13.49,
+   "district": "",
+   "tag": "field_boundary"
+  },
+  {
+   "id": "green_valley_0561",
+   "asset": "fence",
+   "position": [
+    -10.322,
+    66.331,
+    251.675
+   ],
+   "yaw_deg": 136.84,
+   "scale": 1.07,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.23,
+   "road_clearance_m": 13.8,
+   "district": "",
+   "tag": "field_boundary"
+  }
+ ]
+}
