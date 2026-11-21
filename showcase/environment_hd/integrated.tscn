@@ -5,5 +5,5 @@
 [node name="NeedlePass_ArtOverlay_ONLY" type="Node3D"]
 script = ExtResource("1_world")
 add_lighting = false
-render_terrain_visual = false
-render_road_visual = false
+render_terrain_visual = true
+render_road_visual = true

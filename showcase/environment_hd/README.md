@@ -8,7 +8,7 @@
 - **205** placements from scenery PR #23, constrained to terrain patch and prevalidated road clearances. Reuses compatible project original art; added 5 more-detailed authored source glTF meshes (fir variants, cliff variants and fern).
 - 1K CC0 textures with exact source provenance; full rock albedo/normal/roughness and partial asphalt/ground PBR channels.
 - Two scene workflows based on the *same data*: Godot 4.7.2 Forward+ `standalone.tscn` and Blender source-scene script `tools/environment_hd/build_blender.py`. Six stable comparison poses, key 1–6 in Godot, all present as named Blender cameras.
-- `integrated.tscn` overlay root with **terrain/road rendering and standalone lighting disabled**. It owns no physics, cannot replace the World Runtime collision surface, and must be instanced by the integrator.
+- `integrated.tscn` overlay root with **terrain/road rendering and standalone lighting disabled; visual-only terrain/road coatings are enabled**. It owns no physics, cannot replace the World Runtime collision surface, and must be instanced by the integrator.
 
 ## Reproduce
 
@@ -36,9 +36,9 @@ This creates `showcase/environment_hd/NeedlePass_Portfolio.blend` with six camer
 
 ## Integration contract
 
-Integrators should open the genuine world physics scene from PR #20 / World Runtime and add `res://showcase/environment_hd/integrated.tscn` as a child. Reuse `data/world/road_graph_v1.json` / R16 metadata in exactly the original world coordinates. The overlay defaults to visual foliage/geology only; it does NOT create `StaticBody3D`, `CollisionShape3D`, drive lanes, or new terrain colliders. If duplicate foliage from the existing scenery runtime is visible, **choose only one foliage renderer** in the showcase footprint; culling/LOD coordination is a remaining integration action. Avoid any collision-authority change.
+Integrators should open the genuine world physics scene from PR #20 / World Runtime and add `res://showcase/environment_hd/integrated.tscn` as a child. Reuse `data/world/road_graph_v1.json` / R16 metadata in exactly the original world coordinates. The overlay defaults to visual foliage/geology and **slightly raised visual-only terrain/road coatings**; it does NOT create `StaticBody3D`, `CollisionShape3D`, drive lanes, or new terrain colliders. If duplicate foliage from the existing scenery runtime is visible, **choose only one foliage renderer** in the showcase footprint; culling/LOD coordination is a remaining integration action. Avoid any collision-authority change.
 
-For the integrated root-Godot project, assets resolve from `res://assets/environment_hd`. The standalone scene uses staged assets when needed. World spatial coordinates are Godot `(X east, Y up, Z south)` in **meters**; Blender transforms to `(X, -Z, Y)`. The same sample and placement data generate both scenes. Use `render_terrain_visual=false` and `render_road_visual=false` for the integrated overlay: existing World Runtime owns the visual road/terrain and authoritative collision.
+For the integrated root-Godot project, assets resolve from `res://assets/environment_hd`. The standalone scene uses staged assets when needed. World spatial coordinates are Godot `(X east, Y up, Z south)` in **meters**; Blender transforms to `(X, -Z, Y)`. The same sample and placement data generate both scenes. The integrated overlay defaults to `render_terrain_visual=true` and `render_road_visual=true`, drawing its coatings just above the canonical visual surface. The **existing World Runtime always owns collision**. Turn either flag off if integration exhibits double material layers or z-fighting. The production integrator must profile any duplicate visual draw costs.
 
 ## Performance expectations vs measurements
 

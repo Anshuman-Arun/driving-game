@@ -69,7 +69,7 @@
         "textures/rock_normal.jpg",
         "textures/rock_rough.jpg"
       ],
-      "resolution": "1024x1024",
+      "resolution": "1024x512",
       "included_maps": [
         "albedo",
         "OpenGL tangent-space normal",

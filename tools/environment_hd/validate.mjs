@@ -43,8 +43,10 @@ for(const [name,count] of Object.entries(expected)){
   metrics[name]={triangles,bytes:fs.statSync(file).size,material_count:obj.materials.length};
 }
 const jpeg={
-  "asphalt_color.jpg":1024,"asphalt_rough.jpg":1024,"rock_color.jpg":1024,
-  "rock_normal.jpg":1024,"rock_rough.jpg":1024,"ground_color.jpg":1024,"ground_rough.jpg":1024
+  "asphalt_color.jpg":[1024,1024],"asphalt_rough.jpg":[1024,1024],
+  "rock_color.jpg":[1024,512],"rock_normal.jpg":[1024,512],
+  "rock_rough.jpg":[1024,512],"ground_color.jpg":[1024,1024],
+  "ground_rough.jpg":[1024,1024]
 };
 function jpgDims(filename){
   const a=fs.readFileSync(filename);
@@ -60,10 +62,10 @@ function jpgDims(filename){
   throw Error("JPEG dimensions unavailable "+filename);
 }
 let jpegBytes=0;
-for(const [name,expectedWidth] of Object.entries(jpeg)){
+for(const [name,expectedSize] of Object.entries(jpeg)){
   const file=path.join(root,"assets/environment_hd/textures",name);
   const [w,h]=jpgDims(file);
-  assert(w===expectedWidth&&h===expectedWidth,"Texture resolution changed "+name+": "+w+"x"+h);
+  assert(w===expectedSize[0]&&h===expectedSize[1],"Texture resolution changed "+name+": "+w+"x"+h);
   jpegBytes+=fs.statSync(file).size;
 }
 const gd=fs.readFileSync(path.join(root,"showcase/environment_hd/world.gd"),"utf8");

@@ -116,7 +116,7 @@ func _build_terrain() -> void:
 	for z in range(_nz):
 		for x in range(_nx):
 			var h := _height(x, z)
-			vertices.append(Vector3(_origin_x + x * _step, h - 0.04, _origin_z + z * _step))
+			vertices.append(Vector3(_origin_x + x * _step, h + 0.04, _origin_z + z * _step))
 			var n := Vector3(_height(x - 1, z) - _height(x + 1, z), 2.0 * _step, _height(x, z - 1) - _height(x, z + 1)).normalized()
 			normals.append(n)
 			texcoords.append(Vector2(float(x) * 0.16, float(z) * 0.16))
@@ -279,6 +279,9 @@ func _place_hero_geology() -> void:
 		var centre := anchor + side * direction * 53.0
 		centre.y = surface_height(centre.x, centre.z) - 1.0
 		var yaw := -rad_to_deg(atan2(tangent.z, tangent.x))
+		# Front-facing normals of the scanned-textured cliff point towards the roadway.
+		if direction > 0.0:
+			yaw += 180.0
 		_instance_model("cliff_rockface_a.gltf" if i != 1 else "cliff_rockface_b.gltf", "EscarpmentArt_%d" % i, centre, yaw, 1.0 + 0.13 * i, _rock_material)
 
 func _place_road_furniture() -> void:

@@ -105,7 +105,7 @@ verts=[]
 faces=[]
 for z in range(P["nz"]):
     for x in range(P["nx"]):
-        verts.append((P["origin_x"]+x*4,-(P["origin_z"]+z*4),height(x,z)-.04))
+        verts.append((P["origin_x"]+x*4,-(P["origin_z"]+z*4),height(x,z)+.04))
 for z in range(P["nz"]-1):
     for x in range(P["nx"]-1):
         a=z*P["nx"]+x
@@ -206,6 +206,7 @@ for j,i in enumerate([24,45,66]):
     c=Vector(ROUTE[i])+side*direction*53
     c.y=surface_y(c.x,c.z)-1
     yaw=-math.degrees(math.atan2(t.z,t.x))
+    if direction>0: yaw+=180.0  # Face geology toward the roadway.
     name="cliff_rockface_b.gltf" if j==1 else "cliff_rockface_a.gltf"
     place(name,"Cliff_"+str(j),c,yaw,1+.13*j,True)
 
