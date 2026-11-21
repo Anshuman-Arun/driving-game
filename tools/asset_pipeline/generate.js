@@ -240,8 +240,18 @@ if (typeof require !== "undefined" && require.main === module) {
   const fs = require("fs"), path = require("path");
   const args = process.argv.slice(2), check = args.includes("--check");
   const result = generate();
+  // This generator owns only supplemental GLBs and supplemental previews.
+  // The primary authoring pipeline owns MANIFEST.json, materials and primary previews.
+  const owned = result.files
+    .filter(item => item.path.endsWith(".glb") || item.path.endsWith(".svg"))
+    .map(item => ({
+      path: item.path.endsWith(".svg")
+        ? item.path.replace("assets/curated/previews/", "assets/curated/previews/supplemental/")
+        : item.path,
+      content: item.content
+    }));
   let mismatches = 0;
-  for (const item of result.files) {
+  for (const item of owned) {
     const local = path.join(process.cwd(), item.path);
     const expected = Buffer.from(item.content);
     if (check) {
@@ -254,8 +264,8 @@ if (typeof require !== "undefined" && require.main === module) {
     }
   }
   console.log(JSON.stringify({mode:check?"check":"build", models:result.report.length,
-    files:result.files.length, triangles:result.report.reduce((n,x)=>n+x.triangles,0),
-    bytes:result.files.reduce((n,x)=>n+x.content.length,0),
+    files:owned.length, triangles:result.report.reduce((n,x)=>n+x.triangles,0),
+    bytes:owned.reduce((n,x)=>n+x.content.length,0),
     mismatches},null,2));
   if (mismatches) process.exitCode = 1;
 }
