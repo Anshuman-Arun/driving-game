@@ -139,7 +139,7 @@ jobs:
             echo '## Disposable multi-branch integration (no PR merge)'
             for dir in ci integrated staging/*; do
               if [[ -d "$dir/.git" ]]; then
-                printf -- '- %s: \`%s\`\n' "$dir" "$(git -C "$dir" rev-parse HEAD)"
+                printf -- '- %s: `%s`\n' "$dir" "$(git -C "$dir" rev-parse HEAD)"
               fi
             done
             echo
