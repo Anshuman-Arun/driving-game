@@ -4,6 +4,8 @@
   "source": {
     "world_pr": 3,
     "art_pr": 7,
+    "race_pr": 10,
+    "race_head_sha": "4bd2857019ebf7f4e11a358c6dfdb5b7127bc420",
     "road_git_blob": "9bba378d68879df3baed2c97a4885c0adde88406",
     "terrain_git_blob": "d951ce11a831dad5430b4c7157e2296f73c6b151",
     "art_manifest_git_blob": "7c67ab03c29169c48432b36df6ae7a429a8decee"
@@ -11,10 +13,11 @@
   "source_road_corridors": 16,
   "source_turn_paths": 72,
   "source_r16_samples": 251001,
-  "total_objects": 2799,
-  "near_mesh_triangles_estimate": 1050176,
-  "minimum_asset_cell_batches": 343,
-  "full_world_near_mesh_component_draw_batches_estimate": 1832,
+  "source_race_exclusion_zones": 102,
+  "total_objects": 2791,
+  "near_mesh_triangles_estimate": 1064164,
+  "minimum_asset_cell_batches": 348,
+  "full_world_near_mesh_component_draw_batches_estimate": 1857,
   "regions": {
     "alder_town": {
       "count": 200,
@@ -31,65 +34,65 @@
       "near_mesh_component_draw_batches_estimate": 210
     },
     "cedar_woods": {
-      "count": 893,
+      "count": 892,
       "by_asset": {
         "arch": 1,
-        "rock": 115,
-        "pine": 525,
-        "shrub": 86,
-        "boulder": 122,
-        "warning": 18,
+        "rock": 127,
+        "pine": 511,
+        "shrub": 90,
+        "boulder": 120,
+        "warning": 17,
         "quarry": 1,
         "barrier": 25
       },
-      "near_mesh_triangles_estimate": 226888,
-      "minimum_asset_cell_batches": 95,
-      "near_mesh_component_draw_batches_estimate": 508
+      "near_mesh_triangles_estimate": 234896,
+      "minimum_asset_cell_batches": 99,
+      "near_mesh_component_draw_batches_estimate": 512
     },
     "north_ridge": {
-      "count": 742,
+      "count": 725,
       "by_asset": {
         "overlook": 1,
-        "rock": 116,
-        "pine": 153,
-        "boulder": 308,
-        "guardrail": 152,
-        "warning": 12
+        "pine": 163,
+        "boulder": 289,
+        "rock": 125,
+        "guardrail": 137,
+        "warning": 10
       },
-      "near_mesh_triangles_estimate": 176920,
-      "minimum_asset_cell_batches": 94,
-      "near_mesh_component_draw_batches_estimate": 447
+      "near_mesh_triangles_estimate": 175488,
+      "minimum_asset_cell_batches": 93,
+      "near_mesh_component_draw_batches_estimate": 440
     },
     "green_valley": {
-      "count": 558,
+      "count": 561,
       "by_asset": {
         "windmill": 1,
         "barn": 3,
-        "hay": 85,
-        "shrub": 149,
-        "broadleaf": 212,
-        "pine": 44,
-        "fence": 64
+        "shrub": 173,
+        "broadleaf": 204,
+        "hay": 72,
+        "pine": 47,
+        "fence": 61
       },
-      "near_mesh_triangles_estimate": 353466,
-      "minimum_asset_cell_batches": 70,
-      "near_mesh_component_draw_batches_estimate": 440
+      "near_mesh_triangles_estimate": 367638,
+      "minimum_asset_cell_batches": 73,
+      "near_mesh_component_draw_batches_estimate": 466
     },
     "eastwater_lake": {
-      "count": 406,
+      "count": 413,
       "by_asset": {
         "pier": 1,
-        "rock": 153,
-        "pine": 70,
-        "broadleaf": 12,
-        "shrub": 62,
-        "boulder": 71,
-        "fence": 20,
+        "rock": 146,
+        "pine": 82,
+        "broadleaf": 10,
+        "shrub": 57,
+        "boulder": 81,
+        "fence": 19,
         "warning": 17
       },
-      "near_mesh_triangles_estimate": 175548,
-      "minimum_asset_cell_batches": 51,
-      "near_mesh_component_draw_batches_estimate": 248
+      "near_mesh_triangles_estimate": 168788,
+      "minimum_asset_cell_batches": 50,
+      "near_mesh_component_draw_batches_estimate": 241
     }
   },
   "lake": {
@@ -98,16 +101,17 @@
     "triangles": 10286
   },
   "rejects": {
-    "bounds": 1464,
-    "road": 658,
+    "bounds": 1434,
+    "road": 676,
     "turn": 28,
     "junction": 0,
-    "slope": 1277,
-    "water": 921,
-    "landmark": 2,
-    "spacing": 1510,
-    "no_location": 84,
-    "foundation": 19
+    "slope": 1255,
+    "water": 848,
+    "landmark": 3,
+    "spacing": 1425,
+    "no_location": 76,
+    "foundation": 19,
+    "race_gate": 23
   },
   "landmark_ids": [
     "alder_garage",

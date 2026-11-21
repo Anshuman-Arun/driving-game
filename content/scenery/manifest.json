@@ -108,6 +108,8 @@
   "sources": {
     "world_pr": 3,
     "art_pr": 7,
+    "race_pr": 10,
+    "race_head_sha": "4bd2857019ebf7f4e11a358c6dfdb5b7127bc420",
     "road_git_blob": "9bba378d68879df3baed2c97a4885c0adde88406",
     "terrain_git_blob": "d951ce11a831dad5430b4c7157e2296f73c6b151",
     "art_manifest_git_blob": "7c67ab03c29169c48432b36df6ae7a429a8decee"
@@ -346,22 +348,22 @@
     {
       "id": "cedar_woods",
       "path": "content/scenery/packs/cedar_woods.json",
-      "count": 893
+      "count": 892
     },
     {
       "id": "north_ridge",
       "path": "content/scenery/packs/north_ridge.json",
-      "count": 742
+      "count": 725
     },
     {
       "id": "green_valley",
       "path": "content/scenery/packs/green_valley.json",
-      "count": 558
+      "count": 561
     },
     {
       "id": "eastwater_lake",
       "path": "content/scenery/packs/eastwater_lake.json",
-      "count": 406
+      "count": 413
     }
   ],
   "lake": {
