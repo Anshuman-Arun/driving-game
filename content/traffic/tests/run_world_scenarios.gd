@@ -66,7 +66,7 @@ func _run() -> void:
 	_check(loader.native_definitions(pack_data).size() == 6, "six actual runtime controls; five pass-through nodes excluded")
 	_check(loader.apply_pack(pack_data, basic), "configure_junctions() accepts six authored definitions")
 	_check(basic.junctions.size() == 28, "22 implicit merges + 6 explicit junctions")
-	_check(basic.inbound_junction.size() == 94, "72 turn connector inbound mappings plus 22 controlled travel approaches")
+	_check(basic.inbound_junction.size() == 84, "62 implicit connector mappings plus 22 explicit travel approaches")
 	_check(not loader.apply_pack(pack_data, basic), "double application rejected before mutation")
 	var bad: Dictionary = pack_data.duplicate(true)
 	bad["junctions"][0]["incoming_lane_ids"][0] = "not_a_lane"
