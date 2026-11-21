@@ -11,7 +11,8 @@ This directory contains **road-network-specific authoring**, not an alternative 
 | previews/traffic_controls.svg | Top-down SVG traced from the authoritative World graph with the 11 junction markers |
 | JUNCTION_INVENTORY.md | Per-node control decisions, speeds, connector lengths and bottlenecks |
 | tests/validate_content.js | Node 20+ static graph/content validator, with negative mutation tests |
-| tests/run_world_scenarios.gd | Godot 4.7.2 smoke/full traffic stress suites, deterministic replay and point-agent checks |
+| tests/run_world_scenarios.gd | Godot 4.7.2 smoke/full suites, deterministic replay, modeled body occupancy, queue checks and separately logged close passes |
+| tests/vehicle_clearance.gd | 4.5 m x 1.85 m oriented vehicle footprints and rear-end, turn and merge conflict classification |
 | INTEGRATION_NOTES.md | API hookup, reservation safety caveats, commands and ownership handoff |
 | VALIDATION_REPORT.md | Evidence and explicit unverified work |
 
@@ -25,4 +26,6 @@ This directory contains **road-network-specific authoring**, not an alternative 
 - Market, Depot, Chapel: no runtime controls; these are genuinely non-crossing two-way continuations.
 - 22 implicit successor-merge groups are left intact. Eight explicit controls map *incoming travel lanes*, disjoint from the 62 implicit connector-to-merge mappings.
 
-**Safety limitation:** the current simulator releases explicit intersection reservations on the entry turn connector after one common clearance distance. Six complex multi-arm nodes have actual crossings beyond what their shortest connector can safely protect. Longer clearances can deadlock permanently. Full collision-safe junction arbitration needs an upstream simulator change; do not mistake authored stops or point-agent spacing for physical collision certification.
+**Safety limitation:** the original Traffic PR #4 simulator releases explicit intersection reservations on the entry turn connector after one common clearance distance. Six complex multi-arm nodes have actual crossings beyond what their shortest connector can safely protect. Longer clearances can deadlock permanently. Full collision-safe junction arbitration needs an upstream simulator change; do not mistake authored stops or point-agent spacing for physical collision certification.
+
+**Native evidence:** Expanded CI retry 44955678724 executed Node/geometry validation and Godot 4.7.2 import, smoke (24 scenarios passed) and full soak (33/72 scenarios failed against the original Traffic PR #4 simulator). See VALIDATION_REPORT.md. The separate simulator fix branch is not the dependency hardcoded by the present CI runner.
