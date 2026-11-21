@@ -1,8 +1,6 @@
 name: Expanded standalone module validation
 
 on:
-  push:
-    branches: [feat/ci-expansion]
   pull_request:
     branches: [feat/ci-validation]
 
@@ -46,11 +44,15 @@ jobs:
           - track: game-shell
             branch: fix/game-shell-runtime-qa
           - track: audio
-            branch: feat/audio
+            branch: fix/audio-runtime-readiness
           - track: race-content
             branch: feat/race-content
           - track: racing-production
             branch: feat/production-racing-readiness
+          - track: vehicle-world
+            branch: feat/vehicle-world-integration
+          - track: scenery
+            branch: feat/scenery-runtime
     steps:
       - name: Checkout CI implementation from this commit
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -64,14 +66,28 @@ jobs:
           path: worktree
           persist-credentials: false
       - name: Checkout authoritative World branch (read-only input)
-        if: matrix.track == 'world-runtime' || matrix.track == 'race-content'
+        if: matrix.track == 'world-runtime' || matrix.track == 'race-content' || matrix.track == 'racing-production' || matrix.track == 'scenery'
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: feat/worldgen
           path: world-source
           persist-credentials: false
+      - name: Checkout authoritative Race Content for production-racing
+        if: matrix.track == 'racing-production'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/race-content
+          path: race-source
+          persist-credentials: false
+      - name: Checkout original Art for scenery
+        if: matrix.track == 'scenery'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/art-pipeline
+          path: art-source
+          persist-credentials: false
       - name: Pin Node.js 22.16.0
-        if: matrix.track == 'world-runtime' || matrix.track == 'race-content'
+        if: matrix.track == 'world-runtime' || matrix.track == 'race-content' || matrix.track == 'scenery'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22.16.0
@@ -94,10 +110,14 @@ jobs:
         run: |
           set -euo pipefail
           world_dir=""
-          if [[ "$TRACK" == "world-runtime" || "$TRACK" == "race-content" ]]; then
+          if [[ "$TRACK" == "world-runtime" || "$TRACK" == "race-content" || "$TRACK" == "racing-production" || "$TRACK" == "scenery" ]]; then
             world_dir="$GITHUB_WORKSPACE/world-source"
           fi
-          bash ci/tools/ci/run_expanded.sh "$TRACK" "$GITHUB_WORKSPACE/worktree" "$GITHUB_WORKSPACE/ci-out" "$GITHUB_WORKSPACE/ci/tools/ci" "$world_dir"
+          race_dir=""
+          art_dir=""
+          if [[ "$TRACK" == "racing-production" ]]; then race_dir="$GITHUB_WORKSPACE/race-source"; fi
+          if [[ "$TRACK" == "scenery" ]]; then art_dir="$GITHUB_WORKSPACE/art-source"; fi
+          bash ci/tools/ci/run_expanded.sh "$TRACK" "$GITHUB_WORKSPACE/worktree" "$GITHUB_WORKSPACE/ci-out" "$GITHUB_WORKSPACE/ci/tools/ci" "$world_dir" "" "$race_dir" "$art_dir"
       - name: Exact checked-out sources and test results
         if: always()
         shell: bash
@@ -110,6 +130,8 @@ jobs:
             if [[ -d ci/.git ]]; then printf 'CI source SHA: `%s`\n\n' "$(git -C ci rev-parse HEAD)"; fi
             if [[ -d worktree/.git ]]; then printf 'Test source SHA: `%s`\n\n' "$(git -C worktree rev-parse HEAD)"; fi
             if [[ -d world-source/.git ]]; then printf 'Authoritative World SHA: `%s`\n\n' "$(git -C world-source rev-parse HEAD)"; fi
+            if [[ -d race-source/.git ]]; then printf 'Authoritative Race Content SHA: `%s`\n\n' "$(git -C race-source rev-parse HEAD)"; fi
+            if [[ -d art-source/.git ]]; then printf 'Original Art SHA: `%s`\n\n' "$(git -C art-source rev-parse HEAD)"; fi
             if [[ -f ci-out/SUMMARY.md ]]; then
               cat ci-out/SUMMARY.md
             else
