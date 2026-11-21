@@ -18,10 +18,14 @@ Date: 2026-11-21 (UTC). Scope: vehicle visuals only.
   steering. Source prep therefore does not add a second wheel-spin controller.
 - **PASS** Independent numeric coordinate transform from +X Blender source
   to -Z Godot: body wheelbase 2.85*(2.71/2.85)=2.71 m;
-  0.405*(0.35/0.405)=0.35 m wheel radius; original source negative-side
+  (0.405+0.135)*(0.35/0.540)=0.35 m **outside** tire radius; original source negative-side
   wheel maps to positive Godot X, so label side reversal is necessary.
   Body wheel-center vertical estimate 0.53*(2.71/2.85)-0.57=-0.066 m,
-  near expected initial GEVP visual pivot height.
+  near expected initial GEVP visual pivot height. After correct torus scaling,
+  source fender-lip inner radius (0.438-0.045)*2.71/2.85=0.374 m,
+  giving ~0.024 m theoretical tire clearance. The Blender script also
+  boolean-cuts the continuous body loft at 0.385 m, but neither operation
+  is visually/mesh-validated without Blender.
 - **PASS** Source license is explicit CC0 at pinned revision, model is not gated.
   No Fab/Sketchfab/Blendkit paid or unknown-entitlement content was copied.
 - **PASS** Tooling is additive: no shared `project.godot`, GEVP files,
