@@ -10,6 +10,7 @@ const ROOT = path.resolve(__dirname, "../../..");
 const PACK = path.resolve(__dirname, "../controls_v1.json");
 const SCENARIOS = path.resolve(__dirname, "../scenarios_v1.json");
 const SVG = path.resolve(__dirname, "../previews/traffic_controls.svg");
+const AUDIT = path.resolve(__dirname, "../conflict_audit_v1.json");
 const EXPECTED_BLOB = "9bba378d68879df3baed2c97a4885c0adde88406";
 const raw = (p) => JSON.parse(fs.readFileSync(p, "utf8"));
 const keys = (xs) => new Set(xs);
@@ -22,6 +23,29 @@ function distance(lane) {
 function same(a,b) {
   return a.length === b.length && keys(a).size === a.length && a.every(id => b.includes(id));
 }
+function lastCross(a,b) {
+  let largest = -1, sa = 0;
+  const cross2=(p,q)=>p[0]*q[1]-p[1]*q[0];
+  for(let i=1;i<a.points.length;i++) {
+    const p=a.points[i-1],q=a.points[i],u=[q[0]-p[0],q[2]-p[2]];
+    const la=close(p,q);let sb=0;
+    for(let j=1;j<b.points.length;j++){
+      const r=b.points[j-1],t=b.points[j],v=[t[0]-r[0],t[2]-r[2]],lb=close(r,t);
+      const d=cross2(u,v);
+      if(Math.abs(d)>1e-8){
+        const off=[r[0]-p[0],r[2]-p[2]],x=cross2(off,v)/d,y=cross2(off,u)/d;
+        if(x>=0&&x<=1&&y>=0&&y<=1){
+          const ha=p[1]+x*(q[1]-p[1]),hb=r[1]+y*(t[1]-r[1]);
+          if(Math.abs(ha-hb)<=2.5)largest=Math.max(largest,sa+x*la,sb+y*lb);
+        }
+      }
+      sb+=lb;
+    }
+    sa+=la;
+  }
+  return largest;
+}
+
 function verify(g, pack, scenarios) {
   const check = (ok,message) => assert.ok(ok,message);
   check(g.schema_version===1 && g.units==="meters" && g.coordinate_system==="godot_y_up","graph v1");
@@ -82,9 +106,12 @@ function verify(g, pack, scenarios) {
       seenIncoming.add(id);
       check(lanes.get(id).next_lane_ids.every(x=>j.turn_lane_ids.includes(x)),"incoming only reaches matching junction "+id);
     }
+    const last = j.incoming_lane_ids.length===2 && j.turn_lane_ids.length===2 ?
+      lastCross(lanes.get(j.turn_lane_ids[0]),lanes.get(j.turn_lane_ids[1])) : -1;
     if(j.mode==="pass_through") {
-      check(j.incoming_lane_ids.length===2 && j.turn_lane_ids.length===2,"no control on simple two-way continuation "+j.id);
+      check(j.incoming_lane_ids.length===2 && j.turn_lane_ids.length===2 && last<0,"no control on non-crossing two-way continuation "+j.id);
     } else {
+      if(j.incoming_lane_ids.length===2)check(last>=0 && j.clearance_m>last+1.5,"two-way crossing requires late release "+j.id);
       controlledApproaches+=j.incoming_lane_ids.length;
       check(j.incoming_lane_ids.length>=2 && j.turn_lane_ids.length>=2,"valid controlled junction "+j.id);
       check(Number.isFinite(j.clearance_m) && j.clearance_m>=4 && j.clearance_m+0.5<shortest,"reservation will release on every turn "+j.id);
@@ -120,6 +147,8 @@ function testRejections(graph,original,scenarios) {
   mutation("zero stop dwell",p=>p.junctions[0].stop_s=0);
   mutation("unreachable turn",g=>{ const id=original.junctions[0].turn_lane_ids[0];for(const l of g.lanes)l.next_lane_ids=l.next_lane_ids.filter(x=>x!==id);},true);
   mutation("duplicate travel source",p=>p.junctions[1].incoming_lane_ids[0]=p.junctions[0].incoming_lane_ids[0]);
+  mutation("uncontrolled crossing",p=>p.junctions.find(j=>j.id==="junction_overlook").mode="pass_through");
+  mutation("premature two-way crossing clearance",p=>p.junctions.find(j=>j.id==="junction_orchard").clearance_m=6);
   return rejected;
 }
 
@@ -133,6 +162,11 @@ if (require.main===module) {
   const graph=raw(graphPath),pack=raw(PACK),scenarios=raw(SCENARIOS);
   const summary=verify(graph,pack,scenarios);
   const rejected=testRejections(graph,pack,scenarios);
+  const audit=raw(AUDIT);
+  assert.equal(audit.source_graph_git_blob_sha,EXPECTED_BLOB);
+  assert.equal(audit.nodes.length,11);
+  assert.ok(audit.nodes.filter(j=>j.mode==="pass_through").every(j=>j.turn_pairs_crossing===0));
+  assert.ok(audit.nodes.filter(j=>["junction_overlook","junction_orchard"].includes(j.junction_id)).every(j=>j.turn_pairs_with_crossing_after_release===0));
   const svg=fs.readFileSync(SVG,"utf8");
   assert.ok(svg.includes("ASTER VALLEY")&&svg.includes(EXPECTED_BLOB.slice(0,10)),"real-graph preview provenance");
   console.log("PASS canonical topology/content authoring, "+rejected+" negative mutations, preview marker");
