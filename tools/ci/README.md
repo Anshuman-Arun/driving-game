@@ -47,3 +47,43 @@ bash tools/ci/run_workstream.sh traffic /path/to/traffic-branch /tmp/traffic-log
 - **NOT TESTED BY CI:** interactive driving quality, keyboard/gamepad hardware feel, Windows export, GPU FPS, rendered appearance, 10–20 traffic vehicles' actual visual behavior, and integrated multi-branch gameplay. A successful headless test is not evidence of these.
 
 Neither the five source PRs nor this CI PR should be merged on the strength of these standalone checks alone. Follow up with real integrated engine and hardware playtests. `docs/PROJECT_STATUS.md` is intentionally not modified here because it is outside the assigned ownership scope.
+
+## Expansion on `feat/ci-expansion` (base: `feat/ci-validation`)
+
+The original `validate-workstreams.yml` remains unchanged: its five jobs still assess the exact original Core, Racing, Traffic, World and Art feature branches, including known upstream failures. **Do not interpret the red original Core gate as the result for the corrected PR #9/#15 branch.** The original manual dispatcher also remains intact.
+
+The new `expanded-validation.yml` tests six *additional, independent* source branches on GitHub Actions push to `feat/ci-expansion` and PRs targeting `feat/ci-validation`, without merging them:
+
+| Expanded gate | Exact source ref | Mandatory CLI/engine tests |
+| --- | --- | --- |
+| Corrected Core | `fix/steering-camera-smoothing` (#15, based on #9) | Godot 4.7.2 import, Core smoke at fixed 60 FPS, steering/camera regression at fixed 30, 60, 83, 144 FPS |
+| Corrected World Runtime | `fix/world-runtime-qa` (#16) + `feat/worldgen` (#3) | Copy immutable World JSON and R16 into disposable ignored cache; Node reference geometry; Godot editor import, preview collider smoke, full-world collider smoke |
+| Corrected Game Shell | `fix/game-shell-runtime-qa` (#17) | Standalone Godot import and native `tests/run_tests.gd` (53 assertions per PR QA documentation) |
+| Audio | `feat/audio` (#11) | Python WAV unit tests; synth regeneration and tracked WAV byte comparison; standalone Godot import and native GDScript smoke |
+| Production Race Content | `feat/race-content` (#10) + `feat/worldgen` (#3) | Node author `--check` and native independent `test_author.js` against the actual World graph (not fixtures) |
+| Racing production | `feat/production-racing-readiness` | Reuse strict original Racing Godot import and native GDScript gates; never infer a pass from a branch name |
+
+An availability-aware extra job observes `feat/world-traffic-content`. While it is empty or absent, the job explicitly states **NOT EXECUTED** (not a content test pass). When the branch gains `content/traffic/` and an actual `tests/test_content.mjs` or `tests/test_content.py` entrypoint, this gate executes the test. If content appears without a recognized native test, it fails loudly and requires adapting the CI to the upstream entrypoint; it never reports zero discovered tests as success. This optional gate is **not** a substitute for the original `modules/traffic/` suite.
+
+`integration-smoke.yml` independently checks out the corrected Core project and the World data, corrected World Runtime, corrected Game Shell, Audio, production Race Content, production Racing, Traffic and Art branches. `stage_integration.sh` stages **only the owned paths** inside the throwaway runner checkout. `check_integration.py` flags duplicate `class_name` declarations and missing *literal* `res://` paths. Godot 4.7.2 editor import and a Core physics smoke then probe real combined-project parser/import and runtime problems. Stage, static, import and smoke outcomes are evaluated separately: a failure remains a failure. This is a **diagnostic integration probe**, not a merged branch, gameplay quality result or production-ready binary. Dynamic resource construction and graphical/physical controller behavior need additional tests.
+
+These new workflows use read-only `contents: read` credentials, SHA-pinned official Actions, version-pinned Node/Python and a SHA-256 verified Godot executable. Each checkout's exact **commit SHA** (and the World data SHA where relevant) is printed into the job summary; moving branch names alone are insufficient provenance. No new job attempts artifact upload because repository Actions artifact storage is exhausted. The existing baseline's upload remains best-effort.
+
+### Reproduce locally with separate branches
+
+Check out each source branch independently, never merge its PR:
+
+```bash
+bash tools/ci/install_godot.sh /tmp/godot/bin
+export PATH="/tmp/godot/bin:$PATH"
+bash tools/ci/run_expanded.sh core-qa /path/to/steering-camera-checkout /tmp/core-ci "$PWD/tools/ci"
+bash tools/ci/run_expanded.sh world-runtime /path/to/world-runtime-qa /tmp/world-ci "$PWD/tools/ci" /path/to/worldgen-checkout
+bash tools/ci/run_expanded.sh race-content /path/to/race-content /tmp/race-ci "$PWD/tools/ci" /path/to/worldgen-checkout
+bash tools/ci/run_expanded.sh game-shell /path/to/game-shell-qa /tmp/shell-ci "$PWD/tools/ci"
+bash tools/ci/run_expanded.sh audio /path/to/audio /tmp/audio-ci "$PWD/tools/ci"
+bash tools/ci/run_expanded.sh racing-production /path/to/racing-production /tmp/racing-ci "$PWD/tools/ci"
+```
+
+For the integration preflight, use a **disposable** rooted Core QA checkout (not a developer's working tree) and a sibling staging directory with subcheckouts named `worldgen`, `world-runtime`, `game-shell`, `audio`, `race-content`, `racing`, `traffic`, and `art`. Then run `bash tools/ci/stage_integration.sh /tmp/integrated /tmp/staging /tmp/integration-logs`, followed by `python tools/ci/check_integration.py /tmp/integrated` and Godot import/smoke from `/tmp/integrated`. Never run staging on a real game or source-feature worktree.
+
+**Evidence rules:** "PASS" only if the named real command and its strict Godot logs succeeded; "FAIL" for failing upstream checks or CI setup; "NOT EXECUTED" for missing branch/content or infrastructure before tests. Runner headless tests do not validate rendered gameplay, 10–20-car behavior, Windows export, FPS, or gamepad hardware. Consult the particular Actions run and source SHAs for current observed results; these branches can move.
