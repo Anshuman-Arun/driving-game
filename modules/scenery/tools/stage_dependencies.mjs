@@ -25,12 +25,12 @@ for(const cfg of Object.values(scenery.assets)){
  if(cfg.path.startsWith("assets/curated/"))artPaths.add(cfg.path);
  if(cfg.lod&&cfg.lod.startsWith("assets/curated/"))artPaths.add(cfg.lod);
 }
-stage(artRef,"assets/curated/MANIFEST.json",".art_source/MANIFEST.json");
-stage(artRef,"assets/curated/ORIGINAL_ASSETS_LICENSE.md",".art_source/ORIGINAL_ASSETS_LICENSE.md");
-for(const file of [...artPaths].sort())stage(artRef,file,".art_source/"+file.slice("assets/curated/".length));
+stage(artRef,"assets/curated/MANIFEST.json","staged_art/MANIFEST.json");
+stage(artRef,"assets/curated/ORIGINAL_ASSETS_LICENSE.md","staged_art/ORIGINAL_ASSETS_LICENSE.md");
+for(const file of [...artPaths].sort())stage(artRef,file,"staged_art/"+file.slice("assets/curated/".length));
 for(const cfg of Object.values(scenery.assets)){
  if(!cfg.path.startsWith("content/scenery/models/"))continue;
- const source=path.join(root,cfg.path),dest=path.join(moduleDir,".models",path.basename(cfg.path));
+ const source=path.join(root,cfg.path),dest=path.join(moduleDir,"staged_models",path.basename(cfg.path));
  fs.mkdirSync(path.dirname(dest),{recursive:true});
  fs.copyFileSync(source,dest);
  console.log("STAGED",cfg.path,"->",path.relative(moduleDir,dest));
