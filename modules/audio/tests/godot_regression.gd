@@ -53,6 +53,10 @@ func _test(audio) -> void:
 		_expect(audio._players[key].stream != null, "loaded loop stream " + key)
 	_expect(audio._current_profile == "vela_gt", "default car profile")
 	_expect(audio._event_index == 0, "no event at startup")
+	for name in ["engine_low", "engine_mid", "engine_high", "roll_asphalt", "wind"]:
+		var wav: AudioStreamWAV = audio._players[name].stream
+		var decoded_frames := int(round(wav.get_length() * float(wav.mix_rate)))
+		_expect(abs(wav.loop_end - decoded_frames) <= 1, "loop endpoint uses decoded frames: " + name)
 
 	var idle: Dictionary = audio.compute_targets({"rpm": 950.0, "speed_mps": 0.0})
 	var full: Dictionary = audio.compute_targets({"rpm": 6800.0, "throttle": 1.0, "load": 1.0, "speed_mps": 40.0})
