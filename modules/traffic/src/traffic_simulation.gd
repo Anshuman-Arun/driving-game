@@ -166,6 +166,7 @@ func spawn_agent(lane_id: String, s: float, initial_speed_mps: float = 0.0, spee
 	agent.assign({"id": id, "lane_id": lane_id, "s": s,
 		"next_lane": next_lane, "route_locked": false, "route_queue": [], "speed_mps": maxf(0.0, initial_speed_mps),
 		"target_speed_mps": 0.0, "speed_factor": multiplier, "vehicle_type": vehicle_type,
+		"density_managed": false,
 		"position": pos, "tangent": pose["tangent"], "state": "FOLLOW_LANE",
 		"wait_s": 0.0, "stop_done": false, "reserved_junction": "",
 		"entered_lane": "", "clearance_m": 0.0,
@@ -223,6 +224,7 @@ func spawn_near(position: Vector3, attempts: int = 36) -> int:
 			continue
 		var id: int = spawn_agent(lid, s, 0.0)
 		if id != -1:
+			agents[id]["density_managed"] = true
 			return id
 	return -1
 
@@ -258,10 +260,15 @@ func _fixed_step(dt: float) -> void:
 	_spawn_clock += dt
 	if _spawn_clock >= spawn_period_s:
 		_spawn_clock -= spawn_period_s
-		while agents.size() > density_target:
-			var remove_ids: Array = agents.keys()
-			remove_ids.sort()
-			despawn_agent(remove_ids.back())
+		# Density may only evict automatically populated traffic. Direct callers
+		# own the lifetime of spawn_agent() cars until they leave view or are removed.
+		var remove_ids: Array[int] = []
+		for agent_id in agents:
+			if agents[agent_id].get("density_managed", false):
+				remove_ids.append(agent_id)
+		remove_ids.sort()
+		while agents.size() > density_target and not remove_ids.is_empty():
+			despawn_agent(remove_ids.pop_back())
 		var failures := 0
 		while agents.size() < density_target and failures < 3:
 			if spawn_near(viewer_position) == -1:
