@@ -15,7 +15,9 @@
     "supplementary_variant_models": 25,
     "all_model_files": 49,
     "total_art_resources": 70,
-    "all_model_triangles": 32702
+    "all_model_triangles": 32702,
+    "supplementary_model_previews": 25,
+    "all_model_previews": 49
   },
   "third_party_asset_count": 0,
   "source_policy": "Only original procedural content, no scraped or commercially proprietary source assets",
@@ -1060,7 +1062,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Alternative low poly vegetation",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/pine_tree_lod0.svg"
     },
     {
       "id": "supp_pine_tree_lod1_environment_variant",
@@ -1079,7 +1082,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Alternative low poly vegetation",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/pine_tree_lod1.svg"
     },
     {
       "id": "supp_vela_gt_vehicle_alternative",
@@ -1098,7 +1102,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Alternative original vehicle visual",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/vela_gt.svg"
     },
     {
       "id": "supp_orion_rs_vehicle_alternative",
@@ -1117,7 +1122,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Alternative original vehicle visual",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/orion_rs.svg"
     },
     {
       "id": "supp_kestrel_xr_vehicle_alternative",
@@ -1136,7 +1142,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Alternative original vehicle visual",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/kestrel_xr.svg"
     },
     {
       "id": "supp_alder_hatch_vehicle_alternative",
@@ -1155,7 +1162,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Alternative original vehicle visual",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/alder_hatch.svg"
     },
     {
       "id": "supp_cedar_sedan_vehicle_alternative",
@@ -1174,7 +1182,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Alternative original vehicle visual",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/cedar_sedan.svg"
     },
     {
       "id": "supp_valley_wagon_vehicle_alternative",
@@ -1193,7 +1202,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Alternative original vehicle visual",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/valley_wagon.svg"
     },
     {
       "id": "supp_alder_hatch_lod1_traffic_lod",
@@ -1212,7 +1222,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Distant civilian traffic visual LOD",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/alder_hatch_lod1.svg"
     },
     {
       "id": "supp_cedar_sedan_lod1_traffic_lod",
@@ -1231,7 +1242,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Distant civilian traffic visual LOD",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/cedar_sedan_lod1.svg"
     },
     {
       "id": "supp_valley_wagon_lod1_traffic_lod",
@@ -1250,7 +1262,8 @@
       "forward_axis": "-Z",
       "intended_usage": "Distant civilian traffic visual LOD",
       "texture_resolution": null,
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/valley_wagon_lod1.svg"
     },
     {
       "id": "supp_environment_bollard",
@@ -1269,7 +1282,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/bollard.svg"
     },
     {
       "id": "supp_environment_boulder",
@@ -1288,7 +1302,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/boulder.svg"
     },
     {
       "id": "supp_environment_broadleaf_tree",
@@ -1307,7 +1322,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/broadleaf_tree.svg"
     },
     {
       "id": "supp_environment_bus_shelter",
@@ -1326,7 +1342,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/bus_shelter.svg"
     },
     {
       "id": "supp_environment_concrete_barrier",
@@ -1345,7 +1362,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/concrete_barrier.svg"
     },
     {
       "id": "supp_environment_guardrail_4m",
@@ -1364,7 +1382,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/guardrail_4m.svg"
     },
     {
       "id": "supp_environment_hay_bale",
@@ -1383,7 +1402,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/hay_bale.svg"
     },
     {
       "id": "supp_environment_rock_cluster",
@@ -1402,7 +1422,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/rock_cluster.svg"
     },
     {
       "id": "supp_environment_shrub_cluster",
@@ -1421,7 +1442,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/shrub_cluster.svg"
     },
     {
       "id": "supp_environment_stone_wall",
@@ -1440,7 +1462,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/stone_wall.svg"
     },
     {
       "id": "supp_environment_street_lamp",
@@ -1459,7 +1482,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/street_lamp.svg"
     },
     {
       "id": "supp_environment_traffic_cone",
@@ -1478,7 +1502,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/traffic_cone.svg"
     },
     {
       "id": "supp_environment_warning_sign",
@@ -1497,7 +1522,8 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/warning_sign.svg"
     },
     {
       "id": "supp_environment_wood_fence",
@@ -1516,8 +1542,10 @@
       "up_axis": "+Y",
       "forward_axis": "-Z",
       "intended_usage": "Alternative original scenery/roadside prop",
-      "attribution_required": false
+      "attribution_required": false,
+      "preview": "assets/curated/previews/supplemental/wood_fence.svg"
     }
   ],
-  "provenance_note": "Supplementary 25 GLBs were added by a concurrent project generator.js; all returned GLB files' triangle counts and scene structure were checked. They are preserved without replacement."
+  "provenance_note": "Supplementary 25 GLBs were added by a concurrent project generator.js; all returned GLB files' triangle counts and scene structure were checked. They are preserved without replacement.",
+  "supplementary_gallery": "assets/curated/previews/supplemental/gallery.html"
 }
