@@ -67,22 +67,52 @@ func _run() -> void:
 	print("PHYSICS braking before %.2f m/s; after %.2f m/s" % [prior_speed, after_brake])
 	_check(after_brake < prior_speed + 0.7, "braking does not accelerate forward")
 
-	# Reset, apply steering while moving and verify heading/position changes.
+	# Reset, apply steering while moving and verify heading/position changes in the expected direction.
 	scene.call("_reset_to_road")
-	await _step(75)
-	var heading := car.global_basis.z
+	await _step(45)
+	_check(car.current_gear == 0, "reset returns transmission to neutral")
+	var heading := -car.global_basis.z
+	var start_right := car.global_basis.x
+	var start_pos := car.global_position
 	Input.action_press("drive_throttle", 1.0)
 	Input.action_press("drive_left", 0.8)
-	await _step(310)
+	await _step(220)
 	Input.action_release("drive_left")
 	Input.action_release("drive_throttle")
-	print("PHYSICS heading changed %.3f" % heading.distance_to(car.global_basis.z))
-	_check(heading.distance_to(car.global_basis.z) > 0.01, "steering rotates car")
+	var left_yaw := heading.signed_angle_to(-car.global_basis.z, Vector3.UP)
+	var left_lat := (car.global_position - start_pos).dot(start_right)
+	print("PHYSICS steer left yaw %.3f rad; lateral %.2f m" % [left_yaw, left_lat])
+	_check(left_yaw > 0.15 and left_lat < -1.0, "steering left rotates and moves car left")
+
+	# Verify camera cycling including unobstructed hood camera placement.
+	cam.cycle()
+	cam.cycle()
+	var hood_local := car.to_local(cam.global_position)
+	print("CAMERA hood local ", hood_local)
+	_check(cam.mode == 2 and hood_local.z < -0.84 and hood_local.y > 0.7, "hood camera mounts cleanly ahead of cabin")
+	cam.cycle()
+	_check(cam.mode == 0, "camera cycles back to chase far")
 
 	var adapter := scene.get("adapter") as VehicleAdapter
 	adapter.set_drive_input(0.0, 0.0, 0.1, true)
 	_check(car.handbrake_input > 0.5, "handbrake maps to GEVP")
 	adapter.set_drive_input(0.0, 0.0, 0.0, false)
+
+	# Verify reverse gear engages from standstill and exits cleanly on forward throttle.
+	scene.call("_reset_to_road")
+	await _step(45)
+	Input.action_press("drive_brake", 1.0)
+	await _step(300)
+	Input.action_release("drive_brake")
+	var rev_speed := adapter.get_forward_speed_mps()
+	print("PHYSICS reverse speed %.2f m/s; gear %d" % [rev_speed, car.current_gear])
+	_check(car.current_gear == -1 and rev_speed < -1.5, "holding brake engages reverse")
+	Input.action_press("drive_throttle", 0.6)
+	await _step(420)
+	Input.action_release("drive_throttle")
+	var exit_rev_speed := adapter.get_forward_speed_mps()
+	print("PHYSICS exit reverse speed %.2f m/s; gear %d" % [exit_rev_speed, car.current_gear])
+	_check(car.current_gear >= 1 and exit_rev_speed > 1.5, "forward throttle exits reverse cleanly")
 
 	var grass_x := 0.0
 	var grass_z := 120.0
