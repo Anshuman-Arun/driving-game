@@ -10,6 +10,18 @@ The World Runtime exposes each collider's source surface as metadata. The scene 
 
 W / ↑ accelerates, S / ↓ brakes or reverses, and A/D or ←/→ steers. Space is the handbrake. R resets to a nearby road, C cycles the two chase views and hood, and Esc pauses or resumes. Existing Core controller mappings are retained.
 
+## Ultrawide (21:9)
+
+Press **F11** in free roam to switch between windowed mode and native fullscreen. You can launch directly into fullscreen with `godot --path . --fullscreen`. On a 3440×1440 display, use fullscreen for the exact pixel dimensions because the Windows desktop can reduce the windowed client height. The 1600×900 default stays in place. The viewport expands horizontally on wide displays while the cameras keep their vertical FOV.
+
+Native 3440×1440 Forward+ passed all integrated driving checks, including both F11 transitions. The two chase modes kept approximately 70° vertical FOV and expanded to 118° horizontal FOV. The hood view measured 76° vertical and 124° horizontal. [Chase screenshot](screenshots/ultrawide-chase.png) · [Hood screenshot](screenshots/ultrawide-hood.png)
+
+To verify on a 3440×1440 display, run the integrated driving suite in fullscreen with the resolution check enabled.
+
+```powershell
+godot --path . --fullscreen --script res://tests/integration/vehicle_world.gd -- --expect-ultrawide --capture-dir <existing-folder>
+```
+
 ## Verified on Godot 4.7.2 for Windows
 
 - Root editor import and normal launch passed. The editor recognizes `modules/world_runtime` as a nested standalone project and skips its automatic filesystem scan. The runtime is explicitly referenced by the free-roam scene and successfully loads.
