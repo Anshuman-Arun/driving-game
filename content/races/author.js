@@ -282,7 +282,7 @@ function main(){
  const args=process.argv.slice(2),ix=args.indexOf("--graph");
  const graphPath=ix<0?"data/world/road_graph_v1.json":args[ix+1];
  if(!graphPath||!fs.existsSync(graphPath)){console.error("World graph unavailable; pass --graph path/to/feat-worldgen/data/world/road_graph_v1.json");process.exit(2)}
- const raw=fs.readFileSync(graphPath),blob=crypto.createHash("sha1").update(Buffer.from("blob "+raw.length+"\\0")).update(raw).digest("hex");
+ const raw=fs.readFileSync(graphPath),blob=crypto.createHash("sha1").update(Buffer.from("blob "+raw.length+"\0")).update(raw).digest("hex");
  const data=generate(JSON.parse(raw.toString("utf8")),blob),root=__dirname;
  const write=args.includes("--write");
  for(const [file,content] of Object.entries(data.files)){
