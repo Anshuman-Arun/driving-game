@@ -1,0 +1,16 @@
+# Godot-generated cache and builds
+.godot/
+builds/
+exports/
+*.log
+# Local/editor config and secrets
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+# Keep game source, addon sources/licenses, and world data in Git.
