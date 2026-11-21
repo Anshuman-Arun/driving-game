@@ -42,7 +42,7 @@ func _initialize() -> void:
 	call_deferred("_test", audio)
 
 
-func _test(audio: Node) -> void:
+func _test(audio) -> void:
 	var script_resource = load("res://telemetry_bridge.gd")
 	_expect(audio._players.size() == 11, "eleven loop players created")
 	_expect(audio._alternate_engines.size() == 3, "three crossfade voices created")
