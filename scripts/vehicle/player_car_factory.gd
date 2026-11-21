@@ -5,8 +5,8 @@ extends RefCounted
 const VehicleScript = preload("res://addons/gevp/scripts/vehicle.gd")
 const WheelScript = preload("res://addons/gevp/scripts/wheel.gd")
 
-static func create() -> RigidBody3D:
-	var car: RigidBody3D = VehicleScript.new()
+static func create() -> Vehicle:
+	var car: Vehicle = VehicleScript.new()
 	car.name = "VelaGT"
 	car.collision_layer = 2
 	car.collision_mask = 1

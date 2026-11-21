@@ -50,7 +50,9 @@ func _bake_road() -> void:
 		for p in road_points:
 			heights.append(p.y)
 		for i in range(1, road_points.size() - 1):
-			road_points[i].y = heights[i - 1] * 0.25 + heights[i] * 0.50 + heights[i + 1] * 0.25
+			var graded := road_points[i]
+			graded.y = heights[i - 1] * 0.25 + heights[i] * 0.50 + heights[i + 1] * 0.25
+			road_points[i] = graded
 
 func _catmull(a: Vector2, b: Vector2, c: Vector2, d: Vector2, t: float) -> Vector2:
 	var t2 := t * t

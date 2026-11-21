@@ -1,9 +1,9 @@
 class_name VehicleAdapter
 extends RefCounted
 ## Stable public interface hiding GEVP-specific input and reset implementation.
-var vehicle: RigidBody3D
+var vehicle: Vehicle
 
-func _init(body: RigidBody3D) -> void:
+func _init(body: Vehicle) -> void:
 	vehicle = body
 
 func set_drive_input(steer: float, throttle: float, brake: float, handbrake: bool) -> void:
