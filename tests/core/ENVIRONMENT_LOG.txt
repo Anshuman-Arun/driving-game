@@ -1,0 +1,32 @@
+Core driving validation log — 2026-11-21
+Branch: feat/core-driving
+Working environment: connected GitHub app for remote edits; isolated container for executable checks.
+Target: Godot 4.7.2 stable, Forward+, 120 physics ticks/sec
+
+EXECUTED (container shell):
+$ command -v godot || true
+(no output)
+$ command -v godot4 || true
+(no output)
+$ godot --headless --path . --editor --quit
+bash: line 1: godot: command not found
+Godot exit status: 127
+$ git --version
+git version 2.47.3
+$ git ls-remote https://github.com/Anshuman-Arun/driving-game.git HEAD
+fatal: unable to access 'https://github.com/Anshuman-Arun/driving-game.git/': Could not resolve host: github.com
+
+EXECUTED (connected GitHub API source-level checks):
+- Main...feat/core-driving comparison reported 113 changed files; 0 outside exclusive Track A ownership (at time of test).
+- 7 new vehicle GDScript source files scanned, 2 declared res:// dependencies resolved, 0 missing.
+- Road Generator key scripts (8 upstream files) scanned; 25 referenced resources, 0 missing.
+- LICENSE files for GEVP and Road Generator found.
+- Road Generator vendor file count: 95.
+- Independent Catmull-Rom math from hardcoded road control points: 486 spline samples, 1210m path, x approx -178.3 to 206.3, z approx -158.1 to 212.0, 1.29..3.24m sample spacing.
+- Godot 4.7.2 parser, physics and visual pass: NOT RUN. Source-level checks are not engine tests.
+
+NEXT REQUIRED TESTS (not executed):
+$ godot --headless --path . --editor --quit
+$ godot --headless --path . --script res://tests/core/smoke.gd
+$ godot --path . # F5 equivalent
+Keyboard, gamepad, collisions, camera, reset, road-to-grass, Road Generator+Terrain3D GDExtension, export and performance need real engine/device.
