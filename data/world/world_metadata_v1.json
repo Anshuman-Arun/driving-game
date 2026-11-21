@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "world_name": "Aster Valley",
+  "seed": 20261121,
+  "coordinate_system": "godot_y_up",
+  "bounds": {
+    "min_x": -1000,
+    "max_x": 1000,
+    "min_z": -1000,
+    "max_z": 1000
+  },
+  "heightfield": {
+    "path": "data/world/terrain_height_r16le.bin",
+    "sample_width": 501,
+    "sample_height": 501,
+    "spacing_m": 4,
+    "origin_x": -1000,
+    "origin_z": -1000,
+    "row_order": "z_ascending_x_ascending",
+    "format": "uint16_le",
+    "scale_m_per_unit": 0.01,
+    "offset_m": 0,
+    "min_height_m": 5,
+    "max_height_m": 240.449,
+    "note": "Elevation encoded in centimetres, positive Y; importer must decode uint16 LE explicitly."
+  },
+  "roads": {
+    "unique_corridor_count": 16,
+    "directed_travel_lane_count": 32,
+    "total_centreline_length_m": 11976.963,
+    "junction_connector_count": 72
+  },
+  "regions": [
+    {
+      "id": "alder_town",
+      "name": "Alder Town",
+      "center": [
+        -620,
+        560
+      ],
+      "radius_m": 310,
+      "description": "Garage, civic square, compact town streets"
+    },
+    {
+      "id": "cedar_woods",
+      "name": "Cedar Woods",
+      "center": [
+        -700,
+        -320
+      ],
+      "radius_m": 450,
+      "description": "Dense conifers and enclosed technical curves"
+    },
+    {
+      "id": "north_ridge",
+      "name": "North Ridge",
+      "center": [
+        230,
+        -650
+      ],
+      "radius_m": 590,
+      "description": "High mountain terrain, switchbacks, crest"
+    },
+    {
+      "id": "green_valley",
+      "name": "Green Valley",
+      "center": [
+        45,
+        170
+      ],
+      "radius_m": 440,
+      "description": "Fields, orchard and fast flowing roads"
+    },
+    {
+      "id": "eastwater_lake",
+      "name": "Eastwater Lake",
+      "center": [
+        700,
+        450
+      ],
+      "radius_m": 335,
+      "description": "Lakeside driving and shoreline viewpoints"
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "alder_garage",
+      "name": "Alder Garage",
+      "x": -645,
+      "z": 575,
+      "kind": "garage",
+      "y": 39.935
+    },
+    {
+      "id": "pine_arch",
+      "name": "Cedar Stone Arch",
+      "x": -690,
+      "z": -330,
+      "kind": "landmark",
+      "y": 92.025
+    },
+    {
+      "id": "ridge_lookout",
+      "name": "Starfall Overlook",
+      "x": 620,
+      "z": -265,
+      "kind": "scenic_overlook",
+      "y": 121.98
+    },
+    {
+      "id": "valley_windmill",
+      "name": "Green Valley Windmill",
+      "x": 70,
+      "z": 180,
+      "kind": "landmark",
+      "y": 67.885
+    },
+    {
+      "id": "eastwater_pier",
+      "name": "Eastwater Pier",
+      "x": 725,
+      "z": 465,
+      "kind": "lake",
+      "y": 23.519
+    },
+    {
+      "id": "old_quarry",
+      "name": "Old Quarry",
+      "x": -170,
+      "z": -430,
+      "kind": "landmark",
+      "y": 125.18
+    }
+  ],
+  "main_touring_loop": [
+    "alder_cedar",
+    "cedar_ridge",
+    "ridge_valley",
+    "valley_lake",
+    "lake_alder"
+  ],
+  "shortcut_corridors": [
+    "cedar_pine",
+    "pine_valley",
+    "alder_market",
+    "market_valley",
+    "pine_ridge"
+  ],
+  "notes": [
+    "Road lengths count each physical undirected corridor only once.",
+    "Connector lanes represent turn movements; not added to centreline mileage.",
+    "Road surfaces are terrain-graded around the generated centreline."
+  ]
+}
