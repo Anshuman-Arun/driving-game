@@ -97,17 +97,16 @@ for slot in race.get_starting_grid(): # authored order
     # Host's actual physics-controller velocity must also be reset to ZERO.
     assert(race.synchronize_racer_spawn(slot["id"], vehicle.global_position))
 
-# During GRID/COUNTDOWN: hold controls/brakes, do not drive.
-# update_racer_state also accepts near-spawn observations in these states.
-# Engine ticks advance GRID -> COUNTDOWN -> RACING, including leftover delta.
-race.tick(delta)
+# One host physics frame (state checked BEFORE tick):
 if race.state == RaceEngine.State.RACING:
-    # Run vehicle physics/AI first, then once per racer:
+    # Run the physical vehicles and AI first, then feed all their observations.
     race.update_racer_state("player", player.global_position, player.linear_velocity)
     # Repeat for all rivals with actual world positions and velocities.
-    race.tick(delta) # exactly once for THIS physics frame (not a second time)
-
-# This is illustrative state-flow pseudocode; call tick only once per frame.
+else:
+    # Hold/brake all vehicles through GRID and COUNTDOWN.
+    # Near-spawn observations may be synchronized here if needed.
+    pass
+race.tick(delta) # Exactly ONCE per physics frame, advancing all state timers.
 # When a crash or invalid movement requires recovery:
 if race.needs_reset("rival_1"):
     var recovery: Dictionary = race.reset_racer("rival_1")
