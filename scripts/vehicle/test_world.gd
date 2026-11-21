@@ -88,7 +88,7 @@ func respawn_near(position: Vector3) -> Transform3D:
 	var direction := (road_points[index + 1] - road_points[index - 1]).normalized()
 	direction.y = 0.0
 	direction = direction.normalized()
-	return Transform3D(Basis.looking_at(direction, Vector3.UP), p + Vector3.UP * 0.72)
+	return Transform3D(Basis.looking_at(direction, Vector3.UP), p + Vector3.UP * 0.58)
 
 func start_transform() -> Transform3D:
 	return respawn_near(Vector3(-177, 0, 165))
@@ -113,7 +113,7 @@ func _build_terrain() -> void:
 			var b := a + 1
 			var c := a + side
 			var d := c + 1
-			indices.append_array(PackedInt32Array([a, c, b, b, c, d]))
+			indices.append_array(PackedInt32Array([a, b, c, b, d, c]))
 	var mesh := _array_mesh(vertices, normals, indices)
 	var mat := _mat(Color(0.21, 0.34, 0.18), 0.92)
 	_static_mesh("Grass", mesh, mat, true, "Grass")
@@ -150,7 +150,7 @@ func _ribbon_mesh(width: float, vertical: float, offset: float) -> ArrayMesh:
 		normals.append(Vector3.UP)
 	for i in range(road_points.size() - 1):
 		var a := i * 2
-		indices.append_array(PackedInt32Array([a, a + 1, a + 2, a + 1, a + 3, a + 2]))
+		indices.append_array(PackedInt32Array([a, a + 2, a + 1, a + 1, a + 2, a + 3]))
 	return _array_mesh(vertices, normals, indices)
 
 func _stripe_mesh(offset: float, dashed: bool) -> ArrayMesh:
@@ -168,7 +168,7 @@ func _stripe_mesh(offset: float, dashed: bool) -> ArrayMesh:
 		vertices.append_array(PackedVector3Array([a, b, c, d]))
 		for j in range(4):
 			normals.append(Vector3.UP)
-		indices.append_array(PackedInt32Array([base, base + 1, base + 2, base + 1, base + 3, base + 2]))
+		indices.append_array(PackedInt32Array([base, base + 2, base + 1, base + 1, base + 2, base + 3]))
 	return _array_mesh(vertices, normals, indices)
 
 func _array_mesh(vertices: PackedVector3Array, normals: PackedVector3Array, indices: PackedInt32Array) -> ArrayMesh:
@@ -194,11 +194,13 @@ func _static_mesh(label: String, mesh: ArrayMesh, mat: Material, collision: bool
 		root = Node3D.new()
 	root.name = label
 	var visual := MeshInstance3D.new()
+	visual.name = "MeshInstance3D"
 	visual.mesh = mesh
 	visual.material_override = mat
 	root.add_child(visual)
 	if collision:
 		var collider := CollisionShape3D.new()
+		collider.name = "CollisionShape3D"
 		collider.shape = mesh.create_trimesh_shape()
 		root.add_child(collider)
 	add_child(root)
@@ -227,7 +229,7 @@ func _build_barriers() -> void:
 		visual.mesh = box
 		visual.material_override = rail_mat
 		barrier.add_child(visual)
-		barrier.global_position = edge
+		barrier.position = edge
 		barrier.rotation.y = atan2(-direction.x, -direction.y)
 		add_child(barrier)
 

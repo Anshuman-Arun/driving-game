@@ -57,7 +57,7 @@ func _process(delta: float) -> void:
 			if wheel.is_colliding():
 				surface = wheel.surface_type.to_upper()
 				break
-		_info.text = surface
+		_info.text = "%s    •    %s" % [surface, camera.get_mode_name()]
 	_pause_layer.visible = get_tree().paused
 
 func _reset_to_road() -> void:
@@ -80,16 +80,19 @@ func _make_hud() -> void:
 	tint.name = "SpeedBackground"
 	tint.color = Color(0.024, 0.044, 0.062, 0.73)
 	tint.position = Vector2(24, 22)
-	tint.size = Vector2(305, 126)
+	tint.size = Vector2(315, 162)
 	tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(tint)
 	var car_name := _label(layer, "V E L A   G T", Vector2(42, 29), 18, Color(0.78, 0.88, 0.97))
 	_speed = _label(layer, "000", Vector2(40, 48), 53, Color.WHITE)
 	_gear = _label(layer, "km/h    •    GEAR 1", Vector2(43, 114), 16, Color(0.80, 0.90, 0.96))
-	_info = _label(layer, "ROAD", Vector2(42, 154), 16, Color(0.94, 0.77, 0.33))
-	var legend := _label(layer, "W / ↑ gas   S / ↓ brake   A D / ← → steer   SPACE handbrake\nR reset   C camera   ESC pause    •    Xbox RT / LT / LS / B / Y / Menu", Vector2(24, 0), 17, Color.WHITE)
+	_info = _label(layer, "ROAD    •    CHASE FAR", Vector2(43, 144), 15, Color(0.94, 0.77, 0.33))
+	var legend := _label(layer, "W / ↑ gas   S / ↓ brake   A D / ← → steer   SPACE handbrake\nR reset   C camera   ESC pause    •    Xbox RT / LT / LS / B / Y / Menu", Vector2.ZERO, 17, Color.WHITE)
 	legend.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	legend.position = Vector2(24, -76)
+	legend.offset_left = 24.0
+	legend.offset_top = -62.0
+	legend.offset_right = 1100.0
+	legend.offset_bottom = -14.0
 	legend.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.9))
 	legend.add_theme_constant_override("shadow_offset_x", 2)
 	legend.add_theme_constant_override("shadow_offset_y", 2)

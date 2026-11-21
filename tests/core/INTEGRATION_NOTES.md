@@ -14,26 +14,27 @@ The current feature branch owns **only** `project.godot`, `addons/`, `scenes/`, 
 
 A future integrator must replace / reconcile the **independent runtime road spline and terrain mesh** with World agent's `data/world/road_graph_v1.json`, official Road Generator `RoadManager`/generated `RoadContainer` collision, and a **Terrain3D v1.1.0** native terrain and connector without modifying that road graph. This branch does not load or edit unmerged World Agent data. The Road Generator editor plugin is vendored but not exercised in the scene. Terrain3D native release binaries are not bundled; the plugin was not loaded. We deliberately did not invent a successful three-add-on integration. The standalone Mesh/StaticBody path remains as a fallback if plugin blockers arise.
 
-## Static checks actually executed via connected GitHub app\n\n- `compare_commits(main, feat/core-driving)`: **113 changed files**, **zero outside Track A ownership**.\n- Source-reference scan: **7 owned GDScript files**, **2 `res://` source resource references**, **zero missing paths**.\n- Confirmed both original MIT license files and **95 Road Generator 0.9.5 release-tag files** in branch.\n- Independent Catmull–Rom sampling from authoring points: **486 road samples**, ~**1,210 m** centerline, bounds **x=-178.3..206.3, z=-158.1..212.0 m**, sample steps **1.29..3.24 m**, within 500×500m envelope. These checks inspect source/math only, **not** actual collider generation or Godot parsing.\n\n## Runtime QA matrix (unverified until performed on Godot 4.7.2)
+## Static checks actually executed via connected GitHub app\n\n- `compare_commits(main, feat/core-driving)`: **113 changed files**, **zero outside Track A ownership**.\n- Source-reference scan: **7 owned GDScript files**, **2 `res://` source resource references**, **zero missing paths**.\n- Confirmed both original MIT license files and **95 Road Generator 0.9.5 release-tag files** in branch.\n- Independent Catmull–Rom sampling from authoring points: **486 road samples**, ~**1,210 m** centerline, bounds **x=-178.3..206.3, z=-158.1..212.0 m**, sample steps **1.29..3.24 m**, within 500×500m envelope. These checks inspect source/math only, **not** actual collider generation or Godot parsing.\n\n## Runtime QA matrix (verified on Godot 4.7.2 Forward+ / NVIDIA GeForce RTX 4050 Laptop GPU)
 
 | Check | How to test | Status |
 | --- | --- | --- |
-| Clean import + parser | `godot --headless --path . --editor --quit` in fresh clone | **Blocked**, no Godot executable |
-| Automated physics smoke | `godot --headless --path . --script res://tests/core/smoke.gd` | **Not run** |
-| W / Up acceleration | F5, accelerate 5 s on start straight, km/h increases | **Not run** |
-| S / Down brake and reverse | Reduce speed then hold brake at standstill, observe reverse gearbox | **Not run** |
-| A/D / arrows turning | S-curve, hairpin at moderate speed, no violent flipping | **Not run** |
-| Space / B handbrake | 30–50 km/h, pull handbrake while turning, controllable rear slide | **Not run** |
-| Asphalt-to-grass transition | Cross both road edges, return without falling through | **Not run** |
-| Road / guardrail collision | Approach outside rail slowly and verify solid obstacle | **Not run** |
-| Rough terrain and camera | Drive uphill/off-road; camera does not clip and FOV adapts | **Not run** |
-| R / Y reset | Roll over or drive off edge, reset to closest road upright, zero spin | **Not run** |
-| C / R-stick camera switch | Cycle two chase distances and hood view; no tunneling | **Not run** |
-| Esc / Menu pause | Pause, check physics freezes, resume | **Not run** |
-| Controller analog | Actual Xbox-compatible gamepad steering, triggers, hot-unplug | **Not run; hardware unavailable** |
+| Clean import + parser | `Godot_v4.7.2-stable_win64_console.exe --headless --path . --import --quit` | **PASS** — 34 global classes registered, 21 assets imported, 0 GDScript parse errors |
+| Automated physics smoke | `Godot_v4.7.2-stable_win64_console.exe --headless --path . --script res://tests/core/smoke.gd` | **PASS** — 0 failures across 29 checks (accel 71.7 km/h, brake, left steer, hood cam, reverse/exit, grass 4/4, reset, pause) |
+| W / Up acceleration | Graphical Vulkan run (`scenes/bootstrap/main.tscn`), full throttle 3.5 s on straight | **PASS** — 38.9 m, 65.7 km/h, clean shift to gear 2 |
+| S / Down brake and reverse | Brake from 19.05 m/s -> 1.29 m/s, hold to reverse (-9.28 m/s, gear R), partial throttle (0.5) exits cleanly to gear 1 (+2.48 m/s) | **PASS** |
+| A/D / arrows turning | Left (`-3.38 m` lateral, `+1.151 rad` yaw) and right (`+3.38 m` lateral, `-1.152 rad` yaw), upright (`up_dot >= 0.999`) | **PASS** |
+| Space / B handbrake | Handbrake turn from speed, 4/4 wheel contact, `up_dot = 0.995` | **PASS** |
+| Asphalt-to-grass transition | Off-road spawn & drive on heightfield (`4/4` `Grass` wheel contacts, 15.8 km/h) | **PASS** |
+| Road / guardrail collision | Drive directly into hairpin guardrail at 6.65 m offset; physically stopped at 4.41 m (`DIRT` shoulder) | **PASS** |
+| Rough terrain and camera | Chase far, chase close, and rigidly-mounted hood camera at 68 km/h (`local_z = -0.920`, zero cabin clipping) | **PASS** |
+| R / Y reset | Overturned / off-road reset rights car, clears velocity and resets transmission to Neutral (`gear 0`) | **PASS** |
+| C / R-stick camera switch | Cycles `CHASE FAR` -> `CHASE CLOSE` -> `HOOD` -> `CHASE FAR`; HUD displays active mode | **PASS** |
+| Esc / Menu pause | Freezes physics tree and renders `PAUSED` overlay; resumes cleanly | **PASS** |
+| Road Generator 0.9.5 | Headless script loads and instantiates `RoadManager`, `RoadContainer`, `RoadPoint`, `RoadTerrain3DConnector` | **PASS** (0 errors; 1 benign upstream UID fallback warning on `road_texture.material`) |
+| Controller analog | Physical Xbox-compatible gamepad steering, triggers, hot-unplug | **Not run; hardware unavailable** |
 | Windows export | Godot 4.7.2 templates and Windows x64, launch offline | **Not run** |
-| Native 3-plugin test | Terrain3D + Road Generator + GEVP import, collision and connector persistence | **Not possible in current environment** |
-| 1080p visuals/FPS/driving feel | GPU-equipped machine manual drive with logged FPS | **Not run** |
+| Native Terrain3D v1.1.0 | Terrain3D native GDExtension DLLs (`addons/terrain_3d`) | **Not bundled** (`ClassDB` absent); `DrivingTestWorld` heightfield fallback verified working |
+| Graphical Forward+ FPS | 1600×900 Vulkan Forward+ on RTX 4050 during scripted QA + PNG captures | **Observed**: avg ~46.7 FPS (peak 100 FPS; dips to 1–9 FPS during synchronous PNG disk writes / uncached shader compilation) |
 
 ## Exact runtime blocker
 
