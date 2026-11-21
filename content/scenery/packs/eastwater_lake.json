@@ -1,0 +1,6574 @@
+{
+ "schema_version": 1,
+ "seed": 20261121,
+ "region": "eastwater_lake",
+ "source": {
+  "world_pr": 3,
+  "art_pr": 7,
+  "road_git_blob": "9bba378d68879df3baed2c97a4885c0adde88406",
+  "terrain_git_blob": "d951ce11a831dad5430b4c7157e2296f73c6b151",
+  "art_manifest_git_blob": "7c67ab03c29169c48432b36df6ae7a429a8decee"
+ },
+ "placements": [
+  {
+   "id": "eastwater_lake_0001",
+   "asset": "pier",
+   "position": [
+    751,
+    5,
+    465
+   ],
+   "yaw_deg": 0,
+   "scale": 1,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.33,
+   "road_clearance_m": 60.05,
+   "district": "",
+   "tag": "landmark"
+  },
+  {
+   "id": "eastwater_lake_0002",
+   "asset": "pine",
+   "position": [
+    588.006,
+    44.405,
+    236.914
+   ],
+   "yaw_deg": 51.51,
+   "scale": 1.143,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 23.33,
+   "road_clearance_m": 23.95,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0003",
+   "asset": "rock",
+   "position": [
+    512.754,
+    17.027,
+    270.053
+   ],
+   "yaw_deg": 329.27,
+   "scale": 1.032,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 35.93,
+   "road_clearance_m": 56.91,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0004",
+   "asset": "rock",
+   "position": [
+    582.431,
+    41.465,
+    296.387
+   ],
+   "yaw_deg": 113.35,
+   "scale": 1.032,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.49,
+   "road_clearance_m": 13.65,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0005",
+   "asset": "broadleaf",
+   "position": [
+    612.044,
+    40.915,
+    280.608
+   ],
+   "yaw_deg": 110.67,
+   "scale": 0.978,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 14.58,
+   "road_clearance_m": 19.77,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0006",
+   "asset": "rock",
+   "position": [
+    624.439,
+    29.052,
+    259.154
+   ],
+   "yaw_deg": 63.73,
+   "scale": 0.747,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 36.85,
+   "road_clearance_m": 41.92,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0007",
+   "asset": "rock",
+   "position": [
+    515.905,
+    14.705,
+    277.407
+   ],
+   "yaw_deg": 251.28,
+   "scale": 1.242,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 34.14,
+   "road_clearance_m": 58.45,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0008",
+   "asset": "rock",
+   "position": [
+    607.693,
+    41.422,
+    272.862
+   ],
+   "yaw_deg": 252.02,
+   "scale": 1.072,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 16.01,
+   "road_clearance_m": 20.39,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0009",
+   "asset": "rock",
+   "position": [
+    585.487,
+    36.198,
+    202.198
+   ],
+   "yaw_deg": 234.44,
+   "scale": 0.772,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 36.76,
+   "road_clearance_m": 41.47,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0010",
+   "asset": "rock",
+   "position": [
+    608.516,
+    31.838,
+    235.719
+   ],
+   "yaw_deg": 336.78,
+   "scale": 1.109,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 37.35,
+   "road_clearance_m": 41.63,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0011",
+   "asset": "broadleaf",
+   "position": [
+    601.804,
+    42.675,
+    270.219
+   ],
+   "yaw_deg": 306.04,
+   "scale": 0.724,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.5,
+   "road_clearance_m": 16.93,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0012",
+   "asset": "rock",
+   "position": [
+    624.264,
+    33.247,
+    271.447
+   ],
+   "yaw_deg": 89.37,
+   "scale": 1.296,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 34.38,
+   "road_clearance_m": 35.01,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0013",
+   "asset": "rock",
+   "position": [
+    612.163,
+    33.38,
+    247.734
+   ],
+   "yaw_deg": 326.88,
+   "scale": 1.334,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 36.57,
+   "road_clearance_m": 37.99,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0014",
+   "asset": "broadleaf",
+   "position": [
+    510.035,
+    7.473,
+    297.23
+   ],
+   "yaw_deg": 24.34,
+   "scale": 1.044,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.4,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0015",
+   "asset": "rock",
+   "position": [
+    568.366,
+    43.24,
+    279.532
+   ],
+   "yaw_deg": 277.95,
+   "scale": 0.924,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 14.89,
+   "road_clearance_m": 16.09,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0016",
+   "asset": "rock",
+   "position": [
+    554.771,
+    46.995,
+    250.895
+   ],
+   "yaw_deg": 357.41,
+   "scale": 1.227,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.56,
+   "road_clearance_m": 11.4,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0017",
+   "asset": "rock",
+   "position": [
+    611.151,
+    23.552,
+    214.234
+   ],
+   "yaw_deg": 58.36,
+   "scale": 0.901,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 31.7,
+   "road_clearance_m": 55.83,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0018",
+   "asset": "rock",
+   "position": [
+    630.981,
+    34.752,
+    291.98
+   ],
+   "yaw_deg": 122.34,
+   "scale": 0.897,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 29.55,
+   "road_clearance_m": 29.38,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0019",
+   "asset": "broadleaf",
+   "position": [
+    595.867,
+    43.91,
+    260.655
+   ],
+   "yaw_deg": 243.23,
+   "scale": 1.192,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.72,
+   "road_clearance_m": 17.26,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0020",
+   "asset": "rock",
+   "position": [
+    618.575,
+    29.661,
+    249.582
+   ],
+   "yaw_deg": 353.2,
+   "scale": 0.915,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 37.02,
+   "road_clearance_m": 42.31,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0021",
+   "asset": "rock",
+   "position": [
+    565.561,
+    48.584,
+    225.008
+   ],
+   "yaw_deg": 312,
+   "scale": 1.319,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.75,
+   "road_clearance_m": 12.12,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0022",
+   "asset": "pine",
+   "position": [
+    576.082,
+    42.272,
+    289.922
+   ],
+   "yaw_deg": 108.34,
+   "scale": 1.205,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.33,
+   "road_clearance_m": 15.39,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0023",
+   "asset": "rock",
+   "position": [
+    527.442,
+    49.369,
+    224.064
+   ],
+   "yaw_deg": 183.32,
+   "scale": 1.098,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 19.6,
+   "road_clearance_m": 18.69,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0024",
+   "asset": "pine",
+   "position": [
+    590.168,
+    44.823,
+    250.778
+   ],
+   "yaw_deg": 275.58,
+   "scale": 1.202,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 11.41,
+   "road_clearance_m": 18,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0025",
+   "asset": "rock",
+   "position": [
+    622.268,
+    36.15,
+    278.18
+   ],
+   "yaw_deg": 247.99,
+   "scale": 0.911,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 29.75,
+   "road_clearance_m": 29.64,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0026",
+   "asset": "pine",
+   "position": [
+    605.845,
+    41.833,
+    280.964
+   ],
+   "yaw_deg": 248.77,
+   "scale": 1.409,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.49,
+   "road_clearance_m": 14.39,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0027",
+   "asset": "pine",
+   "position": [
+    536.775,
+    46.395,
+    242.162
+   ],
+   "yaw_deg": 208.85,
+   "scale": 0.81,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 25.11,
+   "road_clearance_m": 21.32,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0028",
+   "asset": "rock",
+   "position": [
+    594.924,
+    39.66,
+    232.249
+   ],
+   "yaw_deg": 219.44,
+   "scale": 0.957,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 33.16,
+   "road_clearance_m": 32.29,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0029",
+   "asset": "rock",
+   "position": [
+    616.383,
+    34.67,
+    260.154
+   ],
+   "yaw_deg": 321,
+   "scale": 1.4,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 34.84,
+   "road_clearance_m": 34.64,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0030",
+   "asset": "rock",
+   "position": [
+    590.601,
+    39.165,
+    313.101
+   ],
+   "yaw_deg": 227.14,
+   "scale": 0.711,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 14.8,
+   "road_clearance_m": 15.98,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0031",
+   "asset": "rock",
+   "position": [
+    637.905,
+    36.023,
+    317.92
+   ],
+   "yaw_deg": 152.43,
+   "scale": 1.098,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 16.6,
+   "road_clearance_m": 21.03,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0032",
+   "asset": "rock",
+   "position": [
+    577.193,
+    43.039,
+    283.81
+   ],
+   "yaw_deg": 190.88,
+   "scale": 1.242,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.12,
+   "road_clearance_m": 11.09,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0033",
+   "asset": "rock",
+   "position": [
+    578.996,
+    38.427,
+    305.25
+   ],
+   "yaw_deg": 128.95,
+   "scale": 1.465,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 26.59,
+   "road_clearance_m": 21.39,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0034",
+   "asset": "rock",
+   "position": [
+    600.252,
+    24.029,
+    187.866
+   ],
+   "yaw_deg": 57.19,
+   "scale": 1.036,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 18.69,
+   "road_clearance_m": 61.76,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0035",
+   "asset": "rock",
+   "position": [
+    553.338,
+    50.82,
+    192.315
+   ],
+   "yaw_deg": 354.3,
+   "scale": 1.446,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 16.24,
+   "road_clearance_m": 20.72,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0036",
+   "asset": "rock",
+   "position": [
+    516.941,
+    7.289,
+    298.762
+   ],
+   "yaw_deg": 271.48,
+   "scale": 0.899,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 14.27,
+   "road_clearance_m": 69.54,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0037",
+   "asset": "broadleaf",
+   "position": [
+    573.586,
+    47.768,
+    229.103
+   ],
+   "yaw_deg": 76.67,
+   "scale": 1.389,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.57,
+   "road_clearance_m": 16.42,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0038",
+   "asset": "rock",
+   "position": [
+    601.01,
+    38.87,
+    242.669
+   ],
+   "yaw_deg": 243.79,
+   "scale": 1.329,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 32.76,
+   "road_clearance_m": 31.52,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0039",
+   "asset": "rock",
+   "position": [
+    594.424,
+    43.544,
+    266.485
+   ],
+   "yaw_deg": 328.71,
+   "scale": 1.401,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.08,
+   "road_clearance_m": 12.84,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0040",
+   "asset": "rock",
+   "position": [
+    636.018,
+    31.4,
+    290.023
+   ],
+   "yaw_deg": 156.89,
+   "scale": 1.409,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 33.61,
+   "road_clearance_m": 34.67,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0041",
+   "asset": "broadleaf",
+   "position": [
+    584.558,
+    45.686,
+    248.948
+   ],
+   "yaw_deg": 231.69,
+   "scale": 0.894,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.44,
+   "road_clearance_m": 14.36,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0042",
+   "asset": "broadleaf",
+   "position": [
+    633.615,
+    21.296,
+    196.326
+   ],
+   "yaw_deg": 327.99,
+   "scale": 1.238,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.29,
+   "road_clearance_m": 84.48,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0043",
+   "asset": "rock",
+   "position": [
+    548.208,
+    36.43,
+    276.619
+   ],
+   "yaw_deg": 191.42,
+   "scale": 1.19,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 38.31,
+   "road_clearance_m": 31.24,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0044",
+   "asset": "rock",
+   "position": [
+    584.036,
+    34.759,
+    320.037
+   ],
+   "yaw_deg": 143.92,
+   "scale": 1.179,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 33.63,
+   "road_clearance_m": 25.27,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0045",
+   "asset": "rock",
+   "position": [
+    546.72,
+    39.181,
+    269.257
+   ],
+   "yaw_deg": 289.17,
+   "scale": 1.334,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 35.5,
+   "road_clearance_m": 28.37,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0046",
+   "asset": "broadleaf",
+   "position": [
+    648.793,
+    17.657,
+    213.748
+   ],
+   "yaw_deg": 135.42,
+   "scale": 1.282,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.78,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0047",
+   "asset": "rock",
+   "position": [
+    562.691,
+    36.863,
+    291.887
+   ],
+   "yaw_deg": 191.5,
+   "scale": 1.086,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 35.19,
+   "road_clearance_m": 27.64,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0048",
+   "asset": "rock",
+   "position": [
+    592.281,
+    36.1,
+    325.517
+   ],
+   "yaw_deg": 222.74,
+   "scale": 1.426,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 27.2,
+   "road_clearance_m": 21.36,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0049",
+   "asset": "rock",
+   "position": [
+    563.493,
+    43.416,
+    275.22
+   ],
+   "yaw_deg": 307.24,
+   "scale": 0.936,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 18.41,
+   "road_clearance_m": 17.75,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0050",
+   "asset": "pine",
+   "position": [
+    579.621,
+    46.719,
+    233.097
+   ],
+   "yaw_deg": 215.53,
+   "scale": 1.28,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.74,
+   "road_clearance_m": 19.15,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0051",
+   "asset": "pine",
+   "position": [
+    482.227,
+    12.236,
+    279.432
+   ],
+   "yaw_deg": 24.09,
+   "scale": 1.102,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0052",
+   "asset": "rock",
+   "position": [
+    597.456,
+    39.989,
+    239.14
+   ],
+   "yaw_deg": 339.56,
+   "scale": 0.704,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 31.82,
+   "road_clearance_m": 30.54,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0053",
+   "asset": "rock",
+   "position": [
+    544.152,
+    46.025,
+    249.703
+   ],
+   "yaw_deg": 100.77,
+   "scale": 1.271,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 22.08,
+   "road_clearance_m": 19.51,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0054",
+   "asset": "rock",
+   "position": [
+    571.157,
+    40.099,
+    292.79
+   ],
+   "yaw_deg": 214.34,
+   "scale": 1.44,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 25.62,
+   "road_clearance_m": 21.08,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0055",
+   "asset": "pine",
+   "position": [
+    498.279,
+    9.951,
+    285.73
+   ],
+   "yaw_deg": 290.23,
+   "scale": 0.864,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0056",
+   "asset": "broadleaf",
+   "position": [
+    564.483,
+    49.346,
+    211.221
+   ],
+   "yaw_deg": 259.7,
+   "scale": 1.135,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.91,
+   "road_clearance_m": 19.06,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0057",
+   "asset": "rock",
+   "position": [
+    641.134,
+    20.802,
+    266.161
+   ],
+   "yaw_deg": 233.74,
+   "scale": 1.461,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 33.26,
+   "road_clearance_m": 55.53,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0058",
+   "asset": "rock",
+   "position": [
+    599.961,
+    42.157,
+    255.104
+   ],
+   "yaw_deg": 313.67,
+   "scale": 1.423,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 23,
+   "road_clearance_m": 23.75,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0059",
+   "asset": "pine",
+   "position": [
+    617.731,
+    39.842,
+    294.352
+   ],
+   "yaw_deg": 298.5,
+   "scale": 0.962,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.45,
+   "road_clearance_m": 16.99,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0060",
+   "asset": "rock",
+   "position": [
+    557.548,
+    41.81,
+    274.587
+   ],
+   "yaw_deg": 294.17,
+   "scale": 1.335,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 27.06,
+   "road_clearance_m": 22.35,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0061",
+   "asset": "rock",
+   "position": [
+    583.642,
+    38.851,
+    308.7
+   ],
+   "yaw_deg": 275.37,
+   "scale": 1.296,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 22.79,
+   "road_clearance_m": 19.39,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0062",
+   "asset": "rock",
+   "position": [
+    620.783,
+    34.092,
+    267.211
+   ],
+   "yaw_deg": 197.84,
+   "scale": 0.829,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 34.18,
+   "road_clearance_m": 34.43,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0063",
+   "asset": "rock",
+   "position": [
+    595.904,
+    38.277,
+    321.518
+   ],
+   "yaw_deg": 323.9,
+   "scale": 1.449,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 15.51,
+   "road_clearance_m": 16.14,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0064",
+   "asset": "rock",
+   "position": [
+    592.808,
+    30.502,
+    338.912
+   ],
+   "yaw_deg": 23.01,
+   "scale": 1.32,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 37.75,
+   "road_clearance_m": 28.22,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0065",
+   "asset": "rock",
+   "position": [
+    514.488,
+    46.432,
+    220.015
+   ],
+   "yaw_deg": 211.84,
+   "scale": 1.064,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 31.38,
+   "road_clearance_m": 26.99,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0066",
+   "asset": "rock",
+   "position": [
+    567.517,
+    44.809,
+    268.704
+   ],
+   "yaw_deg": 155.11,
+   "scale": 1.359,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.95,
+   "road_clearance_m": 10.79,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0067",
+   "asset": "pine",
+   "position": [
+    513.955,
+    10.676,
+    285.763
+   ],
+   "yaw_deg": 239.98,
+   "scale": 1.272,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 24.07,
+   "road_clearance_m": 64.76,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0068",
+   "asset": "rock",
+   "position": [
+    622.918,
+    20.797,
+    229.579
+   ],
+   "yaw_deg": 186.44,
+   "scale": 0.888,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 29.65,
+   "road_clearance_m": 57.01,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0069",
+   "asset": "rock",
+   "position": [
+    532.822,
+    50.593,
+    220.877
+   ],
+   "yaw_deg": 26.19,
+   "scale": 1.399,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.14,
+   "road_clearance_m": 12.45,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0070",
+   "asset": "rock",
+   "position": [
+    541.954,
+    37.544,
+    267.201
+   ],
+   "yaw_deg": 329.22,
+   "scale": 1.001,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 38.28,
+   "road_clearance_m": 31.16,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0071",
+   "asset": "broadleaf",
+   "position": [
+    626.394,
+    38.166,
+    300.564
+   ],
+   "yaw_deg": 344.81,
+   "scale": 1.392,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 16.78,
+   "road_clearance_m": 20.85,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0072",
+   "asset": "broadleaf",
+   "position": [
+    612.818,
+    40.534,
+    292.6
+   ],
+   "yaw_deg": 59.82,
+   "scale": 0.852,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.01,
+   "road_clearance_m": 13.84,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0073",
+   "asset": "rock",
+   "position": [
+    574.37,
+    39.343,
+    297.966
+   ],
+   "yaw_deg": 338.52,
+   "scale": 0.945,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 26.09,
+   "road_clearance_m": 21.25,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0074",
+   "asset": "rock",
+   "position": [
+    552.196,
+    45.513,
+    258.236
+   ],
+   "yaw_deg": 87.98,
+   "scale": 0.743,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 18.25,
+   "road_clearance_m": 17.66,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0075",
+   "asset": "rock",
+   "position": [
+    561.266,
+    45.62,
+    262.199
+   ],
+   "yaw_deg": 113.2,
+   "scale": 1.316,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8,
+   "road_clearance_m": 12.36,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0076",
+   "asset": "pine",
+   "position": [
+    607.52,
+    23.676,
+    177.402
+   ],
+   "yaw_deg": 77.66,
+   "scale": 1.316,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.5,
+   "road_clearance_m": 73.7,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0077",
+   "asset": "rock",
+   "position": [
+    612.64,
+    40.649,
+    287.415
+   ],
+   "yaw_deg": 47.29,
+   "scale": 0.818,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.25,
+   "road_clearance_m": 16.53,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0078",
+   "asset": "rock",
+   "position": [
+    612.623,
+    25.316,
+    224.273
+   ],
+   "yaw_deg": 48.83,
+   "scale": 1.396,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 35.25,
+   "road_clearance_m": 51.42,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0079",
+   "asset": "rock",
+   "position": [
+    604.961,
+    28.728,
+    218.617
+   ],
+   "yaw_deg": 262.11,
+   "scale": 1.078,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 36.6,
+   "road_clearance_m": 48.25,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0080",
+   "asset": "rock",
+   "position": [
+    659.273,
+    12.155,
+    258.177
+   ],
+   "yaw_deg": 234.56,
+   "scale": 0.891,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.2,
+   "road_clearance_m": 73.37,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0081",
+   "asset": "rock",
+   "position": [
+    589.521,
+    41.641,
+    227.879
+   ],
+   "yaw_deg": 282.59,
+   "scale": 1.24,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 31.12,
+   "road_clearance_m": 30.27,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0082",
+   "asset": "rock",
+   "position": [
+    647.12,
+    14.578,
+    248.147
+   ],
+   "yaw_deg": 309.92,
+   "scale": 1.267,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 15.18,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0083",
+   "asset": "rock",
+   "position": [
+    562.378,
+    49.303,
+    217.949
+   ],
+   "yaw_deg": 153.65,
+   "scale": 0.972,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.08,
+   "road_clearance_m": 13.5,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0084",
+   "asset": "rock",
+   "position": [
+    599.173,
+    34.228,
+    223.348
+   ],
+   "yaw_deg": 33.84,
+   "scale": 0.792,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 37.02,
+   "road_clearance_m": 40.8,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0085",
+   "asset": "rock",
+   "position": [
+    599.243,
+    25.414,
+    193.91
+   ],
+   "yaw_deg": 92.55,
+   "scale": 1.303,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 26.2,
+   "road_clearance_m": 57.5,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0086",
+   "asset": "pine",
+   "position": [
+    646.351,
+    15.168,
+    228.412
+   ],
+   "yaw_deg": 168.74,
+   "scale": 1.429,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.24,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0087",
+   "asset": "shrub",
+   "position": [
+    551.145,
+    13.904,
+    681.463
+   ],
+   "yaw_deg": 95.94,
+   "scale": 0.718,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.5,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0088",
+   "asset": "pine",
+   "position": [
+    594.943,
+    7.407,
+    614.257
+   ],
+   "yaw_deg": 38.68,
+   "scale": 1.078,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.42,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0089",
+   "asset": "rock",
+   "position": [
+    598.268,
+    11.559,
+    656.295
+   ],
+   "yaw_deg": 20.17,
+   "scale": 1.155,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.82,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0090",
+   "asset": "pine",
+   "position": [
+    591.898,
+    7.708,
+    620.668
+   ],
+   "yaw_deg": 225.54,
+   "scale": 1.242,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.36,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0091",
+   "asset": "rock",
+   "position": [
+    570.005,
+    10.302,
+    636.936
+   ],
+   "yaw_deg": 292.33,
+   "scale": 0.955,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.39,
+   "road_clearance_m": 92.84,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0092",
+   "asset": "rock",
+   "position": [
+    587.463,
+    12.686,
+    665.323
+   ],
+   "yaw_deg": 78.18,
+   "scale": 1.233,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.84,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0093",
+   "asset": "shrub",
+   "position": [
+    608.97,
+    9.008,
+    636.1
+   ],
+   "yaw_deg": 274.5,
+   "scale": 0.862,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.57,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0094",
+   "asset": "rock",
+   "position": [
+    589.817,
+    13.779,
+    679.197
+   ],
+   "yaw_deg": 112.95,
+   "scale": 0.961,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.35,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0095",
+   "asset": "rock",
+   "position": [
+    559.776,
+    12.464,
+    668.752
+   ],
+   "yaw_deg": 171.53,
+   "scale": 1.132,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.42,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0096",
+   "asset": "shrub",
+   "position": [
+    633.846,
+    11.681,
+    679.408
+   ],
+   "yaw_deg": 88.66,
+   "scale": 0.871,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.7,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0097",
+   "asset": "shrub",
+   "position": [
+    588.615,
+    11.73,
+    651.333
+   ],
+   "yaw_deg": 270.1,
+   "scale": 0.701,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.03,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0098",
+   "asset": "rock",
+   "position": [
+    623.008,
+    9.542,
+    645.693
+   ],
+   "yaw_deg": 133.06,
+   "scale": 1.3,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.41,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0099",
+   "asset": "shrub",
+   "position": [
+    577.77,
+    10.651,
+    640.568
+   ],
+   "yaw_deg": 338.43,
+   "scale": 1.4,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.03,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0100",
+   "asset": "shrub",
+   "position": [
+    572.923,
+    12.449,
+    663.592
+   ],
+   "yaw_deg": 248.9,
+   "scale": 1.345,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.38,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0101",
+   "asset": "shrub",
+   "position": [
+    623.631,
+    10.89,
+    662.572
+   ],
+   "yaw_deg": 110.94,
+   "scale": 0.721,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.24,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0102",
+   "asset": "shrub",
+   "position": [
+    615.259,
+    11.908,
+    675.513
+   ],
+   "yaw_deg": 317.24,
+   "scale": 0.706,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.96,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0103",
+   "asset": "rock",
+   "position": [
+    617.145,
+    13.145,
+    693.459
+   ],
+   "yaw_deg": 214.9,
+   "scale": 1.17,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0104",
+   "asset": "pine",
+   "position": [
+    649.617,
+    7.12,
+    639.245
+   ],
+   "yaw_deg": 183.51,
+   "scale": 1.085,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.22,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0105",
+   "asset": "pine",
+   "position": [
+    554.974,
+    11.299,
+    652.212
+   ],
+   "yaw_deg": 21.41,
+   "scale": 0.973,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.65,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0106",
+   "asset": "pine",
+   "position": [
+    583.975,
+    11.604,
+    649.107
+   ],
+   "yaw_deg": 138.78,
+   "scale": 1.191,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.33,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0107",
+   "asset": "shrub",
+   "position": [
+    559.811,
+    14.554,
+    688.346
+   ],
+   "yaw_deg": 158.65,
+   "scale": 1.2,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.72,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0108",
+   "asset": "pine",
+   "position": [
+    636.668,
+    10.677,
+    670.156
+   ],
+   "yaw_deg": 208.9,
+   "scale": 0.784,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.44,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0109",
+   "asset": "pine",
+   "position": [
+    599,
+    9.423,
+    636.359
+   ],
+   "yaw_deg": 352.08,
+   "scale": 1.362,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.93,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0110",
+   "asset": "pine",
+   "position": [
+    642.225,
+    8.838,
+    657.167
+   ],
+   "yaw_deg": 103.41,
+   "scale": 0.898,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.11,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0111",
+   "asset": "pine",
+   "position": [
+    524.228,
+    18.674,
+    611.12
+   ],
+   "yaw_deg": 239.86,
+   "scale": 0.764,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 27.35,
+   "road_clearance_m": 48.3,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0112",
+   "asset": "rock",
+   "position": [
+    630.083,
+    14.53,
+    710.65
+   ],
+   "yaw_deg": 106.03,
+   "scale": 0.963,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.11,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0113",
+   "asset": "rock",
+   "position": [
+    537.18,
+    13.053,
+    666.622
+   ],
+   "yaw_deg": 311.72,
+   "scale": 0.79,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 2.56,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0114",
+   "asset": "rock",
+   "position": [
+    576.449,
+    13.055,
+    670.902
+   ],
+   "yaw_deg": 150.56,
+   "scale": 1.188,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.25,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0115",
+   "asset": "rock",
+   "position": [
+    680.938,
+    9.64,
+    675.114
+   ],
+   "yaw_deg": 23.88,
+   "scale": 1.261,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.55,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0116",
+   "asset": "rock",
+   "position": [
+    576.906,
+    11.739,
+    655.031
+   ],
+   "yaw_deg": 182.69,
+   "scale": 1.368,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.82,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0117",
+   "asset": "shrub",
+   "position": [
+    561.277,
+    11.971,
+    661.673
+   ],
+   "yaw_deg": 194.16,
+   "scale": 0.788,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.18,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0118",
+   "asset": "shrub",
+   "position": [
+    628.029,
+    9.569,
+    648.135
+   ],
+   "yaw_deg": 60.46,
+   "scale": 0.701,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.69,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0119",
+   "asset": "pine",
+   "position": [
+    579.056,
+    10.608,
+    600.378
+   ],
+   "yaw_deg": 191.35,
+   "scale": 0.783,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 19.5,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0120",
+   "asset": "rock",
+   "position": [
+    617.228,
+    10.793,
+    657.651
+   ],
+   "yaw_deg": 284.22,
+   "scale": 1.269,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.99,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0121",
+   "asset": "rock",
+   "position": [
+    542.698,
+    13.513,
+    677.824
+   ],
+   "yaw_deg": 219.09,
+   "scale": 0.799,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.34,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0122",
+   "asset": "shrub",
+   "position": [
+    549.94,
+    13.011,
+    670.852
+   ],
+   "yaw_deg": 143.85,
+   "scale": 0.812,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.93,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0123",
+   "asset": "pine",
+   "position": [
+    584.564,
+    8.653,
+    604.491
+   ],
+   "yaw_deg": 358.29,
+   "scale": 1.043,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.45,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0124",
+   "asset": "rock",
+   "position": [
+    559.324,
+    15.583,
+    696.016
+   ],
+   "yaw_deg": 145.86,
+   "scale": 1.424,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.2,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0125",
+   "asset": "rock",
+   "position": [
+    605.256,
+    10.525,
+    647.33
+   ],
+   "yaw_deg": 312.3,
+   "scale": 0.843,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.57,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0126",
+   "asset": "pine",
+   "position": [
+    589.85,
+    10.633,
+    642.047
+   ],
+   "yaw_deg": 206.82,
+   "scale": 0.799,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.25,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0127",
+   "asset": "rock",
+   "position": [
+    626.787,
+    10.934,
+    669.945
+   ],
+   "yaw_deg": 301.69,
+   "scale": 0.832,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.27,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0128",
+   "asset": "rock",
+   "position": [
+    530.923,
+    14.114,
+    684.932
+   ],
+   "yaw_deg": 30.76,
+   "scale": 1.019,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.99,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0129",
+   "asset": "shrub",
+   "position": [
+    646.996,
+    7.402,
+    644.3
+   ],
+   "yaw_deg": 56.18,
+   "scale": 1.323,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.56,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0130",
+   "asset": "pine",
+   "position": [
+    543.636,
+    15.839,
+    607.888
+   ],
+   "yaw_deg": 261.98,
+   "scale": 1.142,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 23.92,
+   "road_clearance_m": 54.66,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0131",
+   "asset": "pine",
+   "position": [
+    581.214,
+    9.28,
+    629.961
+   ],
+   "yaw_deg": 222.16,
+   "scale": 1.177,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.56,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0132",
+   "asset": "rock",
+   "position": [
+    678.969,
+    14.237,
+    717.236
+   ],
+   "yaw_deg": 107.98,
+   "scale": 0.996,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.57,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0133",
+   "asset": "pine",
+   "position": [
+    524.03,
+    12.063,
+    641.364
+   ],
+   "yaw_deg": 300.03,
+   "scale": 1.224,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.63,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0134",
+   "asset": "pine",
+   "position": [
+    609.345,
+    8.227,
+    630.725
+   ],
+   "yaw_deg": 156.47,
+   "scale": 1.256,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.98,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0135",
+   "asset": "pine",
+   "position": [
+    588.24,
+    10.822,
+    593.104
+   ],
+   "yaw_deg": 194.64,
+   "scale": 0.912,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 20.28,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0136",
+   "asset": "shrub",
+   "position": [
+    647.109,
+    8.2,
+    655.201
+   ],
+   "yaw_deg": 47.18,
+   "scale": 1.139,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.5,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0137",
+   "asset": "rock",
+   "position": [
+    568.728,
+    12.591,
+    668.428
+   ],
+   "yaw_deg": 185.36,
+   "scale": 1.279,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.54,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0138",
+   "asset": "pine",
+   "position": [
+    576.689,
+    11.41,
+    648.663
+   ],
+   "yaw_deg": 170.59,
+   "scale": 0.741,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.04,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0139",
+   "asset": "rock",
+   "position": [
+    520.85,
+    12.243,
+    645.382
+   ],
+   "yaw_deg": 126.24,
+   "scale": 1.208,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.2,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0140",
+   "asset": "rock",
+   "position": [
+    545.938,
+    10.665,
+    627.247
+   ],
+   "yaw_deg": 340.14,
+   "scale": 0.795,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.29,
+   "road_clearance_m": 72.77,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0141",
+   "asset": "rock",
+   "position": [
+    559.374,
+    10.604,
+    642.936
+   ],
+   "yaw_deg": 229.63,
+   "scale": 0.968,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 1.49,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0142",
+   "asset": "pine",
+   "position": [
+    608.938,
+    13.466,
+    688.922
+   ],
+   "yaw_deg": 301.34,
+   "scale": 1.128,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.47,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0143",
+   "asset": "pine",
+   "position": [
+    533.36,
+    13.254,
+    661.776
+   ],
+   "yaw_deg": 9.86,
+   "scale": 0.782,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.15,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0144",
+   "asset": "shrub",
+   "position": [
+    627.561,
+    8.314,
+    636.921
+   ],
+   "yaw_deg": 351.67,
+   "scale": 0.91,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.72,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0145",
+   "asset": "rock",
+   "position": [
+    618.235,
+    8.543,
+    636.539
+   ],
+   "yaw_deg": 272.89,
+   "scale": 1.128,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.54,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0146",
+   "asset": "shrub",
+   "position": [
+    624.848,
+    12.492,
+    686.745
+   ],
+   "yaw_deg": 76.83,
+   "scale": 1.201,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.28,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0147",
+   "asset": "rock",
+   "position": [
+    595.401,
+    12.979,
+    673.03
+   ],
+   "yaw_deg": 320.19,
+   "scale": 0.954,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.76,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0148",
+   "asset": "rock",
+   "position": [
+    545.966,
+    14.101,
+    684.686
+   ],
+   "yaw_deg": 189.65,
+   "scale": 0.786,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.19,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0149",
+   "asset": "rock",
+   "position": [
+    587.101,
+    8.851,
+    630.544
+   ],
+   "yaw_deg": 235.82,
+   "scale": 1.403,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.33,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0150",
+   "asset": "rock",
+   "position": [
+    642.001,
+    7.248,
+    634.487
+   ],
+   "yaw_deg": 5.81,
+   "scale": 1.34,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0151",
+   "asset": "pine",
+   "position": [
+    644.825,
+    10.666,
+    672.766
+   ],
+   "yaw_deg": 39.87,
+   "scale": 0.893,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0152",
+   "asset": "shrub",
+   "position": [
+    652.092,
+    7.69,
+    653.154
+   ],
+   "yaw_deg": 86.36,
+   "scale": 1.098,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.24,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0153",
+   "asset": "pine",
+   "position": [
+    653.902,
+    7.104,
+    646.11
+   ],
+   "yaw_deg": 202.58,
+   "scale": 1.136,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.77,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0154",
+   "asset": "shrub",
+   "position": [
+    583.281,
+    12.486,
+    660.562
+   ],
+   "yaw_deg": 34.67,
+   "scale": 1.279,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.62,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0155",
+   "asset": "pine",
+   "position": [
+    621.409,
+    13.466,
+    697.351
+   ],
+   "yaw_deg": 104.24,
+   "scale": 1.155,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.93,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0156",
+   "asset": "shrub",
+   "position": [
+    655.645,
+    12.013,
+    687.529
+   ],
+   "yaw_deg": 269.01,
+   "scale": 1.001,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.48,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0157",
+   "asset": "rock",
+   "position": [
+    641.324,
+    11.649,
+    681.481
+   ],
+   "yaw_deg": 352.45,
+   "scale": 1.087,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.19,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0158",
+   "asset": "pine",
+   "position": [
+    556.634,
+    14.016,
+    683.489
+   ],
+   "yaw_deg": 23.3,
+   "scale": 1.193,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.97,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0159",
+   "asset": "rock",
+   "position": [
+    577.676,
+    12.154,
+    659.988
+   ],
+   "yaw_deg": 28.96,
+   "scale": 1.037,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.97,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0160",
+   "asset": "shrub",
+   "position": [
+    620.848,
+    11.646,
+    675.578
+   ],
+   "yaw_deg": 57.35,
+   "scale": 0.781,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.35,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0161",
+   "asset": "rock",
+   "position": [
+    575.522,
+    13.88,
+    680.731
+   ],
+   "yaw_deg": 120.58,
+   "scale": 1.37,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.27,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0162",
+   "asset": "pine",
+   "position": [
+    555.026,
+    13.688,
+    607.69
+   ],
+   "yaw_deg": 330.56,
+   "scale": 0.972,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 20.15,
+   "road_clearance_m": 60,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0163",
+   "asset": "rock",
+   "position": [
+    656.959,
+    8.03,
+    659.007
+   ],
+   "yaw_deg": 313.91,
+   "scale": 1.398,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.68,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0164",
+   "asset": "shrub",
+   "position": [
+    585.672,
+    10.083,
+    637.404
+   ],
+   "yaw_deg": 54.22,
+   "scale": 1.432,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.55,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0165",
+   "asset": "rock",
+   "position": [
+    593.68,
+    9.435,
+    636.183
+   ],
+   "yaw_deg": 30.5,
+   "scale": 1.071,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.06,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0166",
+   "asset": "pine",
+   "position": [
+    572.613,
+    10.006,
+    631.361
+   ],
+   "yaw_deg": 51.34,
+   "scale": 1.212,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.33,
+   "road_clearance_m": 89.25,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0167",
+   "asset": "rock",
+   "position": [
+    605.644,
+    9.796,
+    641.726
+   ],
+   "yaw_deg": 258.8,
+   "scale": 0.921,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.17,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0168",
+   "asset": "pine",
+   "position": [
+    542.298,
+    10.981,
+    634.386
+   ],
+   "yaw_deg": 53.42,
+   "scale": 1.464,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.35,
+   "road_clearance_m": 77.33,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0169",
+   "asset": "pine",
+   "position": [
+    600.724,
+    12.563,
+    669.996
+   ],
+   "yaw_deg": 323.92,
+   "scale": 1.163,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.6,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0170",
+   "asset": "rock",
+   "position": [
+    646.324,
+    6.966,
+    630.385
+   ],
+   "yaw_deg": 353.55,
+   "scale": 0.87,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 2.48,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0171",
+   "asset": "rock",
+   "position": [
+    517.434,
+    12.85,
+    631.144
+   ],
+   "yaw_deg": 47.7,
+   "scale": 0.709,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 13.39,
+   "road_clearance_m": 62.94,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0172",
+   "asset": "rock",
+   "position": [
+    596.399,
+    8.391,
+    595.676
+   ],
+   "yaw_deg": 332.59,
+   "scale": 0.729,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 13.81,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0173",
+   "asset": "shrub",
+   "position": [
+    511.056,
+    22.008,
+    610.701
+   ],
+   "yaw_deg": 179.56,
+   "scale": 1.443,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 27,
+   "road_clearance_m": 41.85,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0174",
+   "asset": "rock",
+   "position": [
+    607.159,
+    12.959,
+    683.33
+   ],
+   "yaw_deg": 40.69,
+   "scale": 1.006,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.73,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0175",
+   "asset": "rock",
+   "position": [
+    616.78,
+    7.221,
+    626.297
+   ],
+   "yaw_deg": 177.85,
+   "scale": 1.136,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.91,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0176",
+   "asset": "pine",
+   "position": [
+    602.833,
+    7.11,
+    610.468
+   ],
+   "yaw_deg": 213.83,
+   "scale": 1.066,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.57,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0177",
+   "asset": "pine",
+   "position": [
+    590.301,
+    12.119,
+    657.277
+   ],
+   "yaw_deg": 283.28,
+   "scale": 0.799,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.74,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0178",
+   "asset": "shrub",
+   "position": [
+    573.593,
+    15.519,
+    695.246
+   ],
+   "yaw_deg": 109.37,
+   "scale": 0.734,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.82,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0179",
+   "asset": "rock",
+   "position": [
+    620.38,
+    12.003,
+    681.889
+   ],
+   "yaw_deg": 161.01,
+   "scale": 0.787,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.41,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0180",
+   "asset": "pine",
+   "position": [
+    610.87,
+    11.086,
+    655.19
+   ],
+   "yaw_deg": 354.35,
+   "scale": 1.154,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.49,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0181",
+   "asset": "pine",
+   "position": [
+    515.974,
+    24.486,
+    602.553
+   ],
+   "yaw_deg": 224.29,
+   "scale": 1.231,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 25.23,
+   "road_clearance_m": 36.89,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0182",
+   "asset": "rock",
+   "position": [
+    649.225,
+    12.538,
+    691.518
+   ],
+   "yaw_deg": 283.94,
+   "scale": 1.259,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.55,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0183",
+   "asset": "shrub",
+   "position": [
+    637.72,
+    7.082,
+    626.617
+   ],
+   "yaw_deg": 267.12,
+   "scale": 1.147,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.93,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0184",
+   "asset": "pine",
+   "position": [
+    566.664,
+    10.192,
+    614.208
+   ],
+   "yaw_deg": 359.31,
+   "scale": 1.067,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.74,
+   "road_clearance_m": 71.38,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0185",
+   "asset": "rock",
+   "position": [
+    830.34,
+    15.277,
+    262.817
+   ],
+   "yaw_deg": 73.77,
+   "scale": 0.733,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.08,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0186",
+   "asset": "boulder",
+   "position": [
+    837.427,
+    12.235,
+    295.947
+   ],
+   "yaw_deg": 6.35,
+   "scale": 1.216,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0187",
+   "asset": "boulder",
+   "position": [
+    856.802,
+    12.072,
+    302.168
+   ],
+   "yaw_deg": 267.32,
+   "scale": 0.901,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.6,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0188",
+   "asset": "rock",
+   "position": [
+    843.622,
+    14.072,
+    274.631
+   ],
+   "yaw_deg": 100.71,
+   "scale": 0.715,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.17,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0189",
+   "asset": "rock",
+   "position": [
+    868.369,
+    9.328,
+    329.012
+   ],
+   "yaw_deg": 349.71,
+   "scale": 0.938,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.69,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0190",
+   "asset": "rock",
+   "position": [
+    875.731,
+    11.875,
+    305.05
+   ],
+   "yaw_deg": 206.91,
+   "scale": 1.257,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.01,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0191",
+   "asset": "rock",
+   "position": [
+    872.471,
+    10.81,
+    316.327
+   ],
+   "yaw_deg": 80.08,
+   "scale": 0.812,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.65,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0192",
+   "asset": "boulder",
+   "position": [
+    841.868,
+    11.945,
+    302.281
+   ],
+   "yaw_deg": 106.89,
+   "scale": 0.939,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.87,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0193",
+   "asset": "rock",
+   "position": [
+    885.546,
+    12.263,
+    298.836
+   ],
+   "yaw_deg": 284.12,
+   "scale": 0.914,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.8,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0194",
+   "asset": "rock",
+   "position": [
+    862.098,
+    13.176,
+    283.386
+   ],
+   "yaw_deg": 152.61,
+   "scale": 1.076,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.81,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0195",
+   "asset": "pine",
+   "position": [
+    872.277,
+    13.739,
+    280.501
+   ],
+   "yaw_deg": 72.75,
+   "scale": 1.108,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.21,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0196",
+   "asset": "rock",
+   "position": [
+    806.499,
+    19.036,
+    224.382
+   ],
+   "yaw_deg": 23,
+   "scale": 1.448,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0197",
+   "asset": "pine",
+   "position": [
+    861.987,
+    20.854,
+    228.056
+   ],
+   "yaw_deg": 294.54,
+   "scale": 0.937,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.93,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0198",
+   "asset": "rock",
+   "position": [
+    850.663,
+    11.327,
+    310.832
+   ],
+   "yaw_deg": 117.8,
+   "scale": 1.464,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.72,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0199",
+   "asset": "boulder",
+   "position": [
+    843.301,
+    8.044,
+    339.882
+   ],
+   "yaw_deg": 73.24,
+   "scale": 1.329,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.91,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0200",
+   "asset": "boulder",
+   "position": [
+    851.028,
+    14.112,
+    274.689
+   ],
+   "yaw_deg": 264.62,
+   "scale": 1.473,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.49,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0201",
+   "asset": "rock",
+   "position": [
+    872.509,
+    19.44,
+    240.821
+   ],
+   "yaw_deg": 62.99,
+   "scale": 1.406,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.16,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0202",
+   "asset": "boulder",
+   "position": [
+    846.522,
+    19.542,
+    236.339
+   ],
+   "yaw_deg": 9.28,
+   "scale": 1.444,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.34,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0203",
+   "asset": "rock",
+   "position": [
+    818.338,
+    11.85,
+    285.817
+   ],
+   "yaw_deg": 131.15,
+   "scale": 0.95,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.68,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0204",
+   "asset": "rock",
+   "position": [
+    837.952,
+    19.407,
+    235.723
+   ],
+   "yaw_deg": 257.61,
+   "scale": 0.768,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.1,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0205",
+   "asset": "boulder",
+   "position": [
+    861.39,
+    9.529,
+    327.189
+   ],
+   "yaw_deg": 231.67,
+   "scale": 0.844,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.62,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0206",
+   "asset": "boulder",
+   "position": [
+    908.434,
+    13.089,
+    290.883
+   ],
+   "yaw_deg": 6.92,
+   "scale": 1.367,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.11,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0207",
+   "asset": "pine",
+   "position": [
+    808.223,
+    9.847,
+    307.736
+   ],
+   "yaw_deg": 346.78,
+   "scale": 1.428,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.79,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0208",
+   "asset": "boulder",
+   "position": [
+    896.781,
+    14.834,
+    280.813
+   ],
+   "yaw_deg": 330.39,
+   "scale": 0.826,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.82,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0209",
+   "asset": "boulder",
+   "position": [
+    865.671,
+    18.2,
+    250.65
+   ],
+   "yaw_deg": 270.4,
+   "scale": 0.883,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.53,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0210",
+   "asset": "pine",
+   "position": [
+    860.148,
+    14.016,
+    276.871
+   ],
+   "yaw_deg": 19.15,
+   "scale": 1.138,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0211",
+   "asset": "boulder",
+   "position": [
+    857.189,
+    15.483,
+    265.973
+   ],
+   "yaw_deg": 60.76,
+   "scale": 0.864,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.33,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0212",
+   "asset": "boulder",
+   "position": [
+    854.572,
+    19.162,
+    240.921
+   ],
+   "yaw_deg": 106.19,
+   "scale": 0.852,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.39,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0213",
+   "asset": "rock",
+   "position": [
+    848.927,
+    12.06,
+    301.58
+   ],
+   "yaw_deg": 21.74,
+   "scale": 1.443,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.55,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0214",
+   "asset": "boulder",
+   "position": [
+    833.114,
+    12.847,
+    283.835
+   ],
+   "yaw_deg": 27.34,
+   "scale": 1,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.38,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0215",
+   "asset": "rock",
+   "position": [
+    771.14,
+    13.61,
+    256.135
+   ],
+   "yaw_deg": 291.22,
+   "scale": 1.107,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.33,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0216",
+   "asset": "rock",
+   "position": [
+    885.188,
+    13.988,
+    283.854
+   ],
+   "yaw_deg": 258.53,
+   "scale": 1.461,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0217",
+   "asset": "boulder",
+   "position": [
+    911.544,
+    20.117,
+    226.849
+   ],
+   "yaw_deg": 52.65,
+   "scale": 0.928,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.17,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0218",
+   "asset": "pine",
+   "position": [
+    858.76,
+    22.088,
+    217.997
+   ],
+   "yaw_deg": 121.26,
+   "scale": 0.738,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.99,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0219",
+   "asset": "boulder",
+   "position": [
+    826.493,
+    8.163,
+    331.98
+   ],
+   "yaw_deg": 170.23,
+   "scale": 0.701,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.97,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0220",
+   "asset": "rock",
+   "position": [
+    831.113,
+    19.442,
+    233.747
+   ],
+   "yaw_deg": 0.24,
+   "scale": 0.866,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.37,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0221",
+   "asset": "pine",
+   "position": [
+    899.208,
+    13.476,
+    291.261
+   ],
+   "yaw_deg": 15.86,
+   "scale": 0.987,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.24,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0222",
+   "asset": "boulder",
+   "position": [
+    817.22,
+    23.159,
+    199.506
+   ],
+   "yaw_deg": 277.76,
+   "scale": 0.71,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.41,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0223",
+   "asset": "boulder",
+   "position": [
+    873.973,
+    14.914,
+    270.834
+   ],
+   "yaw_deg": 200.55,
+   "scale": 0.856,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.78,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0224",
+   "asset": "rock",
+   "position": [
+    861.462,
+    18.517,
+    247.866
+   ],
+   "yaw_deg": 129.57,
+   "scale": 0.896,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.95,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0225",
+   "asset": "rock",
+   "position": [
+    820.445,
+    13.543,
+    271.501
+   ],
+   "yaw_deg": 115.26,
+   "scale": 1.298,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.16,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0226",
+   "asset": "rock",
+   "position": [
+    846.018,
+    12.685,
+    289.648
+   ],
+   "yaw_deg": 345.12,
+   "scale": 1.211,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.46,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0227",
+   "asset": "rock",
+   "position": [
+    831.174,
+    17.146,
+    249.34
+   ],
+   "yaw_deg": 331.7,
+   "scale": 1.335,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.24,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0228",
+   "asset": "rock",
+   "position": [
+    921.129,
+    14.919,
+    270.384
+   ],
+   "yaw_deg": 63.63,
+   "scale": 0.763,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.63,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0229",
+   "asset": "rock",
+   "position": [
+    822.441,
+    13.09,
+    276.156
+   ],
+   "yaw_deg": 125.64,
+   "scale": 1.206,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.82,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0230",
+   "asset": "boulder",
+   "position": [
+    892.752,
+    15.268,
+    275.914
+   ],
+   "yaw_deg": 55.22,
+   "scale": 1.153,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0231",
+   "asset": "boulder",
+   "position": [
+    907.93,
+    15.012,
+    276.108
+   ],
+   "yaw_deg": 95.2,
+   "scale": 1.292,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.4,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0232",
+   "asset": "boulder",
+   "position": [
+    865.91,
+    15.057,
+    269.027
+   ],
+   "yaw_deg": 19.25,
+   "scale": 0.811,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.44,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0233",
+   "asset": "boulder",
+   "position": [
+    877.159,
+    17.033,
+    257.713
+   ],
+   "yaw_deg": 148.36,
+   "scale": 0.889,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.77,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0234",
+   "asset": "boulder",
+   "position": [
+    886.937,
+    15.877,
+    267.234
+   ],
+   "yaw_deg": 283.51,
+   "scale": 1.342,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.09,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0235",
+   "asset": "boulder",
+   "position": [
+    900.325,
+    15.668,
+    272.029
+   ],
+   "yaw_deg": 261.51,
+   "scale": 0.826,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.57,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0236",
+   "asset": "boulder",
+   "position": [
+    861.663,
+    12.753,
+    289.583
+   ],
+   "yaw_deg": 22.73,
+   "scale": 1.055,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.36,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0237",
+   "asset": "boulder",
+   "position": [
+    832.275,
+    16.122,
+    257.247
+   ],
+   "yaw_deg": 129.3,
+   "scale": 0.865,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.11,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0238",
+   "asset": "boulder",
+   "position": [
+    850.691,
+    13.243,
+    282.248
+   ],
+   "yaw_deg": 218.46,
+   "scale": 1.073,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.34,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0239",
+   "asset": "boulder",
+   "position": [
+    886.687,
+    11.396,
+    305.829
+   ],
+   "yaw_deg": 110.58,
+   "scale": 1.157,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.11,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0240",
+   "asset": "boulder",
+   "position": [
+    826.668,
+    10.778,
+    308.93
+   ],
+   "yaw_deg": 302.22,
+   "scale": 1.42,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.9,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0241",
+   "asset": "rock",
+   "position": [
+    821.71,
+    16.046,
+    253.299
+   ],
+   "yaw_deg": 64.65,
+   "scale": 0.979,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.49,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0242",
+   "asset": "rock",
+   "position": [
+    837.694,
+    16.25,
+    257.619
+   ],
+   "yaw_deg": 227.12,
+   "scale": 1.406,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0243",
+   "asset": "boulder",
+   "position": [
+    832.522,
+    10.191,
+    317.309
+   ],
+   "yaw_deg": 233.93,
+   "scale": 1.415,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.27,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0244",
+   "asset": "boulder",
+   "position": [
+    893.526,
+    17.243,
+    252.872
+   ],
+   "yaw_deg": 146.27,
+   "scale": 1.229,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.38,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0245",
+   "asset": "rock",
+   "position": [
+    823.392,
+    7.135,
+    340.012
+   ],
+   "yaw_deg": 196.71,
+   "scale": 1.122,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.97,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0246",
+   "asset": "boulder",
+   "position": [
+    880.338,
+    15.81,
+    266.227
+   ],
+   "yaw_deg": 355.75,
+   "scale": 1.048,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.9,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0247",
+   "asset": "boulder",
+   "position": [
+    861.182,
+    14.582,
+    271.777
+   ],
+   "yaw_deg": 46.05,
+   "scale": 0.806,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.74,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0248",
+   "asset": "boulder",
+   "position": [
+    813.578,
+    10.724,
+    298.892
+   ],
+   "yaw_deg": 42.64,
+   "scale": 1.436,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.13,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0249",
+   "asset": "boulder",
+   "position": [
+    831.963,
+    12.267,
+    291.857
+   ],
+   "yaw_deg": 212.03,
+   "scale": 1.071,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.1,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0250",
+   "asset": "pine",
+   "position": [
+    839.581,
+    18.604,
+    242.299
+   ],
+   "yaw_deg": 206.59,
+   "scale": 0.822,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.62,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0251",
+   "asset": "boulder",
+   "position": [
+    820.059,
+    11.1,
+    299.575
+   ],
+   "yaw_deg": 258.76,
+   "scale": 1.222,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.41,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0252",
+   "asset": "boulder",
+   "position": [
+    809.546,
+    8.595,
+    317.926
+   ],
+   "yaw_deg": 251.51,
+   "scale": 0.719,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.85,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0253",
+   "asset": "rock",
+   "position": [
+    877.267,
+    12.415,
+    297.919
+   ],
+   "yaw_deg": 301.73,
+   "scale": 1.025,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.4,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0254",
+   "asset": "rock",
+   "position": [
+    856.192,
+    12.521,
+    293.59
+   ],
+   "yaw_deg": 82.43,
+   "scale": 1.166,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 2.96,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0255",
+   "asset": "boulder",
+   "position": [
+    842.843,
+    10.977,
+    313.362
+   ],
+   "yaw_deg": 161.98,
+   "scale": 1.389,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.24,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0256",
+   "asset": "boulder",
+   "position": [
+    889.792,
+    16.866,
+    257.388
+   ],
+   "yaw_deg": 74.7,
+   "scale": 0.925,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.98,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0257",
+   "asset": "boulder",
+   "position": [
+    845.075,
+    13.176,
+    282.729
+   ],
+   "yaw_deg": 140.78,
+   "scale": 1.036,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.16,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0258",
+   "asset": "rock",
+   "position": [
+    917.305,
+    13.289,
+    286.062
+   ],
+   "yaw_deg": 216.38,
+   "scale": 0.831,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.82,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0259",
+   "asset": "boulder",
+   "position": [
+    848.389,
+    15.178,
+    266.918
+   ],
+   "yaw_deg": 82.39,
+   "scale": 0.795,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.34,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0260",
+   "asset": "rock",
+   "position": [
+    868.076,
+    7.521,
+    348.565
+   ],
+   "yaw_deg": 96.23,
+   "scale": 1.156,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.2,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0261",
+   "asset": "rock",
+   "position": [
+    797.189,
+    8.46,
+    312.153
+   ],
+   "yaw_deg": 234.76,
+   "scale": 1.238,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.45,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0262",
+   "asset": "boulder",
+   "position": [
+    858.186,
+    11.278,
+    311.828
+   ],
+   "yaw_deg": 282.74,
+   "scale": 1.428,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0263",
+   "asset": "pine",
+   "position": [
+    864.708,
+    7.207,
+    358.043
+   ],
+   "yaw_deg": 269.98,
+   "scale": 1.404,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.95,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0264",
+   "asset": "rock",
+   "position": [
+    846.098,
+    18.305,
+    244.852
+   ],
+   "yaw_deg": 74.94,
+   "scale": 0.812,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.3,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0265",
+   "asset": "rock",
+   "position": [
+    833.226,
+    7.889,
+    337.614
+   ],
+   "yaw_deg": 266.12,
+   "scale": 1.436,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.73,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0266",
+   "asset": "rock",
+   "position": [
+    956.383,
+    11.997,
+    310.068
+   ],
+   "yaw_deg": 200.33,
+   "scale": 1.017,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.01,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0267",
+   "asset": "rock",
+   "position": [
+    866.345,
+    10.341,
+    320.506
+   ],
+   "yaw_deg": 164.66,
+   "scale": 1.019,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.75,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0268",
+   "asset": "boulder",
+   "position": [
+    876.644,
+    7.134,
+    715.433
+   ],
+   "yaw_deg": 278.9,
+   "scale": 0.979,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.9,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0269",
+   "asset": "rock",
+   "position": [
+    885.868,
+    7.131,
+    713.857
+   ],
+   "yaw_deg": 17.85,
+   "scale": 1.107,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 2.93,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0270",
+   "asset": "boulder",
+   "position": [
+    917.005,
+    7.288,
+    696.288
+   ],
+   "yaw_deg": 289.67,
+   "scale": 1.12,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.41,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0271",
+   "asset": "shrub",
+   "position": [
+    865.576,
+    7.42,
+    718.016
+   ],
+   "yaw_deg": 299.07,
+   "scale": 1.118,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.94,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0272",
+   "asset": "shrub",
+   "position": [
+    897.816,
+    7.137,
+    709.06
+   ],
+   "yaw_deg": 146.04,
+   "scale": 1.257,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.5,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0273",
+   "asset": "rock",
+   "position": [
+    922.893,
+    7.032,
+    688.881
+   ],
+   "yaw_deg": 105.7,
+   "scale": 0.705,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.38,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0274",
+   "asset": "boulder",
+   "position": [
+    909.565,
+    7.048,
+    697.334
+   ],
+   "yaw_deg": 342.74,
+   "scale": 1.226,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 2.35,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0275",
+   "asset": "boulder",
+   "position": [
+    834.87,
+    8.193,
+    731.619
+   ],
+   "yaw_deg": 32.55,
+   "scale": 0.847,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.8,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0276",
+   "asset": "shrub",
+   "position": [
+    890.382,
+    7.107,
+    708.559
+   ],
+   "yaw_deg": 308.88,
+   "scale": 1.337,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.68,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0277",
+   "asset": "shrub",
+   "position": [
+    914.319,
+    7.153,
+    691.358
+   ],
+   "yaw_deg": 8.66,
+   "scale": 1.44,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.59,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0278",
+   "asset": "shrub",
+   "position": [
+    849.53,
+    7.289,
+    715.833
+   ],
+   "yaw_deg": 283.66,
+   "scale": 1.349,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.2,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0279",
+   "asset": "shrub",
+   "position": [
+    905.569,
+    7.155,
+    702.441
+   ],
+   "yaw_deg": 226.32,
+   "scale": 0.98,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.07,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0280",
+   "asset": "rock",
+   "position": [
+    861.165,
+    7.979,
+    725.04
+   ],
+   "yaw_deg": 248.56,
+   "scale": 1.007,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0281",
+   "asset": "boulder",
+   "position": [
+    856.682,
+    8.409,
+    728.842
+   ],
+   "yaw_deg": 163.37,
+   "scale": 0.861,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.19,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0282",
+   "asset": "rock",
+   "position": [
+    890.791,
+    7.233,
+    715.696
+   ],
+   "yaw_deg": 39.48,
+   "scale": 1.19,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 2.94,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0283",
+   "asset": "boulder",
+   "position": [
+    824.088,
+    7.745,
+    735.595
+   ],
+   "yaw_deg": 274.55,
+   "scale": 1.282,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.6,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0284",
+   "asset": "shrub",
+   "position": [
+    860.283,
+    7.199,
+    715.107
+   ],
+   "yaw_deg": 197.37,
+   "scale": 1.199,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.15,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0285",
+   "asset": "rock",
+   "position": [
+    882.635,
+    7.693,
+    722.283
+   ],
+   "yaw_deg": 84.66,
+   "scale": 1.472,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.68,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0286",
+   "asset": "boulder",
+   "position": [
+    877.093,
+    8.081,
+    726.109
+   ],
+   "yaw_deg": 153.07,
+   "scale": 0.976,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.65,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0287",
+   "asset": "rock",
+   "position": [
+    871.137,
+    7.026,
+    714.467
+   ],
+   "yaw_deg": 235.01,
+   "scale": 1.416,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 3.79,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0288",
+   "asset": "rock",
+   "position": [
+    872.011,
+    8.144,
+    726.49
+   ],
+   "yaw_deg": 148.81,
+   "scale": 1.057,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.17,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0289",
+   "asset": "rock",
+   "position": [
+    844.761,
+    8.804,
+    734.232
+   ],
+   "yaw_deg": 181.29,
+   "scale": 1.187,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.4,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0290",
+   "asset": "shrub",
+   "position": [
+    840.613,
+    9.26,
+    739.461
+   ],
+   "yaw_deg": 147.04,
+   "scale": 1.256,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.6,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0291",
+   "asset": "shrub",
+   "position": [
+    902.15,
+    7.116,
+    706.191
+   ],
+   "yaw_deg": 310.91,
+   "scale": 0.769,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 1.54,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0292",
+   "asset": "boulder",
+   "position": [
+    854.542,
+    7.458,
+    719.826
+   ],
+   "yaw_deg": 322.02,
+   "scale": 1.164,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.33,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0293",
+   "asset": "rock",
+   "position": [
+    867.343,
+    7.812,
+    723.554
+   ],
+   "yaw_deg": 15.88,
+   "scale": 1.14,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.14,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0294",
+   "asset": "shrub",
+   "position": [
+    879.773,
+    7.08,
+    710.649
+   ],
+   "yaw_deg": 58.33,
+   "scale": 1.101,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.41,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0295",
+   "asset": "shrub",
+   "position": [
+    847.686,
+    8.596,
+    729.782
+   ],
+   "yaw_deg": 17.65,
+   "scale": 1.191,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.77,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0296",
+   "asset": "pine",
+   "position": [
+    680.275,
+    18.772,
+    770.563
+   ],
+   "yaw_deg": 232.51,
+   "scale": 0.769,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.22,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0297",
+   "asset": "pine",
+   "position": [
+    663.963,
+    18.4,
+    758.938
+   ],
+   "yaw_deg": 210.03,
+   "scale": 0.85,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.12,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0298",
+   "asset": "pine",
+   "position": [
+    678.918,
+    17.219,
+    753.454
+   ],
+   "yaw_deg": 255.15,
+   "scale": 0.968,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0299",
+   "asset": "shrub",
+   "position": [
+    682.505,
+    17.637,
+    760.335
+   ],
+   "yaw_deg": 221.71,
+   "scale": 1.429,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.07,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0300",
+   "asset": "pine",
+   "position": [
+    663.814,
+    19.119,
+    773.399
+   ],
+   "yaw_deg": 187.81,
+   "scale": 1.032,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.21,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0301",
+   "asset": "pine",
+   "position": [
+    658.27,
+    18.619,
+    762.726
+   ],
+   "yaw_deg": 323.57,
+   "scale": 1.373,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.67,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0302",
+   "asset": "boulder",
+   "position": [
+    675.365,
+    15.777,
+    736.347
+   ],
+   "yaw_deg": 353.05,
+   "scale": 1.399,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.7,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0303",
+   "asset": "pine",
+   "position": [
+    732.639,
+    9.471,
+    758.601
+   ],
+   "yaw_deg": 222.06,
+   "scale": 1.47,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.22,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0304",
+   "asset": "boulder",
+   "position": [
+    686.156,
+    15.835,
+    749.519
+   ],
+   "yaw_deg": 181.27,
+   "scale": 0.973,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.79,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0305",
+   "asset": "shrub",
+   "position": [
+    656.174,
+    16.664,
+    734.957
+   ],
+   "yaw_deg": 238.78,
+   "scale": 0.831,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.4,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0306",
+   "asset": "pine",
+   "position": [
+    687.33,
+    17.613,
+    767.532
+   ],
+   "yaw_deg": 44.51,
+   "scale": 1.338,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.5,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0307",
+   "asset": "pine",
+   "position": [
+    679.114,
+    16.411,
+    746.14
+   ],
+   "yaw_deg": 112.33,
+   "scale": 1.184,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.71,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0308",
+   "asset": "boulder",
+   "position": [
+    653.975,
+    18.742,
+    770.666
+   ],
+   "yaw_deg": 63.05,
+   "scale": 0.756,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 1.72,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0309",
+   "asset": "boulder",
+   "position": [
+    706.023,
+    10.046,
+    703.335
+   ],
+   "yaw_deg": 215.3,
+   "scale": 1.006,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0310",
+   "asset": "pine",
+   "position": [
+    693.304,
+    16.41,
+    766.825
+   ],
+   "yaw_deg": 237.18,
+   "scale": 1.025,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.08,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0311",
+   "asset": "pine",
+   "position": [
+    705.097,
+    13.552,
+    749.425
+   ],
+   "yaw_deg": 273.13,
+   "scale": 0.956,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.18,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0312",
+   "asset": "boulder",
+   "position": [
+    710.33,
+    12.715,
+    761.085
+   ],
+   "yaw_deg": 7.58,
+   "scale": 0.752,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.45,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0313",
+   "asset": "pine",
+   "position": [
+    697.65,
+    15.773,
+    777.9
+   ],
+   "yaw_deg": 328.94,
+   "scale": 1.15,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 13.17,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0314",
+   "asset": "shrub",
+   "position": [
+    675.324,
+    18.094,
+    758.76
+   ],
+   "yaw_deg": 118.25,
+   "scale": 0.917,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0315",
+   "asset": "shrub",
+   "position": [
+    710.767,
+    12.821,
+    754.85
+   ],
+   "yaw_deg": 338.84,
+   "scale": 1.384,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.77,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0316",
+   "asset": "pine",
+   "position": [
+    715.446,
+    11.682,
+    741.047
+   ],
+   "yaw_deg": 108.7,
+   "scale": 1.231,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.48,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0317",
+   "asset": "pine",
+   "position": [
+    679.649,
+    19.042,
+    776.446
+   ],
+   "yaw_deg": 139.57,
+   "scale": 1.199,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.9,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0318",
+   "asset": "shrub",
+   "position": [
+    698.931,
+    14.881,
+    759.02
+   ],
+   "yaw_deg": 354.36,
+   "scale": 0.822,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.51,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0319",
+   "asset": "shrub",
+   "position": [
+    705.613,
+    13.631,
+    755.334
+   ],
+   "yaw_deg": 53.45,
+   "scale": 0.877,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.13,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0320",
+   "asset": "boulder",
+   "position": [
+    686.84,
+    13.624,
+    718.42
+   ],
+   "yaw_deg": 49.95,
+   "scale": 0.8,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.25,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0321",
+   "asset": "boulder",
+   "position": [
+    661.129,
+    16.123,
+    731.536
+   ],
+   "yaw_deg": 45.56,
+   "scale": 1.177,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.25,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0322",
+   "asset": "pine",
+   "position": [
+    704.91,
+    12.341,
+    728.562
+   ],
+   "yaw_deg": 116.8,
+   "scale": 1.215,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.67,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0323",
+   "asset": "boulder",
+   "position": [
+    681.58,
+    15.381,
+    738.567
+   ],
+   "yaw_deg": 130.53,
+   "scale": 1.37,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0324",
+   "asset": "boulder",
+   "position": [
+    697.374,
+    14.015,
+    743.665
+   ],
+   "yaw_deg": 292.55,
+   "scale": 1.155,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.77,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0325",
+   "asset": "boulder",
+   "position": [
+    616.615,
+    18.492,
+    740.137
+   ],
+   "yaw_deg": 148.46,
+   "scale": 1.383,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.35,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0326",
+   "asset": "shrub",
+   "position": [
+    645.881,
+    18.084,
+    747.345
+   ],
+   "yaw_deg": 248.44,
+   "scale": 0.789,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.47,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0327",
+   "asset": "boulder",
+   "position": [
+    704.166,
+    13.939,
+    771.046
+   ],
+   "yaw_deg": 176.93,
+   "scale": 0.867,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 12.49,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0328",
+   "asset": "pine",
+   "position": [
+    640.767,
+    19.02,
+    756.383
+   ],
+   "yaw_deg": 118.79,
+   "scale": 1.362,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.17,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0329",
+   "asset": "shrub",
+   "position": [
+    646.584,
+    19.009,
+    764.226
+   ],
+   "yaw_deg": 242.37,
+   "scale": 0.855,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.01,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0330",
+   "asset": "pine",
+   "position": [
+    624.554,
+    20.137,
+    758.307
+   ],
+   "yaw_deg": 272.67,
+   "scale": 0.721,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.67,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0331",
+   "asset": "boulder",
+   "position": [
+    648.293,
+    16.438,
+    729.903
+   ],
+   "yaw_deg": 81.58,
+   "scale": 1.092,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.41,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0332",
+   "asset": "shrub",
+   "position": [
+    658.776,
+    15.949,
+    725.514
+   ],
+   "yaw_deg": 105.12,
+   "scale": 1.229,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.44,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0333",
+   "asset": "boulder",
+   "position": [
+    670.023,
+    18.544,
+    763.38
+   ],
+   "yaw_deg": 54.77,
+   "scale": 1.096,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.48,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0334",
+   "asset": "pine",
+   "position": [
+    641.517,
+    19.525,
+    768.665
+   ],
+   "yaw_deg": 103.48,
+   "scale": 1.035,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.96,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0335",
+   "asset": "pine",
+   "position": [
+    719.159,
+    11.622,
+    771.637
+   ],
+   "yaw_deg": 150.2,
+   "scale": 1.213,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.51,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0336",
+   "asset": "boulder",
+   "position": [
+    654.535,
+    17.966,
+    752.766
+   ],
+   "yaw_deg": 215.97,
+   "scale": 1.285,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 4.06,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0337",
+   "asset": "shrub",
+   "position": [
+    692.566,
+    16.048,
+    759.393
+   ],
+   "yaw_deg": 46.43,
+   "scale": 1.392,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.67,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0338",
+   "asset": "pine",
+   "position": [
+    718.331,
+    11.459,
+    746.55
+   ],
+   "yaw_deg": 308.96,
+   "scale": 1.183,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 10.4,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0339",
+   "asset": "shrub",
+   "position": [
+    632.407,
+    19.891,
+    760.871
+   ],
+   "yaw_deg": 15.4,
+   "scale": 1.043,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0340",
+   "asset": "shrub",
+   "position": [
+    616.166,
+    20.637,
+    763.687
+   ],
+   "yaw_deg": 258.25,
+   "scale": 1.252,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.84,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0341",
+   "asset": "shrub",
+   "position": [
+    654.332,
+    17.348,
+    742.901
+   ],
+   "yaw_deg": 292.18,
+   "scale": 1.079,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0342",
+   "asset": "pine",
+   "position": [
+    663.668,
+    18.854,
+    766.427
+   ],
+   "yaw_deg": 335.03,
+   "scale": 0.964,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.94,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0343",
+   "asset": "pine",
+   "position": [
+    637.923,
+    17.963,
+    740.777
+   ],
+   "yaw_deg": 237.46,
+   "scale": 1.22,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0344",
+   "asset": "pine",
+   "position": [
+    691.336,
+    15.291,
+    748.635
+   ],
+   "yaw_deg": 300.08,
+   "scale": 0.975,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.51,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0345",
+   "asset": "pine",
+   "position": [
+    710.429,
+    12.984,
+    777.239
+   ],
+   "yaw_deg": 111.27,
+   "scale": 1.175,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 9.97,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0346",
+   "asset": "boulder",
+   "position": [
+    664.308,
+    16.674,
+    740.647
+   ],
+   "yaw_deg": 129.03,
+   "scale": 1.196,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.17,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0347",
+   "asset": "boulder",
+   "position": [
+    627.135,
+    16.222,
+    724.612
+   ],
+   "yaw_deg": 241.16,
+   "scale": 1.199,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 8.02,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0348",
+   "asset": "pine",
+   "position": [
+    694.842,
+    16.282,
+    771.702
+   ],
+   "yaw_deg": 354.36,
+   "scale": 0.926,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.95,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0349",
+   "asset": "boulder",
+   "position": [
+    616.806,
+    19.15,
+    747.084
+   ],
+   "yaw_deg": 83.06,
+   "scale": 0.915,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.04,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0350",
+   "asset": "boulder",
+   "position": [
+    706.318,
+    13.435,
+    764.897
+   ],
+   "yaw_deg": 286.16,
+   "scale": 0.714,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 10.94,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0351",
+   "asset": "boulder",
+   "position": [
+    685.558,
+    18.055,
+    773.411
+   ],
+   "yaw_deg": 292.35,
+   "scale": 1.046,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.23,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0352",
+   "asset": "shrub",
+   "position": [
+    711.293,
+    12.519,
+    745.269
+   ],
+   "yaw_deg": 229.5,
+   "scale": 0.763,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.48,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0353",
+   "asset": "shrub",
+   "position": [
+    698.329,
+    15.293,
+    765.931
+   ],
+   "yaw_deg": 52.87,
+   "scale": 0.726,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 12.29,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0354",
+   "asset": "pine",
+   "position": [
+    662.092,
+    17.926,
+    752.325
+   ],
+   "yaw_deg": 143.26,
+   "scale": 0.87,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.71,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0355",
+   "asset": "boulder",
+   "position": [
+    657.45,
+    17.477,
+    747.294
+   ],
+   "yaw_deg": 314.09,
+   "scale": 1.279,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 5.06,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0356",
+   "asset": "pine",
+   "position": [
+    611.855,
+    19.776,
+    752.903
+   ],
+   "yaw_deg": 11.54,
+   "scale": 1.319,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.95,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0357",
+   "asset": "boulder",
+   "position": [
+    658.757,
+    18.837,
+    773.585
+   ],
+   "yaw_deg": 283.82,
+   "scale": 0.772,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 1.66,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0358",
+   "asset": "pine",
+   "position": [
+    743.372,
+    8.853,
+    764.57
+   ],
+   "yaw_deg": 197.6,
+   "scale": 1.18,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0359",
+   "asset": "pine",
+   "position": [
+    674.766,
+    19.235,
+    774.001
+   ],
+   "yaw_deg": 155.84,
+   "scale": 1.262,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.46,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0360",
+   "asset": "boulder",
+   "position": [
+    679.95,
+    18.212,
+    764.693
+   ],
+   "yaw_deg": 138.55,
+   "scale": 0.737,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 7.45,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0361",
+   "asset": "pine",
+   "position": [
+    715.451,
+    12.075,
+    761.243
+   ],
+   "yaw_deg": 42.57,
+   "scale": 1.027,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.54,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0362",
+   "asset": "boulder",
+   "position": [
+    669.143,
+    19.163,
+    776.323
+   ],
+   "yaw_deg": 217.26,
+   "scale": 1.03,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 1.08,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0363",
+   "asset": "shrub",
+   "position": [
+    726.906,
+    10.689,
+    766.931
+   ],
+   "yaw_deg": 356.83,
+   "scale": 1.036,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 6.36,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0364",
+   "asset": "pine",
+   "position": [
+    672.948,
+    15.705,
+    730.141
+   ],
+   "yaw_deg": 98.27,
+   "scale": 1.185,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.98,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0365",
+   "asset": "boulder",
+   "position": [
+    735.19,
+    7.873,
+    743.79
+   ],
+   "yaw_deg": 128.08,
+   "scale": 1.327,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 10.22,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0366",
+   "asset": "boulder",
+   "position": [
+    730.853,
+    8.326,
+    728.043
+   ],
+   "yaw_deg": 352.64,
+   "scale": 0.856,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.4,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0367",
+   "asset": "pine",
+   "position": [
+    673.181,
+    19.035,
+    768.721
+   ],
+   "yaw_deg": 161.64,
+   "scale": 1.2,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.67,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0368",
+   "asset": "shrub",
+   "position": [
+    677.636,
+    15.161,
+    726.529
+   ],
+   "yaw_deg": 133.48,
+   "scale": 1.019,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.65,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0369",
+   "asset": "boulder",
+   "position": [
+    671.959,
+    17.472,
+    752.676
+   ],
+   "yaw_deg": 32.96,
+   "scale": 1.255,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.6,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0370",
+   "asset": "boulder",
+   "position": [
+    670.653,
+    16.874,
+    746.089
+   ],
+   "yaw_deg": 84.69,
+   "scale": 1.034,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 6.26,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0371",
+   "asset": "boulder",
+   "position": [
+    734.059,
+    7.905,
+    737.593
+   ],
+   "yaw_deg": 357.71,
+   "scale": 0.778,
+   "terrain_offset_m": -0.24,
+   "slope_deg": 9.89,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0372",
+   "asset": "pine",
+   "position": [
+    649.572,
+    18.513,
+    756.527
+   ],
+   "yaw_deg": 183.31,
+   "scale": 1.397,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.88,
+   "road_clearance_m": 1000000,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "eastwater_lake_0373",
+   "asset": "fence",
+   "position": [
+    531.438,
+    54.543,
+    170.424
+   ],
+   "yaw_deg": 215.27,
+   "scale": 0.989,
+   "terrain_offset_m": 0,
+   "slope_deg": 5.71,
+   "road_clearance_m": 15.42,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0374",
+   "asset": "fence",
+   "position": [
+    535.464,
+    54.017,
+    175.349
+   ],
+   "yaw_deg": 215.21,
+   "scale": 1.056,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.27,
+   "road_clearance_m": 15.86,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0375",
+   "asset": "fence",
+   "position": [
+    538.874,
+    53.484,
+    180.713
+   ],
+   "yaw_deg": 215.15,
+   "scale": 1.001,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.48,
+   "road_clearance_m": 15.55,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0376",
+   "asset": "fence",
+   "position": [
+    542.798,
+    52.881,
+    185.696
+   ],
+   "yaw_deg": 215.15,
+   "scale": 0.951,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.19,
+   "road_clearance_m": 15.89,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0377",
+   "asset": "fence",
+   "position": [
+    546.302,
+    52.333,
+    190.995
+   ],
+   "yaw_deg": 215.08,
+   "scale": 0.994,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.08,
+   "road_clearance_m": 15.72,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0378",
+   "asset": "fence",
+   "position": [
+    550.084,
+    51.789,
+    196.101
+   ],
+   "yaw_deg": 215,
+   "scale": 1.011,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.13,
+   "road_clearance_m": 15.88,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0379",
+   "asset": "fence",
+   "position": [
+    553.727,
+    51.156,
+    201.305
+   ],
+   "yaw_deg": 214.92,
+   "scale": 0.985,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.62,
+   "road_clearance_m": 15.89,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0380",
+   "asset": "fence",
+   "position": [
+    557.269,
+    50.537,
+    206.583
+   ],
+   "yaw_deg": 214.83,
+   "scale": 1.034,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.54,
+   "road_clearance_m": 15.78,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0381",
+   "asset": "fence",
+   "position": [
+    578.951,
+    46.888,
+    238.009
+   ],
+   "yaw_deg": 214.09,
+   "scale": 0.99,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.92,
+   "road_clearance_m": 15.84,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0382",
+   "asset": "fence",
+   "position": [
+    582.238,
+    46.281,
+    243.432
+   ],
+   "yaw_deg": 214.09,
+   "scale": 1.062,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.48,
+   "road_clearance_m": 15.52,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0383",
+   "asset": "fence",
+   "position": [
+    603.593,
+    42.5,
+    275.062
+   ],
+   "yaw_deg": 213.4,
+   "scale": 0.977,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.39,
+   "road_clearance_m": 15.76,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0384",
+   "asset": "fence",
+   "position": [
+    621.053,
+    39.346,
+    301.553
+   ],
+   "yaw_deg": 213.14,
+   "scale": 1.025,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.6,
+   "road_clearance_m": 15.83,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0385",
+   "asset": "fence",
+   "position": [
+    624.441,
+    38.783,
+    306.919
+   ],
+   "yaw_deg": 213.09,
+   "scale": 1.066,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.2,
+   "road_clearance_m": 15.74,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0386",
+   "asset": "fence",
+   "position": [
+    628.101,
+    38.265,
+    312.106
+   ],
+   "yaw_deg": 213.05,
+   "scale": 0.958,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.17,
+   "road_clearance_m": 15.98,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0387",
+   "asset": "fence",
+   "position": [
+    631.384,
+    37.645,
+    317.538
+   ],
+   "yaw_deg": 213,
+   "scale": 0.982,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.14,
+   "road_clearance_m": 15.77,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0388",
+   "asset": "fence",
+   "position": [
+    634.964,
+    37.055,
+    322.775
+   ],
+   "yaw_deg": 212.97,
+   "scale": 1.007,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.28,
+   "road_clearance_m": 15.92,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0389",
+   "asset": "fence",
+   "position": [
+    638.117,
+    36.545,
+    328.289
+   ],
+   "yaw_deg": 212.93,
+   "scale": 1.007,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.61,
+   "road_clearance_m": 15.57,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0390",
+   "asset": "fence",
+   "position": [
+    641.888,
+    35.935,
+    333.4
+   ],
+   "yaw_deg": 212.9,
+   "scale": 1.041,
+   "terrain_offset_m": 0,
+   "slope_deg": 7.31,
+   "road_clearance_m": 15.96,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0391",
+   "asset": "fence",
+   "position": [
+    645.206,
+    35.407,
+    338.806
+   ],
+   "yaw_deg": 212.87,
+   "scale": 1.06,
+   "terrain_offset_m": 0,
+   "slope_deg": 6.85,
+   "road_clearance_m": 15.81,
+   "district": "",
+   "tag": "shore_fence"
+  },
+  {
+   "id": "eastwater_lake_0392",
+   "asset": "warning",
+   "position": [
+    614.638,
+    30.133,
+    494.628
+   ],
+   "yaw_deg": -57.59,
+   "scale": 0.946,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.16,
+   "road_clearance_m": 6.25,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0393",
+   "asset": "warning",
+   "position": [
+    615.768,
+    30.161,
+    512.856
+   ],
+   "yaw_deg": 122.29,
+   "scale": 1.066,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.15,
+   "road_clearance_m": 9.76,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0394",
+   "asset": "warning",
+   "position": [
+    599.775,
+    30.181,
+    503.945
+   ],
+   "yaw_deg": -57.99,
+   "scale": 1.018,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.17,
+   "road_clearance_m": 6.29,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0395",
+   "asset": "warning",
+   "position": [
+    600.896,
+    30.214,
+    522.384
+   ],
+   "yaw_deg": 121.84,
+   "scale": 1.041,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.2,
+   "road_clearance_m": 9.95,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0396",
+   "asset": "warning",
+   "position": [
+    584.93,
+    30.241,
+    513.31
+   ],
+   "yaw_deg": -58.33,
+   "scale": 0.945,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.21,
+   "road_clearance_m": 6.17,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0397",
+   "asset": "warning",
+   "position": [
+    585.625,
+    30.274,
+    531.24
+   ],
+   "yaw_deg": 121.49,
+   "scale": 0.939,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.22,
+   "road_clearance_m": 9.48,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0398",
+   "asset": "warning",
+   "position": [
+    569.961,
+    30.311,
+    522.41
+   ],
+   "yaw_deg": -58.91,
+   "scale": 0.979,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.24,
+   "road_clearance_m": 6.2,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0399",
+   "asset": "warning",
+   "position": [
+    570.496,
+    30.348,
+    540.393
+   ],
+   "yaw_deg": 120.87,
+   "scale": 0.977,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.24,
+   "road_clearance_m": 9.49,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0400",
+   "asset": "warning",
+   "position": [
+    554.921,
+    30.384,
+    531.428
+   ],
+   "yaw_deg": -59.35,
+   "scale": 0.988,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.26,
+   "road_clearance_m": 6.17,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0401",
+   "asset": "warning",
+   "position": [
+    555.428,
+    30.426,
+    549.68
+   ],
+   "yaw_deg": 120.16,
+   "scale": 1.02,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.27,
+   "road_clearance_m": 9.82,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0402",
+   "asset": "warning",
+   "position": [
+    539.662,
+    30.471,
+    539.983
+   ],
+   "yaw_deg": -60.11,
+   "scale": 1.041,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.26,
+   "road_clearance_m": 6.48,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0403",
+   "asset": "warning",
+   "position": [
+    540.169,
+    30.506,
+    558.601
+   ],
+   "yaw_deg": 119.62,
+   "scale": 1.005,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.26,
+   "road_clearance_m": 9.94,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0404",
+   "asset": "warning",
+   "position": [
+    524.539,
+    30.559,
+    548.83
+   ],
+   "yaw_deg": -60.67,
+   "scale": 0.987,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.27,
+   "road_clearance_m": 6.25,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0405",
+   "asset": "warning",
+   "position": [
+    524.712,
+    30.605,
+    567.284
+   ],
+   "yaw_deg": 118.71,
+   "scale": 1.056,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.32,
+   "road_clearance_m": 9.96,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0406",
+   "asset": "warning",
+   "position": [
+    509.096,
+    30.647,
+    556.991
+   ],
+   "yaw_deg": -61.62,
+   "scale": 0.996,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.32,
+   "road_clearance_m": 6.56,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0407",
+   "asset": "warning",
+   "position": [
+    509.013,
+    30.704,
+    575.449
+   ],
+   "yaw_deg": 118.03,
+   "scale": 1.005,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.32,
+   "road_clearance_m": 9.67,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0408",
+   "asset": "warning",
+   "position": [
+    493.743,
+    30.755,
+    565.385
+   ],
+   "yaw_deg": -62.33,
+   "scale": 0.943,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.33,
+   "road_clearance_m": 6.36,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0409",
+   "asset": "warning",
+   "position": [
+    493.192,
+    30.803,
+    583.509
+   ],
+   "yaw_deg": 116.89,
+   "scale": 0.987,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.37,
+   "road_clearance_m": 9.49,
+   "district": "",
+   "tag": "shore_warning"
+  },
+  {
+   "id": "eastwater_lake_0410",
+   "asset": "warning",
+   "position": [
+    478.192,
+    30.862,
+    573.256
+   ],
+   "yaw_deg": -63.52,
+   "scale": 1,
+   "terrain_offset_m": 0,
+   "slope_deg": 0.38,
+   "road_clearance_m": 6.42,
+   "district": "",
+   "tag": "shore_warning"
+  }
+ ]
+}
