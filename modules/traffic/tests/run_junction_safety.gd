@@ -1,0 +1,304 @@
+extends SceneTree
+## Run from an integration worktree containing the read-only World PR #3 graph,
+## Traffic PR #4 module, and Traffic Content PR #22 controls:
+## godot --headless --path . --script res://modules/traffic/tests/run_junction_safety.gd
+## This suite deliberately does NOT count cars passing on separate opposing
+## directed travel lanes as a junction collision.
+const TrafficSimulation = preload("../src/traffic_simulation.gd")
+const GRAPH_PATH := "res://data/world/road_graph_v1.json"
+const CONTROLS_PATH := "res://content/traffic/controls_v1.json"
+const COMPLEX := ["junction_alder", "junction_cedar", "junction_ridge",
+    "junction_valley", "junction_lake", "junction_pine"]
+const DT := 1.0 / 30.0
+
+var passed := 0
+var failed := 0
+var world: Dictionary = {}
+var controls: Array = []
+
+
+func _initialize() -> void:
+    call_deferred("_run")
+
+
+func _check(ok: bool, message: String) -> void:
+    if ok:
+        passed += 1
+        print("PASS ", message)
+    else:
+        failed += 1
+        printerr("FAIL ", message)
+
+
+func _read(path: String) -> Dictionary:
+    if not FileAccess.file_exists(path):
+        printerr("Missing read-only canonical dependency: ", path)
+        return {}
+    var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+    return parsed if parsed is Dictionary else {}
+
+
+func _simulation(seed_value: int):
+    var sim = TrafficSimulation.new()
+    if not sim.load_road_graph(world):
+        printerr("World graph invalid: ", sim.graph.errors)
+        return null
+    if not sim.configure_junctions(controls):
+        printerr("Junction configuration rejected")
+        return null
+    sim.reset(seed_value)
+    sim.set_density(0)
+    return sim
+
+
+func _run() -> void:
+    world = _read(GRAPH_PATH)
+    var pack: Dictionary = _read(CONTROLS_PATH)
+    if world.is_empty() or pack.is_empty():
+        quit(2)
+        return
+    for raw in pack.get("junctions", []):
+        if not ["yield", "stop"].has(str(raw.get("mode", ""))):
+            continue
+        var entry: Dictionary = {
+            "id": raw["id"], "incoming_lane_ids": raw["incoming_lane_ids"],
+            "mode": raw["mode"], "clearance_m": raw["clearance_m"]}
+        if raw["mode"] == "stop":
+            entry["stop_s"] = raw["stop_s"]
+        controls.append(entry)
+    var sim = _simulation(20261121)
+    if sim == null:
+        quit(2)
+        return
+    _check(sim.junctions.size() == 30, "canonical eight controls plus 22 implicit merges")
+    _test_geometry(sim)
+    _test_short_connector(sim)
+    _test_opposing_flow()
+    _test_cleanup()
+    for jid in COMPLEX:
+        _test_conflicting_movements(str(jid))
+    _test_seeded_flow()
+    print("JUNCTION SAFETY: %d pass / %d fail" % [passed, failed])
+    quit(0 if failed == 0 else 1)
+
+
+func _incoming(sim, junction_id: String, turn_id: String) -> String:
+    for lane_id in sim.junctions[junction_id]["inbound"]:
+        if sim.graph.lanes[lane_id]["next_lane_ids"].has(turn_id):
+            return str(lane_id)
+    return ""
+
+
+func _pick_conflicting_pair(sim, junction_id: String) -> Array[String]:
+    var turns: Array[String] = []
+    for movement in sim.movement_junction:
+        if sim.movement_junction[movement] == junction_id:
+            turns.append(str(movement))
+    turns.sort()
+    var best: Array[String] = []
+    var best_distance := -1.0
+    for i in range(turns.size()):
+        for j in range(i + 1, turns.size()):
+            var first: String = turns[i]
+            var second: String = turns[j]
+            if not sim.movement_conflicts[first].has(second):
+                continue
+            if _incoming(sim, junction_id, first) == _incoming(sim, junction_id, second):
+                continue
+            var score: float = maxf(float(sim.movement_release[first]), float(sim.movement_release[second]))
+            if score > best_distance:
+                best_distance = score
+                best = [first, second]
+    return best
+
+
+func _test_geometry(sim) -> void:
+    for jid in COMPLEX:
+        var pair: Array[String] = _pick_conflicting_pair(sim, str(jid))
+        _check(pair.size() == 2, str(jid) + " has genuine conflicting approach turns")
+        var max_release := 0.0
+        var min_length := INF
+        for movement in sim.movement_junction:
+            if sim.movement_junction[movement] != jid:
+                continue
+            max_release = maxf(max_release, float(sim.movement_release[movement]))
+            min_length = minf(min_length, sim.graph.lane_length(str(movement)))
+        _check(max_release > float(sim.junctions[jid]["clearance_m"]) + 12.0,
+            str(jid) + " uses late geometric conflicts, not shared clearance")
+        _check(min_length < max_release, str(jid) + " preserves short connector exits")
+    _check(sim.movement_junction.size() == 66, "all 66 controlled World turning movements indexed")
+
+
+func _spawn_routed(sim, junction_id: String, turn_id: String) -> int:
+    var incoming: String = _incoming(sim, junction_id, turn_id)
+    if incoming == "":
+        return -1
+    for offset in [27.0, 34.0, 45.0, 57.0]:
+        var s: float = maxf(0.1, sim.graph.lane_length(incoming) - offset)
+        var id: int = sim.spawn_agent(incoming, s, 0.0, 1.0)
+        if id <= 0:
+            continue
+        var outgoing: String = str(sim.graph.lanes[turn_id]["next_lane_ids"][0])
+        var route: Array[String] = [incoming, turn_id, outgoing]
+        if not sim.assign_route(id, route):
+            sim.despawn_agent(id)
+            return -1
+        return id
+    return -1
+
+
+func _test_conflicting_movements(junction_id: String) -> void:
+    var sim = _simulation(73)
+    if sim == null:
+        _check(false, junction_id + " setup")
+        return
+    var pair: Array[String] = _pick_conflicting_pair(sim, junction_id)
+    if pair.size() != 2:
+        _check(false, junction_id + " pair")
+        return
+    var first: int = _spawn_routed(sim, junction_id, pair[0])
+    var second: int = _spawn_routed(sim, junction_id, pair[1])
+    _check(first > 0 and second > 0, junction_id + " both approach vehicles spawn")
+    if first <= 0 or second <= 0:
+        return
+    var viewer: Vector3 = sim.graph.get_pose(pair[0], 0.0)["position"]
+    var visited_first := false
+    var visited_second := false
+    var conflicting_ownership := false
+    var overlapping_turns := false
+    var early_release := false
+    for _tick in range(1800):
+        sim.step(DT, viewer)
+        var a: Dictionary = sim.get_state(first)
+        var b: Dictionary = sim.get_state(second)
+        if a.is_empty() or b.is_empty():
+            break
+        visited_first = visited_first or a["lane_id"] == pair[0]
+        visited_second = visited_second or b["lane_id"] == pair[1]
+        var in_a: bool = a["lane_id"] == pair[0]
+        var in_b: bool = b["lane_id"] == pair[1]
+        if a["reserved_junction"] != "" and b["reserved_junction"] != "":
+            conflicting_ownership = true
+        if (in_a or in_b) and a["position"].distance_to(b["position"]) < 3.6:
+            overlapping_turns = true
+        for state in [a, b]:
+            if state["lane_id"] == state["reservation_movement"] and state["reserved_junction"] == "" and state["reservation_movement"] != "":
+                early_release = true
+    _check(visited_first and visited_second, junction_id + " both routes traverse a turn")
+    _check(not conflicting_ownership, junction_id + " conflicting turns never hold simultaneously")
+    _check(not overlapping_turns, junction_id + " overlapping turn occupancy excluded")
+    _check(not early_release, junction_id + " turn ownership retained until geometric release")
+    _check(sim.reservations.is_empty(), junction_id + " no reservation stranded after connector exit")
+
+
+func _test_short_connector(sim) -> void:
+    var found := false
+    for movement in sim.movement_release:
+        var len_m: float = sim.graph.lane_length(str(movement))
+        if len_m < 20.0 and float(sim.movement_release[movement]) > len_m:
+            found = true
+            break
+    _check(found, "short turn releases on successor travel lane rather than leaking")
+
+
+func _test_opposing_flow() -> void:
+    var sim = _simulation(21)
+    if sim == null:
+        _check(false, "opposing flow setup")
+        return
+    var ab := "lane_orchard_lake_ab"
+    var ba := "lane_orchard_lake_ba"
+    var len_m: float = sim.graph.lane_length(ab)
+    var a: int = sim.spawn_agent(ab, len_m * 0.40, 12.0, 1.0)
+    var b: int = sim.spawn_agent(ba, sim.graph.lane_length(ba) * 0.40, 12.0, 1.0)
+    _check(a > 0 and b > 0, "ordinary opposing-lane cars can spawn")
+    if a <= 0 or b <= 0:
+        return
+    var viewer: Vector3 = sim.graph.get_pose(ab, len_m * 0.5)["position"]
+    var passing := false
+    var blocked := false
+    for _tick in range(480):
+        sim.step(DT, viewer)
+        var one: Dictionary = sim.get_state(a)
+        var two: Dictionary = sim.get_state(b)
+        if one.is_empty() or two.is_empty():
+            break
+        if one["lane_id"] != ab or two["lane_id"] != ba:
+            break
+        var d: float = one["position"].distance_to(two["position"])
+        if d < 3.6 and d > 2.0 and one["speed_mps"] > 0.5 and two["speed_mps"] > 0.5:
+            passing = true
+        blocked = blocked or one["reserved_junction"] != "" or two["reserved_junction"] != ""
+    _check(passing, "3.4m-separated opposing travel lanes pass without collision classification")
+    _check(not blocked, "two-way passing needs no intersection reservation")
+
+
+func _test_cleanup() -> void:
+    var sim = _simulation(18)
+    if sim == null:
+        _check(false, "cleanup setup")
+        return
+    var pair: Array[String] = _pick_conflicting_pair(sim, "junction_alder")
+    var id: int = _spawn_routed(sim, "junction_alder", pair[0])
+    var held := false
+    for _tick in range(480):
+        sim.step(DT, sim.graph.get_pose(pair[0], 0.0)["position"])
+        var state: Dictionary = sim.get_state(id)
+        if state.is_empty():
+            break
+        if state["reserved_junction"] != "":
+            held = true
+            break
+    _check(held and not sim.reservations.is_empty(), "cleanup fixture acquires movement reservation")
+    sim.despawn_agent(id)
+    _check(sim.reservations.is_empty(), "despawn releases the exact owned reservation")
+    id = _spawn_routed(sim, "junction_alder", pair[0])
+    for _tick in range(450):
+        sim.step(DT, sim.graph.get_pose(pair[0], 0.0)["position"])
+        if not sim.get_state(id).is_empty() and sim.get_state(id)["reserved_junction"] != "":
+            break
+    sim.reset(18)
+    _check(sim.reservations.is_empty() and sim.agents.is_empty(), "reset removes all reservation ownership")
+
+
+func _seed_trace(seed_value: int) -> Dictionary:
+    var sim = _simulation(seed_value)
+    if sim == null:
+        return {"ok": false, "trace": ""}
+    sim.set_density(20)
+    var viewer: Vector3 = sim.graph.get_pose("turn_alder_alder_cedar_ba__alder_depot_ab", 0.0)["position"]
+    var trace := ""
+    var peak := 0
+    var transitions := 0
+    var previous: Dictionary = {}
+    var safe := true
+    for _tick in range(900):
+        sim.step(DT, viewer)
+        var states: Array = sim.get_states()
+        peak = maxi(peak, states.size())
+        if states.size() > 20:
+            safe = false
+        var now: Dictionary = {}
+        for a in states:
+            var aid: int = int(a["id"])
+            now[aid] = a["lane_id"]
+            if previous.has(aid) and previous[aid] != a["lane_id"]:
+                transitions += 1
+            if a["reserved_junction"] != "" and int(sim.reservations.get(a["reserved_junction"], -1)) != aid:
+                safe = false
+            trace += "%s:%s:%.3f:%s|" % [aid, a["lane_id"], float(a["s"]), a["reserved_junction"]]
+        previous = now
+        for key in sim.reservations:
+            var owner_id: int = int(sim.reservations[key])
+            if not sim.agents.has(owner_id):
+                safe = false
+    return {"ok": safe and peak > 0 and transitions > 0, "trace": trace,
+        "peak": peak, "transitions": transitions}
+
+
+func _test_seeded_flow() -> void:
+    for seed_value in [20261121, 73]:
+        var a: Dictionary = _seed_trace(seed_value)
+        var b: Dictionary = _seed_trace(seed_value)
+        _check(bool(a["ok"]) and bool(b["ok"]), "30-second canonical traffic flow/cap/ownership seed %d" % seed_value)
+        _check(a["trace"] == b["trace"], "30-second fixed-seed replay identical %d" % seed_value)
