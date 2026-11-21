@@ -6,11 +6,11 @@ import crypto from "node:crypto";
 
 const repo = path.resolve(import.meta.dirname, "../..");
 const source = path.join(repo, "assets/environment_hd");
-const dest = path.join(repo, "showcase/environment_hd/.staged_assets");
+const dest = path.join(repo, "showcase/environment_hd/staged_assets");
 if (!fs.existsSync(source)) throw Error("Run from a checkout containing assets/environment_hd");
 if (process.argv.includes("--clean")) {
   fs.rmSync(dest, {recursive:true, force:true});
-  console.log("Removed only showcase/environment_hd/.staged_assets");
+  console.log("Removed only showcase/environment_hd/staged_assets");
   process.exit(0);
 }
 const files = [];

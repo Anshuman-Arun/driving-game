@@ -23,7 +23,7 @@ godot --headless --path showcase/environment_hd --editor --quit
 godot --path showcase/environment_hd
 ```
 
-Use Godot **4.7.2 stable** and press 1–6 for the fixed views. Forward+ is enabled in the standalone subproject. `stage.mjs` duplicates files **only** into the locally ignored `.staged_assets/` folder, because the standalone Godot project root cannot resolve another project's `res://assets` paths. Run `--clean` to remove only that local staging folder.
+Use Godot **4.7.2 stable** and press 1–6 for the fixed views. Forward+ is enabled in the standalone subproject. `stage.mjs` duplicates files **only** into the locally ignored `staged_assets/` folder, because the standalone Godot project root cannot resolve another project's `res://assets` paths. Run `--clean` to remove only that local staging folder.
 
 For the professional source scene, install Blender 4.x (any local Blender 4.x must be checked for API compatibility):
 

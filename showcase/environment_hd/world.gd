@@ -72,7 +72,7 @@ func _asset_path(relative_path: String) -> String:
 	var integrated := "res://assets/environment_hd/" + relative_path
 	if ResourceLoader.exists(integrated):
 		return integrated
-	return "res://.staged_assets/" + relative_path
+	return "res://staged_assets/" + relative_path
 
 func _tex(relative_path: String) -> Texture2D:
 	var p := _asset_path("textures/" + relative_path)
