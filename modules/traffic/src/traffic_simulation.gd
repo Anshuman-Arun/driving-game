@@ -44,6 +44,7 @@ var reservations: Dictionary = {}
 # Legacy merge and fixture controls retain the original one-owner key.
 var movement_junction: Dictionary = {}
 var movement_conflicts: Dictionary = {}
+var movement_pair_release: Dictionary = {}
 var movement_release: Dictionary = {}
 var inbound_stop_offsets: Dictionary = {}
 var reused_agents := 0
@@ -59,6 +60,7 @@ func load_road_graph(data: Dictionary) -> bool:
 	reservations.clear()
 	movement_junction.clear()
 	movement_conflicts.clear()
+	movement_pair_release.clear()
 	movement_release.clear()
 	inbound_stop_offsets.clear()
 	graph_valid = graph.load_road_graph(data)
@@ -131,6 +133,7 @@ func _index_junction_movements(jid: String, movements: Array[String]) -> void:
 	for movement in movements:
 		movement_junction[movement] = jid
 		movement_conflicts[movement] = {}
+		movement_pair_release[movement] = {}
 		latest[movement] = -1.0
 	for i in range(movements.size()):
 		var first_id: String = movements[i]
@@ -143,6 +146,8 @@ func _index_junction_movements(jid: String, movements: Array[String]) -> void:
 			var second_points: Array = second["points"]
 			var second_arc: Array = second["cumulative"]
 			var intersects := false
+			var first_last := -1.0
+			var second_last := -1.0
 			for ai in range(first_points.size() - 1):
 				for bi in range(second_points.size() - 1):
 					var nearest: PackedVector3Array = Geometry3D.get_closest_points_between_segments(
@@ -152,11 +157,15 @@ func _index_junction_movements(jid: String, movements: Array[String]) -> void:
 					intersects = true
 					# Take the END of the affected segments, not just the closest
 					# point: safely covers nearly parallel overlapping connectors.
-					latest[first_id] = maxf(float(latest[first_id]), float(first_arc[ai + 1]))
-					latest[second_id] = maxf(float(latest[second_id]), float(second_arc[bi + 1]))
+					first_last = maxf(first_last, float(first_arc[ai + 1]))
+					second_last = maxf(second_last, float(second_arc[bi + 1]))
+					latest[first_id] = maxf(float(latest[first_id]), first_last)
+					latest[second_id] = maxf(float(latest[second_id]), second_last)
 			if intersects:
 				movement_conflicts[first_id][second_id] = true
 				movement_conflicts[second_id][first_id] = true
+				movement_pair_release[first_id][second_id] = first_last + CONFLICT_EXIT_GAP_M
+				movement_pair_release[second_id][first_id] = second_last + CONFLICT_EXIT_GAP_M
 	for movement in movements:
 		# A movement's release distance is measured from its own connector
 		# origin and may extend onto its outgoing travel lane. Never clamp to
@@ -190,6 +199,17 @@ func _near_movement(position: Vector3, movement: String) -> bool:
 		if position.distance_to(start + edge * ratio) < CONFLICT_PROXIMITY_M:
 			return true
 	return false
+
+
+func _movement_progress(a: Dictionary, movement: String) -> float:
+	# Arc distance along the actual turn, continuing onto its first outgoing
+	# lane. A queued owner with a granted approach reservation has not begun.
+	if a["lane_id"] == movement:
+		return float(a["s"])
+	var successors: Array = graph.lanes[movement]["next_lane_ids"]
+	if successors.size() == 1 and a["lane_id"] == successors[0]:
+		return graph.lane_length(movement) + float(a["s"])
+	return -1.0
 
 
 func _reservation_exit(a: Dictionary, jid: String, j: Dictionary) -> Dictionary:
@@ -470,8 +490,16 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 			if other.get("reservation_zone", "") != junction_id:
 				continue
 			var other_movement: String = str(other.get("reservation_movement", ""))
-			if other_movement == movement or movement_conflicts[movement].has(other_movement):
+			if other_movement == movement:
+				# The existing follower/merge logic handles spacing along the same
+				# actual turn, but one owner must claim its entry at a time.
 				return true
+			if movement_conflicts[movement].has(other_movement):
+				# An owner may still be clearing some OTHER turn. Do not block
+				# this one once the owner has passed their last shared conflict.
+				var progress: float = _movement_progress(other, other_movement)
+				if progress < float(movement_pair_release[other_movement][movement]):
+					return true
 	elif reservations.has(junction_id) and reservations[junction_id] != a["id"]:
 		return true
 	var mode: String = j["mode"]
