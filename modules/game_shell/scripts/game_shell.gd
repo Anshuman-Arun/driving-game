@@ -101,7 +101,7 @@ func _bind_axis(action: String, axis: int, direction: float) -> void:
 		InputMap.action_add_event(action, event)
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.echo:
+	if event.is_echo():
 		return
 	if event.is_action_pressed("shell_pause"):
 		if screen in ["FREE_ROAM", "RACE", "PAUSE"]:

@@ -3,22 +3,22 @@
 ## Verified in authoring environment
 
 - Repository and requirements inspected from connected GitHub: AGENTS, Game Design, Technical Architecture, Interfaces, and PRs for Core (#6), Art (#7), Racing (#5).
-- Only \`modules/game_shell/\` paths were written to \`feat/game-shell\`. Branch started from main commit \`2f6d2a71f48eee09dadd16c86457b4daddc51f07\`.
+- Only `modules/game_shell/` paths were written to `feat/game-shell`. Branch started from main commit `2f6d2a71f48eee09dadd16c86457b4daddc51f07`.
 - Source-controlled scenes, scripts, save migration/recovery, mock transitions and automated Godot test harness authored. GitHub content/branch writes confirmed.
 
 ## Engine/runtime checks — not executable in this environment
 
-The authoring container has **no \`godot\` or \`godot4\` binary**. Standard \`git\` cannot resolve \`github.com\` from that container, although the connected GitHub app can access and write the repository. Therefore this report **does not claim a Godot parser pass, imported scene pass, visual screenshot, interactive gameplay test, controller test or exported Windows build**.
+The authoring container has **no `godot` or `godot4` binary**. Standard `git` cannot resolve `github.com` from that container, although the connected GitHub app can access and write the repository. Therefore this report **does not claim a Godot parser pass, imported scene pass, visual screenshot, interactive gameplay test, controller test or exported Windows build**.
 
 Run on a Godot 4.7.2 machine:
 
-\`\`\`sh
+```sh
 godot --headless --path modules/game_shell --editor --quit
 godot --headless --path modules/game_shell --script res://tests/run_tests.gd
 godot --path modules/game_shell
-\`\`\`
+```
 
-The \`tests/run_tests.gd\` assertions are authored, **not claimed passing** until their real console output is recorded. They cover first-run defaults, locked selections, save/write/reload, persistence, invalid settings, progression unlocks/best times, backup/temp/corrupt recovery, schema-1 migration, pause/resume, mock stage progression, and actual UI callback paths.
+The `tests/run_tests.gd` assertions are authored, **not claimed passing** until their real console output is recorded. They cover first-run defaults, locked selections, save/write/reload, persistence, invalid settings, progression unlocks/best times, backup/temp/corrupt recovery, schema-1 migration, pause/resume, mock stage progression, and actual UI callback paths.
 
 ## Manual QA gates pending
 

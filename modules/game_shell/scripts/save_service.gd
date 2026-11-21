@@ -211,7 +211,9 @@ func _commit(rotate_backup: bool) -> bool:
 	var source_exists := FileAccess.file_exists(path)
 	var primary_valid := source_exists and _read_candidate(path) is Dictionary
 	var backup_valid := _read_candidate(path + ".bak") is Dictionary
-	if rotate_backup and primary_valid:
+	if primary_valid and (rotate_backup or not backup_valid):
+		## A validated backup is required before Windows replace fallback, even
+		## when promoting a migrated v1 primary or a recovered temp.
 		error = DirAccess.copy_absolute(absolute, ProjectSettings.globalize_path(path + ".bak"))
 		if error != OK or not (_read_candidate(path + ".bak") is Dictionary):
 			last_error = "Could not preserve last valid save."
