@@ -6,7 +6,6 @@ from __future__ import annotations
 import math
 from pathlib import Path
 import struct
-import wave
 
 RATE = 22050
 ASSETS = Path(__file__).resolve().parents[1] / "assets"
@@ -101,15 +100,27 @@ def generate(name: str) -> tuple[int, ...]:
     return tuple(max(-32767, min(32767, round(v * 32767 * target / peak))) for v in raw)
 
 
+def wav_bytes(samples: tuple[int, ...]) -> bytes:
+    """Write canonical 44-byte PCM RIFF independent of Python wave.Wave_write.
+
+    The WAVs are fixed 16-bit, mono PCM, so no extended format chunk is
+    needed. Pinning the container bytes avoids Python-version-specific
+    headers while preserving the original mathematically generated samples.
+    """
+    pcm = struct.pack("<" + "h" * len(samples), *samples)
+    header = struct.pack(
+        "<4sI4s4sIHHIIHH4sI",
+        b"RIFF", 36 + len(pcm), b"WAVE", b"fmt ", 16,
+        1, 1, RATE, RATE * 2, 2, 16, b"data", len(pcm),
+    )
+    return header + pcm
+
+
 def write(name: str) -> Path:
     samples = generate(name)
     path = ASSETS / f"{name}.wav"
     path.parent.mkdir(parents=True, exist_ok=True)
-    with wave.open(str(path), "wb") as output:
-        output.setnchannels(1)
-        output.setsampwidth(2)
-        output.setframerate(RATE)
-        output.writeframes(struct.pack("<" + "h" * len(samples), *samples))
+    path.write_bytes(wav_bytes(samples))
     return path
 
 
