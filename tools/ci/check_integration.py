@@ -44,7 +44,18 @@ def check(root: Path) -> int:
             if not uri or "://" not in uri or not uri.startswith("res://"):
                 continue
             resource = uri[len("res://"):].split("::", 1)[0]
-            if not resource or not (root / resource).is_file():
+            # Standalone modules carry their own project.godot and use
+            # res:// relative to that project. Accept a path found in the
+            # owning subproject OR the final integrated root, then let the
+            # actual combined Godot import check runtime compatibility.
+            candidates = [root]
+            for ancestor in (path.parent, *path.parents):
+                if ancestor == root or root not in ancestor.parents:
+                    break
+                if (ancestor / "project.godot").is_file():
+                    candidates.append(ancestor)
+                    break
+            if not resource or not any((base / resource).is_file() for base in candidates):
                 missing.add((rel, uri))
 
     duplicates = {name: paths for name, paths in classes.items() if len(paths) > 1}
