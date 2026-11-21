@@ -72,7 +72,7 @@ case "$track" in
     run_required world-graph node worldgen/tests/test_world.js
     run_required world-turns node worldgen/tests/test_turns.js
     run_required world-regenerate node worldgen/generate.js
-    run_required world-deterministic git diff --exit-code -- data/world worldgen/previews
+    run_required world-deterministic bash -c 'git diff --name-status -- data/world worldgen/previews; git diff --quiet -- data/world worldgen/previews'
     ;;
   art)
     test -f "$worktree/assets/curated/MANIFEST.json"
@@ -82,7 +82,7 @@ case "$track" in
     run_required art-previews node tools/asset_pipeline/render_previews.mjs
     run_required art-environment node tools/asset_pipeline/generate_environment.mjs
     run_required art-textures node tools/asset_pipeline/generate_textures.mjs
-    run_required art-deterministic git diff --exit-code -- assets/curated
+    run_required art-deterministic bash -c 'git diff --name-status -- assets/curated; git diff --quiet -- assets/curated'
     run_required art-revalidate node tools/asset_pipeline/validate.mjs
     # Art has no standalone Godot project; create a disposable one on the runner.
     if [[ -e "$worktree/project.godot" ]]; then
