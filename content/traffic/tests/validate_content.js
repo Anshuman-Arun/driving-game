@@ -111,7 +111,10 @@ function verify(g, pack, scenarios) {
     if(j.mode==="pass_through") {
       check(j.incoming_lane_ids.length===2 && j.turn_lane_ids.length===2 && last<0,"no control on non-crossing two-way continuation "+j.id);
     } else {
-      if(j.incoming_lane_ids.length===2)check(last>=0 && j.clearance_m>last+1.5,"two-way crossing requires late release "+j.id);
+      // Degree in the coarse road graph is not a geometric intersection test.
+      // Exactly two incoming travel lanes may still have crossed turn paths.
+      if(j.incoming_lane_ids.length===2)check(j.turn_lane_ids.length===2 && last>=0 && j.clearance_m>last+1.5,"two-way crossing requires late release "+j.id);
+      else check(j.incoming_lane_ids.length>=3,"controlled junction must have multi-approach topology or actual turn crossing "+j.id);
       controlledApproaches+=j.incoming_lane_ids.length;
       check(j.incoming_lane_ids.length>=2 && j.turn_lane_ids.length>=2,"valid controlled junction "+j.id);
       check(Number.isFinite(j.clearance_m) && j.clearance_m>=4 && j.clearance_m+0.5<shortest,"reservation will release on every turn "+j.id);
@@ -126,7 +129,7 @@ function verify(g, pack, scenarios) {
   check(scenarios.hotspots.length===2 && scenarios.hotspots.every(h=>["junction_overlook","junction_orchard"].includes(h.junction_id) && same(h.populations,[5,20])),"two crossing two-way stress sites");
   check(scenarios.seeds.length===3 && keys(scenarios.seeds).size===3 && scenarios.duration_s===90,"fixed seeds and 90-second soak");
   check(scenarios.regions.every(r=>pack.junctions.some(j=>j.id===r.junction_id) && r.view_position.length===3),"viewer coordinates derived from real nodes");
-  return {nodes:11,controlled:6,implicitMerges:merges.length,approaches:controlledApproaches,cases:5*4*3};
+  return {nodes:11,controlled:8,implicitMerges:merges.length,approaches:controlledApproaches,cases:5*4*3+2*2*3};
 }
 
 function testRejections(graph,original,scenarios) {
@@ -150,6 +153,10 @@ function testRejections(graph,original,scenarios) {
   mutation("duplicate travel source",p=>p.junctions[1].incoming_lane_ids[0]=p.junctions[0].incoming_lane_ids[0]);
   mutation("uncontrolled crossing",p=>p.junctions.find(j=>j.id==="junction_overlook").mode="pass_through");
   mutation("premature two-way crossing clearance",p=>p.junctions.find(j=>j.id==="junction_orchard").clearance_m=6);
+  mutation("unnecessary control on non-crossing degree-two continuation",p=>{
+    const j=p.junctions.find(x=>x.id==="junction_market");
+    j.mode="yield"; j.clearance_m=6;
+  });
   return rejected;
 }
 
@@ -168,6 +175,19 @@ if (require.main===module) {
   assert.equal(audit.nodes.length,11);
   assert.ok(audit.nodes.filter(j=>j.mode==="pass_through").every(j=>j.turn_pairs_crossing===0));
   assert.ok(audit.nodes.filter(j=>["junction_overlook","junction_orchard"].includes(j.junction_id)).every(j=>j.turn_pairs_with_crossing_after_release===0));
+  const laneIndex=new Map(graph.lanes.map(l=>[l.id,l]));
+  const audited=new Map(audit.nodes.map(j=>[j.junction_id,j]));
+  assert.equal(audited.size,11,"one independent audit per real node");
+  for(const j of pack.junctions){
+    const item=audited.get(j.id);
+    assert.ok(item && item.mode===j.mode,"conflict audit mode matches live control "+j.id);
+    assert.equal(item.clearance_m,j.mode==="pass_through"?null:j.clearance_m,"audit release matches "+j.id);
+    if(j.incoming_lane_ids.length===2 && j.turn_lane_ids.length===2){
+      const crossing=lastCross(laneIndex.get(j.turn_lane_ids[0]),laneIndex.get(j.turn_lane_ids[1]));
+      assert.equal(crossing>=0,item.turn_pairs_crossing>0,"degree-two audited crossing matches real geometry "+j.id);
+      assert.ok(Math.abs(Math.max(0,crossing)-item.furthest_crossing_arc_s_m)<0.1,"measured crossing arc matches audit "+j.id);
+    }
+  }
   const svg=fs.readFileSync(SVG,"utf8");
   assert.ok(svg.includes("ASTER VALLEY")&&svg.includes(EXPECTED_BLOB.slice(0,10)),"real-graph preview provenance");
   console.log("PASS canonical topology/content authoring, "+rejected+" negative mutations, preview marker");
