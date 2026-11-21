@@ -491,9 +491,12 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 				continue
 			var other_movement: String = str(other.get("reservation_movement", ""))
 			if other_movement == movement:
-				# The existing follower/merge logic handles spacing along the same
-				# actual turn, but one owner must claim its entry at a time.
-				return true
+				# Rear-end following on the same route is separately enforced by
+				# _find_leader(). Keep only a short exclusive entrance gap, rather
+				# than queuing every following car through the entire long turn.
+				if _movement_progress(other, movement) < 12.0:
+					return true
+				continue
 			if movement_conflicts[movement].has(other_movement):
 				# An owner may still be clearing some OTHER turn. Do not block
 				# this one once the owner has passed their last shared conflict.
