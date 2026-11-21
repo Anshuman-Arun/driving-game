@@ -94,6 +94,14 @@ func _start(id: String) -> void:
 	selected_event = id
 	max_error_m = 0.0
 	_build_road()
+	var camera := get_viewport().get_camera_3d()
+	if camera != null:
+		if id == "north_ridge_climb":
+			camera.position = Vector3(100, 500, 345)
+			camera.size = 680.0
+		else:
+			camera.position = Vector3(0, 380, 0)
+			camera.size = 520.0
 	var colors := [Color(0.8, 0.25, 0.2), Color(0.25, 0.6, 0.95), Color(0.9, 0.8, 0.3), Color(0.4, 0.9, 0.5)]
 	var ids := ["player", "rival_a", "rival_b", "rival_c"]
 	for i in range(ids.size()):
