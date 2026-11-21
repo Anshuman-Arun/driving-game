@@ -167,6 +167,10 @@ func _test_conflicting_movements(junction_id: String) -> void:
     var conflicting_ownership := false
     var overlapping_turns := false
     var early_release := false
+    var released_first := false
+    var released_second := false
+    var exit_first: String = str(sim.graph.lanes[pair[0]]["next_lane_ids"][0])
+    var exit_second: String = str(sim.graph.lanes[pair[1]]["next_lane_ids"][0])
     for _tick in range(1800):
         sim.step(DT, viewer)
         var a: Dictionary = sim.get_state(first)
@@ -177,17 +181,23 @@ func _test_conflicting_movements(junction_id: String) -> void:
         visited_second = visited_second or b["lane_id"] == pair[1]
         var in_a: bool = a["lane_id"] == pair[0]
         var in_b: bool = b["lane_id"] == pair[1]
-        if a["reserved_junction"] != "" and b["reserved_junction"] != "":
+        if a["reservation_zone"] == junction_id and b["reservation_zone"] == junction_id:
             conflicting_ownership = true
         if (in_a or in_b) and a["position"].distance_to(b["position"]) < 3.6:
             overlapping_turns = true
-        for state in [a, b]:
-            if state["lane_id"] == state["reservation_movement"] and state["reserved_junction"] == "" and state["reservation_movement"] != "":
-                early_release = true
+        if in_a and a["reserved_junction"] == "":
+            early_release = true
+        if in_b and b["reserved_junction"] == "":
+            early_release = true
+        released_first = released_first or a["lane_id"] == exit_first and a["reserved_junction"] == ""
+        released_second = released_second or b["lane_id"] == exit_second and b["reserved_junction"] == ""
+        if released_first and released_second:
+            break
     _check(visited_first and visited_second, junction_id + " both routes traverse a turn")
     _check(not conflicting_ownership, junction_id + " conflicting turns never hold simultaneously")
     _check(not overlapping_turns, junction_id + " overlapping turn occupancy excluded")
     _check(not early_release, junction_id + " turn ownership retained until geometric release")
+    _check(released_first and released_second, junction_id + " both vehicles reach their outgoing lanes")
     _check(sim.reservations.is_empty(), junction_id + " no reservation stranded after connector exit")
 
 
@@ -267,12 +277,14 @@ func _seed_trace(seed_value: int) -> Dictionary:
         return {"ok": false, "trace": ""}
     sim.set_density(20)
     var viewer: Vector3 = sim.graph.get_pose("turn_alder_alder_cedar_ba__alder_depot_ab", 0.0)["position"]
-    var trace := ""
+    var fingerprint: int = 1
     var peak := 0
     var transitions := 0
     var previous: Dictionary = {}
     var safe := true
-    for _tick in range(900):
+    var wait_ticks: Dictionary = {}
+    var longest_wait := 0
+    for _tick in range(1350):
         sim.step(DT, viewer)
         var states: Array = sim.get_states()
         peak = maxi(peak, states.size())
@@ -286,13 +298,35 @@ func _seed_trace(seed_value: int) -> Dictionary:
                 transitions += 1
             if a["reserved_junction"] != "" and int(sim.reservations.get(a["reserved_junction"], -1)) != aid:
                 safe = false
-            trace += "%s:%s:%.3f:%s|" % [aid, a["lane_id"], float(a["s"]), a["reserved_junction"]]
+            var snap: String = "%s:%s:%.3f:%s" % [aid, a["lane_id"], float(a["s"]), a["reserved_junction"]]
+            fingerprint = posmod(fingerprint * 131 + int(snap.hash()), 2147483647)
+            if a["state"] == "WAIT_AT_JUNCTION":
+                wait_ticks[aid] = int(wait_ticks.get(aid, 0)) + 1
+                longest_wait = maxi(longest_wait, int(wait_ticks[aid]))
+            else:
+                wait_ticks.erase(aid)
         previous = now
-        for key in sim.reservations:
-            var owner_id: int = int(sim.reservations[key])
-            if not sim.agents.has(owner_id):
+        var keys: Array = sim.reservations.keys()
+        for i in range(keys.size()):
+            var first_owner: int = int(sim.reservations[keys[i]])
+            if not sim.agents.has(first_owner):
                 safe = false
-    return {"ok": safe and peak > 0 and transitions > 0, "trace": trace,
+                continue
+            var first: Dictionary = sim.agents[first_owner]
+            for j in range(i + 1, keys.size()):
+                var second_owner: int = int(sim.reservations[keys[j]])
+                if not sim.agents.has(second_owner):
+                    safe = false
+                    continue
+                var second: Dictionary = sim.agents[second_owner]
+                if first["reservation_zone"] == second["reservation_zone"] and first["reservation_zone"] != "":
+                    var movement: String = str(first["reservation_movement"])
+                    if movement == second["reservation_movement"] or (
+                            sim.movement_conflicts.has(movement) and
+                            sim.movement_conflicts[movement].has(second["reservation_movement"])):
+                        safe = false
+    return {"ok": safe and peak > 0 and transitions > 0 and longest_wait < 900,
+        "trace": fingerprint,
         "peak": peak, "transitions": transitions}
 
 
@@ -300,5 +334,5 @@ func _test_seeded_flow() -> void:
     for seed_value in [20261121, 73]:
         var a: Dictionary = _seed_trace(seed_value)
         var b: Dictionary = _seed_trace(seed_value)
-        _check(bool(a["ok"]) and bool(b["ok"]), "30-second canonical traffic flow/cap/ownership seed %d" % seed_value)
-        _check(a["trace"] == b["trace"], "30-second fixed-seed replay identical %d" % seed_value)
+        _check(bool(a["ok"]) and bool(b["ok"]), "45-second canonical flow/cap/conflicts/queues seed %d" % seed_value)
+        _check(a["trace"] == b["trace"], "45-second fixed-seed replay identical %d" % seed_value)
