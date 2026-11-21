@@ -14,7 +14,7 @@
   "total_objects": 2799,
   "near_mesh_triangles_estimate": 1050176,
   "minimum_asset_cell_batches": 343,
-  "full_world_near_mesh_component_draw_batches_estimate": 1853,
+  "full_world_near_mesh_component_draw_batches_estimate": 1832,
   "regions": {
     "alder_town": {
       "count": 200,
