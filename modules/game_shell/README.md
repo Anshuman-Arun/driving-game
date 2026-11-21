@@ -22,7 +22,7 @@ Open `modules/game_shell/project.godot` in Godot 4.7.2 for the same demo. The st
 - **Events:** four canonical design event names, course type/laps, per-event best time and start action.
 - **Race:** 3-second countdown, clock, position, lap, speed, result transition, pause/abort-to-roam. F finishes an active mock race early for rapid UI testing.
 - **Results:** time, best time, placement, deterministic credits and unlocks, retry and free-roam return. Save failure is visible.
-- **Settings:** low/medium/high 3D render-scale presets (Forward+ standalone), windowed/fullscreen, three resolutions, controller sensitivity, master/music/SFX volume and persistent values. Music and SFX bus values are staged until buses are present in the host.
+- **Settings:** low/medium/high Forward+ render-scale presets applied to the root and active 3D car preview viewports, windowed/fullscreen, three resolutions, controller sensitivity, master/music/SFX volume and persistent values. Music and SFX bus values are staged until buses are present in the host.
 - **Pause:** freezes the mock clock, offers resume/settings/main-menu; abandoning a race returns to free roam.
 - **Focus/navigation:** buttons and options have keyboard focus and directional UI navigation. Runtime default mappings support keyboard and Xbox-style gamepad.
 

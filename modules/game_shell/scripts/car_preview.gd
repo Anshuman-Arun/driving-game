@@ -112,6 +112,10 @@ func set_car(car_id: String) -> void:
 		_part(turntable, Vector3(.28,.08,.05), Vector3(x,.85,-length * .505), Color("#fff1cd"))
 	turntable.rotation.y = -.28
 
+func set_quality(scale: float) -> void:
+	if viewport != null:
+		viewport.scaling_3d_scale = clampf(scale, 0.5, 1.0)
+
 func _process(delta: float) -> void:
 	if orbit_enabled and turntable != null:
 		turntable.rotate_y(delta * 0.13)

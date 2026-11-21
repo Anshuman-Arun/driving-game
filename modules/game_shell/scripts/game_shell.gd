@@ -294,6 +294,16 @@ func _focus_initial() -> void:
 	if is_instance_valid(first_focus) and first_focus.is_inside_tree():
 		first_focus.grab_focus()
 
+func _quality_scale() -> float:
+	var preset: String = str(save.data["settings"]["graphics_quality"])
+	return 0.67 if preset == "low" else (0.82 if preset == "medium" else 1.0)
+
+func _preview(parent: Node, car_id: String) -> void:
+	var preview := Preview.new()
+	parent.add_child(preview)
+	preview.set_car(car_id)
+	preview.set_quality(_quality_scale())
+
 func _menu(root: VBoxContainer) -> void:
 	var content := _scroll(root)
 	var body := _columns(content)
@@ -307,9 +317,7 @@ func _menu(root: VBoxContainer) -> void:
 	_action(left, "QUIT TO DESKTOP", func(): get_tree().quit())
 	var right := _surface(body, Vector2(320, 420))
 	_label(right, "CURRENT DRIVE    •    " + Catalog.car_name(save.selected_car()), 16, ShellTheme.ACCENT)
-	var preview := Preview.new()
-	right.add_child(preview)
-	preview.set_car(save.selected_car())
+	_preview(right, save.selected_car())
 	_label(right, "MOUNTAIN ROADS     /     TOWN CIRCUITS     /     LAKESIDE SPRINTS", 14, ShellTheme.MUTED)
 	_label(right, "DEMO MODE  •  Independently running game shell; road and vehicle physics are not connected.", 13, ShellTheme.MUTED)
 	_footer(root)
@@ -355,9 +363,7 @@ func _free_roam(root: VBoxContainer) -> void:
 	_action(left, "PAUSE  [ESC / START]", func(): toggle_pause())
 	var right := _surface(top, Vector2(320, 380))
 	_label(right, "SELECTED CAR    •    SHOWROOM VISUAL", 14, ShellTheme.MUTED)
-	var preview := Preview.new()
-	right.add_child(preview)
-	preview.set_car(save.selected_car())
+	_preview(right, save.selected_car())
 	var widgets := HBoxContainer.new()
 	widgets.add_theme_constant_override("separation", 12)
 	content.add_child(widgets)
@@ -425,9 +431,7 @@ func _garage(root: VBoxContainer) -> void:
 	_label(details, str(spec["class"]), 13, ShellTheme.ACCENT)
 	_label(details, str(spec["name"]), 34)
 	_label(details, str(spec["tagline"]), 16, ShellTheme.MUTED)
-	var preview := Preview.new()
-	details.add_child(preview)
-	preview.set_car(inspected_car)
+	_preview(details, inspected_car)
 	var stat_group := VBoxContainer.new()
 	details.add_child(stat_group)
 	_stat(stat_group, "HANDLING", int(spec["handling"]))
@@ -482,9 +486,7 @@ func _race(root: VBoxContainer) -> void:
 	_action(left, "PAUSE / RACE OPTIONS", func(): toggle_pause())
 	var right := _surface(columns, Vector2(300, 360))
 	_label(right, "LIVE VEHICLE VISUAL  /  MOCK", 14, ShellTheme.ACCENT)
-	var preview := Preview.new()
-	right.add_child(preview)
-	preview.set_car(save.selected_car())
+	_preview(right, save.selected_car())
 	countdown_label = _label(right, "", 48, ShellTheme.ACCENT)
 	countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var widgets := HBoxContainer.new()
@@ -629,6 +631,9 @@ func _apply_setting(key: String, value: Variant) -> void:
 		"graphics_quality":
 			var factor := 0.67 if value == "low" else (0.82 if value == "medium" else 1.0)
 			get_viewport().scaling_3d_scale = factor
+			for node in find_children("*", "SubViewportContainer", true, false):
+				if node.has_method("set_quality"):
+					node.call("set_quality", factor)
 		"window_mode":
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if value == "fullscreen" else DisplayServer.WINDOW_MODE_WINDOWED)
 		"resolution":
