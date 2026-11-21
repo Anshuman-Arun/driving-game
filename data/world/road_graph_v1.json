@@ -11463,8 +11463,8 @@
         ]
       ],
       "width_m": 3.4,
-      "speed_limit_kph": 70,
-      "surface": "asphalt",
+      "speed_limit_kph": 45,
+      "surface": "gravel",
       "next_lane_ids": [
         "turn_valley_market_valley_ab__ridge_valley_ba",
         "turn_valley_market_valley_ab__valley_lake_ab",
@@ -11842,8 +11842,8 @@
         ]
       ],
       "width_m": 3.4,
-      "speed_limit_kph": 70,
-      "surface": "asphalt",
+      "speed_limit_kph": 45,
+      "surface": "gravel",
       "next_lane_ids": [
         "turn_market_market_valley_ba__alder_market_ba"
       ]
@@ -13905,8 +13905,8 @@
         ]
       ],
       "width_m": 3.4,
-      "speed_limit_kph": 55,
-      "surface": "asphalt",
+      "speed_limit_kph": 40,
+      "surface": "gravel",
       "next_lane_ids": [
         "turn_orchard_overlook_orchard_ab__orchard_lake_ab"
       ]
@@ -14482,8 +14482,8 @@
         ]
       ],
       "width_m": 3.4,
-      "speed_limit_kph": 55,
-      "surface": "asphalt",
+      "speed_limit_kph": 40,
+      "surface": "gravel",
       "next_lane_ids": [
         "turn_overlook_overlook_orchard_ba__ridge_overlook_ba"
       ]
@@ -14809,8 +14809,8 @@
         ]
       ],
       "width_m": 3.4,
-      "speed_limit_kph": 65,
-      "surface": "asphalt",
+      "speed_limit_kph": 45,
+      "surface": "gravel",
       "next_lane_ids": [
         "turn_lake_orchard_lake_ab__valley_lake_ba",
         "turn_lake_orchard_lake_ab__lake_alder_ab"
@@ -15137,8 +15137,8 @@
         ]
       ],
       "width_m": 3.4,
-      "speed_limit_kph": 65,
-      "surface": "asphalt",
+      "speed_limit_kph": 45,
+      "surface": "gravel",
       "next_lane_ids": [
         "turn_orchard_orchard_lake_ba__overlook_orchard_ba"
       ]
@@ -19950,7 +19950,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_market_valley_ba"
       ]
@@ -20106,7 +20106,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_market_valley_ba"
       ]
@@ -20262,7 +20262,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_market_valley_ba"
       ]
@@ -20319,7 +20319,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_ridge_valley_ba"
       ]
@@ -20366,7 +20366,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_valley_lake_ab"
       ]
@@ -20413,7 +20413,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_pine_valley_ba"
       ]
@@ -20507,7 +20507,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_orchard_lake_ba"
       ]
@@ -20606,7 +20606,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_orchard_lake_ba"
       ]
@@ -20653,7 +20653,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_valley_lake_ba"
       ]
@@ -20700,7 +20700,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_lake_alder_ab"
       ]
@@ -21079,7 +21079,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 20,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_market_valley_ab"
       ]
@@ -21136,7 +21136,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 20,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_alder_market_ba"
       ]
@@ -21188,7 +21188,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_overlook_orchard_ab"
       ]
@@ -21235,7 +21235,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_ridge_overlook_ba"
       ]
@@ -21282,7 +21282,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_orchard_lake_ab"
       ]
@@ -21329,7 +21329,7 @@
       ],
       "width_m": 3.4,
       "speed_limit_kph": 25,
-      "surface": "asphalt",
+      "surface": "gravel",
       "next_lane_ids": [
         "lane_overlook_orchard_ba"
       ]
