@@ -201,7 +201,14 @@ func _test_conflicting_movements(junction_id: String) -> void:
         var in_a: bool = a["lane_id"] == pair[0]
         var in_b: bool = b["lane_id"] == pair[1]
         if a["reservation_zone"] == junction_id and b["reservation_zone"] == junction_id:
-            conflicting_ownership = true
+            # Both may hold distinct reservation keys once the first has
+            # passed this pair's last shared crossing, even while finishing
+            # other conflicts. Check *actual* unsafe overlapping ownership.
+            var first_progress: float = sim._movement_progress(a, pair[0])
+            var second_progress: float = sim._movement_progress(b, pair[1])
+            if first_progress < float(sim.movement_pair_release[pair[0]][pair[1]]) and (
+                    second_progress < float(sim.movement_pair_release[pair[1]][pair[0]])):
+                conflicting_ownership = true
         if (in_a or in_b) and a["position"].distance_to(b["position"]) < 3.6:
             overlapping_turns = true
         if in_a and a["reserved_junction"] == "":
@@ -213,7 +220,7 @@ func _test_conflicting_movements(junction_id: String) -> void:
         if released_first and released_second:
             break
     _check(visited_first and visited_second, junction_id + " both routes traverse a turn")
-    _check(not conflicting_ownership, junction_id + " conflicting turns never hold simultaneously")
+    _check(not conflicting_ownership, junction_id + " conflicting turns never own overlapping unsafe conflict intervals")
     _check(not overlapping_turns, junction_id + " overlapping turn occupancy excluded")
     _check(not early_release, junction_id + " turn ownership retained until geometric release")
     _check(released_first and released_second, junction_id + " both vehicles reach their outgoing lanes")
@@ -386,10 +393,16 @@ func _seed_trace(seed_value: int) -> Dictionary:
                 var second: Dictionary = sim.agents[second_owner]
                 if first["reservation_zone"] == second["reservation_zone"] and first["reservation_zone"] != "":
                     var movement: String = str(first["reservation_movement"])
-                    if movement == second["reservation_movement"] or (
-                            sim.movement_conflicts.has(movement) and
-                            sim.movement_conflicts[movement].has(second["reservation_movement"])):
+                    var other_movement: String = str(second["reservation_movement"])
+                    if movement == other_movement:
                         safe = false
+                    elif sim.movement_conflicts.has(movement) and (
+                            sim.movement_conflicts[movement].has(other_movement)):
+                        if sim._movement_progress(first, movement) < float(
+                                sim.movement_pair_release[movement][other_movement]) and (
+                                sim._movement_progress(second, other_movement) < float(
+                                sim.movement_pair_release[other_movement][movement])):
+                            safe = false
     return {"ok": safe and peak > 0 and transitions > 0 and longest_wait < 900,
         "trace": fingerprint,
         "peak": peak, "transitions": transitions}
