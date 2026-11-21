@@ -1,10 +1,10 @@
 ; Engine configuration file.
-; Aster Valley P0/P1 self-contained driving prototype.
+; Aster Valley vehicle and canonical world integration.
 config_version=5
 
 [application]
-config/name="Aster Valley — Driving Test"
-run/main_scene="res://scenes/bootstrap/main.tscn"
+config/name="Aster Valley — Free Roam"
+run/main_scene="res://scenes/free_roam/aster_valley.tscn"
 config/features=PackedStringArray("4.7", "GLTF", "Forward Plus")
 
 [display]
