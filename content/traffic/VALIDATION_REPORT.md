@@ -7,7 +7,7 @@ Source snapshot from World PR #3: road_graph_v1.json, Git blob SHA 9bba378d68879
 | Test / inspection | Actually executed? | Result |
 |---|---|---|
 | Read graph and enumerate physical/connector topology with connected GitHub tool + JavaScript assertions | Yes | **309/309 checks passed** on initially authored inventory of 11 nodes, 32 travel lanes, 72 turns, and 22 implicit merges |
-| Exact directed topology audit after 2-way crossing correction | Yes | 11 nodes, 8 active controls, 3 pass-throughs, 26 controlled inbound travel lanes and 22 implicit merge zones inspected |
+| Exact directed topology audit after 2-way crossing correction | Yes | **315/315 fresh connector-side checks passed**; 11 nodes, 8 active controls, 3 pass-throughs, 26 controlled incoming travel lanes, and 22 implicit merge zones inspected |
 | Geometric intersection audit from canonical 3D connector polylines | Yes | Crossings found and written to conflict_audit_v1.json; Overlook and Orchard each have four opposing-path XZ crossings at near-identical height |
 | Regenerated visual top-down control preview from World data | Yes | SVG source produced from actual 104 directed lanes; manually adjusted label/control color for two extra crossing yield sites |
 | Node CLI script tests/validate_content.js executed on Node with a local canonical graph | **No** | Reproducible command supplied; requires temp export/merged World PR file in executing checkout |
