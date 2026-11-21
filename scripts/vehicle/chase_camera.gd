@@ -22,7 +22,7 @@ func setup(car: RigidBody3D) -> void:
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	top_level = true
 	current = true
-	far = 900.0
+	far = 3500.0
 	# Prime the chassis interpolation history before the first render or respawn.
 	target.get_global_transform_interpolated()
 	snap_to_vehicle()

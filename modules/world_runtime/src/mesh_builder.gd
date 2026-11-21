@@ -30,7 +30,7 @@ func build(parent: Node3D, world: Variant, all_chunks: bool, focus_xz: Vector2,
 		"terrain_chunks": 0, "terrain_vertices": 0, "terrain_triangles": 0,
 		"physical_corridors": 0, "road_triangles": 0, "road_vertices": 0,
 		"junction_pads": 0, "junction_triangles": 0, "junction_vertices": 0,
-		"static_colliders": 0, "mesh_surface_count": 0,
+		"static_colliders": 0, "shoulder_colliders": 0, "mesh_surface_count": 0,
 		"turn_paths_covered": 0, "generation_ms": 0,
 		"estimated_vertex_bytes": 0
 	}
@@ -97,7 +97,8 @@ func _new_arrays(vertices: PackedVector3Array, normals: PackedVector3Array,
 		arr[Mesh.ARRAY_INDEX] = indices
 	return arr
 
-func _attach_mesh(parent: Node3D, label: String, mesh: ArrayMesh, material_count: int) -> void:
+func _attach_mesh(parent: Node3D, label: String, mesh: ArrayMesh, material_count: int,
+		surface_group: String = "", collider_mesh: ArrayMesh = null) -> void:
 	if mesh.get_surface_count() == 0:
 		return
 	var instance := MeshInstance3D.new()
@@ -106,15 +107,26 @@ func _attach_mesh(parent: Node3D, label: String, mesh: ArrayMesh, material_count
 	parent.add_child(instance)
 	stats["mesh_surface_count"] += material_count
 	if make_colliders:
-		var body := StaticBody3D.new()
-		body.name = label + "_Collision"
-		parent.add_child(body)
-		var shape := CollisionShape3D.new()
-		shape.shape = mesh.create_trimesh_shape()
-		if shape.shape is ConcavePolygonShape3D:
-			shape.shape.backface_collision = true
-		body.add_child(shape)
-		stats["static_colliders"] += 1
+		var source_mesh: ArrayMesh = collider_mesh if collider_mesh != null else mesh
+		_attach_collider(parent, label + "_Collision", source_mesh, surface_group)
+
+func _attach_collider(parent: Node3D, label: String, mesh: ArrayMesh, surface_group: String) -> void:
+	if mesh == null or mesh.get_surface_count() == 0:
+		return
+	var body := StaticBody3D.new()
+	body.name = label
+	if not surface_group.is_empty():
+		body.add_to_group(surface_group)
+	parent.add_child(body)
+	var shape := CollisionShape3D.new()
+	shape.shape = mesh.create_trimesh_shape()
+	if shape.shape is ConcavePolygonShape3D:
+		shape.shape.backface_collision = true
+	body.add_child(shape)
+	stats["static_colliders"] += 1
+
+func _surface_group_for(surface_name: String) -> String:
+	return "Dirt" if surface_name == "gravel" else "Road"
 
 func _terrain_normal(ix: int, iz: int) -> Vector3:
 	var sx: float = source.height_index(ix - 1, iz) - source.height_index(ix + 1, iz)
@@ -192,7 +204,7 @@ func _build_terrain(parent: Node3D, cell_count: int) -> void:
 			var mesh := ArrayMesh.new()
 			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(v, n, uv, ind))
 			mesh.surface_set_material(0, materials["terrain"])
-			_attach_mesh(parent, "Terrain_%d_%d" % [ix0, iz0], mesh, 1)
+			_attach_mesh(parent, "Terrain_%d_%d" % [ix0, iz0], mesh, 1, "Grass")
 			stats["terrain_chunks"] += 1
 			stats["terrain_vertices"] += vert_count
 			stats["terrain_triangles"] += (depth * width * 2)
@@ -302,14 +314,21 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 		cumulative += length
 	if pavement_verts.is_empty():
 		return
+	var pavement_arrays := _new_arrays(pavement_verts, pavement_norms, pavement_uv, PackedInt32Array())
+	var shoulder_arrays := _new_arrays(shoulder_verts, shoulder_norms, shoulder_uv, PackedInt32Array())
 	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
-		_new_arrays(pavement_verts, pavement_norms, pavement_uv, PackedInt32Array()))
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, pavement_arrays)
 	mesh.surface_set_material(0, materials[surface])
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
-		_new_arrays(shoulder_verts, shoulder_norms, shoulder_uv, PackedInt32Array()))
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, shoulder_arrays)
 	mesh.surface_set_material(1, materials["shoulder"])
-	_attach_mesh(parent, "Road_" + road["id"], mesh, 2)
+	var pavement_col_mesh := ArrayMesh.new()
+	pavement_col_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, pavement_arrays)
+	_attach_mesh(parent, "Road_" + road["id"], mesh, 2, _surface_group_for(surface), pavement_col_mesh)
+	if make_colliders and not shoulder_verts.is_empty():
+		var shoulder_col_mesh := ArrayMesh.new()
+		shoulder_col_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, shoulder_arrays)
+		_attach_collider(parent, "Road_" + road["id"] + "_Shoulder_Collision", shoulder_col_mesh, "Dirt")
+		stats["shoulder_colliders"] += 1
 	stats["physical_corridors"] += 1
 	stats["road_vertices"] += pavement_verts.size() + shoulder_verts.size()
 	stats["road_triangles"] += (pavement_verts.size() + shoulder_verts.size()) / 3
@@ -468,15 +487,25 @@ func _build_junction_pads(parent: Node3D) -> void:
 		var skirt_norms := PackedVector3Array()
 		var skirt_uvs := PackedVector2Array()
 		_append_pad_skirt(hull, skirt_verts, skirt_norms, skirt_uvs)
+		var pad_arrays := _new_arrays(vertices, normals, uvs, PackedInt32Array())
 		var mesh := ArrayMesh.new()
-		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(vertices, normals, uvs, PackedInt32Array()))
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, pad_arrays)
 		mesh.surface_set_material(0, materials[group_surfaces[junction]])
 		var surf_count := 1
+		var skirt_arrays: Array = []
 		if not skirt_verts.is_empty():
-			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(skirt_verts, skirt_norms, skirt_uvs, PackedInt32Array()))
+			skirt_arrays = _new_arrays(skirt_verts, skirt_norms, skirt_uvs, PackedInt32Array())
+			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, skirt_arrays)
 			mesh.surface_set_material(1, materials["shoulder"])
 			surf_count = 2
-		_attach_mesh(parent, "Junction_" + junction, mesh, surf_count)
+		var pad_col_mesh := ArrayMesh.new()
+		pad_col_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, pad_arrays)
+		_attach_mesh(parent, "Junction_" + junction, mesh, surf_count, _surface_group_for(group_surfaces[junction]), pad_col_mesh)
+		if make_colliders and not skirt_arrays.is_empty():
+			var skirt_col_mesh := ArrayMesh.new()
+			skirt_col_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, skirt_arrays)
+			_attach_collider(parent, "Junction_" + junction + "_Shoulder_Collision", skirt_col_mesh, "Dirt")
+			stats["shoulder_colliders"] += 1
 		stats["junction_pads"] += 1
 		stats["turn_paths_covered"] += int(turn_counts[junction])
 		stats["junction_vertices"] += vertices.size() + skirt_verts.size()

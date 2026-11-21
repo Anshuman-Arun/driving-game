@@ -35,7 +35,8 @@ func _execute() -> void:
 		_fail("No junction pads generated.")
 		return
 	if world.report["static_colliders"] != (world.report["terrain_chunks"] +
-		world.report["physical_corridors"] + world.report["junction_pads"]):
+		world.report["physical_corridors"] + world.report["junction_pads"] +
+		int(world.report.get("shoulder_colliders", 0))):
 		_fail("Each generated mesh must have an independent collider.")
 		return
 	for ix in [0, 32, 64, 200, 500]:
