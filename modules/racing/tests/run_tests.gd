@@ -19,6 +19,12 @@ func _check(condition: bool, message: String) -> void:
 		printerr("FAIL: " + message)
 
 func _initialize() -> void:
+	# A SceneTree script initializes before its root Window joins the active tree.
+	# Defer tests so Node3D.global_transform is valid for the kinematic demo cars.
+	call_deferred("_run_tests")
+
+func _run_tests() -> void:
+	_check(root.is_inside_tree(), "headless test root is inside the scene tree")
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://fixtures/road_graph_v1.json"))
 	if not (parsed is Dictionary):
 		printerr("FAIL: missing road graph fixture")
@@ -333,8 +339,10 @@ func _test_ai_controls() -> void:
 	for i in range(5, 125):
 		most_curved = minf(most_curved, ai._corner_speed(float(i) * 6.0))
 	_check(most_curved < straight_speed, "curvature reduces safe corner speed")
-	var invalid_adapter = Adapter.apply(Node.new(), {"throttle": 1.0})
+	var unsupported_vehicle := Node.new()
+	var invalid_adapter = Adapter.apply(unsupported_vehicle, {"throttle": 1.0})
 	_check(not invalid_adapter, "adapter rejects vehicles without input API")
+	unsupported_vehicle.free()
 
 func _test_ai_closed_course() -> void:
 	# Actual Godot KinematicCar and RacerAI code; deterministic visual competence still
