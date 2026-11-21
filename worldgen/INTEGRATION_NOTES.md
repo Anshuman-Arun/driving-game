@@ -26,3 +26,9 @@
 The generated 16 undirected physical corridors have **11,976.963 m** total centerline; do **not** double-count reverse lanes or add turn connector lengths. There are **104 directed lanes** (32 traveling + 72 connectors) and **144 directed links**, with strongly connected lane topology, no endpoint gap, and local centerline curvature radius ≥21.89 m for travel lanes. Maximum measured travel-lane grade is **13.61%** on mountain/gravel features (short sections; use advisory speed signs). Quantized terrain height spans **5–240.449 m**. The exact checks live in `worldgen/tests/test_world.js`.
 
 **Not verified:** collision/meshing, Terrain3D native import, user driving smoothness, actual playable road grading after Godot conversion, GPU performance, controller tests, watermesh fidelity. Those require a separate Godot integration and manual playtest.
+
+## Junction curve correction and collider pads
+
+An audit found sharp cubic turning maneuvers with sub-meter effective radius. The exporter now uses a curvature-constrained forward-only **9 m Dubins path** when a compact cubic turn would be unsafe; all 72 connector lanes pass a **minimum 7 m sampled turning radius** validation. Directed endpoints and headings remain continuous. This change requires **no v1 interface schema modification**.
+
+**Integrator requirement:** turn centerlines can travel approximately **21 m away from physical corridor centerlines**. Reconstruct/widen intersection surface pads and collision around actual turn paths; a 6.8 m corridor mesh alone will not support these trajectories. Check junction collider coverage, curbs, NPC tracking and elevation in Godot. Native Terrain3D / Road Generator imports and driving tests remain unverified in this independent PR.

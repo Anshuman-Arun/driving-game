@@ -17,6 +17,7 @@ function run(){
  for(let i=0;i<a.terrain.values.length;i++)assert.equal(raw.readUInt16LE(i*2),a.terrain.values[i],'terrain sample '+i);
  for(let name of ['topographic_map.svg','road_network.svg'])assert.match(load('worldgen/previews/'+name).toString(),/<svg/,'SVG missing');
  assert.equal(a.metadata.seed,SEED);
+ assert.ok(result.stats.min_turn_radius_m>=7,'sampled connector turning radius');
  console.log(JSON.stringify({passed:true,tests:['schema and IDs','bounds','point spacing','grades','minimum curve radius','lane end joins','turn headings','directed strongly connected graph','touring loop and alternative','lane/terrain separation','5 regions, landmarks','8-12km unique length','heightfield dimensions','deterministic regeneration','committed JSON and R16 bytes','SVG previews'],stats:result.stats},null,2));
 }
 if(require.main===module)run();

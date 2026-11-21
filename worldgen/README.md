@@ -9,13 +9,14 @@ Requires Node.js 20 or newer (tested with Node.js 22.16.0). From repository root
 ```sh
 node worldgen/generate.js
 node worldgen/tests/test_world.js
+node worldgen/tests/test_turns.js
 ```
 
 The first command **overwrites only** the five generated files listed below (all inside the World Agent's exclusive scope). The second command independently builds the same world twice and asserts graph/terrain determinism, exact checked-in file match, topological and geometric validity. The generator itself refuses to export invalid geometry. It is safe to rerun on any operating system with modern Node.
 
 ## Generated files
 
-- `data/world/road_graph_v1.json`: strict INTERFACES_V1 directed lane graph with 16 physical road corridors, two driving directions each, 11 explicit junctions and 72 low-speed turning connectors. Each connector is itself a valid lane. Nominal road width is 6.8 m, two 3.4 m lanes.
+- `data/world/road_graph_v1.json`: strict INTERFACES_V1 directed lane graph with 16 physical road corridors, two driving directions each, 11 explicit junctions and 72 low-speed turning connectors. Tight cubic turns are replaced by forward-only 9 m-radius Dubins maneuvers; the validator requires a minimum sampled 7 m turning radius. Each connector is itself a valid lane. Nominal road width is 6.8 m, two 3.4 m lanes.
 - `data/world/world_metadata_v1.json`: five region definitions, landmark positions, generation seed, heightmap format, loop routes, exact measured centerline length and preview metadata.
 - `data/world/terrain_height_r16le.bin`: 501×501 **unsigned little-endian 16-bit** raster, elevation in **centimeters**, 4 m XY spacing, rows southward (+Z), columns eastward (+X). Data source is 0.01 m quantized; road lane heights bilinearly sample that exact raster.
 - `worldgen/previews/topographic_map.svg`: generated elevation color map and road centerlines.
