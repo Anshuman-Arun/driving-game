@@ -322,7 +322,10 @@ func _set_loop(player: AudioStreamPlayer, name: String) -> void:
 	player.stop()
 	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	wav.loop_begin = 0
-	wav.loop_end = int(wav.data.size() / 2) # mono signed PCM16 samples
+	# Imported WAVs may be Quite OK Audio rather than raw PCM16. Data size
+	# then measures compressed bytes, NOT sample frames.
+	var sample_frames := int(round(wav.get_length() * float(wav.mix_rate)))
+	wav.loop_end = maxi(1, sample_frames - 1) # last valid decoded frame
 	player.stream = wav
 	player.play()
 
