@@ -6,6 +6,7 @@ root="$(cd "${2:?feature checkout required}" && pwd)"
 out="${3:?output directory required}"
 ci_dir="$(cd "${4:?CI scripts directory required}" && pwd)"
 world_dir="${5:-}"
+traffic_module_dir="${6:-}"
 mkdir -p "$out"
 out="$(cd "$out" && pwd)"
 summary="$out/SUMMARY.md"
@@ -21,6 +22,10 @@ esac
   if [[ -n "$world_dir" ]]; then
     world_dir="$(cd "$world_dir" && pwd)"
     printf 'Authoritative World SHA: `%s`\n\n' "$(git -C "$world_dir" rev-parse HEAD)"
+  fi
+  if [[ -n "$traffic_module_dir" ]]; then
+    traffic_module_dir="$(cd "$traffic_module_dir" && pwd)"
+    printf 'Traffic module SHA: `%s`\n\n' "$(git -C "$traffic_module_dir" rev-parse HEAD)"
   fi
   printf '| Gate | Status |\n| --- | --- |\n'
 } > "$summary"
@@ -121,23 +126,34 @@ case "$track" in
     fi
     ;;
   traffic-content)
-    # The traffic content branch was initially an empty fork of main.
-    # A successful no-op must never count as a validated traffic dataset.
+    # Branches may exist before their actual content is written. Never pass a no-op.
     if [[ ! -d "$root/content/traffic" ]]; then
-      printf '| content/traffic implementation | NOT EXECUTED (no content yet) |\n' >> "$summary"
-      printf '\n**NOT EXECUTED:** no testable traffic content was found at this SHA. This is not a pass.\n' >> "$summary"
+      printf '| traffic content | NOT EXECUTED (no content yet) |\n' >> "$summary"
+      printf '\n**NOT EXECUTED:** no traffic-content source at this SHA, not a pass.\n' >> "$summary"
       cat "$summary"
       exit 0
     fi
-    # Require a documented native test entrypoint, rather than treating zero discovered tests as pass.
-    if [[ -f "$root/content/traffic/tests/test_content.mjs" ]]; then
-      gate traffic-content-node node content/traffic/tests/test_content.mjs
-    elif [[ -f "$root/content/traffic/tests/test_content.py" ]]; then
-      gate traffic-content-python python content/traffic/tests/test_content.py
-    else
-      echo "::error::Traffic content exists without a recognized runnable content test" >&2
-      printf '| traffic content test entrypoint | **FAIL (unconfigured upstream test)** |\n' >> "$summary"
-      failures=$((failures+1))
+    if required_file content/traffic/tests/validate_content.js && required_file content/traffic/tests/run_world_scenarios.gd; then
+      if [[ -z "$world_dir" || -z "$traffic_module_dir" ]]; then
+        printf '| required upstream World/Traffic sources | **FAIL (missing)** |\n' >> "$summary"
+        failures=$((failures+1))
+      elif [[ ! -f "$world_dir/data/world/road_graph_v1.json" || ! -f "$traffic_module_dir/modules/traffic/src/traffic_simulation.gd" ]]; then
+        printf '| required source files | **FAIL (missing)** |\n' >> "$summary"
+        failures=$((failures+1))
+      else
+        gate traffic-content-node node content/traffic/tests/validate_content.js "$world_dir/data/world/road_graph_v1.json"
+        # GDScript native tests import both otherwise unmerged source branches
+        # plus the immutable World graph in a new throwaway project.
+        integrated="$out/traffic-native-project"
+        mkdir -p "$integrated/content" "$integrated/modules" "$integrated/data"
+        cp -a "$root/content/traffic" "$integrated/content/traffic"
+        cp -a "$traffic_module_dir/modules/traffic" "$integrated/modules/traffic"
+        cp -a "$world_dir/data/world" "$integrated/data/world"
+        printf 'config_version=5\n\n[application]\nconfig/name="Aster Valley Traffic Content CI"\n' > "$integrated/project.godot"
+        gate godot-import timeout 600 godot --headless --path "$integrated" --editor --quit
+        gate godot-traffic-smoke timeout 600 godot --headless --path "$integrated" --script res://content/traffic/tests/run_world_scenarios.gd -- --smoke
+        gate godot-traffic-full timeout 900 godot --headless --path "$integrated" --script res://content/traffic/tests/run_world_scenarios.gd -- --full
+      fi
     fi
     ;;
 esac
