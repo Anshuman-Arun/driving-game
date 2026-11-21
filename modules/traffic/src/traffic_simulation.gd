@@ -45,6 +45,7 @@ var reservations: Dictionary = {}
 var movement_junction: Dictionary = {}
 var movement_conflicts: Dictionary = {}
 var movement_release: Dictionary = {}
+var inbound_stop_offsets: Dictionary = {}
 var reused_agents := 0
 var total_spawned := 0
 var total_despawned := 0
@@ -59,6 +60,7 @@ func load_road_graph(data: Dictionary) -> bool:
 	movement_junction.clear()
 	movement_conflicts.clear()
 	movement_release.clear()
+	inbound_stop_offsets.clear()
 	graph_valid = graph.load_road_graph(data)
 	if not graph_valid:
 		return false
@@ -160,6 +162,34 @@ func _index_junction_movements(jid: String, movements: Array[String]) -> void:
 		# origin and may extend onto its outgoing travel lane. Never clamp to
 		# a short connector's length: that previously stranded reservations.
 		movement_release[movement] = maxf(3.0, float(latest[movement]) + CONFLICT_EXIT_GAP_M)
+	# Some tight real turns loop behind the usual stop line. Measure a safe
+	# stop position along EACH inbound approach against EVERY authored turn.
+	# A shared 5m stop line would place waiting cars in those turning paths.
+	for incoming_id in junctions[jid]["inbound"]:
+		var lane_id: String = str(incoming_id)
+		var length_m: float = graph.lane_length(lane_id)
+		var last_overlap := 0.0
+		for metre in range(36):
+			if float(metre) >= length_m - 1.0:
+				break
+			var position: Vector3 = graph.get_pose(lane_id, length_m - float(metre))["position"]
+			for movement in movements:
+				if _near_movement(position, movement):
+					last_overlap = float(metre)
+					break
+		inbound_stop_offsets[lane_id] = minf(length_m - 0.5,
+			maxf(CONTROLLED_STOP_OFFSET_M, last_overlap + 2.0))
+
+
+func _near_movement(position: Vector3, movement: String) -> bool:
+	var points: Array = graph.lanes[movement]["points"]
+	for index in range(points.size() - 1):
+		var start: Vector3 = points[index]
+		var edge: Vector3 = points[index + 1] - start
+		var ratio: float = clampf((position - start).dot(edge) / edge.length_squared(), 0.0, 1.0)
+		if position.distance_to(start + edge * ratio) < CONFLICT_PROXIMITY_M:
+			return true
+	return false
 
 
 func _reservation_exit(a: Dictionary, jid: String, j: Dictionary) -> Dictionary:
@@ -173,8 +203,8 @@ func _reservation_exit(a: Dictionary, jid: String, j: Dictionary) -> Dictionary:
 			var successors: Array = graph.lanes[movement]["next_lane_ids"]
 			if successors.size() == 1:
 				release_lane = str(successors[0])
-				release_s = minf(graph.lane_length(release_lane) - 0.01,
-					maxf(0.0, release_s - length_m))
+				release_s = clampf(release_s - length_m, 0.0,
+					maxf(0.0, graph.lane_length(release_lane) - 0.01))
 			else:
 				release_s = maxf(0.0, length_m - 0.01)
 	return {"lane": release_lane, "s": release_s}
@@ -235,8 +265,7 @@ func spawn_agent(lane_id: String, s: float, initial_speed_mps: float = 0.0, spee
 	if movement_junction.has(lane_id) and s < minf(graph.lane_length(lane_id),
 			float(movement_release[lane_id])) + 0.5:
 		return -1
-	if inbound_junction.has(lane_id) and movement_junction.has(str(
-			graph.lanes[lane_id]["next_lane_ids"][0])) and graph.lane_length(lane_id) - s < CONTROLLED_STOP_OFFSET_M + 1.0:
+	if inbound_stop_offsets.has(lane_id) and graph.lane_length(lane_id) - s < float(inbound_stop_offsets[lane_id]) + 1.0:
 		return -1
 	for id in agents:
 		if pos.distance_to(agents[id]["position"]) < SPAWN_GAP_M:
@@ -390,8 +419,9 @@ func _calculate_command(a: Dictionary, dt: float) -> Dictionary:
 		desired = minf(desired, sqrt(2.0 * BRAKE_MPS2 * maxf(obstacle_gap - MIN_GAP_M, 0.0)))
 		mode = "BRAKE_FOR_OBSTACLE"
 	var junction_id: String = inbound_junction.get(lid, "")
-	var stop_offset: float = CONTROLLED_STOP_OFFSET_M if movement_junction.get(a["next_lane"], "") == junction_id and junction_id != "" else STOP_OFFSET_M
-	if junction_id != "" and a["next_lane"] != "" and remaining < APPROACH_M and a["reserved_junction"] == "":
+	var stop_offset: float = float(inbound_stop_offsets.get(lid, STOP_OFFSET_M))
+	var approach_distance: float = maxf(APPROACH_M, stop_offset + 42.0) if inbound_stop_offsets.has(lid) else APPROACH_M
+	if junction_id != "" and a["next_lane"] != "" and remaining < approach_distance and a["reserved_junction"] == "":
 		var j: Dictionary = junctions[junction_id]
 		var blocked := _junction_blocked(a, junction_id, j)
 		if blocked:
@@ -442,7 +472,7 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 			return true
 	if mode == "stop" and not a["stop_done"]:
 		# Stop signs require full stop and a finite dwell, no instantaneous rolling stop.
-		var offset: float = CONTROLLED_STOP_OFFSET_M if movement_junction.get(movement, "") == junction_id else STOP_OFFSET_M
+		var offset: float = float(inbound_stop_offsets.get(a["lane_id"], STOP_OFFSET_M))
 		if graph.lane_length(a["lane_id"]) - a["s"] < offset + 0.9 and a["speed_mps"] < 0.45:
 			a["wait_s"] += FIXED_STEP
 			if a["wait_s"] >= j["stop_s"]:
