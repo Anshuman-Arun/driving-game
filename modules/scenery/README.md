@@ -27,7 +27,7 @@ godot --headless --path modules/scenery --script res://tests/smoke.gd
 godot --path modules/scenery
 ~~~
 
-The staging utility reads exact Git objects without changing remote branches. Generated staging stays in gitignored .world_source/, .art_source/ and .models/ directories under the module. The source-only validation tests 16 physical corridors, 72 turns, 11 junctions, 102 real race gates/grids, terrain height, slope and architecture footprint relief. Generate and model --check commands require byte-for-byte identical output.
+The staging utility reads exact Git objects without changing remote branches. Generated staging stays in gitignored .world_source/, staged_art/ and staged_models/ directories under the module. The source-only validation tests 16 physical corridors, 72 turns, 11 junctions, 102 real race gates/grids, terrain height, slope and architecture footprint relief. Generate and model --check commands require byte-for-byte identical output.
 
 ## Required root integration call
 
