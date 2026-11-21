@@ -7,17 +7,17 @@ func _initialize() -> void:
 func _run() -> void:
 	var host := Node3D.new()
 	get_root().add_child(host)
-	var scenery = load("res://src/scenery_runtime.gd").new()
+	var scenery: Node3D = load("res://src/scenery_runtime.gd").new()
 	host.add_child(scenery)
-	scenery.build_on_ready = false
-	scenery.quality = 2
+	scenery.set("build_on_ready", false)
+	scenery.set("quality", 2)
 	var content: String = ProjectSettings.globalize_path("res://").path_join("../../content/scenery").simplify_path()
 	var world: String = ProjectSettings.globalize_path("res://.world_source")
-	if not scenery.build_scenery(null, content, world):
-		push_error("[ScenerySmoke] Build failed: " + scenery.error_message)
+	if not bool(scenery.call("build_scenery", null, content, world)):
+		push_error("[ScenerySmoke] Build failed: " + str(scenery.get("error_message")))
 		quit(1)
 		return
-	var report: Dictionary = scenery.report
+	var report: Dictionary = scenery.get("report")
 	var errors: Array[String] = []
 	if int(report.get("regions", 0)) != 5:
 		errors.append("Expected five region packs")
