@@ -290,7 +290,7 @@ func _advance_racer(id: String, delta: float, elapsed_before: float) -> void:
 				_invalidate(id, "missed_checkpoint")
 			return
 			break
-	var finish_threshold := float(lap) * route.length_m - FINISH_TOLERANCE_M
+	var finish_threshold: float = float(lap) * float(route.length_m) - FINISH_TOLERANCE_M
 	if progress >= finish_threshold:
 		if index != checkpoints.size():
 			_invalidate(id, "missed_checkpoint_before_finish")
