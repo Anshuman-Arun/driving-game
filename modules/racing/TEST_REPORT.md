@@ -1,46 +1,39 @@
 # Racing systems test report — 2026-11-21
 
-## Checks actually executed
+## Executed Godot 4.7.2 checks — PASS
 
-| Evidence gate | Method | Observed result |
+This report supersedes the pre-CI note that the Godot executable was unavailable. The official engine **4.7.2.stable.official.ed1daf0bf** ran on the GitHub-hosted Ubuntu 24.04 validation runner for branch `feat/racing-systems`.
+
+| Gate | Actual execution | Observed result |
 |---|---|---|
-| Branch publishing | GitHub branch/ref/write/commit operations | Created feat/racing-systems from main; changes confined to modules/racing/ |
-| Fixture parsing | Loaded committed JSON content from GitHub into an independent JavaScript validator | PASS: 2 roads, 8 directed lanes, 2 events |
-| Geometry, gate order and closure | Independently projected JSON checkpoint centers onto the actual committed polyline segments | PASS: town circuit ~845 m, gate arclengths ~143/314/486/737 m, closed endpoint gap 0 m; ridge sprint ~685 m, gate arclengths ~127/286/455/624 m |
-| Terrain grade | Measured absolute rise/run for all road fixture segments | PASS: max measured grade 7.84% on ridge_b |
-| AI numerical pilot | Independent JavaScript reproduction of the steering, curvature-speed, throttle/brake and demo bicycle formulas (dt=0.05 s) on the committed town fixture | PASS **for the independent model only**: 1 closed lap, all 4 gate regions, ~59.7 simulated seconds, ~1.98 m maximum horizontal road-centerline error, no recovery |
-| Source builtin argument inspection | Inspected all 8 existing Godot scripts for minf/maxf/clampf/atan2/absf/roundf/is_equal_approx invocation arity after correcting an earlier bug | PASS: no wrong-arity calls found |
+| Editor import and GDScript parser | `godot --headless --path modules/racing --editor --quit` (equivalent absolute path in runner) | **PASS** — no parser/import errors |
+| Headless GDScript suite | `godot --headless --path modules/racing --script res://tests/run_tests.gd` | **PASS** — `RACING TESTS PASSED: 156 checks`; no engine error lines |
+| AI + demo kinematic car closed-course simulation | Same Godot GDScript suite, with actual `Node3D` cars attached to active `SceneTree` | **PASS** — completed 1 lap, 4 ordered checkpoints, **0 resets**, **1.98 m** maximum horizontal centerline error, **14.41 m/s** final speed |
+| Workflow racing job | GitHub Actions run `44947002599`, job `136980874355` | **success** against commit `c49e651b15c9ee1dd56e2255e3408b1166976c5b` |
 
-These are **data and mathematical checks**, not actual execution of GDScript or the Godot scene. They are not evidence that the headless suite or interactive demo works.
+- Job evidence: https://github.com/Anshuman-Arun/driving-game/actions/runs/44947002599/job/136980874355
+- Original failed job: `136976544186` (two parser errors).
+- The CI script uses a failure gate on log `ERROR:` lines as well as process status. The final successful test job had zero GDScript errors, zero runtime `ERROR:` lines and zero test failures.
+- **Non-blocking infrastructure caveat:** GitHub Actions rejected the optional artifact upload due to storage quota. The Actions job was successful and the full test output remains available in the job log.
 
-## Authored but NOT executed: Godot headless/visual checks
+## Actual fixes and regression coverage
 
-~~~bash
-godot --headless --path modules/racing --editor --quit
-godot --headless --path modules/racing --script res://tests/run_tests.gd
-godot --path modules/racing
-~~~
+1. `race_engine.gd`: explicit `float` declaration for dynamically accessed route finish distance; valid integral JSON number acceptance for `laps`, rejecting fractional/invalid values.
+2. `race_route.gd`: explicit `Vector3` typing at circuit endpoint heading computation.
+3. `event_catalog.gd`: parse malformed event JSON through `JSON.new().parse()` and report a normal validation error, rather than having `JSON.parse_string()` emit an engine error for expected negative tests.
+4. `tests/run_tests.gd`: corrected grid/countdown elapsed-time arithmetic, validated fractional lap rejection, deferred tests until the SceneTree root is active, attached test `Node3D` vehicles, and freed test nodes.
 
-**Blocker:** The execution container has no Godot executable; the local git clone also cannot access github.com via DNS/network. An attempt to locate/download the official Godot 4.7.2 Linux build yielded no runnable binary. As a result, there are **zero claimed passing GDScript tests, zero claimed scene imports, and zero claimed Godot screenshots/playtests**. No Test Report text should be interpreted as a pass for these commands.
+The suite exercises schema/graph validation, invalid events, sprint and circuit progression, timer and pause/restart/quit transitions, standings, ordered checkpoints, lap resets, reverse movement, teleport detection, shortcuts, missed/out-of-order gates, collisions and airborne/out-of-world recovery, coarse-tick crossing of multiple gates, AI steering, obstacle speed reduction, the adapter, and a full closed-course AI run in Godot.
 
-The source of tests/run_tests.gd contains executable Godot tests intended to check:
-- schema-v1 road IDs, lane/point validation and event rejection;
-- GRID → COUNTDOWN → RACING timer splitting, pause/resume, restart and abort/return;
-- complete sprint and multi-racer finish order, standings and results;
-- circuit checkpoint order and three completed laps;
-- reversing without progress, sudden teleports, cuts and missed/out-of-order gates;
-- reset replay in a later lap, collision-related reset and airborne invalidation;
-- a large physics step that crosses *two legitimate checkpoints in order*;
-- steering sign on opposite sides of a road, curve speed reduction, obstacle braking and adapter behavior;
-- the actual GDScript AI plus the demo kinematic vehicle completing one closed loop within a bounded deterministic simulation.
+## Earlier independent checks (not substituted for engine execution)
 
-The suite has not been run in Godot. If an engine parser/runtime failure appears, fix it before treating this branch as a completed, verified racing implementation.
+A separate static fixture/geometry analysis found two roads, eight directed lanes and two fixture events; ~845 m town circuit, ~685 m ridge sprint, non-overlapping route checkpoints and maximum ridge grade 7.84%. A JavaScript pilot had predicted one lap with ~1.98 m maximum route error. That pilot remains independent evidence only; the actual Godot GDScript AI simulation has now independently passed as reported above.
 
-## Still unverified or outside isolated scope
+## Still unverified / out of isolated module scope
 
-- Godot 4.7.2 GDScript import/parser and runtime tests, and whether the standalone 3D demo renders/plays as intended.
-- Integration with the Core Agent's actual physics, World Agent's canonical road graph, Traffic Agent's sensing/traffic, and real map event data.
-- Production collisions, vehicle suspension/grip, keyboard/gamepad handling, Windows export, framerate and visual driving competence.
-- The intended 1.5 km town circuit and 2.3 km mountain climb: local fixtures are deliberately smaller test courses.
+- **Manual interactive demo playtest:** No human inspected the rendered scene, driving visuals or AI behavior on a real viewport.
+- **Game-wide integration:** Not yet connected to the Core Agent's actual physics/vehicle controller, canonical World Agent map, Traffic Agent data or production race content.
+- **Hardware and Windows verification:** No measured FPS/performance, physical driving/grip/suspension/collisions, gamepad/keyboard input validation, packaged Windows build or export.
+- Temporary town and ridge fixtures are not production-length events and use module-local lane IDs.
 
-**Next execution gate:** Run both Godot headless commands above, capture exit status/output, correct any parser/runtime errors and update this report under modules/racing/. Then play the demo and integrate only after the other branches have been reviewed/merged. Do not equate the independent JavaScript pilot with a Godot pass.
+This PR remains draft/unmerged. The validated scope is standalone **headless Godot 4.7.2 racing module execution**, not full-game acceptance.
