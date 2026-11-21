@@ -17,7 +17,7 @@ func set_player(uv: Vector2, heading: float) -> void:
 	heading_rad = heading
 	queue_redraw()
 
-func _line(points: Array[Vector2], color: Color, thickness: float) -> void:
+func _line(points: Array, color: Color, thickness: float) -> void:
 	var scaled := PackedVector2Array()
 	for p in points:
 		scaled.append(Vector2(p.x * size.x, p.y * size.y))

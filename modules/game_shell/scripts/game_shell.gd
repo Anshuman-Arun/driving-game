@@ -7,8 +7,8 @@ const ShellTheme = preload("shell_theme.gd")
 const Preview = preload("car_preview.gd")
 const Minimap = preload("minimap.gd")
 
-var save: RefCounted
-var game: RefCounted
+var save: Variant
+var game: Variant
 var screen: String = "MENU"  # MENU, FREE_ROAM, GARAGE, EVENTS, RACE, RESULTS, PAUSE, SETTINGS
 var return_screen: String = "MENU"
 var paused_from: String = "FREE_ROAM"
@@ -23,7 +23,7 @@ var race_lap_label: Label
 var race_position_label: Label
 var race_time_label: Label
 var countdown_label: Label
-var map_view: Control
+var map_view: Variant
 var layout_is_narrow: bool = false
 
 func _ready() -> void:
@@ -295,7 +295,8 @@ func _focus_initial() -> void:
 		first_focus.grab_focus()
 
 func _menu(root: VBoxContainer) -> void:
-	var body := _columns(root)
+	var content := _scroll(root)
+	var body := _columns(content)
 	var left := _surface(body, Vector2(290, 450))
 	_label(left, "THE ROAD IS YOURS", 14, ShellTheme.TEAL)
 	_heading(left, "ASTER\nVALLEY", "A world to wander. A line to chase.")
@@ -341,7 +342,8 @@ func _hud_metrics(parent: Node) -> void:
 	notification_label = _label(panel, game.notification, 14, ShellTheme.MUTED)
 
 func _free_roam(root: VBoxContainer) -> void:
-	var top := _columns(root)
+	var content := _scroll(root)
+	var top := _columns(content)
 	var left := _surface(top, Vector2(300, 390))
 	_label(left, "EXPLORE  /  ALDER TOWN", 14, ShellTheme.ACCENT)
 	_label(left, "YOUR WORLD,\nYOUR PACE.", 31)
@@ -358,7 +360,7 @@ func _free_roam(root: VBoxContainer) -> void:
 	preview.set_car(save.selected_car())
 	var widgets := HBoxContainer.new()
 	widgets.add_theme_constant_override("separation", 12)
-	root.add_child(widgets)
+	content.add_child(widgets)
 	_hud_metrics(widgets)
 	_mini_panel(widgets, large_map)
 	_footer(root, "W / RT ACCELERATE    S / LT BRAKE    A-D / LEFT STICK STEER    E / A DISCOVER    G / X GARAGE    M / VIEW MAP")
@@ -405,7 +407,8 @@ func _stat(parent: Node, label: String, value: int) -> void:
 
 func _garage(root: VBoxContainer) -> void:
 	_heading(root, "THE GARAGE", "Three fictional sports cars. Progression is saved locally.")
-	var body := _columns(root)
+	var content := _scroll(root)
+	var body := _columns(content)
 	var left := _surface(body, Vector2(292, 350))
 	_label(left, "VEHICLE COLLECTION", 14, ShellTheme.ACCENT)
 	for spec in Catalog.CARS:
@@ -467,7 +470,8 @@ func _start_event(id: String) -> void:
 func _race(root: VBoxContainer) -> void:
 	var event: Dictionary = game.current_event()
 	_heading(root, str(event.get("name", "EVENT")), str(event.get("kind", "RACE")) + "   /   " + str(event.get("region", "ASTER VALLEY")) + "   /   DEMO SIMULATION")
-	var columns := _columns(root)
+	var content := _scroll(root)
+	var columns := _columns(content)
 	var left := _surface(columns, Vector2(280, 360))
 	_label(left, "POSITION", 15, ShellTheme.MUTED)
 	race_position_label = _label(left, "4 / 4", 49, ShellTheme.ACCENT)

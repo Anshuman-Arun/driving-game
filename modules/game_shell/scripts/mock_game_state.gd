@@ -7,7 +7,7 @@ signal race_finished(results: Dictionary)
 const Catalog = preload("car_catalog.gd")
 const SaveService = preload("save_service.gd")
 
-var save: RefCounted
+var save: Variant
 var speed_kph: float = 0.0
 var gear: String = "1"
 var travel_m: float = 0.0
@@ -23,7 +23,7 @@ var result: Dictionary = {}
 var notification: String = "CRUISE THE VALLEY  ·  PRESS E TO DISCOVER A RACE"
 var notification_s: float = 7.0
 
-func _init(save_service: RefCounted = null) -> void:
+func _init(save_service: Variant = null) -> void:
 	save = save_service if save_service != null else SaveService.new()
 	if save_service == null:
 		save.load()

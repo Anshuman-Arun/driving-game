@@ -171,9 +171,11 @@ func load() -> Dictionary:
 		if loaded is Dictionary:
 			data = loaded
 			var recovered := candidate != path
-			last_status = "recovered_temp" if candidate.ends_with(".tmp") else ("recovered_backup" if recovered else "loaded")
-			## Promote migration or recovery to the canonical path without destroying the backup.
-			if recovered or FileAccess.get_file_as_string(candidate).contains('"schema_version": 1'):
+			var original: Variant = JSON.parse_string(FileAccess.get_file_as_string(candidate))
+			var migrated := original is Dictionary and int(original.get("schema_version", 2)) == 1
+			last_status = "recovered_temp" if candidate.ends_with(".tmp") else ("recovered_backup" if recovered else ("migrated_v1" if migrated else "loaded"))
+			## Promote migration or recovery to canonical format, with validated backup.
+			if recovered or migrated:
 				_commit(false)
 			return data.duplicate(true)
 	var any_file := FileAccess.file_exists(path) or FileAccess.file_exists(path + ".bak") or FileAccess.file_exists(path + ".tmp")
@@ -215,6 +217,14 @@ func _commit(rotate_backup: bool) -> bool:
 			last_error = "Could not preserve last valid save."
 			return false
 		backup_valid = true
+	## Corrupt originals are never silently overwritten even on POSIX, where rename
+	## can atomically replace a destination; preserve forensic recovery evidence.
+	if source_exists and not primary_valid:
+		var quarantine := absolute + ".corrupt." + str(Time.get_unix_time_from_system())
+		if DirAccess.rename_absolute(absolute, quarantine) != OK:
+			last_error = "Could not quarantine corrupt primary."
+			return false
+		source_exists = false
 	error = DirAccess.rename_absolute(ProjectSettings.globalize_path(temporary), absolute)
 	if error != OK and source_exists:
 		if primary_valid and not backup_valid:
