@@ -27,14 +27,14 @@ func _ready() -> void:
 	camera.look_at(Vector3(-620.0, 45.0, 575.0))
 	scenery = load("res://src/scenery_runtime.gd").new()
 	scenery.name = "RuntimeScenery"
-	scenery.build_on_ready = false
-	scenery.quality = 2
+	scenery.set("build_on_ready", false)
+	scenery.set("quality", 2)
 	add_child(scenery)
 	var content: String = ProjectSettings.globalize_path("res://").path_join("../../content/scenery").simplify_path()
-	if not scenery.build_scenery(null, content, staged):
-		push_error(scenery.error_message)
+	if not bool(scenery.call("build_scenery", null, content, staged)):
+		push_error(str(scenery.get("error_message")))
 	else:
-		print("[SceneryInspector] Move WASD, Q/E down/up, Shift sprint, drag right mouse to look. ", JSON.stringify(scenery.report))
+		print("[SceneryInspector] Move WASD, Q/E down/up, Shift sprint, drag right mouse to look. ", JSON.stringify(scenery.get("report")))
 	_setup_overlay()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
