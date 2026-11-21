@@ -15,8 +15,9 @@ function run(){
  const raw=load('data/world/terrain_height_r16le.bin');
  assert.equal(raw.length,GRID*GRID*2,'binary size');
  for(let i=0;i<a.terrain.values.length;i++)assert.equal(raw.readUInt16LE(i*2),a.terrain.values[i],'terrain sample '+i);
- for(let name of ['topographic_map.svg','road_network.svg'])assert.match(load('worldgen/previews/'+name).toString(),/<svg/,'SVG missing');
+ for(let name of ['topographic_map.svg','road_network.svg','junction_detail.svg'])assert.match(load('worldgen/previews/'+name).toString(),/<svg/,'SVG missing');
  assert.equal(a.metadata.seed,SEED);
+ assert.equal(load('worldgen/previews/junction_detail.svg').toString(),require('../junction_preview.js').renderJunctionPreview(a),'deterministic junction preview');
  assert.ok(result.stats.min_turn_radius_m>=7,'sampled connector turning radius');
  console.log(JSON.stringify({passed:true,tests:['schema and IDs','bounds','point spacing','grades','minimum curve radius','lane end joins','turn headings','directed strongly connected graph','touring loop and alternative','lane/terrain separation','5 regions, landmarks','8-12km unique length','heightfield dimensions','deterministic regeneration','committed JSON and R16 bytes','SVG previews'],stats:result.stats},null,2));
 }

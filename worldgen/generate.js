@@ -5,6 +5,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const {makeTurn}=require('./turn_geometry');
+const {renderJunctionPreview}=require('./junction_preview');
 const ROOT = path.resolve(__dirname, '..');
 const SEED=20261121,GRID=501,STEP=2000/(GRID-1),BOUNDS={"min_x":-1000,"max_x":1000,"min_z":-1000,"max_z":1000};
 const NODES=[{"id":"alder","x":-620,"z":560,"y":40,"region":"alder_town"},{"id":"cedar","x":-700,"z":-320,"y":92,"region":"cedar_woods"},{"id":"ridge","x":170,"z":-680,"y":162,"region":"north_ridge"},{"id":"valley","x":45,"z":170,"y":68,"region":"green_valley"},{"id":"lake","x":700,"z":450,"y":30,"region":"eastwater_lake"},{"id":"pine","x":-430,"z":-40,"y":82,"region":"cedar_woods"},{"id":"market","x":-340,"z":510,"y":52,"region":"alder_town"},{"id":"overlook","x":610,"z":-260,"y":122,"region":"north_ridge"},{"id":"orchard","x":450,"z":80,"y":60,"region":"green_valley"},{"id":"depot","x":-800,"z":630,"y":38,"region":"alder_town"},{"id":"chapel","x":-750,"z":800,"y":40,"region":"alder_town"}];
@@ -86,7 +87,8 @@ function exportWorld(root=ROOT){
  'data/world/road_graph_v1.json':JSON.stringify(w.graph,null,2)+'\n',
  'data/world/world_metadata_v1.json':JSON.stringify(w.metadata,null,2)+'\n',
  'worldgen/previews/topographic_map.svg':renderSvg(w.lines,w.terrain,w.metadata,true),
- 'worldgen/previews/road_network.svg':renderSvg(w.lines,w.terrain,w.metadata,false)
+ 'worldgen/previews/road_network.svg':renderSvg(w.lines,w.terrain,w.metadata,false),
+ 'worldgen/previews/junction_detail.svg':renderJunctionPreview(w)
  };
  const bytes=Buffer.alloc(w.terrain.values.length*2);
  for(let i=0;i<w.terrain.values.length;i++)bytes.writeUInt16LE(w.terrain.values[i],i*2);

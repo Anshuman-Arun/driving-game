@@ -21,6 +21,7 @@ The first command **overwrites only** the five generated files listed below (all
 - `data/world/terrain_height_r16le.bin`: 501×501 **unsigned little-endian 16-bit** raster, elevation in **centimeters**, 4 m XY spacing, rows southward (+Z), columns eastward (+X). Data source is 0.01 m quantized; road lane heights bilinearly sample that exact raster.
 - `worldgen/previews/topographic_map.svg`: generated elevation color map and road centerlines.
 - `worldgen/previews/road_network.svg`: region/road/landmark printable map.
+- `worldgen/previews/junction_detail.svg`: 11-panel real junction turn-path contact sheet; shows directed paths and entry/exit endpoints.
 
 The generator intentionally does **not** edit the Godot project. Terrain3D import and Road Generator mesh/collision integration remain separate tasks. See `INTEGRATION_NOTES.md`.
 
