@@ -1,0 +1,43 @@
+{
+  "approaches": {
+    "east_near": {
+      "junction_id": "town_cross",
+      "mode": "signal",
+      "group": "EW",
+      "stop_distance_m": 5.0
+    },
+    "west_in": {
+      "junction_id": "town_cross",
+      "mode": "signal",
+      "group": "EW",
+      "stop_distance_m": 5.0
+    },
+    "north_in": {
+      "junction_id": "town_cross",
+      "mode": "signal",
+      "group": "NS",
+      "stop_distance_m": 5.0
+    },
+    "south_in": {
+      "junction_id": "town_cross",
+      "mode": "signal",
+      "group": "NS",
+      "stop_distance_m": 5.0
+    }
+  },
+  "signals": {
+    "town_cross": {
+      "phases": [
+        {
+          "group": "EW",
+          "duration_s": 14.0
+        },
+        {
+          "group": "NS",
+          "duration_s": 14.0
+        }
+      ],
+      "all_red_s": 1.0
+    }
+  }
+}
