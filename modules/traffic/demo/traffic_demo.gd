@@ -56,10 +56,10 @@ func _build_environment() -> void:
 	add_child(sunlight)
 	camera = Camera3D.new()
 	camera.position = Vector3(0, 170, 125)
+	add_child(camera)
 	camera.look_at(Vector3(0, 0, 0), Vector3.UP)
 	camera.fov = 72.0
 	camera.current = true
-	add_child(camera)
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	hud = Label.new()
