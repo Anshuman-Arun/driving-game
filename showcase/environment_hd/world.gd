@@ -179,7 +179,7 @@ func _ribbon(points: PackedVector3Array, width: float, lateral: float, lift: flo
 		var centre := p + side * lateral + Vector3.UP * lift
 		var normal := d.cross(side).normalized()
 		for edge in [-1.0, 1.0]:
-			var vertex := centre + side * edge * width * 0.5
+			var vertex: Vector3 = centre + side * float(edge) * width * 0.5
 			if conform_edges:
 				# Blend the outer verge back onto the unmodified canonical terrain.
 				vertex.y = lerpf(vertex.y, surface_height(vertex.x, vertex.z) + 0.07, 0.90)
@@ -290,6 +290,9 @@ func _flush_batches() -> void:
 			push_warning("Needle Pass missing batched model: " + model)
 			continue
 		var source := packed.instantiate()
+		if source == null:
+			push_warning("Needle Pass cannot instantiate batched model: " + model)
+			continue
 		var meshes: Array = []
 		_collect_model_meshes(source, Transform3D.IDENTITY, meshes)
 		source.free()
