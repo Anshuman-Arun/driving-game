@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1310 970" role="img" aria-label="Aster Valley top-down directed traffic control map">
+<rect width="1310" height="970" fill="#f6f7f5"/>
+<text x="45" y="33" font-family="Arial,sans-serif" font-weight="bold" font-size="21" fill="#202c34">ASTER VALLEY · Traffic controls v1</text>
+<rect x="45" y="45" width="840" height="840" rx="4" fill="#e6efe8" stroke="#b2bfbb"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<polyline points="202,698 125,646 106,627 99,611 103,592 137,533 142,510 133,489 92,442 88,432 88,420 96,405 111,387 169,334" stroke="#587965" stroke-width="2.5" opacity=".7"/>
+<polyline points="168,332 110,386 95,404 87,420 87,432 91,443 132,490 141,511 136,533 101,591 98,611 105,628 124,647 202,699" stroke="#587965" stroke-width="2.5" opacity=".7"/>
+<polyline points="173,328 195,246 205,221 217,202 237,180 264,158 296,137 331,120 364,110 399,104 434,103 463,108 478,115 494,128 534,177" stroke="#a18670" stroke-width="2.5" opacity=".7"/>
+<polyline points="535,176 495,127 479,114 463,107 434,102 399,102 364,108 330,119 296,136 263,157 236,179 216,201 204,221 194,245 171,327" stroke="#a18670" stroke-width="2.5" opacity=".7"/>
+<polyline points="539,181 613,199 651,215 671,232 685,250 694,272 695,289 690,306 677,325 661,342 646,351 626,352 578,338 560,336 546,340 528,355 516,372 507,391 503,408 503,423 515,440 554,475 559,482 561,490 555,500 543,508 487,534" stroke="#a18670" stroke-width="2.5" opacity=".7"/>
+<polyline points="487,535 544,509 556,501 562,491 557,477 516,439 504,423 504,408 509,391 517,373 529,356 547,341 560,337 578,340 626,353 646,352 662,343 678,326 691,306 696,289 695,271 686,250 672,231 652,213 614,197 540,180" stroke="#a18670" stroke-width="2.5" opacity=".7"/>
+<polyline points="486,539 539,598 555,610 579,622 612,634 655,644 756,654" stroke="#72996c" stroke-width="2.5" opacity=".7"/>
+<polyline points="756,653 656,643 613,633 580,621 556,609 540,597 487,538" stroke="#72996c" stroke-width="2.5" opacity=".7"/>
+<polyline points="756,655 681,701 622,728 536,758 473,769 417,768 354,757 301,739 208,701" stroke="#578a9a" stroke-width="2.5" opacity=".7"/>
+<polyline points="207,702 300,740 353,758 417,770 473,771 537,759 623,729 682,702 756,656" stroke="#578a9a" stroke-width="2.5" opacity=".7"/>
+<polyline points="174,333 211,349 235,366 253,392 282,446" stroke="#587965" stroke-width="2.5" opacity=".7"/>
+<polyline points="283,445 254,391 236,365 212,347 174,331" stroke="#587965" stroke-width="2.5" opacity=".7"/>
+<polyline points="286,451 333,500 379,536 409,555 423,559 438,558 481,538" stroke="#72996c" stroke-width="2.5" opacity=".7"/>
+<polyline points="481,537 438,556 423,557 409,553 379,535 333,499 287,450" stroke="#72996c" stroke-width="2.5" opacity=".7"/>
+<polyline points="208,700 263,693 319,681" stroke="#8e8384" stroke-width="2.5" opacity=".7"/>
+<polyline points="319,679 263,691 208,699" stroke="#8e8384" stroke-width="2.5" opacity=".7"/>
+<polyline points="325,678 403,620 482,539" stroke="#72996c" stroke-width="2.5" opacity=".7"/>
+<polyline points="481,538 402,619 325,677" stroke="#72996c" stroke-width="2.5" opacity=".7"/>
+<polyline points="540,178 607,137 628,127 647,121 662,121 678,127 696,138 716,155 735,176 750,198 760,219 764,236 762,256 755,279 722,352" stroke="#a18670" stroke-width="2.5" opacity=".7"/>
+<polyline points="723,353 756,279 763,257 765,236 762,219 752,197 737,176 717,154 697,137 679,126 662,120 647,120 627,125 606,135 539,177" stroke="#a18670" stroke-width="2.5" opacity=".7"/>
+<polyline points="724,357 777,360 791,364 801,369 809,384 813,404 812,427 807,444 798,459 785,471 769,483 753,490 718,496 657,498" stroke="#72996c" stroke-width="2.5" opacity=".7"/>
+<polyline points="657,499 718,497 753,492 769,484 786,472 799,460 808,445 814,425 814,401 810,381 802,368 791,362 777,359 725,355" stroke="#72996c" stroke-width="2.5" opacity=".7"/>
+<polyline points="655,502 704,571 757,652" stroke="#578a9a" stroke-width="2.5" opacity=".7"/>
+<polyline points="758,651 705,570 657,501" stroke="#578a9a" stroke-width="2.5" opacity=".7"/>
+<polyline points="201,700 167,704 131,727" stroke="#8e8384" stroke-width="2.5" opacity=".7"/>
+<polyline points="132,728 167,705 201,701" stroke="#8e8384" stroke-width="2.5" opacity=".7"/>
+<polyline points="127,732 117,753 116,768 125,780 147,799" stroke="#8e8384" stroke-width="2.5" opacity=".7"/>
+<polyline points="148,798 126,779 117,768 118,754 128,733" stroke="#8e8384" stroke-width="2.5" opacity=".7"/>
+<polyline points="153,801 220,793 237,788 247,781 248,772 242,755 207,703" stroke="#8e8384" stroke-width="2.5" opacity=".7"/>
+<polyline points="206,703 241,756 246,769 246,780 237,787 220,792 153,800" stroke="#8e8384" stroke-width="2.5" opacity=".7"/>
+<polyline points="287,446 338,360 395,290 443,246 534,182" stroke="#587965" stroke-width="2.5" opacity=".7"/>
+<polyline points="533,181 442,245 394,289 337,360 286,445" stroke="#587965" stroke-width="2.5" opacity=".7"/>
+<polyline points="202,699 207,702" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="202,699 205,701 208,700" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="202,699 206,704 209,704 211,702 210,699 208,697 201,700" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="202,699 206,703" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="208,701 202,698" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="208,701 203,696 200,697 199,699 200,703 202,704 208,700" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="208,701 201,700" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="208,701 204,695 202,694 199,696 198,698 199,701 206,703" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="208,699 202,698" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="208,699 202,696 199,697 198,699 198,702 201,704 207,702" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="208,699 201,700" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="208,699 205,699 201,695 197,696 198,701 204,702 206,703" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="201,701 207,705 210,704 212,702 212,700 209,698 202,698" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="201,701 207,702" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="201,701 208,700" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="201,701 206,703" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="207,703 202,698" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="207,703 205,696 202,695 200,696 199,699 201,702 207,702" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="207,703 205,696 202,696 199,698 199,701 202,703 208,700" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="207,703 201,700" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="169,334 173,328" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="169,334 174,333" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="171,327 168,332" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="171,327 172,331 174,333" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="174,331 168,332" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="174,331 172,329 168,329 167,331 166,334 169,336 173,335 174,333 173,328" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="534,177 536,180 539,181" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="534,177 537,179 540,178" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="534,177 535,182 537,184 541,183 542,180 541,177 538,176 533,181" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="540,180 535,176" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="540,180 534,176 531,178 531,180 532,183 535,184 540,178" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="540,180 533,181" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="539,177 535,178 533,180 533,183 536,185 539,184 540,181 539,179 535,176" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="539,177 532,176 530,177 529,180 531,183 533,184 539,181" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="539,177 533,181" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="534,182 537,181 543,184 546,180 543,176 538,178 535,176" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="534,182 539,181" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="534,182 540,178" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="487,534 484,534 478,532 475,535 478,539 483,538 486,539" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="487,534 481,537" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="487,534 481,538" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="487,538 485,534 483,532 480,533 478,535 479,538 482,540 487,535" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="487,538 481,537" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="487,538 484,537 481,538" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="481,538 487,535" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="481,538 486,539" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="481,538 488,538 489,536 489,533 486,531 484,532 481,538" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="482,539 487,535" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="482,539 487,537 488,535 487,532 484,531 481,532 480,535 482,538 486,539" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="482,539 489,538 490,535 490,532 487,531 484,531 481,537" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="756,654 762,657 764,656 765,653 763,650 760,650 756,655" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="756,654 761,660 766,658 766,656 765,653 758,651" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="756,656 764,657 766,655 766,652 764,650 762,649 756,653" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="756,656 758,653 758,651" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="757,652 758,658 761,659 764,657 764,654 762,652 756,653" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="757,652 757,656 760,658 763,658 765,655 764,652 761,651 758,652 756,655" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="282,446 286,451" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="282,446 283,448 281,453 282,456 285,456 288,453 286,448 287,446" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="287,450 283,445" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="287,450 287,446" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="286,445 281,450 281,453 284,454 287,453 288,450 283,445" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="286,445 286,451" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="319,681 325,678" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="325,677 319,679" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="722,352 720,354 715,356 714,360 718,362 722,358 724,357" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="725,355 718,353 716,356 716,359 719,361 722,360 723,358 723,353" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="657,498 655,497 651,493 649,493 647,495 648,500 654,500 655,502" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="657,501 654,495 651,494 649,496 649,499 651,501 657,499" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="131,727 127,732" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="128,733 132,728" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="147,799 153,801" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+<polyline points="153,800 148,798" stroke="#ce9e59" stroke-width="1.2" opacity=".6"/>
+</g>
+<circle cx="204" cy="700" r="13" stroke="white" stroke-width="2" fill="#ab403b"/>
+<text x="204" y="704" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">1</text>
+<circle cx="171" cy="331" r="13" stroke="white" stroke-width="2" fill="#b58c2e"/>
+<text x="171" y="335" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">2</text>
+<circle cx="537" cy="180" r="13" stroke="white" stroke-width="2" fill="#ab403b"/>
+<text x="537" y="184" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">3</text>
+<circle cx="484" cy="536" r="13" stroke="white" stroke-width="2" fill="#ab403b"/>
+<text x="484" y="540" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">4</text>
+<circle cx="761" cy="654" r="13" stroke="white" stroke-width="2" fill="#b58c2e"/>
+<text x="761" y="658" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">5</text>
+<circle cx="285" cy="450" r="13" stroke="white" stroke-width="2" fill="#b58c2e"/>
+<text x="285" y="454" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">6</text>
+<circle cx="322" cy="679" r="8" stroke="white" stroke-width="2" fill="#66826c"/>
+<text x="322" y="683" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">7</text>
+<circle cx="719" cy="357" r="8" stroke="white" stroke-width="2" fill="#66826c"/>
+<text x="719" y="361" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">8</text>
+<circle cx="652" cy="498" r="8" stroke="white" stroke-width="2" fill="#66826c"/>
+<text x="652" y="502" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">9</text>
+<circle cx="129" cy="730" r="8" stroke="white" stroke-width="2" fill="#66826c"/>
+<text x="129" y="734" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">10</text>
+<circle cx="150" cy="800" r="8" stroke="white" stroke-width="2" fill="#66826c"/>
+<text x="150" y="804" text-anchor="middle" font-size="11" font-weight="bold" font-family="Arial,sans-serif" fill="white">11</text>
+<g font-family="Arial,sans-serif" fill="#26333b">
+<text x="915" y="77" font-size="19" font-weight="bold">Authoring inventory</text>
+<circle cx="925" cy="117" r="9" fill="#ab403b"/>
+<text x="925" y="121" font-size="10" fill="white" text-anchor="middle" font-weight="bold">1</text>
+<text x="943" y="114" font-size="14" font-weight="bold">ALDER · all-way stop</text>
+<text x="943" y="132" font-size="12" fill="#65747b">5 in · 20 turns · alder town</text>
+<circle cx="925" cy="174" r="9" fill="#b58c2e"/>
+<text x="925" y="178" font-size="10" fill="white" text-anchor="middle" font-weight="bold">2</text>
+<text x="943" y="171" font-size="14" font-weight="bold">CEDAR · yield reservation</text>
+<text x="943" y="189" font-size="12" fill="#65747b">3 in · 6 turns · cedar woods</text>
+<circle cx="925" cy="231" r="9" fill="#ab403b"/>
+<text x="925" y="235" font-size="10" fill="white" text-anchor="middle" font-weight="bold">3</text>
+<text x="943" y="228" font-size="14" font-weight="bold">RIDGE · all-way stop</text>
+<text x="943" y="246" font-size="12" fill="#65747b">4 in · 12 turns · north ridge</text>
+<circle cx="925" cy="288" r="9" fill="#ab403b"/>
+<text x="925" y="292" font-size="10" fill="white" text-anchor="middle" font-weight="bold">4</text>
+<text x="943" y="285" font-size="14" font-weight="bold">VALLEY · all-way stop</text>
+<text x="943" y="303" font-size="12" fill="#65747b">4 in · 12 turns · green valley</text>
+<circle cx="925" cy="345" r="9" fill="#b58c2e"/>
+<text x="925" y="349" font-size="10" fill="white" text-anchor="middle" font-weight="bold">5</text>
+<text x="943" y="342" font-size="14" font-weight="bold">LAKE · yield reservation</text>
+<text x="943" y="360" font-size="12" fill="#65747b">3 in · 6 turns · eastwater lake</text>
+<circle cx="925" cy="402" r="9" fill="#b58c2e"/>
+<text x="925" y="406" font-size="10" fill="white" text-anchor="middle" font-weight="bold">6</text>
+<text x="943" y="399" font-size="14" font-weight="bold">PINE · yield reservation</text>
+<text x="943" y="417" font-size="12" fill="#65747b">3 in · 6 turns · cedar woods</text>
+<circle cx="925" cy="459" r="9" fill="#66826c"/>
+<text x="925" y="463" font-size="10" fill="white" text-anchor="middle" font-weight="bold">7</text>
+<text x="943" y="456" font-size="14" font-weight="bold">MARKET · continuation</text>
+<text x="943" y="474" font-size="12" fill="#65747b">2 in · 2 turns · alder town</text>
+<circle cx="925" cy="516" r="9" fill="#66826c"/>
+<text x="925" y="520" font-size="10" fill="white" text-anchor="middle" font-weight="bold">8</text>
+<text x="943" y="513" font-size="14" font-weight="bold">OVERLOOK · continuation</text>
+<text x="943" y="531" font-size="12" fill="#65747b">2 in · 2 turns · north ridge</text>
+<circle cx="925" cy="573" r="9" fill="#66826c"/>
+<text x="925" y="577" font-size="10" fill="white" text-anchor="middle" font-weight="bold">9</text>
+<text x="943" y="570" font-size="14" font-weight="bold">ORCHARD · continuation</text>
+<text x="943" y="588" font-size="12" fill="#65747b">2 in · 2 turns · green valley</text>
+<circle cx="925" cy="630" r="9" fill="#66826c"/>
+<text x="925" y="634" font-size="10" fill="white" text-anchor="middle" font-weight="bold">10</text>
+<text x="943" y="627" font-size="14" font-weight="bold">DEPOT · continuation</text>
+<text x="943" y="645" font-size="12" fill="#65747b">2 in · 2 turns · alder town</text>
+<circle cx="925" cy="687" r="9" fill="#66826c"/>
+<text x="925" y="691" font-size="10" fill="white" text-anchor="middle" font-weight="bold">11</text>
+<text x="943" y="684" font-size="14" font-weight="bold">CHAPEL · continuation</text>
+<text x="943" y="702" font-size="12" fill="#65747b">2 in · 2 turns · alder town</text>
+<text x="915" y="810" font-size="13" font-weight="bold">Map: graph blob 9bba378d68</text>
+<text x="915" y="835" font-size="12">16 road corridors · 32 travel lanes</text>
+<text x="915" y="853" font-size="12">72 turn connectors · 11 physical junctions</text>
+<text x="915" y="874" font-size="12">Red stop / amber yield / green pass-through</text>
+<text x="915" y="899" font-size="11" fill="#647278">Geometry projected directly from World PR #3</text>
+<text x="45" y="908" font-size="12">+X east → · +Z south ↓ · meters · top-down schematic, not collision visualization</text>
+</g>
+</svg>

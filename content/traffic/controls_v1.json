@@ -1,0 +1,305 @@
+{
+  "schema_version": 1,
+  "source_graph": {
+    "git_blob_sha": "9bba378d68879df3baed2c97a4885c0adde88406",
+    "schema_version": 1,
+    "corridors": 16,
+    "corridor_lanes": 32,
+    "turn_lanes": 72,
+    "physical_junctions": 11
+  },
+  "simulation_api": "TrafficSimulation.configure_junctions(Array)",
+  "note": "Only stop/yield entries are applied. pass_through entries are audited but deliberately not passed to the API. Runtime stop offset is fixed at 2.5 m in TrafficSimulation.",
+  "junctions": [
+    {
+      "id": "junction_alder",
+      "region": "alder_town",
+      "mode": "stop",
+      "incoming_lane_ids": [
+        "lane_alder_cedar_ba",
+        "lane_alder_depot_ba",
+        "lane_alder_market_ba",
+        "lane_chapel_alder_ab",
+        "lane_lake_alder_ab"
+      ],
+      "turn_lane_ids": [
+        "turn_alder_alder_cedar_ba__alder_depot_ab",
+        "turn_alder_alder_cedar_ba__alder_market_ab",
+        "turn_alder_alder_cedar_ba__chapel_alder_ba",
+        "turn_alder_alder_cedar_ba__lake_alder_ba",
+        "turn_alder_alder_depot_ba__alder_cedar_ab",
+        "turn_alder_alder_depot_ba__alder_market_ab",
+        "turn_alder_alder_depot_ba__chapel_alder_ba",
+        "turn_alder_alder_depot_ba__lake_alder_ba",
+        "turn_alder_alder_market_ba__alder_cedar_ab",
+        "turn_alder_alder_market_ba__alder_depot_ab",
+        "turn_alder_alder_market_ba__chapel_alder_ba",
+        "turn_alder_alder_market_ba__lake_alder_ba",
+        "turn_alder_chapel_alder_ab__alder_cedar_ab",
+        "turn_alder_chapel_alder_ab__alder_depot_ab",
+        "turn_alder_chapel_alder_ab__alder_market_ab",
+        "turn_alder_chapel_alder_ab__lake_alder_ba",
+        "turn_alder_lake_alder_ab__alder_cedar_ab",
+        "turn_alder_lake_alder_ab__alder_depot_ab",
+        "turn_alder_lake_alder_ab__alder_market_ab",
+        "turn_alder_lake_alder_ab__chapel_alder_ba"
+      ],
+      "outgoing_lane_ids": [
+        "lane_alder_cedar_ab",
+        "lane_alder_depot_ab",
+        "lane_alder_market_ab",
+        "lane_chapel_alder_ba",
+        "lane_lake_alder_ba"
+      ],
+      "clearance_m": 8.5,
+      "stop_s": 1.1,
+      "note": "Five-arm town hub: all-way stop pending realistic turn-priority support."
+    },
+    {
+      "id": "junction_cedar",
+      "region": "cedar_woods",
+      "mode": "yield",
+      "incoming_lane_ids": [
+        "lane_alder_cedar_ab",
+        "lane_cedar_pine_ba",
+        "lane_cedar_ridge_ba"
+      ],
+      "turn_lane_ids": [
+        "turn_cedar_alder_cedar_ab__cedar_pine_ab",
+        "turn_cedar_alder_cedar_ab__cedar_ridge_ab",
+        "turn_cedar_cedar_pine_ba__alder_cedar_ba",
+        "turn_cedar_cedar_pine_ba__cedar_ridge_ab",
+        "turn_cedar_cedar_ridge_ba__alder_cedar_ba",
+        "turn_cedar_cedar_ridge_ba__cedar_pine_ab"
+      ],
+      "outgoing_lane_ids": [
+        "lane_alder_cedar_ba",
+        "lane_cedar_pine_ab",
+        "lane_cedar_ridge_ab"
+      ],
+      "clearance_m": 7.5,
+      "stop_s": null,
+      "note": "Three-arm forest junction; slow reserve-and-yield behavior."
+    },
+    {
+      "id": "junction_ridge",
+      "region": "north_ridge",
+      "mode": "stop",
+      "incoming_lane_ids": [
+        "lane_cedar_ridge_ab",
+        "lane_pine_ridge_ab",
+        "lane_ridge_overlook_ba",
+        "lane_ridge_valley_ba"
+      ],
+      "turn_lane_ids": [
+        "turn_ridge_cedar_ridge_ab__pine_ridge_ba",
+        "turn_ridge_cedar_ridge_ab__ridge_overlook_ab",
+        "turn_ridge_cedar_ridge_ab__ridge_valley_ab",
+        "turn_ridge_pine_ridge_ab__cedar_ridge_ba",
+        "turn_ridge_pine_ridge_ab__ridge_overlook_ab",
+        "turn_ridge_pine_ridge_ab__ridge_valley_ab",
+        "turn_ridge_ridge_overlook_ba__cedar_ridge_ba",
+        "turn_ridge_ridge_overlook_ba__pine_ridge_ba",
+        "turn_ridge_ridge_overlook_ba__ridge_valley_ab",
+        "turn_ridge_ridge_valley_ba__cedar_ridge_ba",
+        "turn_ridge_ridge_valley_ba__pine_ridge_ba",
+        "turn_ridge_ridge_valley_ba__ridge_overlook_ab"
+      ],
+      "outgoing_lane_ids": [
+        "lane_cedar_ridge_ba",
+        "lane_pine_ridge_ba",
+        "lane_ridge_overlook_ab",
+        "lane_ridge_valley_ab"
+      ],
+      "clearance_m": 9,
+      "stop_s": 1.1,
+      "note": "Four-arm steep ridge/loose gravel crossing; conservative all-way stop."
+    },
+    {
+      "id": "junction_valley",
+      "region": "green_valley",
+      "mode": "stop",
+      "incoming_lane_ids": [
+        "lane_market_valley_ab",
+        "lane_pine_valley_ab",
+        "lane_ridge_valley_ab",
+        "lane_valley_lake_ba"
+      ],
+      "turn_lane_ids": [
+        "turn_valley_market_valley_ab__pine_valley_ba",
+        "turn_valley_market_valley_ab__ridge_valley_ba",
+        "turn_valley_market_valley_ab__valley_lake_ab",
+        "turn_valley_pine_valley_ab__market_valley_ba",
+        "turn_valley_pine_valley_ab__ridge_valley_ba",
+        "turn_valley_pine_valley_ab__valley_lake_ab",
+        "turn_valley_ridge_valley_ab__market_valley_ba",
+        "turn_valley_ridge_valley_ab__pine_valley_ba",
+        "turn_valley_ridge_valley_ab__valley_lake_ab",
+        "turn_valley_valley_lake_ba__market_valley_ba",
+        "turn_valley_valley_lake_ba__pine_valley_ba",
+        "turn_valley_valley_lake_ba__ridge_valley_ba"
+      ],
+      "outgoing_lane_ids": [
+        "lane_market_valley_ba",
+        "lane_pine_valley_ba",
+        "lane_ridge_valley_ba",
+        "lane_valley_lake_ab"
+      ],
+      "clearance_m": 7.5,
+      "stop_s": 1,
+      "note": "Four-arm fast rural crossing: interim all-way stop because major-road priority is unsupported."
+    },
+    {
+      "id": "junction_lake",
+      "region": "eastwater_lake",
+      "mode": "yield",
+      "incoming_lane_ids": [
+        "lane_lake_alder_ba",
+        "lane_orchard_lake_ab",
+        "lane_valley_lake_ab"
+      ],
+      "turn_lane_ids": [
+        "turn_lake_lake_alder_ba__orchard_lake_ba",
+        "turn_lake_lake_alder_ba__valley_lake_ba",
+        "turn_lake_orchard_lake_ab__lake_alder_ab",
+        "turn_lake_orchard_lake_ab__valley_lake_ba",
+        "turn_lake_valley_lake_ab__lake_alder_ab",
+        "turn_lake_valley_lake_ab__orchard_lake_ba"
+      ],
+      "outgoing_lane_ids": [
+        "lane_lake_alder_ab",
+        "lane_orchard_lake_ba",
+        "lane_valley_lake_ba"
+      ],
+      "clearance_m": 9.5,
+      "stop_s": null,
+      "note": "Three-arm Eastwater junction; no unimplemented signal phases."
+    },
+    {
+      "id": "junction_pine",
+      "region": "cedar_woods",
+      "mode": "yield",
+      "incoming_lane_ids": [
+        "lane_cedar_pine_ab",
+        "lane_pine_ridge_ba",
+        "lane_pine_valley_ba"
+      ],
+      "turn_lane_ids": [
+        "turn_pine_cedar_pine_ab__pine_ridge_ab",
+        "turn_pine_cedar_pine_ab__pine_valley_ab",
+        "turn_pine_pine_ridge_ba__cedar_pine_ba",
+        "turn_pine_pine_ridge_ba__pine_valley_ab",
+        "turn_pine_pine_valley_ba__cedar_pine_ba",
+        "turn_pine_pine_valley_ba__pine_ridge_ab"
+      ],
+      "outgoing_lane_ids": [
+        "lane_cedar_pine_ba",
+        "lane_pine_ridge_ab",
+        "lane_pine_valley_ab"
+      ],
+      "clearance_m": 7.5,
+      "stop_s": null,
+      "note": "Cedar/Quarry T-junction: conservative reservation-controlled yield."
+    },
+    {
+      "id": "junction_market",
+      "region": "alder_town",
+      "mode": "pass_through",
+      "incoming_lane_ids": [
+        "lane_alder_market_ab",
+        "lane_market_valley_ba"
+      ],
+      "turn_lane_ids": [
+        "turn_market_alder_market_ab__market_valley_ab",
+        "turn_market_market_valley_ba__alder_market_ba"
+      ],
+      "outgoing_lane_ids": [
+        "lane_alder_market_ba",
+        "lane_market_valley_ab"
+      ],
+      "clearance_m": null,
+      "stop_s": null,
+      "note": "Two-way continuous road alignment; no conflicting turn choices and no runtime junction control."
+    },
+    {
+      "id": "junction_overlook",
+      "region": "north_ridge",
+      "mode": "pass_through",
+      "incoming_lane_ids": [
+        "lane_overlook_orchard_ba",
+        "lane_ridge_overlook_ab"
+      ],
+      "turn_lane_ids": [
+        "turn_overlook_overlook_orchard_ba__ridge_overlook_ba",
+        "turn_overlook_ridge_overlook_ab__overlook_orchard_ab"
+      ],
+      "outgoing_lane_ids": [
+        "lane_overlook_orchard_ab",
+        "lane_ridge_overlook_ba"
+      ],
+      "clearance_m": null,
+      "stop_s": null,
+      "note": "Two-way continuous road alignment; no conflicting turn choices and no runtime junction control."
+    },
+    {
+      "id": "junction_orchard",
+      "region": "green_valley",
+      "mode": "pass_through",
+      "incoming_lane_ids": [
+        "lane_orchard_lake_ba",
+        "lane_overlook_orchard_ab"
+      ],
+      "turn_lane_ids": [
+        "turn_orchard_orchard_lake_ba__overlook_orchard_ba",
+        "turn_orchard_overlook_orchard_ab__orchard_lake_ab"
+      ],
+      "outgoing_lane_ids": [
+        "lane_orchard_lake_ab",
+        "lane_overlook_orchard_ba"
+      ],
+      "clearance_m": null,
+      "stop_s": null,
+      "note": "Two-way continuous road alignment; no conflicting turn choices and no runtime junction control."
+    },
+    {
+      "id": "junction_depot",
+      "region": "alder_town",
+      "mode": "pass_through",
+      "incoming_lane_ids": [
+        "lane_alder_depot_ab",
+        "lane_depot_chapel_ba"
+      ],
+      "turn_lane_ids": [
+        "turn_depot_alder_depot_ab__depot_chapel_ab",
+        "turn_depot_depot_chapel_ba__alder_depot_ba"
+      ],
+      "outgoing_lane_ids": [
+        "lane_alder_depot_ba",
+        "lane_depot_chapel_ab"
+      ],
+      "clearance_m": null,
+      "stop_s": null,
+      "note": "Two-way continuous road alignment; no conflicting turn choices and no runtime junction control."
+    },
+    {
+      "id": "junction_chapel",
+      "region": "alder_town",
+      "mode": "pass_through",
+      "incoming_lane_ids": [
+        "lane_chapel_alder_ba",
+        "lane_depot_chapel_ab"
+      ],
+      "turn_lane_ids": [
+        "turn_chapel_chapel_alder_ba__depot_chapel_ba",
+        "turn_chapel_depot_chapel_ab__chapel_alder_ab"
+      ],
+      "outgoing_lane_ids": [
+        "lane_chapel_alder_ab",
+        "lane_depot_chapel_ba"
+      ],
+      "clearance_m": null,
+      "stop_s": null,
+      "note": "Two-way continuous road alignment; no conflicting turn choices and no runtime junction control."
+    }
+  ]
+}

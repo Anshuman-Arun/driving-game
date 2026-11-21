@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "graph_git_blob_sha": "9bba378d68879df3baed2c97a4885c0adde88406",
+  "description": "Each region is tested with each population and seed; traffic is local, not a whole-world persistent fleet.",
+  "fixed_dt_s": 0.03333333333333333,
+  "duration_s": 90,
+  "populations": [
+    0,
+    5,
+    10,
+    20
+  ],
+  "seeds": [
+    20261121,
+    2027,
+    73
+  ],
+  "regions": [
+    {
+      "id": "alder_town",
+      "view_position": [
+        -621.67,
+        40.01,
+        559.31
+      ],
+      "junction_id": "junction_alder"
+    },
+    {
+      "id": "cedar_woods",
+      "view_position": [
+        -700.1,
+        92,
+        -317.95
+      ],
+      "junction_id": "junction_cedar"
+    },
+    {
+      "id": "north_ridge",
+      "view_position": [
+        170.61,
+        161.98,
+        -678.94
+      ],
+      "junction_id": "junction_ridge"
+    },
+    {
+      "id": "green_valley",
+      "view_position": [
+        44.39,
+        68,
+        168.87
+      ],
+      "junction_id": "junction_valley"
+    },
+    {
+      "id": "eastwater_lake",
+      "view_position": [
+        703.71,
+        29.92,
+        450.6
+      ],
+      "junction_id": "junction_lake"
+    }
+  ],
+  "notes": [
+    "Repeat each case twice with the same seed and check state fingerprints.",
+    "Separate point-agent spacing from rigid-body contact and FPS measurement.",
+    "Simulated vehicle spawn/despawn is viewer-local (175 m spawn / 230 m despawn).",
+    "No traffic signal phases or road priority classes are claimed."
+  ]
+}
