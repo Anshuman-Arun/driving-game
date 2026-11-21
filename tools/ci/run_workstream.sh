@@ -8,6 +8,7 @@ ci_dir="$(cd "${4:?CI scripts directory required}" && pwd)"
 mkdir -p "$out"
 out="$(cd "$out" && pwd)"
 summary="$out/SUMMARY.md"
+failures=0
 case "$track" in core|racing|traffic|world|art) ;; *) echo "::error::Unknown workstream: $track" >&2; exit 2;; esac
 {
   printf '## %s standalone validation\n\n' "$track"
@@ -39,21 +40,22 @@ run_required() {
     echo "::error::$track/$name failed (exit $rc); see retained $name.log"
   fi
   echo "::endgroup::"
-  return "$rc"
+  if (( rc != 0 )); then failures=$((failures + 1)); fi
+  return 0 # Run remaining independent checks before failing the overall workstream.
 }
 
 case "$track" in
   core)
     test -f "$worktree/project.godot"
     test -f "$worktree/tests/core/smoke.gd"
-    run_required godot-import timeout 600 godot --headless --path "$worktree" --editor --quit
-    run_required godot-tests timeout 900 godot --headless --path "$worktree" --script res://tests/core/smoke.gd
+    run_required godot-import timeout 420 godot --headless --path "$worktree" --editor --quit
+    run_required godot-tests timeout 420 godot --headless --path "$worktree" --script res://tests/core/smoke.gd
     ;;
   racing)
     test -f "$worktree/modules/racing/project.godot"
     test -f "$worktree/modules/racing/tests/run_tests.gd"
     run_required godot-import timeout 600 godot --headless --path "$worktree/modules/racing" --editor --quit
-    run_required godot-tests timeout 900 godot --headless --path "$worktree/modules/racing" --script res://tests/run_tests.gd
+    run_required godot-tests timeout 420 godot --headless --path "$worktree/modules/racing" --script res://tests/run_tests.gd
     ;;
   traffic)
     test -f "$worktree/modules/traffic/project.godot"
@@ -62,7 +64,7 @@ case "$track" in
     run_required python-fixtures python -m unittest discover -s modules/traffic/tests -p fixture_checks.py -v
     run_required python-flow python modules/traffic/tests/reference_flow_sim.py
     run_required godot-import timeout 600 godot --headless --path "$worktree/modules/traffic" --editor --quit
-    run_required godot-tests timeout 900 godot --headless --path "$worktree/modules/traffic" --script res://tests/run_tests.gd
+    run_required godot-tests timeout 420 godot --headless --path "$worktree/modules/traffic" --script res://tests/run_tests.gd
     ;;
   world)
     test -f "$worktree/worldgen/generate.js"
@@ -87,11 +89,19 @@ case "$track" in
       exit 1
     fi
     printf 'config_version=5\n\n[application]\nconfig/name="Aster Valley CI art importer"\n' > "$worktree/project.godot"
-    run_required art-import timeout 900 godot --headless --path "$worktree" --editor --quit
+    run_required art-import timeout 420 godot --headless --path "$worktree" --editor --quit
     ;;
 esac
 {
-  printf '\nAll listed mandatory headless/data gates passed for **%s**.\n\n' "$track"
+  if (( failures == 0 )); then
+    printf '\nAll required headless/data gates passed for **%s**.\n\n' "$track"
+  else
+    printf '\n**%s required gate(s) FAILED** for %s. Other independent gates were still attempted.\n\n' "$failures" "$track"
+  fi
   printf '**NOT TESTED:** interactive rendering, visual driving competence, Xbox hardware, frame rate, Windows export, and cross-branch integration. Headless execution cannot establish these qualities.\n'
 } >> "$summary"
+if (( failures != 0 )); then
+  echo "::error::$track has $failures failed required gate(s); inspect logs and summary."
+  exit 1
+fi
 echo "PASS: required $track validation (headless/data only)"
