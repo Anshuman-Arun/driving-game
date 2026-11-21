@@ -1,12 +1,13 @@
 extends SceneTree
 ## Real vehicle + full world. Use --fixed-fps 60 for headless QA, without it for GPU timing.
-## Graphical capture: -- --capture-dir <existing directory>.
+## Graphical capture: -- --capture-dir <existing directory> [--expect-ultrawide].
 
 var scene: Node3D
 var car: Vehicle
 var failures := 0
 var _capture_dir := ""
 var _graphical := false
+var _expect_ultrawide := false
 var _frame_times := PackedFloat64Array()
 var _last_frame_usec := 0
 var _peak_draw_calls := 0
@@ -32,6 +33,7 @@ func _step(ticks: int) -> void:
 func _run() -> void:
 	_graphical = DisplayServer.get_name() != "headless"
 	var args := OS.get_cmdline_user_args()
+	_expect_ultrawide = "--expect-ultrawide" in args
 	var index := args.find("--capture-dir")
 	if index >= 0 and index + 1 < args.size():
 		_capture_dir = args[index + 1]
@@ -66,6 +68,7 @@ func _run() -> void:
 		scene.get("load_ms"), Time.get_ticks_msec() - started,
 		int(Performance.get_monitor(Performance.MEMORY_STATIC)),
 		int(Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED))])
+	_check_ultrawide_projection()
 	await _capture("01-alder-spawn")
 
 	var graph: Dictionary = runtime.call("get_road_graph")
@@ -113,15 +116,50 @@ func _run() -> void:
 	var camera: DrivingChaseCamera = scene.get("camera")
 	await _tap("drive_camera")
 	_check(camera.mode == 1, "close chase mode responds to C")
+	_check_ultrawide_projection()
 	await _tap("drive_camera")
 	_check(camera.mode == 2 and car.to_local(camera.global_position).distance_to(Vector3(0, 0.86, -0.92)) < 0.10,
 		"hood mode stays attached to Vela")
+	_check_ultrawide_projection()
 	await _capture("05-hood-after-reset")
 	_report_fps()
+	if _expect_ultrawide:
+		await _check_fullscreen_toggle()
 	await _tap("drive_camera")
 	await _stationary_camera()
 	print("Vehicle/world integration failures: ", failures)
 	quit(0 if failures == 0 else 1)
+
+func _check_fullscreen_toggle() -> void:
+	_check(root.mode == Window.MODE_FULLSCREEN, "native ultrawide starts in fullscreen")
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_F11
+	key.pressed = true
+	root.push_input(key)
+	await _step(15)
+	_check(root.mode == Window.MODE_WINDOWED, "F11 returns to windowed mode")
+	root.push_input(key)
+	await _step(15)
+	_check(root.mode == Window.MODE_FULLSCREEN and root.size == Vector2i(3440, 1440),
+		"F11 restores native 3440x1440 fullscreen")
+
+func _check_ultrawide_projection() -> void:
+	if not _expect_ultrawide:
+		return
+	var camera: DrivingChaseCamera = scene.get("camera")
+	var size := root.get_visible_rect().size
+	var center := size * 0.5
+	var horizontal_fov := rad_to_deg(camera.project_local_ray_normal(Vector2(0.0, center.y))
+		.angle_to(camera.project_local_ray_normal(Vector2(size.x, center.y))))
+	var vertical_fov := rad_to_deg(camera.project_local_ray_normal(Vector2(center.x, 0.0))
+		.angle_to(camera.project_local_ray_normal(Vector2(center.x, size.y))))
+	var expected_horizontal := rad_to_deg(2.0 * atan(tan(deg_to_rad(camera.fov) * 0.5) * 3440.0 / 1440.0))
+	print("ULTRAWIDE %s window=%s viewport=%s horizontal=%.2f vertical=%.2f" % [
+		camera.get_mode_name(), root.size, size, horizontal_fov, vertical_fov])
+	_check(root.size == Vector2i(3440, 1440) and absf(size.x / size.y - 3440.0 / 1440.0) < 0.002,
+		"3440x1440 fills the viewport")
+	_check(absf(vertical_fov - camera.fov) < 0.1 and absf(horizontal_fov - expected_horizontal) < 0.1,
+		camera.get_mode_name() + " preserves vertical FOV and expands horizontal FOV")
 
 func _stationary_camera() -> void:
 	var camera: DrivingChaseCamera = scene.get("camera")
@@ -271,6 +309,8 @@ func _capture(name: String) -> void:
 		return
 	await RenderingServer.frame_post_draw
 	var image := root.get_texture().get_image()
+	if _expect_ultrawide:
+		_check(image.get_size() == Vector2i(3440, 1440), "capture has 3440x1440 rendered pixels")
 	_check(image.save_png(_capture_dir.path_join(name + ".png")) == OK, "screenshot " + name)
 
 func _remember_contact_frame() -> void:

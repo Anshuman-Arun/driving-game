@@ -58,6 +58,8 @@ func _ready() -> void:
 	camera.name = "ChaseCamera"
 	camera.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(camera)
+	# Preserve vertical framing and reveal more world at wider aspect ratios.
+	camera.keep_aspect = Camera3D.KEEP_HEIGHT
 	camera.setup(vehicle_body)
 	camera.far = 3000.0
 	load_ms = Time.get_ticks_msec() - started
@@ -72,6 +74,12 @@ func _process(_delta: float) -> void:
 		_reset_requested = true
 	if not get_tree().paused and Input.is_action_just_pressed("drive_camera"):
 		_camera_requested = true
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F11:
+		var window := get_window()
+		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
+		window.set_input_as_handled()
 
 func _physics_process(delta: float) -> void:
 	if adapter == null:
