@@ -10,7 +10,8 @@ Source inspected: authoritative World PR #3 graph (104 directed lanes: 32 travel
 - Ran independent discrete progress simulation using the Racing Agent's distance/ordered swept-gate/finish-threshold logic: all 4 events completed, 0 detected invalid progress. Alder's 3 laps produced 30 gate hits.
 - Exercised malformed graph cases; graph hash mismatch, missing lane, broken directed successor, duplicate consecutive point, invalid bounds and removed turning successor were rejected.
 - Recompiled committed `author.js` as JavaScript source and independently regenerated an event catalog identical to the committed JSON.
-- Follow-up corrected a CLI blob-hash null-byte escaping issue; it was found before creating this report.
+- Executed the exact committed `tests/test_author.js` source in an isolated JavaScript evaluator with mocked Node filesystem/crypto I/O and actual fetched graph/artifact bytes: all 4 distance, checkpoint, grid, AI speed-limit, closure and generated-output assertions plus 6 invalid-graph mutation cases passed. This is **not** a native Node CLI run.
+- Follow-up corrected CLI Git-blob null-byte escaping and an AI-advisory boundary issue (initial minimum clamp could exceed turn limits; endpoint tangent on sprints could become undefined). Independently retested after both fixes: no non-finite targets and no target above its lane limit.
 
 | Event | Course meters | Lap(s) | Checkpoint hits in pilot | Outcome |
 |---|---:|---:|---:|---|
@@ -24,7 +25,7 @@ The progress pilot traverses ideal lane geometry, not real vehicle physics and n
 ## Not executed / outside scope
 
 - Godot 4.7.2 import/parse and `RaceEngine.start_event` in a live running engine.
-- The `node content/races/tests/test_author.js` command in a local worktree with the full World dataset (private GitHub cannot be cloned by the available local container's DNS/network connection). The JavaScript generator and progress pilot **were** executed against the exact connected graph.
+- The native `node content/races/tests/test_author.js` command in a local worktree with the full World dataset (private GitHub cannot be cloned by the available local container's DNS/network connection). Its exact source **was** executed using a JavaScript evaluator and mocked Node I/O against the real connected graph and all committed generated files; this is a narrower verification claim than native Node.
 - Scene roads/junction collider coverage, physical cars and their staggered start grid, manual checkpoint cutting, AI steering/vehicle handling, user input, GPU/Windows export, progression.
 - PR #3 and PR #5 remain unmerged. The direct loader/route compatibility is checked at code/geometry level, not established by an integrated Godot boot test.
 
