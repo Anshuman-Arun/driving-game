@@ -17,10 +17,10 @@ case "$track" in
 esac
 {
   printf '## %s standalone validation\n\n' "$track"
-  printf 'Source SHA: \`%s\`\n\n' "$(git -C "$root" rev-parse HEAD)"
+  printf 'Source SHA: `%s`\n\n' "$(git -C "$root" rev-parse HEAD)"
   if [[ -n "$world_dir" ]]; then
     world_dir="$(cd "$world_dir" && pwd)"
-    printf 'Authoritative World SHA: \`%s\`\n\n' "$(git -C "$world_dir" rev-parse HEAD)"
+    printf 'Authoritative World SHA: `%s`\n\n' "$(git -C "$world_dir" rev-parse HEAD)"
   fi
   printf '| Gate | Status |\n| --- | --- |\n'
 } > "$summary"
