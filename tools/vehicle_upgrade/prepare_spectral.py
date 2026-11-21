@@ -26,12 +26,12 @@ from mathutils import Matrix, Vector
 ORIGIN = "https://github.com/JaronKBragg7337/spectral-gt-rs"
 SOURCE_BLOB_SHA1 = "f5b814848453a6c75a48f5047fdadaa7bdc78969"
 WHEELBASE_SCALE = 2.71 / 2.85
-WHEEL_RADIUS_SCALE = 0.35 / 0.405
+WHEEL_RADIUS_SCALE = 0.35 / (0.405 + 0.135)  # Torus OD, not major radius
 CHASSIS_BODY_VERTICAL_OFFSET_M = -0.57
 SOURCE_WHEEL_HEIGHT_M = 0.53
 SOURCE_FRONT_X = 1.37
 SOURCE_REAR_X = -1.48
-SOURCE_HALF_TRACK = 0.96
+SOURCE_HALF_TRACK = 1.015  # Real source tire center, not fender lip
 
 # Source front is Blender +X. Z+90 maps front to Blender +Y, which glTF
 # exports as Godot -Z. Sign of source side names is not assumed.
@@ -131,6 +131,9 @@ def normalize_import():
             groups[key] += 1
         else:
             parent_keep_matrix(obj, body, new_world)
+            # Source fender lip toruses are too big for retargeted tires.
+            if "_Fender_Lip_" in original_name:
+                obj.scale *= 0.82
             groups["Body"] += 1
     for key in PART_ORDER:
         if groups[key] < 6:
@@ -140,7 +143,9 @@ def normalize_import():
     body.matrix_world = Matrix.Translation((0, 0, CHASSIS_BODY_VERTICAL_OFFSET_M)) @ Matrix.Diagonal(
         (WHEELBASE_SCALE, WHEELBASE_SCALE, WHEELBASE_SCALE, 1.0))
     for key in PART_ORDER:
-        wheels[key].scale = (WHEEL_RADIUS_SCALE,) * 3
+        # Axial correction keeps the visible tires near factory tread width.
+        wheels[key].scale = (WHEEL_RADIUS_SCALE * 1.4,
+                             WHEEL_RADIUS_SCALE, WHEEL_RADIUS_SCALE)
         brakes[key].scale = (WHEEL_RADIUS_SCALE,) * 3
     # The imported GLB's animated empties are not included; wheel dynamics
     # come *only* from GEVP. Blender source remains available upstream.
@@ -150,6 +155,40 @@ def normalize_import():
             bpy.data.objects.remove(obj, do_unlink=True)
     print("Grouped source mesh objects:", dict(groups), "suppressed branding:", discarded)
     return root
+
+
+def carve_wheel_arches():
+    """Boolean-clear source BODY_Shell_Hero for actual rolling tires.
+
+    Source's continuous lower loft side panel intersects tires, even though
+    the source GLB is structurally valid. Cutters are temporary modeling aids
+    and are never part of the exported car.
+    """
+    shell = bpy.data.objects.get("BODY_Shell_Hero")
+    if shell is None or shell.type != "MESH":
+        raise ValueError("Source body loft absent; refusing clipped wheels")
+    scale = WHEELBASE_SCALE
+    for axle in (SOURCE_FRONT_X, SOURCE_REAR_X):
+        # Blender Z+90 made longitudinal +Y and wheel axles X.
+        bpy.ops.mesh.primitive_cylinder_add(
+            vertices=96,
+            radius=0.405 * scale,
+            depth=3.4,
+            end_fill_type="NGON",
+            location=(0.0, axle * scale,
+                      SOURCE_WHEEL_HEIGHT_M * scale + CHASSIS_BODY_VERTICAL_OFFSET_M),
+            rotation=(0.0, math.pi / 2.0, 0.0))
+        cutter = bpy.context.object
+        cutter.name = "TEMP_ARCH_CLEARANCE"
+        modifier = shell.modifiers.new("ClearFrontArch" if axle > 0 else "ClearRearArch", "BOOLEAN")
+        modifier.operation = "DIFFERENCE"
+        modifier.solver = "EXACT"
+        modifier.object = cutter
+        bpy.ops.object.select_all(action="DESELECT")
+        shell.select_set(True)
+        bpy.context.view_layer.objects.active = shell
+        bpy.ops.object.modifier_apply(modifier=modifier.name)
+        bpy.data.objects.remove(cutter, do_unlink=True)
 
 
 def join_material_peers():
@@ -243,6 +282,7 @@ if __name__ == "__main__":
         raise SystemExit("Source SHA changed; refuse to process without re-auditing license/content")
     opts.output.mkdir(parents=True, exist_ok=True)
     root = normalize_import()
+    carve_wheel_arches()
     join_material_peers()
     for n, (label, budget) in enumerate(LOD_TARGETS):
         if n == 2:
