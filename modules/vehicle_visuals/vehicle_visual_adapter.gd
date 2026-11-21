@@ -141,11 +141,11 @@ func request_lod(requested_lod: int) -> bool:
 		var wheel_data: Dictionary = _wheel_components[key]
 		var wheel: Node3D = wheel_data["wheel"]
 		var factory_pivot: Node3D = wheel_data["pivot"]
-		var replacement: Node3D = model.get_node("Wheel_" + key + "_Pivot")
+		var replacement: Node3D = model.get_node("Wheel_" + key + "_Pivot") as Node3D
 		replacement.reparent(factory_pivot, false)
 		replacement.transform = Transform3D.IDENTITY
 		_mounted_nodes.append(replacement)
-		var brake: Node3D = model.get_node_or_null("Brake_" + key)
+		var brake: Node3D = model.get_node_or_null("Brake_" + key) as Node3D
 		if brake != null:
 			brake.reparent(wheel, false)
 			brake.transform = Transform3D.IDENTITY
@@ -162,6 +162,7 @@ func request_lod(requested_lod: int) -> bool:
 				(old_child as Node3D).visible = false
 	_lod = target
 	_visual_available = true
+	_last_error = ""
 	return true
 
 func clear_visuals() -> void:
