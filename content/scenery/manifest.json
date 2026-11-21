@@ -117,7 +117,9 @@
       "path": "assets/curated/models/environment/pine_tree_lod0.glb",
       "lod": "assets/curated/models/environment/pine_tree_lod1.glb",
       "tri": 108,
+      "surfaces": 7,
       "lod_tri": 57,
+      "lod_surfaces": 4,
       "r": 2.5,
       "slope": 28,
       "road": 12,
@@ -128,6 +130,7 @@
     "broadleaf": {
       "path": "assets/curated/models/environment/broadleaf_tree.glb",
       "tri": 960,
+      "surfaces": 8,
       "r": 3.2,
       "slope": 20,
       "road": 13,
@@ -138,6 +141,7 @@
     "shrub": {
       "path": "assets/curated/models/environment/shrub_cluster.glb",
       "tri": 924,
+      "surfaces": 7,
       "r": 1.6,
       "slope": 32,
       "road": 9.5,
@@ -148,6 +152,7 @@
     "boulder": {
       "path": "assets/curated/models/environment/boulder.glb",
       "tri": 224,
+      "surfaces": 1,
       "r": 2.8,
       "slope": 42,
       "road": 11,
@@ -158,6 +163,7 @@
     "rock": {
       "path": "assets/curated/models/environment/rock_cluster.glb",
       "tri": 528,
+      "surfaces": 4,
       "r": 2.2,
       "slope": 39,
       "road": 10.5,
@@ -168,6 +174,7 @@
     "guardrail": {
       "path": "assets/curated/models/environment/guardrail_4m.glb",
       "tri": 192,
+      "surfaces": 10,
       "r": 1.8,
       "slope": 40,
       "road": 5,
@@ -178,6 +185,7 @@
     "barrier": {
       "path": "assets/curated/models/environment/concrete_barrier.glb",
       "tri": 48,
+      "surfaces": 4,
       "r": 1.9,
       "slope": 32,
       "road": 5.2,
@@ -188,6 +196,7 @@
     "fence": {
       "path": "assets/curated/models/environment/wood_fence.glb",
       "tri": 60,
+      "surfaces": 5,
       "r": 1.8,
       "slope": 24,
       "road": 8.5,
@@ -198,6 +207,7 @@
     "bollard": {
       "path": "assets/curated/models/environment/bollard.glb",
       "tri": 60,
+      "surfaces": 3,
       "r": 0.6,
       "slope": 22,
       "road": 6,
@@ -208,6 +218,7 @@
     "warning": {
       "path": "assets/curated/models/environment/warning_sign.glb",
       "tri": 64,
+      "surfaces": 4,
       "r": 0.8,
       "slope": 25,
       "road": 6.1,
@@ -218,6 +229,7 @@
     "lamp": {
       "path": "assets/curated/models/environment/street_lamp.glb",
       "tri": 84,
+      "surfaces": 3,
       "r": 0.9,
       "slope": 17,
       "road": 6.3,
@@ -228,6 +240,7 @@
     "hay": {
       "path": "assets/curated/models/environment/hay_bale.glb",
       "tri": 36,
+      "surfaces": 3,
       "r": 1.2,
       "slope": 15,
       "road": 12,
@@ -237,7 +250,8 @@
     },
     "house": {
       "path": "content/scenery/models/town_house.gltf",
-      "tri": 240,
+      "tri": 366,
+      "surfaces": 8,
       "r": 7.4,
       "slope": 12,
       "road": 16,
@@ -247,7 +261,8 @@
     },
     "barn": {
       "path": "content/scenery/models/barn.gltf",
-      "tri": 200,
+      "tri": 150,
+      "surfaces": 8,
       "r": 8.8,
       "slope": 13,
       "road": 18,
@@ -257,7 +272,8 @@
     },
     "garage": {
       "path": "content/scenery/models/garage.gltf",
-      "tri": 250,
+      "tri": 288,
+      "surfaces": 8,
       "r": 8,
       "slope": 11,
       "road": 11,
@@ -267,7 +283,8 @@
     },
     "windmill": {
       "path": "content/scenery/models/windmill.gltf",
-      "tri": 350,
+      "tri": 168,
+      "surfaces": 7,
       "r": 7.4,
       "slope": 15,
       "road": 16,
@@ -277,7 +294,8 @@
     },
     "arch": {
       "path": "content/scenery/models/stone_arch.gltf",
-      "tri": 90,
+      "tri": 72,
+      "surfaces": 3,
       "r": 4.2,
       "slope": 24,
       "road": 10.2,
@@ -287,7 +305,8 @@
     },
     "overlook": {
       "path": "content/scenery/models/overlook.gltf",
-      "tri": 180,
+      "tri": 204,
+      "surfaces": 3,
       "r": 6.5,
       "slope": 21,
       "road": 12,
@@ -297,7 +316,8 @@
     },
     "pier": {
       "path": "content/scenery/models/pier.gltf",
-      "tri": 250,
+      "tri": 204,
+      "surfaces": 3,
       "r": 6.5,
       "slope": 16,
       "road": 11,
@@ -307,7 +327,8 @@
     },
     "quarry": {
       "path": "content/scenery/models/quarry_hopper.gltf",
-      "tri": 280,
+      "tri": 252,
+      "surfaces": 7,
       "r": 9,
       "slope": 25,
       "road": 16,
@@ -320,7 +341,7 @@
     {
       "id": "alder_town",
       "path": "content/scenery/packs/alder_town.json",
-      "count": 215
+      "count": 200
     },
     {
       "id": "cedar_woods",
@@ -330,17 +351,17 @@
     {
       "id": "north_ridge",
       "path": "content/scenery/packs/north_ridge.json",
-      "count": 740
+      "count": 742
     },
     {
       "id": "green_valley",
       "path": "content/scenery/packs/green_valley.json",
-      "count": 561
+      "count": 558
     },
     {
       "id": "eastwater_lake",
       "path": "content/scenery/packs/eastwater_lake.json",
-      "count": 410
+      "count": 406
     }
   ],
   "lake": {

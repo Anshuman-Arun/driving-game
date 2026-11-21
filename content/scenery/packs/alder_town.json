@@ -30,22 +30,6 @@
    "id": "alder_town_0002",
    "asset": "house",
    "position": [
-    -676.038,
-    41.074,
-    591.456
-   ],
-   "yaw_deg": 97.1,
-   "scale": 1.059,
-   "terrain_offset_m": 0,
-   "slope_deg": 9.45,
-   "road_clearance_m": 30.4,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0003",
-   "asset": "house",
-   "position": [
     -694.094,
     41.028,
     536.016
@@ -59,87 +43,23 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0004",
+   "id": "alder_town_0003",
    "asset": "house",
    "position": [
-    -704.764,
-    40.916,
-    599.698
+    -802.16,
+    39.919,
+    709.598
    ],
-   "yaw_deg": 116.8,
-   "scale": 1.018,
-   "terrain_offset_m": 0,
-   "slope_deg": 11.56,
-   "road_clearance_m": 30.97,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0005",
-   "asset": "house",
-   "position": [
-    -735.633,
-    40.305,
-    618.197
-   ],
-   "yaw_deg": 124.67,
-   "scale": 1.068,
-   "terrain_offset_m": 0,
-   "slope_deg": 11.94,
-   "road_clearance_m": 30.53,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0006",
-   "asset": "house",
-   "position": [
-    -848.518,
-    39.872,
-    663.043
-   ],
-   "yaw_deg": -22.69,
+   "yaw_deg": 181.09,
    "scale": 0.991,
    "terrain_offset_m": 0,
-   "slope_deg": 9.82,
-   "road_clearance_m": 27.18,
+   "slope_deg": 7.42,
+   "road_clearance_m": 30.72,
    "district": "",
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0007",
-   "asset": "house",
-   "position": [
-    -799.472,
-    39.823,
-    695.694
-   ],
-   "yaw_deg": 159.84,
-   "scale": 1.044,
-   "terrain_offset_m": 0,
-   "slope_deg": 8.53,
-   "road_clearance_m": 30.44,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0008",
-   "asset": "house",
-   "position": [
-    -858.413,
-    39.891,
-    691.433
-   ],
-   "yaw_deg": -12.53,
-   "scale": 1.056,
-   "terrain_offset_m": 0,
-   "slope_deg": 8.2,
-   "road_clearance_m": 27.59,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0009",
+   "id": "alder_town_0004",
    "asset": "house",
    "position": [
     -855.645,
@@ -155,23 +75,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0010",
-   "asset": "house",
-   "position": [
-    -798.444,
-    40.154,
-    717.866
-   ],
-   "yaw_deg": 211.98,
-   "scale": 1.027,
-   "terrain_offset_m": 0,
-   "slope_deg": 6.56,
-   "road_clearance_m": 30.75,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0011",
+   "id": "alder_town_0005",
    "asset": "house",
    "position": [
     -837.543,
@@ -187,7 +91,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0012",
+   "id": "alder_town_0006",
    "asset": "house",
    "position": [
     -786.389,
@@ -203,7 +107,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0013",
+   "id": "alder_town_0007",
    "asset": "house",
    "position": [
     -816.692,
@@ -219,7 +123,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0014",
+   "id": "alder_town_0008",
    "asset": "house",
    "position": [
     -769.761,
@@ -235,39 +139,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0015",
-   "asset": "house",
-   "position": [
-    -659.103,
-    41.301,
-    819.222
-   ],
-   "yaw_deg": 95.74,
-   "scale": 1.027,
-   "terrain_offset_m": 0,
-   "slope_deg": 8.18,
-   "road_clearance_m": 27.02,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0016",
-   "asset": "house",
-   "position": [
-    -646.302,
-    41.425,
-    759.706
-   ],
-   "yaw_deg": 276.61,
-   "scale": 1.063,
-   "terrain_offset_m": 0,
-   "slope_deg": 8.82,
-   "road_clearance_m": 30.79,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0017",
+   "id": "alder_town_0009",
    "asset": "house",
    "position": [
     -620.029,
@@ -283,7 +155,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0018",
+   "id": "alder_town_0010",
    "asset": "house",
    "position": [
     -609.537,
@@ -299,7 +171,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0019",
+   "id": "alder_town_0011",
    "asset": "house",
    "position": [
     -580.518,
@@ -315,7 +187,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0020",
+   "id": "alder_town_0012",
    "asset": "house",
    "position": [
     -575.083,
@@ -331,7 +203,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0021",
+   "id": "alder_town_0013",
    "asset": "house",
    "position": [
     -538.539,
@@ -347,7 +219,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0022",
+   "id": "alder_town_0014",
    "asset": "house",
    "position": [
     -546.885,
@@ -363,7 +235,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0023",
+   "id": "alder_town_0015",
    "asset": "house",
    "position": [
     -492.594,
@@ -379,7 +251,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0024",
+   "id": "alder_town_0016",
    "asset": "house",
    "position": [
     -495.341,
@@ -395,7 +267,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0025",
+   "id": "alder_town_0017",
    "asset": "house",
    "position": [
     -556.682,
@@ -411,7 +283,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0026",
+   "id": "alder_town_0018",
    "asset": "house",
    "position": [
     -514.882,
@@ -427,7 +299,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0027",
+   "id": "alder_town_0019",
    "asset": "house",
    "position": [
     -574.596,
@@ -443,7 +315,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0028",
+   "id": "alder_town_0020",
    "asset": "house",
    "position": [
     -536.405,
@@ -459,23 +331,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0029",
-   "asset": "house",
-   "position": [
-    -595.326,
-    41.358,
-    645.558
-   ],
-   "yaw_deg": 35.32,
-   "scale": 1.04,
-   "terrain_offset_m": 0,
-   "slope_deg": 8.46,
-   "road_clearance_m": 30.8,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0030",
+   "id": "alder_town_0021",
    "asset": "house",
    "position": [
     -546.87,
@@ -491,7 +347,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0031",
+   "id": "alder_town_0022",
    "asset": "house",
    "position": [
     -518.811,
@@ -507,23 +363,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0032",
-   "asset": "house",
-   "position": [
-    -495.75,
-    44.122,
-    571.941
-   ],
-   "yaw_deg": 99.11,
-   "scale": 0.968,
-   "terrain_offset_m": 0,
-   "slope_deg": 4.12,
-   "road_clearance_m": 27.2,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0033",
+   "id": "alder_town_0023",
    "asset": "house",
    "position": [
     -491.097,
@@ -539,7 +379,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0034",
+   "id": "alder_town_0024",
    "asset": "house",
    "position": [
     -466.776,
@@ -555,71 +395,7 @@
    "tag": "streetwall"
   },
   {
-   "id": "alder_town_0035",
-   "asset": "house",
-   "position": [
-    -463.749,
-    45.886,
-    507.135
-   ],
-   "yaw_deg": 281.28,
-   "scale": 1.028,
-   "terrain_offset_m": 0,
-   "slope_deg": 9.86,
-   "road_clearance_m": 30.95,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0036",
-   "asset": "house",
-   "position": [
-    -438.136,
-    46.388,
-    561.156
-   ],
-   "yaw_deg": 101.73,
-   "scale": 1.046,
-   "terrain_offset_m": 0,
-   "slope_deg": 11.8,
-   "road_clearance_m": 27.09,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0037",
-   "asset": "house",
-   "position": [
-    -436.021,
-    47.486,
-    501.672
-   ],
-   "yaw_deg": 282.06,
-   "scale": 1.056,
-   "terrain_offset_m": 0,
-   "slope_deg": 9.48,
-   "road_clearance_m": 30.68,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0038",
-   "asset": "house",
-   "position": [
-    -408.29,
-    48.527,
-    495.446
-   ],
-   "yaw_deg": 282.51,
-   "scale": 1.025,
-   "terrain_offset_m": 0,
-   "slope_deg": 11.49,
-   "road_clearance_m": 30.86,
-   "district": "",
-   "tag": "streetwall"
-  },
-  {
-   "id": "alder_town_0039",
+   "id": "alder_town_0025",
    "asset": "lamp",
    "position": [
     -665.133,
@@ -635,7 +411,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0040",
+   "id": "alder_town_0026",
    "asset": "lamp",
    "position": [
     -673.815,
@@ -651,7 +427,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0041",
+   "id": "alder_town_0027",
    "asset": "lamp",
    "position": [
     -678.278,
@@ -667,7 +443,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0042",
+   "id": "alder_town_0028",
    "asset": "lamp",
    "position": [
     -688.273,
@@ -683,7 +459,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0043",
+   "id": "alder_town_0029",
    "asset": "lamp",
    "position": [
     -691.121,
@@ -699,7 +475,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0044",
+   "id": "alder_town_0030",
    "asset": "lamp",
    "position": [
     -702.837,
@@ -715,7 +491,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0045",
+   "id": "alder_town_0031",
    "asset": "lamp",
    "position": [
     -703.221,
@@ -731,7 +507,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0046",
+   "id": "alder_town_0032",
    "asset": "lamp",
    "position": [
     -717.577,
@@ -747,7 +523,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0047",
+   "id": "alder_town_0033",
    "asset": "lamp",
    "position": [
     -714.348,
@@ -763,7 +539,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0048",
+   "id": "alder_town_0034",
    "asset": "lamp",
    "position": [
     -731.037,
@@ -779,7 +555,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0049",
+   "id": "alder_town_0035",
    "asset": "lamp",
    "position": [
     -725.786,
@@ -795,7 +571,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0050",
+   "id": "alder_town_0036",
    "asset": "lamp",
    "position": [
     -743.372,
@@ -811,7 +587,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0051",
+   "id": "alder_town_0037",
    "asset": "lamp",
    "position": [
     -737.055,
@@ -827,7 +603,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0052",
+   "id": "alder_town_0038",
    "asset": "lamp",
    "position": [
     -755.142,
@@ -843,7 +619,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0053",
+   "id": "alder_town_0039",
    "asset": "lamp",
    "position": [
     -748.235,
@@ -859,7 +635,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0054",
+   "id": "alder_town_0040",
    "asset": "lamp",
    "position": [
     -766.792,
@@ -875,7 +651,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0055",
+   "id": "alder_town_0041",
    "asset": "lamp",
    "position": [
     -759.145,
@@ -891,7 +667,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0056",
+   "id": "alder_town_0042",
    "asset": "lamp",
    "position": [
     -830.801,
@@ -907,7 +683,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0057",
+   "id": "alder_town_0043",
    "asset": "lamp",
    "position": [
     -814.168,
@@ -923,7 +699,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0058",
+   "id": "alder_town_0044",
    "asset": "lamp",
    "position": [
     -837.855,
@@ -939,7 +715,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0059",
+   "id": "alder_town_0045",
    "asset": "lamp",
    "position": [
     -818.593,
@@ -955,7 +731,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0060",
+   "id": "alder_town_0046",
    "asset": "lamp",
    "position": [
     -841.955,
@@ -971,7 +747,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0061",
+   "id": "alder_town_0047",
    "asset": "lamp",
    "position": [
     -820.199,
@@ -987,7 +763,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0062",
+   "id": "alder_town_0048",
    "asset": "lamp",
    "position": [
     -839.443,
@@ -1003,7 +779,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0063",
+   "id": "alder_town_0049",
    "asset": "lamp",
    "position": [
     -816.6,
@@ -1019,7 +795,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0064",
+   "id": "alder_town_0050",
    "asset": "lamp",
    "position": [
     -829.876,
@@ -1035,7 +811,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0065",
+   "id": "alder_town_0051",
    "asset": "lamp",
    "position": [
     -807.449,
@@ -1051,7 +827,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0066",
+   "id": "alder_town_0052",
    "asset": "lamp",
    "position": [
     -818.298,
@@ -1067,7 +843,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0067",
+   "id": "alder_town_0053",
    "asset": "lamp",
    "position": [
     -796.899,
@@ -1083,7 +859,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0068",
+   "id": "alder_town_0054",
    "asset": "lamp",
    "position": [
     -805.385,
@@ -1099,7 +875,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0069",
+   "id": "alder_town_0055",
    "asset": "lamp",
    "position": [
     -784.345,
@@ -1115,7 +891,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0070",
+   "id": "alder_town_0056",
    "asset": "lamp",
    "position": [
     -792.226,
@@ -1131,7 +907,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0071",
+   "id": "alder_town_0057",
    "asset": "lamp",
    "position": [
     -658.678,
@@ -1147,7 +923,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0072",
+   "id": "alder_town_0058",
    "asset": "lamp",
    "position": [
     -646.529,
@@ -1163,7 +939,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0073",
+   "id": "alder_town_0059",
    "asset": "lamp",
    "position": [
     -629.278,
@@ -1179,7 +955,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0074",
+   "id": "alder_town_0060",
    "asset": "lamp",
    "position": [
     -617.798,
@@ -1195,7 +971,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0075",
+   "id": "alder_town_0061",
    "asset": "lamp",
    "position": [
     -599.868,
@@ -1211,7 +987,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0076",
+   "id": "alder_town_0062",
    "asset": "lamp",
    "position": [
     -589.449,
@@ -1227,7 +1003,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0077",
+   "id": "alder_town_0063",
    "asset": "lamp",
    "position": [
     -570.405,
@@ -1243,7 +1019,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0078",
+   "id": "alder_town_0064",
    "asset": "lamp",
    "position": [
     -562.057,
@@ -1259,7 +1035,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0079",
+   "id": "alder_town_0065",
    "asset": "lamp",
    "position": [
     -541.037,
@@ -1275,7 +1051,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0080",
+   "id": "alder_town_0066",
    "asset": "lamp",
    "position": [
     -537.582,
@@ -1291,7 +1067,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0081",
+   "id": "alder_town_0067",
    "asset": "lamp",
    "position": [
     -513.033,
@@ -1307,7 +1083,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0082",
+   "id": "alder_town_0068",
    "asset": "lamp",
    "position": [
     -528.022,
@@ -1323,7 +1099,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0083",
+   "id": "alder_town_0069",
    "asset": "lamp",
    "position": [
     -508.371,
@@ -1339,7 +1115,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0084",
+   "id": "alder_town_0070",
    "asset": "lamp",
    "position": [
     -533.806,
@@ -1355,7 +1131,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0085",
+   "id": "alder_town_0071",
    "asset": "lamp",
    "position": [
     -519.434,
@@ -1371,7 +1147,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0086",
+   "id": "alder_town_0072",
    "asset": "lamp",
    "position": [
     -546.03,
@@ -1387,7 +1163,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0087",
+   "id": "alder_town_0073",
    "asset": "lamp",
    "position": [
     -534.215,
@@ -1403,7 +1179,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0088",
+   "id": "alder_town_0074",
    "asset": "lamp",
    "position": [
     -560.345,
@@ -1419,7 +1195,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0089",
+   "id": "alder_town_0075",
    "asset": "lamp",
    "position": [
     -550.327,
@@ -1435,7 +1211,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0090",
+   "id": "alder_town_0076",
    "asset": "lamp",
    "position": [
     -576.618,
@@ -1451,7 +1227,7 @@
    "tag": "town_lamps"
   },
   {
-   "id": "alder_town_0091",
+   "id": "alder_town_0077",
    "asset": "bollard",
    "position": [
     -551.052,
@@ -1467,7 +1243,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0092",
+   "id": "alder_town_0078",
    "asset": "bollard",
    "position": [
     -538.115,
@@ -1483,7 +1259,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0093",
+   "id": "alder_town_0079",
    "asset": "bollard",
    "position": [
     -525.176,
@@ -1499,7 +1275,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0094",
+   "id": "alder_town_0080",
    "asset": "bollard",
    "position": [
     -512.163,
@@ -1515,7 +1291,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0095",
+   "id": "alder_town_0081",
    "asset": "bollard",
    "position": [
     -499.3,
@@ -1531,7 +1307,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0096",
+   "id": "alder_town_0082",
    "asset": "bollard",
    "position": [
     -486.297,
@@ -1547,7 +1323,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0097",
+   "id": "alder_town_0083",
    "asset": "bollard",
    "position": [
     -473.372,
@@ -1563,7 +1339,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0098",
+   "id": "alder_town_0084",
    "asset": "bollard",
    "position": [
     -460.524,
@@ -1579,7 +1355,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0099",
+   "id": "alder_town_0085",
    "asset": "bollard",
    "position": [
     -447.607,
@@ -1595,7 +1371,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0100",
+   "id": "alder_town_0086",
    "asset": "bollard",
    "position": [
     -434.85,
@@ -1611,7 +1387,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0101",
+   "id": "alder_town_0087",
    "asset": "bollard",
    "position": [
     -421.975,
@@ -1627,7 +1403,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0102",
+   "id": "alder_town_0088",
    "asset": "bollard",
    "position": [
     -409.25,
@@ -1643,7 +1419,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0103",
+   "id": "alder_town_0089",
    "asset": "bollard",
    "position": [
     -396.485,
@@ -1659,7 +1435,7 @@
    "tag": "civic_threshold"
   },
   {
-   "id": "alder_town_0104",
+   "id": "alder_town_0090",
    "asset": "shrub",
    "position": [
     -867.956,
@@ -1675,7 +1451,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0105",
+   "id": "alder_town_0091",
    "asset": "shrub",
    "position": [
     -853.828,
@@ -1691,7 +1467,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0106",
+   "id": "alder_town_0092",
    "asset": "broadleaf",
    "position": [
     -881.117,
@@ -1707,7 +1483,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0107",
+   "id": "alder_town_0093",
    "asset": "shrub",
    "position": [
     -848.101,
@@ -1723,7 +1499,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0108",
+   "id": "alder_town_0094",
    "asset": "broadleaf",
    "position": [
     -863.114,
@@ -1739,7 +1515,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0109",
+   "id": "alder_town_0095",
    "asset": "shrub",
    "position": [
     -789.405,
@@ -1755,7 +1531,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0110",
+   "id": "alder_town_0096",
    "asset": "shrub",
    "position": [
     -841.052,
@@ -1771,7 +1547,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0111",
+   "id": "alder_town_0097",
    "asset": "shrub",
    "position": [
     -870.087,
@@ -1787,7 +1563,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0112",
+   "id": "alder_town_0098",
    "asset": "shrub",
    "position": [
     -858.811,
@@ -1803,7 +1579,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0113",
+   "id": "alder_town_0099",
    "asset": "shrub",
    "position": [
     -889.7,
@@ -1819,23 +1595,23 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0114",
-   "asset": "broadleaf",
+   "id": "alder_town_0100",
+   "asset": "shrub",
    "position": [
-    -876.096,
-    42.775,
-    719.334
+    -869.589,
+    41.512,
+    699.862
    ],
-   "yaw_deg": 359.39,
-   "scale": 1.228,
+   "yaw_deg": 354.67,
+   "scale": 1.115,
    "terrain_offset_m": -0.08,
-   "slope_deg": 11.62,
-   "road_clearance_m": 43.57,
+   "slope_deg": 11.02,
+   "road_clearance_m": 37.28,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0115",
+   "id": "alder_town_0101",
    "asset": "broadleaf",
    "position": [
     -849.572,
@@ -1851,7 +1627,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0116",
+   "id": "alder_town_0102",
    "asset": "broadleaf",
    "position": [
     -869.743,
@@ -1867,7 +1643,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0117",
+   "id": "alder_town_0103",
    "asset": "shrub",
    "position": [
     -770.487,
@@ -1883,7 +1659,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0118",
+   "id": "alder_town_0104",
    "asset": "shrub",
    "position": [
     -790.645,
@@ -1899,7 +1675,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0119",
+   "id": "alder_town_0105",
    "asset": "shrub",
    "position": [
     -797.515,
@@ -1915,7 +1691,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0120",
+   "id": "alder_town_0106",
    "asset": "broadleaf",
    "position": [
     -798.42,
@@ -1931,7 +1707,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0121",
+   "id": "alder_town_0107",
    "asset": "shrub",
    "position": [
     -839.811,
@@ -1947,7 +1723,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0122",
+   "id": "alder_town_0108",
    "asset": "shrub",
    "position": [
     -515.642,
@@ -1963,7 +1739,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0123",
+   "id": "alder_town_0109",
    "asset": "shrub",
    "position": [
     -533.227,
@@ -1979,7 +1755,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0124",
+   "id": "alder_town_0110",
    "asset": "shrub",
    "position": [
     -568.025,
@@ -1995,7 +1771,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0125",
+   "id": "alder_town_0111",
    "asset": "shrub",
    "position": [
     -559.027,
@@ -2011,7 +1787,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0126",
+   "id": "alder_town_0112",
    "asset": "shrub",
    "position": [
     -541.388,
@@ -2027,7 +1803,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0127",
+   "id": "alder_town_0113",
    "asset": "shrub",
    "position": [
     -581.343,
@@ -2043,7 +1819,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0128",
+   "id": "alder_town_0114",
    "asset": "shrub",
    "position": [
     -545.543,
@@ -2059,7 +1835,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0129",
+   "id": "alder_town_0115",
    "asset": "shrub",
    "position": [
     -548.088,
@@ -2075,7 +1851,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0130",
+   "id": "alder_town_0116",
    "asset": "shrub",
    "position": [
     -556.369,
@@ -2091,7 +1867,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0131",
+   "id": "alder_town_0117",
    "asset": "shrub",
    "position": [
     -574.45,
@@ -2107,23 +1883,23 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0132",
+   "id": "alder_town_0118",
    "asset": "shrub",
    "position": [
-    -588.195,
-    44.522,
-    685.292
+    -589.196,
+    41.475,
+    655.649
    ],
-   "yaw_deg": 82.32,
-   "scale": 1.191,
+   "yaw_deg": 69.66,
+   "scale": 1.333,
    "terrain_offset_m": -0.08,
-   "slope_deg": 11.61,
-   "road_clearance_m": 47.24,
+   "slope_deg": 9.47,
+   "road_clearance_m": 31.58,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0133",
+   "id": "alder_town_0119",
    "asset": "shrub",
    "position": [
     -575.344,
@@ -2139,7 +1915,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0134",
+   "id": "alder_town_0120",
    "asset": "shrub",
    "position": [
     -488.076,
@@ -2155,7 +1931,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0135",
+   "id": "alder_town_0121",
    "asset": "shrub",
    "position": [
     -532.735,
@@ -2171,7 +1947,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0136",
+   "id": "alder_town_0122",
    "asset": "broadleaf",
    "position": [
     -550.822,
@@ -2187,7 +1963,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0137",
+   "id": "alder_town_0123",
    "asset": "shrub",
    "position": [
     -570.72,
@@ -2203,7 +1979,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0138",
+   "id": "alder_town_0124",
    "asset": "shrub",
    "position": [
     -557.54,
@@ -2219,7 +1995,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0139",
+   "id": "alder_town_0125",
    "asset": "shrub",
    "position": [
     -584.24,
@@ -2235,7 +2011,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0140",
+   "id": "alder_town_0126",
    "asset": "broadleaf",
    "position": [
     -540.693,
@@ -2251,7 +2027,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0141",
+   "id": "alder_town_0127",
    "asset": "shrub",
    "position": [
     -594.361,
@@ -2267,7 +2043,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0142",
+   "id": "alder_town_0128",
    "asset": "broadleaf",
    "position": [
     -538.229,
@@ -2283,7 +2059,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0143",
+   "id": "alder_town_0129",
    "asset": "broadleaf",
    "position": [
     -590.82,
@@ -2299,7 +2075,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0144",
+   "id": "alder_town_0130",
    "asset": "shrub",
    "position": [
     -564.621,
@@ -2315,7 +2091,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0145",
+   "id": "alder_town_0131",
    "asset": "shrub",
    "position": [
     -557.81,
@@ -2331,7 +2107,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0146",
+   "id": "alder_town_0132",
    "asset": "shrub",
    "position": [
     -591.076,
@@ -2347,7 +2123,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0147",
+   "id": "alder_town_0133",
    "asset": "shrub",
    "position": [
     -580.619,
@@ -2363,7 +2139,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0148",
+   "id": "alder_town_0134",
    "asset": "shrub",
    "position": [
     -575.057,
@@ -2379,7 +2155,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0149",
+   "id": "alder_town_0135",
    "asset": "shrub",
    "position": [
     -561.701,
@@ -2395,7 +2171,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0150",
+   "id": "alder_town_0136",
    "asset": "shrub",
    "position": [
     -565.16,
@@ -2411,7 +2187,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0151",
+   "id": "alder_town_0137",
    "asset": "broadleaf",
    "position": [
     -515.703,
@@ -2427,7 +2203,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0152",
+   "id": "alder_town_0138",
    "asset": "shrub",
    "position": [
     -579.033,
@@ -2443,7 +2219,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0153",
+   "id": "alder_town_0139",
    "asset": "shrub",
    "position": [
     -582.329,
@@ -2459,7 +2235,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0154",
+   "id": "alder_town_0140",
    "asset": "shrub",
    "position": [
     -557.287,
@@ -2475,7 +2251,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0155",
+   "id": "alder_town_0141",
    "asset": "broadleaf",
    "position": [
     -520.006,
@@ -2491,7 +2267,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0156",
+   "id": "alder_town_0142",
    "asset": "shrub",
    "position": [
     -590.807,
@@ -2507,7 +2283,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0157",
+   "id": "alder_town_0143",
    "asset": "shrub",
    "position": [
     -560.289,
@@ -2523,7 +2299,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0158",
+   "id": "alder_town_0144",
    "asset": "shrub",
    "position": [
     -632.066,
@@ -2539,23 +2315,23 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0159",
-   "asset": "broadleaf",
+   "id": "alder_town_0145",
+   "asset": "shrub",
    "position": [
-    -572.347,
-    40.038,
-    657.856
+    -598.397,
+    42.582,
+    653.943
    ],
-   "yaw_deg": 358.34,
-   "scale": 0.787,
+   "yaw_deg": 260.5,
+   "scale": 1.316,
    "terrain_offset_m": -0.08,
-   "slope_deg": 2.72,
-   "road_clearance_m": 18.92,
+   "slope_deg": 10.29,
+   "road_clearance_m": 38.15,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0160",
+   "id": "alder_town_0146",
    "asset": "broadleaf",
    "position": [
     -609.469,
@@ -2571,7 +2347,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0161",
+   "id": "alder_town_0147",
    "asset": "shrub",
    "position": [
     -546.527,
@@ -2587,7 +2363,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0162",
+   "id": "alder_town_0148",
    "asset": "shrub",
    "position": [
     -533.095,
@@ -2603,7 +2379,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0163",
+   "id": "alder_town_0149",
    "asset": "shrub",
    "position": [
     -564.028,
@@ -2619,7 +2395,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0164",
+   "id": "alder_town_0150",
    "asset": "shrub",
    "position": [
     -530.675,
@@ -2635,71 +2411,71 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0165",
+   "id": "alder_town_0151",
    "asset": "shrub",
    "position": [
-    -530.428,
-    39.92,
-    726.054
+    -887.515,
+    52.934,
+    486.963
    ],
-   "yaw_deg": 218.79,
-   "scale": 1.12,
+   "yaw_deg": 27.84,
+   "scale": 1.281,
    "terrain_offset_m": -0.08,
-   "slope_deg": 0.25,
-   "road_clearance_m": 13.45,
+   "slope_deg": 4.65,
+   "road_clearance_m": 93.8,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0166",
+   "id": "alder_town_0152",
    "asset": "shrub",
    "position": [
-    -819.765,
-    49.15,
-    484.072
+    -873.326,
+    51.641,
+    476.954
    ],
-   "yaw_deg": 273.49,
-   "scale": 1.133,
+   "yaw_deg": 138.2,
+   "scale": 1.174,
    "terrain_offset_m": -0.08,
-   "slope_deg": 13.26,
-   "road_clearance_m": 48.33,
+   "slope_deg": 3.87,
+   "road_clearance_m": 76.85,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0167",
+   "id": "alder_town_0153",
    "asset": "shrub",
    "position": [
-    -879.064,
-    52.074,
-    457.298
+    -846.609,
+    48.868,
+    457.3
    ],
-   "yaw_deg": 286.58,
-   "scale": 1,
+   "yaw_deg": 179.93,
+   "scale": 1.293,
    "terrain_offset_m": -0.08,
-   "slope_deg": 8.46,
-   "road_clearance_m": 67.15,
+   "slope_deg": 7.48,
+   "road_clearance_m": 44.43,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0168",
-   "asset": "broadleaf",
+   "id": "alder_town_0154",
+   "asset": "shrub",
    "position": [
-    -874.589,
-    52.482,
-    505.723
+    -857.852,
+    48.985,
+    442.463
    ],
-   "yaw_deg": 307.35,
-   "scale": 0.883,
+   "yaw_deg": 105.15,
+   "scale": 1.321,
    "terrain_offset_m": -0.08,
-   "slope_deg": 3.62,
-   "road_clearance_m": 99.42,
+   "slope_deg": 7.05,
+   "road_clearance_m": 41.03,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0169",
+   "id": "alder_town_0155",
    "asset": "shrub",
    "position": [
     -811.138,
@@ -2715,7 +2491,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0170",
+   "id": "alder_town_0156",
    "asset": "shrub",
    "position": [
     -892.501,
@@ -2731,7 +2507,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0171",
+   "id": "alder_town_0157",
    "asset": "shrub",
    "position": [
     -801.452,
@@ -2747,7 +2523,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0172",
+   "id": "alder_town_0158",
    "asset": "shrub",
    "position": [
     -830.978,
@@ -2763,7 +2539,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0173",
+   "id": "alder_town_0159",
    "asset": "broadleaf",
    "position": [
     -859.151,
@@ -2779,71 +2555,71 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0174",
+   "id": "alder_town_0160",
    "asset": "shrub",
    "position": [
-    -838.076,
-    46.607,
-    439.609
+    -819.473,
+    48.428,
+    480.395
    ],
-   "yaw_deg": 136.16,
-   "scale": 1.273,
+   "yaw_deg": 40.49,
+   "scale": 0.878,
    "terrain_offset_m": -0.08,
-   "slope_deg": 6.44,
-   "road_clearance_m": 25.51,
+   "slope_deg": 12.76,
+   "road_clearance_m": 45.23,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0175",
+   "id": "alder_town_0161",
+   "asset": "shrub",
+   "position": [
+    -798.31,
+    44.313,
+    465.97
+   ],
+   "yaw_deg": 324.78,
+   "scale": 0.995,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.56,
+   "road_clearance_m": 20.97,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0162",
    "asset": "broadleaf",
    "position": [
-    -855.509,
-    53.689,
-    530.165
+    -810.817,
+    46.991,
+    478.936
    ],
-   "yaw_deg": 141.22,
-   "scale": 0.892,
+   "yaw_deg": 72.43,
+   "scale": 1.006,
    "terrain_offset_m": -0.08,
-   "slope_deg": 4.51,
-   "road_clearance_m": 1000000,
+   "slope_deg": 11.75,
+   "road_clearance_m": 38.84,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0176",
+   "id": "alder_town_0163",
    "asset": "shrub",
    "position": [
-    -809.06,
-    46.608,
-    477.966
+    -819.992,
+    45.679,
+    456.443
    ],
-   "yaw_deg": 357.2,
-   "scale": 1.09,
+   "yaw_deg": 256.19,
+   "scale": 1.474,
    "terrain_offset_m": -0.08,
-   "slope_deg": 11.23,
-   "road_clearance_m": 37.01,
+   "slope_deg": 6.76,
+   "road_clearance_m": 26.7,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0177",
-   "asset": "shrub",
-   "position": [
-    -851.407,
-    52.561,
-    492.431
-   ],
-   "yaw_deg": 25.73,
-   "scale": 1.466,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 4.82,
-   "road_clearance_m": 74.42,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0178",
+   "id": "alder_town_0164",
    "asset": "shrub",
    "position": [
     -893.001,
@@ -2859,7 +2635,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0179",
+   "id": "alder_town_0165",
    "asset": "broadleaf",
    "position": [
     -789.366,
@@ -2875,7 +2651,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0180",
+   "id": "alder_town_0166",
    "asset": "shrub",
    "position": [
     -811.574,
@@ -2891,7 +2667,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0181",
+   "id": "alder_town_0167",
    "asset": "broadleaf",
    "position": [
     -840.157,
@@ -2907,7 +2683,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0182",
+   "id": "alder_town_0168",
    "asset": "broadleaf",
    "position": [
     -887.465,
@@ -2923,7 +2699,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0183",
+   "id": "alder_town_0169",
    "asset": "broadleaf",
    "position": [
     -853.32,
@@ -2939,7 +2715,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0184",
+   "id": "alder_town_0170",
    "asset": "shrub",
    "position": [
     -830.962,
@@ -2955,7 +2731,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0185",
+   "id": "alder_town_0171",
    "asset": "shrub",
    "position": [
     -855.336,
@@ -2971,295 +2747,295 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0186",
+   "id": "alder_town_0172",
    "asset": "shrub",
    "position": [
-    -819.04,
-    45.545,
-    455.595
+    -898.471,
+    54.133,
+    512.311
    ],
-   "yaw_deg": 194.73,
-   "scale": 1.08,
+   "yaw_deg": 132.36,
+   "scale": 1.402,
    "terrain_offset_m": -0.08,
-   "slope_deg": 6.27,
-   "road_clearance_m": 25.44,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0187",
-   "asset": "broadleaf",
-   "position": [
-    -854.795,
-    47.786,
-    428.487
-   ],
-   "yaw_deg": 175.19,
-   "scale": 0.879,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 6.74,
-   "road_clearance_m": 28.9,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0188",
-   "asset": "shrub",
-   "position": [
-    -797.689,
-    48.803,
-    499.285
-   ],
-   "yaw_deg": 252.56,
-   "scale": 1.251,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 14.09,
-   "road_clearance_m": 47.55,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0189",
-   "asset": "shrub",
-   "position": [
-    -747.101,
-    46.364,
-    435.489
-   ],
-   "yaw_deg": 337.45,
-   "scale": 1.156,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 13.18,
-   "road_clearance_m": 33.74,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0190",
-   "asset": "shrub",
-   "position": [
-    -793.457,
-    44.146,
-    470.639
-   ],
-   "yaw_deg": 215.07,
-   "scale": 1.114,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 5.27,
-   "road_clearance_m": 21.84,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0191",
-   "asset": "broadleaf",
-   "position": [
-    -832.713,
-    50.546,
-    482.216
-   ],
-   "yaw_deg": 345.4,
-   "scale": 1.461,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 11.82,
-   "road_clearance_m": 54.78,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0192",
-   "asset": "shrub",
-   "position": [
-    -849.326,
-    54.229,
-    540.752
-   ],
-   "yaw_deg": 64.47,
-   "scale": 1.395,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 1.97,
+   "slope_deg": 1.84,
    "road_clearance_m": 1000000,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0193",
+   "id": "alder_town_0173",
    "asset": "shrub",
    "position": [
-    -821.808,
-    45.59,
-    433.781
+    -848.55,
+    54.012,
+    562.899
    ],
-   "yaw_deg": 113.45,
-   "scale": 1.354,
+   "yaw_deg": 212.82,
+   "scale": 1.002,
    "terrain_offset_m": -0.08,
-   "slope_deg": 2.45,
-   "road_clearance_m": 10.41,
+   "slope_deg": 1.41,
+   "road_clearance_m": 1000000,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0194",
-   "asset": "shrub",
+   "id": "alder_town_0174",
+   "asset": "broadleaf",
    "position": [
-    -820.364,
-    53.727,
-    526.542
+    -876.754,
+    52.467,
+    501.372
    ],
-   "yaw_deg": 128.41,
-   "scale": 1.309,
+   "yaw_deg": 7.01,
+   "scale": 1.431,
    "terrain_offset_m": -0.08,
-   "slope_deg": 4.03,
-   "road_clearance_m": 90.88,
+   "slope_deg": 4.15,
+   "road_clearance_m": 97.5,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0195",
+   "id": "alder_town_0175",
    "asset": "shrub",
    "position": [
-    -845.993,
-    53.162,
-    498.122
+    -778.61,
+    43.403,
+    478.206
    ],
-   "yaw_deg": 306.42,
-   "scale": 1.289,
+   "yaw_deg": 331.52,
+   "scale": 0.749,
    "terrain_offset_m": -0.08,
-   "slope_deg": 4.31,
-   "road_clearance_m": 75.49,
+   "slope_deg": 4.09,
+   "road_clearance_m": 19.33,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0196",
+   "id": "alder_town_0176",
    "asset": "shrub",
    "position": [
-    -887.117,
-    53.119,
-    497.36
+    -806.935,
+    53.006,
+    527.042
    ],
-   "yaw_deg": 30.97,
+   "yaw_deg": 147.99,
+   "scale": 1.058,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 2.58,
+   "road_clearance_m": 80.01,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0177",
+   "asset": "shrub",
+   "position": [
+    -830.176,
+    45.872,
+    436.405
+   ],
+   "yaw_deg": 329.31,
+   "scale": 0.823,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.31,
+   "road_clearance_m": 17.88,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0178",
+   "asset": "shrub",
+   "position": [
+    -835.795,
+    46.324,
+    438.219
+   ],
+   "yaw_deg": 228.6,
+   "scale": 1.259,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.52,
+   "road_clearance_m": 22.95,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0179",
+   "asset": "shrub",
+   "position": [
+    -845.948,
+    49.381,
+    464.007
+   ],
+   "yaw_deg": 237.51,
+   "scale": 0.782,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.46,
+   "road_clearance_m": 49.08,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0180",
+   "asset": "broadleaf",
+   "position": [
+    -827.903,
+    54.323,
+    532.05
+   ],
+   "yaw_deg": 283.01,
+   "scale": 0.807,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.23,
+   "road_clearance_m": 93.47,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0181",
+   "asset": "broadleaf",
+   "position": [
+    -820.263,
+    45.344,
+    448.072
+   ],
+   "yaw_deg": 37.01,
+   "scale": 1.231,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.24,
+   "road_clearance_m": 20.37,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0182",
+   "asset": "broadleaf",
+   "position": [
+    -864.028,
+    50.951,
+    470.004
+   ],
+   "yaw_deg": 44.1,
+   "scale": 1.204,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.8,
+   "road_clearance_m": 65.47,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0183",
+   "asset": "shrub",
+   "position": [
+    -862.796,
+    50.381,
+    459.577
+   ],
+   "yaw_deg": 184.98,
+   "scale": 1.111,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 5.02,
+   "road_clearance_m": 56.91,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0184",
+   "asset": "broadleaf",
+   "position": [
+    -816.796,
+    53.331,
+    517.752
+   ],
+   "yaw_deg": 261.65,
+   "scale": 0.79,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.74,
+   "road_clearance_m": 83.45,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0185",
+   "asset": "shrub",
+   "position": [
+    -845.629,
+    53.123,
+    496.651
+   ],
+   "yaw_deg": 317.61,
+   "scale": 1.283,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 4.39,
+   "road_clearance_m": 74.11,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0186",
+   "asset": "shrub",
+   "position": [
+    -801.735,
+    45.201,
+    473.821
+   ],
+   "yaw_deg": 307.06,
+   "scale": 0.736,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 8.68,
+   "road_clearance_m": 29.31,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0187",
+   "asset": "shrub",
+   "position": [
+    -834.644,
+    46.16,
+    430.271
+   ],
+   "yaw_deg": 121.02,
+   "scale": 1.177,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 3.01,
+   "road_clearance_m": 16.29,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0188",
+   "asset": "broadleaf",
+   "position": [
+    -849.76,
+    47.787,
+    437.917
+   ],
+   "yaw_deg": 236.44,
+   "scale": 1.463,
+   "terrain_offset_m": -0.08,
+   "slope_deg": 7.35,
+   "road_clearance_m": 32.17,
+   "district": "",
+   "tag": "planted_cluster"
+  },
+  {
+   "id": "alder_town_0189",
+   "asset": "broadleaf",
+   "position": [
+    -782.74,
+    47.236,
+    504.433
+   ],
+   "yaw_deg": 43.81,
    "scale": 0.802,
    "terrain_offset_m": -0.08,
-   "slope_deg": 4.55,
-   "road_clearance_m": 101.26,
+   "slope_deg": 14.62,
+   "road_clearance_m": 43.23,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0197",
-   "asset": "shrub",
-   "position": [
-    -825.118,
-    50.14,
-    485.345
-   ],
-   "yaw_deg": 276.97,
-   "scale": 0.774,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 12.92,
-   "road_clearance_m": 52.59,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0198",
-   "asset": "shrub",
-   "position": [
-    -827.581,
-    51.984,
-    493.943
-   ],
-   "yaw_deg": 111.24,
-   "scale": 1.161,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 10.93,
-   "road_clearance_m": 60.92,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0199",
-   "asset": "shrub",
-   "position": [
-    -850.423,
-    48.807,
-    451.343
-   ],
-   "yaw_deg": 310.18,
-   "scale": 1.149,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 7.22,
-   "road_clearance_m": 42.49,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0200",
-   "asset": "shrub",
-   "position": [
-    -886.075,
-    52.878,
-    472.832
-   ],
-   "yaw_deg": 6.9,
-   "scale": 1.38,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 6,
-   "road_clearance_m": 82.61,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0201",
-   "asset": "shrub",
-   "position": [
-    -813.349,
-    46.016,
-    469.254
-   ],
-   "yaw_deg": 117.58,
-   "scale": 1.029,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 9.09,
-   "road_clearance_m": 32.66,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0202",
-   "asset": "shrub",
-   "position": [
-    -836.179,
-    52.964,
-    495.354
-   ],
-   "yaw_deg": 281.34,
-   "scale": 1.268,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 7.61,
-   "road_clearance_m": 67.54,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0203",
-   "asset": "shrub",
-   "position": [
-    -870.693,
-    51.617,
-    483.313
-   ],
-   "yaw_deg": 82.91,
-   "scale": 1.212,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 2.42,
-   "road_clearance_m": 79.87,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0204",
+   "id": "alder_town_0190",
    "asset": "shrub",
    "position": [
     -805.575,
@@ -3275,7 +3051,7 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0205",
+   "id": "alder_town_0191",
    "asset": "shrub",
    "position": [
     -803.598,
@@ -3291,55 +3067,55 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0206",
+   "id": "alder_town_0192",
    "asset": "shrub",
    "position": [
-    -783.499,
-    47.531,
-    505.249
+    -810.753,
+    45.588,
+    468.138
    ],
-   "yaw_deg": 245.42,
-   "scale": 1.282,
+   "yaw_deg": 50.84,
+   "scale": 0.882,
    "terrain_offset_m": -0.08,
-   "slope_deg": 14.77,
-   "road_clearance_m": 44.33,
+   "slope_deg": 8.3,
+   "road_clearance_m": 30.2,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0207",
+   "id": "alder_town_0193",
    "asset": "shrub",
    "position": [
-    -871.593,
-    50.212,
-    435.784
+    -845.89,
+    53.366,
+    502.525
    ],
-   "yaw_deg": 357.52,
-   "scale": 1.362,
+   "yaw_deg": 337.16,
+   "scale": 0.768,
    "terrain_offset_m": -0.08,
-   "slope_deg": 8.64,
-   "road_clearance_m": 46.02,
+   "slope_deg": 4.22,
+   "road_clearance_m": 78.95,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0208",
+   "id": "alder_town_0194",
    "asset": "shrub",
    "position": [
-    -891.995,
-    53.774,
-    442.012
+    -779.359,
+    49.7,
+    517.824
    ],
-   "yaw_deg": 90.44,
-   "scale": 1.346,
+   "yaw_deg": 123.29,
+   "scale": 0.889,
    "terrain_offset_m": -0.08,
-   "slope_deg": 7.71,
-   "road_clearance_m": 65.22,
+   "slope_deg": 15.15,
+   "road_clearance_m": 53.17,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0209",
+   "id": "alder_town_0195",
    "asset": "broadleaf",
    "position": [
     -841.3,
@@ -3355,98 +3131,82 @@
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0210",
+   "id": "alder_town_0196",
    "asset": "shrub",
    "position": [
-    -882.495,
-    51.326,
-    424.185
+    -828.303,
+    52.565,
+    497.359
    ],
-   "yaw_deg": 273.04,
-   "scale": 1.302,
+   "yaw_deg": 53.5,
+   "scale": 1.426,
    "terrain_offset_m": -0.08,
-   "slope_deg": 10.11,
-   "road_clearance_m": 46.34,
+   "slope_deg": 9.52,
+   "road_clearance_m": 64.08,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0211",
+   "id": "alder_town_0197",
    "asset": "shrub",
    "position": [
-    -894.303,
-    53.391,
-    486.08
+    -845.977,
+    47.86,
+    445.211
    ],
-   "yaw_deg": 196.36,
-   "scale": 0.82,
+   "yaw_deg": 140.49,
+   "scale": 1.292,
    "terrain_offset_m": -0.08,
-   "slope_deg": 2.74,
-   "road_clearance_m": 97.77,
+   "slope_deg": 7.75,
+   "road_clearance_m": 34.97,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0212",
+   "id": "alder_town_0198",
    "asset": "shrub",
    "position": [
-    -871.79,
-    54.377,
-    561.942
+    -889.274,
+    53.212,
+    472.421
    ],
-   "yaw_deg": 227.97,
-   "scale": 1.029,
+   "yaw_deg": 165.72,
+   "scale": 0.904,
    "terrain_offset_m": -0.08,
-   "slope_deg": 1.19,
-   "road_clearance_m": 1000000,
+   "slope_deg": 5.48,
+   "road_clearance_m": 84.68,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0213",
+   "id": "alder_town_0199",
    "asset": "shrub",
    "position": [
-    -842.77,
-    49.308,
-    466.347
+    -801.162,
+    50.717,
+    507.128
    ],
-   "yaw_deg": 127.75,
-   "scale": 1.306,
+   "yaw_deg": 350.77,
+   "scale": 1.194,
    "terrain_offset_m": -0.08,
-   "slope_deg": 8.26,
-   "road_clearance_m": 48.8,
+   "slope_deg": 11.72,
+   "road_clearance_m": 55.97,
    "district": "",
    "tag": "planted_cluster"
   },
   {
-   "id": "alder_town_0214",
-   "asset": "broadleaf",
-   "position": [
-    -808.294,
-    45.178,
-    466.278
-   ],
-   "yaw_deg": 76.37,
-   "scale": 0.952,
-   "terrain_offset_m": -0.08,
-   "slope_deg": 7.15,
-   "road_clearance_m": 27.23,
-   "district": "",
-   "tag": "planted_cluster"
-  },
-  {
-   "id": "alder_town_0215",
+   "id": "alder_town_0200",
    "asset": "shrub",
    "position": [
-    -861.446,
-    51.013,
-    473.043
+    -812.745,
+    44.947,
+    447.472
    ],
-   "yaw_deg": 287.76,
-   "scale": 1.442,
+   "yaw_deg": 213.39,
+   "scale": 0.977,
    "terrain_offset_m": -0.08,
-   "slope_deg": 3.82,
-   "road_clearance_m": 66.05,
+   "slope_deg": 2.51,
+   "road_clearance_m": 15.16,
    "district": "",
    "tag": "planted_cluster"
   }
