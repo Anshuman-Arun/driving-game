@@ -395,7 +395,11 @@ func _seed_trace(seed_value: int) -> Dictionary:
                     var movement: String = str(first["reservation_movement"])
                     var other_movement: String = str(second["reservation_movement"])
                     if movement == other_movement:
-                        safe = false
+                        # Multiple following cars may own entrance keys after
+                        # 12m headway; inspect their real lane clearance.
+                        if first["lane_id"] == second["lane_id"] and (
+                                absf(float(first["s"]) - float(second["s"])) < sim.MIN_GAP_M - 0.05):
+                            safe = false
                     elif sim.movement_conflicts.has(movement) and (
                             sim.movement_conflicts[movement].has(other_movement)):
                         if sim._movement_progress(first, movement) < float(
