@@ -197,6 +197,7 @@ func _test_wrong_way_and_teleport() -> void:
 	var pose: Dictionary = e.reset_racer("a")
 	_check(pose.has("position") and not e.needs_reset("a"), "reset returns a spawn pose")
 	_check(e.get_racer("a")["invalid_laps"] == 1, "invalid attempt counted")
+	_check(not e.update_racer_state("a", Vector3(NAN, 20, 0), Vector3.ZERO), "nonfinite racer telemetry rejected")
 	var rankings: Array[Dictionary] = e.standings()
 	_check(rankings[0]["position"] == 1, "standings assign positions")
 
@@ -317,6 +318,8 @@ func _test_ai_controls() -> void:
 	_check(with_obstacle["brake"] >= baseline["brake"], "obstacle does not decrease braking")
 	var off_lane: Dictionary = ai.compute_controls(p, forward, 15.0, 0.016, [{"distance_m": 12.0, "lateral_m": 10.0}])
 	_check(is_equal_approx(off_lane["target_speed_mps"], baseline["target_speed_mps"]), "off-lane obstacles ignored")
+	var junk: Dictionary = ai.compute_controls(p, forward, 15.0, 0.016, [{"distance_m": "bad", "lateral_m": 0.0}])
+	_check(is_equal_approx(junk["target_speed_mps"], baseline["target_speed_mps"]), "malformed obstacle data ignored")
 	var offroad: Dictionary = ai.compute_controls(Vector3(900, 20, 900), forward, 4.0, 0.016)
 	_check(offroad["needs_reset"], "AI reports grossly off-route condition")
 	var straight_speed := ai._corner_speed(75.0)
