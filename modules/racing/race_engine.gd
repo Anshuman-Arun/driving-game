@@ -54,6 +54,7 @@ func register_racer(id: String, is_player: bool = false) -> bool:
 	if state != State.IDLE and state != State.FREE_ROAM:
 		return _fail("Register racers before starting the event")
 	racers[id] = {"id": id, "is_player": is_player}
+	last_error = ""
 	return true
 
 func unregister_all_racers() -> void:
@@ -153,8 +154,12 @@ func update_racer_state(id: String, position: Vector3, velocity: Vector3) -> boo
 	if not (state in [State.GRID, State.COUNTDOWN, State.RACING]):
 		return false
 	var r: Dictionary = racers[id]
+	for value in [position.x, position.y, position.z, velocity.x, velocity.y, velocity.z]:
+		if not is_finite(value):
+			return _fail("Non-finite racer position or velocity: " + id)
 	r["pending_position"] = position
 	r["velocity"] = velocity
+	last_error = ""
 	return true
 
 func pause() -> bool:
