@@ -131,9 +131,6 @@ def normalize_import():
             groups[key] += 1
         else:
             parent_keep_matrix(obj, body, new_world)
-            # Source fender lip toruses are too big for retargeted tires.
-            if "_Fender_Lip_" in original_name:
-                obj.scale *= 0.82
             groups["Body"] += 1
     for key in PART_ORDER:
         if groups[key] < 6:
