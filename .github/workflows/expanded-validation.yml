@@ -107,9 +107,9 @@ jobs:
         run: |
           {
             printf '### %s — %s\n\n' "$TRACK" "$BRANCH"
-            if [[ -d ci/.git ]]; then printf 'CI source SHA: \`%s\`\n\n' "$(git -C ci rev-parse HEAD)"; fi
-            if [[ -d worktree/.git ]]; then printf 'Test source SHA: \`%s\`\n\n' "$(git -C worktree rev-parse HEAD)"; fi
-            if [[ -d world-source/.git ]]; then printf 'Authoritative World SHA: \`%s\`\n\n' "$(git -C world-source rev-parse HEAD)"; fi
+            if [[ -d ci/.git ]]; then printf 'CI source SHA: `%s`\n\n' "$(git -C ci rev-parse HEAD)"; fi
+            if [[ -d worktree/.git ]]; then printf 'Test source SHA: `%s`\n\n' "$(git -C worktree rev-parse HEAD)"; fi
+            if [[ -d world-source/.git ]]; then printf 'Authoritative World SHA: `%s`\n\n' "$(git -C world-source rev-parse HEAD)"; fi
             if [[ -f ci-out/SUMMARY.md ]]; then
               cat ci-out/SUMMARY.md
             else
@@ -176,7 +176,7 @@ jobs:
           {
             echo '### Traffic content (optional, not an assertion of readiness)'
             if [[ -d worktree/.git ]]; then
-              printf 'Source SHA: \`%s\`\n\n' "$(git -C worktree rev-parse HEAD)"
+              printf 'Source SHA: `%s`\n\n' "$(git -C worktree rev-parse HEAD)"
             fi
             if [[ -f ci-out/SUMMARY.md ]]; then
               cat ci-out/SUMMARY.md
