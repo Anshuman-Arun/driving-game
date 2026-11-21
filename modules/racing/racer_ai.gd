@@ -87,8 +87,10 @@ func compute_controls(position: Vector3, forward: Vector3, speed_mps: float, del
 	for item in obstacles:
 		if not (item is Dictionary):
 			continue
-		var d: float = float(item.get("distance_m", -1.0))
-		var lateral: float = absf(float(item.get("lateral_m", INF)))
+		if not RaceRoute._number(item.get("distance_m")) or not RaceRoute._number(item.get("lateral_m")):
+			continue
+		var d: float = float(item["distance_m"])
+		var lateral: float = absf(float(item["lateral_m"]))
 		if d < 0.0 or lateral > 2.8:
 			continue
 		var clearance := maxf(0.0, d - 5.0)
