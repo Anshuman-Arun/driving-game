@@ -205,7 +205,7 @@ func _process(delta: float) -> void:
 		var name := "engine_" + band
 		_smooth_gain(name, float(_mix_targets[name]) * (0.36 if _shift_timer > 0.0 else 1.0), alpha)
 		var engine: AudioStreamPlayer = _players[name]
-		engine.pitch_scale = float(_mix_targets["pitch_" + band]) * (0.85 if _shift_timer > 0.0 else 1.0)
+		engine.pitch_scale = lerpf(engine.pitch_scale, float(_mix_targets["pitch_" + band]) * (0.85 if _shift_timer > 0.0 else 1.0), alpha)
 	for name in LOOP_NAMES:
 		var target := float(_mix_targets[name])
 		if name == "overrun":
