@@ -1,5 +1,50 @@
 # Validation and art-quality report — 2026-11-21
 
+## Focused art-source revision after review of 0c79d2fc37b2
+
+The branch already included later commit 1210a8a6 before this follow-up; these
+changes were applied on that newer feature head, never rebased onto main.
+
+**Changes prepared, not visually accepted:**
+- Disabled repetitive procedural cliff-sheet blockouts in BOTH default
+  beauty pipelines. Scanned/sculpted substitute remains **not acquired**.
+- Six authored absolute camera XYZ/aim/FOV presets now live in one shared
+  camera_shots_v2.json and drive both Godot and Blender. The integrated
+  overlay no longer steals the game camera; beauty camera labels are off.
+- Godot road/terrain shaders now use CC0 roughness-derived micro-bump
+  approximation, road wear/polish/macro patch variation and cutout paint
+  chipping; added terrain-conforming gravel verge strips. Source asphalt
+  and ground normal maps are still MISSING and may not be claimed acquired.
+- Blender source scene uses matching route-based UV tiling, conforming
+  shoulders, direct roughness-based bump, steep-slope CC0 rock blending,
+  bark microrelief, subtle foliage variation and worn road markings.
+- Godot repeated vegetation/rock instances are grouped into 72 m
+  MultiMesh cells for coarse frustum/distance culling; real LOD pop,
+  correct mesh-transform import and GPU frame costs are unverified.
+- A Godot Forward+ raw capture script, Blender raw Cycles render path,
+  SHA-256 PNG verifier, and no-rebase merge staging instructions are
+  committed in LOCAL_RENDER_HANDOFF.md.
+
+**Actually checked:** all updated GitHub file blobs exist; the six fixed
+camera rays were sampled against the embedded canonical 4 m heightfield
+with minimum clearances 3.26, 1.68, 3.16, 1.42, 12.65, 1.21 m. The
+connector-level checks also verified the integrated camera override and
+both default cliff-disable flags. These are **source-data tests only**.
+
+**Blocked:** Blender, Godot 4.7.2, GPU and a live local clone were
+unavailable, so the new shader/GDScript import, Python/Node CLI
+execution, six real renders, screenshot inspection, FPS measurements
+and artistic approval have NOT occurred. No rendered frames exist here.
+
+**Outstanding artist work:** acquired and hand-composed scanned geology,
+more convincing hero conifers/bark/needles, physical fallen branches,
+grass tufts and moss/forest litter, sourced road/ground normal maps,
+real reflection and light tuning, and six image-by-image iterations.
+Do not accept this draft PR as finished environment art.
+
+---
+
+
 ## Observed
 
 - Inspected current `main` world graph/metadata and PR #23 scenery placement data, PR #20 World Runtime integration, and merged Art PR #7. Source corridor `cedar_ridge` lane and R16 patch retain canonical positions and elevations.
