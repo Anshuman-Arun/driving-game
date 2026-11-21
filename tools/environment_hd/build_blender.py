@@ -177,6 +177,28 @@ road_links.new(wear.outputs[0],road_bsdf.inputs["Base Color"])
 line_gold=plain("Weathered alpine yellow",(.58,.38,.10,1))
 line_white=plain("Off-white worn paint",(.69,.7,.65,1))
 
+def weather_paint(material):
+    nodes=material.node_tree.nodes
+    links=material.node_tree.links
+    bsdf=nodes.get("Principled BSDF")
+    noise=nodes.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value=24.0
+    noise.inputs["Detail"].default_value=2.0
+    geom=nodes.new("ShaderNodeNewGeometry")
+    links.new(geom.outputs["Position"],noise.inputs["Vector"])
+    chipped=nodes.new("ShaderNodeValToRGB")
+    chipped.color_ramp.elements[0].position=.54
+    chipped.color_ramp.elements[0].color=(1,1,1,1)
+    chipped.color_ramp.elements[1].position=.74
+    chipped.color_ramp.elements[1].color=(.25,.25,.25,1)
+    links.new(noise.outputs["Fac"],chipped.inputs[0])
+    links.new(chipped.outputs["Color"],bsdf.inputs["Alpha"])
+    bsdf.inputs["Roughness"].default_value=.86
+
+weather_paint(line_gold)
+weather_paint(line_white)
+
+
 def mesh_object(name,verts,faces,material,uv_from_world=False):
     me=bpy.data.meshes.new(name)
     me.from_pydata(verts,[],faces)
