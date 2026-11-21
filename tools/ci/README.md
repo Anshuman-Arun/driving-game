@@ -87,3 +87,26 @@ bash tools/ci/run_expanded.sh racing-production /path/to/racing-production /tmp/
 For the integration preflight, use a **disposable** rooted Core QA checkout (not a developer's working tree) and a sibling staging directory with subcheckouts named `worldgen`, `world-runtime`, `game-shell`, `audio`, `race-content`, `racing`, `traffic`, and `art`. Then run `bash tools/ci/stage_integration.sh /tmp/integrated /tmp/staging /tmp/integration-logs`, followed by `python tools/ci/check_integration.py /tmp/integrated` and Godot import/smoke from `/tmp/integrated`. Never run staging on a real game or source-feature worktree.
 
 **Evidence rules:** "PASS" only if the named real command and its strict Godot logs succeeded; "FAIL" for failing upstream checks or CI setup; "NOT EXECUTED" for missing branch/content or infrastructure before tests. Runner headless tests do not validate rendered gameplay, 10–20-car behavior, Windows export, FPS, or gamepad hardware. Consult the particular Actions run and source SHAs for current observed results; these branches can move.
+
+## Continued expansion: corrected Audio, production suites, root driving and Scenery PR #23
+
+The expanded checks run on PR synchronization into `feat/ci-validation`; duplicate branch-push executions are intentionally removed. The original five-workstream validation is untouched. The temporary eight-workstream stage/import/Core-smoke remains a separate workflow, now using the source-owned corrected Audio ref.
+
+| Expanded track | Independently staged source(s) | Mandatory real gates |
+| --- | --- | --- |
+| Corrected Audio | `fix/audio-runtime-readiness` | Python unit tests, byte-for-byte WAV regeneration, Godot 4.7.2 import, `godot_smoke.gd`, **`godot_regression.gd`** |
+| Production Racing | `feat/production-racing-readiness` plus `feat/worldgen` and `feat/race-content` | Godot import, legacy 156-check `run_tests.gd`, `run_grid_tests.gd`, and `run_production_tests.gd` with exact canonical JSON copies |
+| PR #20 world driving | `feat/vehicle-world-integration` | Root Godot import, actual `scenes/free_roam/aster_valley.tscn` boot for 120 frames, `tests/integration/vehicle_world.gd` physics drive |
+| Scenery PR #23 | `feat/scenery-runtime` plus independent `feat/worldgen` and `feat/art-pipeline` | Source-authored dependency staging; `generate.mjs --check`, `models.mjs --check`, `validate.mjs`; standalone Godot import and smoke |
+
+Traffic Content retains its isolated canonical World and independent `feat/traffic-systems` source checkout. The actual SHA of the content branch, graph and traffic module are reported; no test failure is silently bypassed. Future run attempts resolve new source-branch heads without changing the feature branches or their tests. Scenery had **source-only** validation in its PR and must not be considered Godot-ready without the actual CI logs.
+
+```bash
+# Each source path is an independent disposable checkout, not a merge.
+bash tools/ci/run_expanded.sh racing-production /tmp/racing /tmp/racing-ci "$PWD/tools/ci" /tmp/world "" /tmp/race-content
+bash tools/ci/run_expanded.sh vehicle-world /tmp/vehicle-world /tmp/world-drive-ci "$PWD/tools/ci"
+bash tools/ci/run_expanded.sh scenery /tmp/scenery /tmp/scenery-ci "$PWD/tools/ci" /tmp/world "" "" /tmp/art
+bash tools/ci/run_expanded.sh audio /tmp/audio-corrected /tmp/audio-ci "$PWD/tools/ci"
+```
+
+Godot scripts are checked by exit status **and** parse/runtime/assertion log scanning. Incomplete staging is marked NOT EXECUTED, not PASS. A failing assertion remains a failing gate. No new artifacts are uploaded, and GitHub token access remains read-only with SHA-pinned Actions and pinned language/engine versions.
