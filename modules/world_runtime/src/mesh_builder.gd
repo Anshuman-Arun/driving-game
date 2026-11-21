@@ -97,7 +97,8 @@ func _new_arrays(vertices: PackedVector3Array, normals: PackedVector3Array,
 		arr[Mesh.ARRAY_INDEX] = indices
 	return arr
 
-func _attach_mesh(parent: Node3D, label: String, mesh: ArrayMesh, material_count: int) -> void:
+func _attach_mesh(parent: Node3D, label: String, mesh: ArrayMesh, material_count: int,
+		surface: String) -> void:
 	if mesh.get_surface_count() == 0:
 		return
 	var instance := MeshInstance3D.new()
@@ -108,6 +109,7 @@ func _attach_mesh(parent: Node3D, label: String, mesh: ArrayMesh, material_count
 	if make_colliders:
 		var body := StaticBody3D.new()
 		body.name = label + "_Collision"
+		body.set_meta("world_surface", surface)
 		parent.add_child(body)
 		var shape := CollisionShape3D.new()
 		shape.shape = mesh.create_trimesh_shape()
@@ -192,7 +194,7 @@ func _build_terrain(parent: Node3D, cell_count: int) -> void:
 			var mesh := ArrayMesh.new()
 			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(v, n, uv, ind))
 			mesh.surface_set_material(0, materials["terrain"])
-			_attach_mesh(parent, "Terrain_%d_%d" % [ix0, iz0], mesh, 1)
+			_attach_mesh(parent, "Terrain_%d_%d" % [ix0, iz0], mesh, 1, "terrain")
 			stats["terrain_chunks"] += 1
 			stats["terrain_vertices"] += vert_count
 			stats["terrain_triangles"] += (depth * width * 2)
@@ -309,7 +311,7 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
 		_new_arrays(shoulder_verts, shoulder_norms, shoulder_uv, PackedInt32Array()))
 	mesh.surface_set_material(1, materials["shoulder"])
-	_attach_mesh(parent, "Road_" + road["id"], mesh, 2)
+	_attach_mesh(parent, "Road_" + road["id"], mesh, 2, surface)
 	stats["physical_corridors"] += 1
 	stats["road_vertices"] += pavement_verts.size() + shoulder_verts.size()
 	stats["road_triangles"] += (pavement_verts.size() + shoulder_verts.size()) / 3
@@ -476,7 +478,7 @@ func _build_junction_pads(parent: Node3D) -> void:
 			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(skirt_verts, skirt_norms, skirt_uvs, PackedInt32Array()))
 			mesh.surface_set_material(1, materials["shoulder"])
 			surf_count = 2
-		_attach_mesh(parent, "Junction_" + junction, mesh, surf_count)
+		_attach_mesh(parent, "Junction_" + junction, mesh, surf_count, group_surfaces[junction])
 		stats["junction_pads"] += 1
 		stats["turn_paths_covered"] += int(turn_counts[junction])
 		stats["junction_vertices"] += vertices.size() + skirt_verts.size()
