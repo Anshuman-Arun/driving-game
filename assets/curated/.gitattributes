@@ -1,0 +1,4 @@
+# Curated GLBs were committed as complete, reproducible Git blobs, not LFS pointers.
+# Override the repository-wide *.glb LFS rule only for this original art library.
+# Do not modify or filter model contents during checkout or regeneration.
+*.glb -filter -diff -merge -text
