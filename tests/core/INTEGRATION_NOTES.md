@@ -14,7 +14,7 @@ The current feature branch owns **only** `project.godot`, `addons/`, `scenes/`, 
 
 A future integrator must replace / reconcile the **independent runtime road spline and terrain mesh** with World agent's `data/world/road_graph_v1.json`, official Road Generator `RoadManager`/generated `RoadContainer` collision, and a **Terrain3D v1.1.0** native terrain and connector without modifying that road graph. This branch does not load or edit unmerged World Agent data. The Road Generator editor plugin is vendored but not exercised in the scene. Terrain3D native release binaries are not bundled; the plugin was not loaded. We deliberately did not invent a successful three-add-on integration. The standalone Mesh/StaticBody path remains as a fallback if plugin blockers arise.
 
-## Runtime QA matrix (unverified until performed on Godot 4.7.2)
+## Static checks actually executed via connected GitHub app\n\n- `compare_commits(main, feat/core-driving)`: **113 changed files**, **zero outside Track A ownership**.\n- Source-reference scan: **7 owned GDScript files**, **2 `res://` source resource references**, **zero missing paths**.\n- Confirmed both original MIT license files and **95 Road Generator 0.9.5 release-tag files** in branch.\n- Independent Catmull–Rom sampling from authoring points: **486 road samples**, ~**1,210 m** centerline, bounds **x=-178.3..206.3, z=-158.1..212.0 m**, sample steps **1.29..3.24 m**, within 500×500m envelope. These checks inspect source/math only, **not** actual collider generation or Godot parsing.\n\n## Runtime QA matrix (unverified until performed on Godot 4.7.2)
 
 | Check | How to test | Status |
 | --- | --- | --- |

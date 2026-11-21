@@ -45,15 +45,19 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("drive_pause"):
 		_toggle_pause()
-	if not get_tree().paused:
-		if Input.is_action_just_pressed("drive_camera"):
-			camera.cycle()
-		if Input.is_action_just_pressed("drive_reset") and _elapsed - _last_reset >= 0.75:
-			_reset_to_road()
+	if Input.is_action_just_pressed("drive_reset") and _elapsed - _last_reset >= 0.75:
+		_reset_to_road()
+	if not get_tree().paused and Input.is_action_just_pressed("drive_camera"):
+		camera.cycle()
 	if adapter != null:
 		_speed.text = "%03d" % roundi(adapter.get_speed_mps() * 3.6)
 		_gear.text = "km/h    •    GEAR " + adapter.get_gear_display()
-		_info.text = "ROAD" if vehicle_body.get_wheel_contact_count() > 0 else "AIRBORNE"
+		var surface := "AIRBORNE"
+		for wheel in vehicle_body.wheel_array:
+			if wheel.is_colliding():
+				surface = wheel.surface_type.to_upper()
+				break
+		_info.text = surface
 	_pause_layer.visible = get_tree().paused
 
 func _reset_to_road() -> void:

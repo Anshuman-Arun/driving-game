@@ -182,12 +182,17 @@ func _array_mesh(vertices: PackedVector3Array, normals: PackedVector3Array, indi
 	return mesh
 
 func _static_mesh(label: String, mesh: ArrayMesh, mat: Material, collision: bool, surface: String) -> void:
-	var root := StaticBody3D.new()
+	var root: Node3D
+	if collision:
+		var physics_body := StaticBody3D.new()
+		physics_body.collision_layer = 1
+		physics_body.collision_mask = 0
+		if surface != "":
+			physics_body.add_to_group(surface)
+		root = physics_body
+	else:
+		root = Node3D.new()
 	root.name = label
-	root.collision_layer = 1
-	root.collision_mask = 0
-	if surface != "":
-		root.add_to_group(surface)
 	var visual := MeshInstance3D.new()
 	visual.mesh = mesh
 	visual.material_override = mat
