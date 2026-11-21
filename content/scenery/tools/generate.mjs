@@ -1,9 +1,11 @@
 // Aster Valley scenery composition. Original deterministic generator; no external packages.
 // Usage: node content/scenery/tools/generate.mjs [path/to/data/world] [--check]
 // Reads PR #3's unmodified heightfield, metadata and directed lane graph.
-export function generate(meta,graph,bytes) {
+export function generate(meta,graph,bytes,reservations) {
  const regionIds=["alder_town","cedar_woods","north_ridge","green_valley","eastwater_lake"];
  const seed0=20261121, lakeLevel=5.35;
+ const gateZones=reservations?.zones||[];
+ if(gateZones.length!==102||reservations.world_graph_blob_sha1!=="9bba378d68879df3baed2c97a4885c0adde88406"||reservations.source_pr!==10||reservations.clearance_margin_m!==2.5)throw Error("Pinned Race PR #10 reservations missing or incompatible");
  if(meta.seed!==seed0||meta.regions.map(r=>r.id).join(",")!==regionIds.join(",")||meta.landmarks.length!==6||bytes.length!==502002)throw Error("Canonical world inputs changed");
  const hf=meta.heightfield, W=hf.sample_width, H=hf.sample_height, s=hf.spacing_m, ox=hf.origin_x,oz=hf.origin_z;
  const sample=(i,j)=>((bytes[2*(j*W+i)] | (bytes[2*(j*W+i)+1]<<8))*hf.scale_m_per_unit+hf.offset_m);
@@ -63,7 +65,7 @@ export function generate(meta,graph,bytes) {
   return {road,turn,junction};
  }
  const packs=Object.fromEntries(regionIds.map(id=>[id,[]])),located=[],grid=new Map(),landmarkIds=new Set();
- const rejected={bounds:0,road:0,turn:0,junction:0,slope:0,water:0,landmark:0,spacing:0,no_location:0,foundation:0};
+ const rejected={bounds:0,road:0,turn:0,junction:0,slope:0,water:0,landmark:0,spacing:0,no_location:0,foundation:0,race_gate:0};
  function add(region,asset,x,z,o={}){
   const a=assets[asset],r=meta.regions.find(q=>q.id===region);if(!r||!a)throw Error("Invalid region/asset");
   const sc=o.scale??1,foot=a.r*sc;
@@ -81,6 +83,7 @@ export function generate(meta,graph,bytes) {
   if(d.road<(o.road_limit??a.road)+Math.max(0,foot-a.r)*.35){rejected.road++;return false;}
   if(d.turn<(o.turn_limit??a.turn)+Math.max(0,foot-a.r)*.35){rejected.turn++;return false;}
   if(d.junction<(o.junction_limit??Math.max(27,a.r+20))){rejected.junction++;return false;}
+  for(const q of gateZones)if(Math.hypot(x-q.x,z-q.z)<q.radius_m+foot+reservations.clearance_margin_m){rejected.race_gate++;return false;}
   if(!o.landmark&&(a.kind==="natural"||a.kind==="architecture")){
    for(const lm of meta.landmarks){const min=lm.id==="ridge_lookout"?43:lm.id==="valley_windmill"?42:lm.id==="alder_garage"?31:lm.id==="eastwater_pier"?30:lm.id==="old_quarry"?27:28;if(Math.hypot(x-lm.x,z-lm.z)<min){rejected.landmark++;return false;}}
   }
@@ -186,7 +189,7 @@ export function generate(meta,graph,bytes) {
  const waterCells=[];for(const k of flood){const i=k%W,j=Math.floor(k/W);if(flood.has(waterKey(i+1,j))&&flood.has(waterKey(i,j+1))&&flood.has(waterKey(i+1,j+1)))waterCells.push([i,j]);}
  waterCells.sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
  if(waterCells.length<100)throw Error("Cannot derive connected flooded region from real terrain");
- const provenance={world_pr:3,art_pr:7,road_git_blob:"9bba378d68879df3baed2c97a4885c0adde88406",terrain_git_blob:"d951ce11a831dad5430b4c7157e2296f73c6b151",art_manifest_git_blob:"7c67ab03c29169c48432b36df6ae7a429a8decee"};
+ const provenance={world_pr:3,art_pr:7,race_pr:10,race_head_sha:reservations.source_head_sha,road_git_blob:"9bba378d68879df3baed2c97a4885c0adde88406",terrain_git_blob:"d951ce11a831dad5430b4c7157e2296f73c6b151",art_manifest_git_blob:"7c67ab03c29169c48432b36df6ae7a429a8decee"};
  const report={},counts={};let total=0,triangles=0,batches=0,surfaceBatches=0,globalSurfaceGroups=new Set();
  for(const r of meta.regions){const list=packs[r.id],byAsset={},groups=new Set();let tri=0;
   for(const q of list){byAsset[q.asset]=(byAsset[q.asset]||0)+1;tri+=assets[q.asset].tri;groups.add(Math.floor(q.position[0]/128)+","+Math.floor(q.position[2]/128)+"|"+q.asset);}
@@ -223,7 +226,7 @@ export function generate(meta,graph,bytes) {
   files["content/scenery/previews/"+r.id+".svg"]=preview(r);
  }
  const manifest={schema_version:1,seed:seed0,coordinate_system:"godot_y_up",units:"meters",region_definitions:meta.regions,landmark_definitions:meta.landmarks,sources:provenance,assets,region_packs:regionIds.map(id=>({id,path:"content/scenery/packs/"+id+".json",count:packs[id].length})),lake:{water_level_m:lakeLevel,source_basin_floor_m:meta.heightfield.min_height_m,source_seed_xz:[800,500],grid_spacing_m:s,origin_x:ox,origin_z:oz,cell_count:waterCells.length,mask_path:"content/scenery/lake/water_cells_v1.json",note:"Flood only four-corner submerged quads in the connected low basin; decorative, non-colliding."}};
- const metrics={schema_version:1,seed:seed0,source:provenance,source_road_corridors:travel.length,source_turn_paths:turns.length,source_r16_samples:W*H,total_objects:total,near_mesh_triangles_estimate:triangles,minimum_asset_cell_batches:batches,full_world_near_mesh_component_draw_batches_estimate:[...globalSurfaceGroups].reduce((sum,k)=>sum+assets[k.split("|")[1]].surfaces,0),regions:report,lake:{water_height_m:lakeLevel,quads:waterCells.length,triangles:2*waterCells.length},rejects:rejected,landmark_ids:[...landmarkIds].sort(),culling:{cell_size_m:128,near_m:170,far_m:450,presets:["low","medium","high"]},caveat:"Minimum theoretical one-surface draw batches and source-asset triangle arithmetic, not measured GPU performance; some scene assets contain multiple surfaces."};
+ const metrics={schema_version:1,seed:seed0,source:provenance,source_road_corridors:travel.length,source_turn_paths:turns.length,source_r16_samples:W*H,source_race_exclusion_zones:gateZones.length,total_objects:total,near_mesh_triangles_estimate:triangles,minimum_asset_cell_batches:batches,full_world_near_mesh_component_draw_batches_estimate:[...globalSurfaceGroups].reduce((sum,k)=>sum+assets[k.split("|")[1]].surfaces,0),regions:report,lake:{water_height_m:lakeLevel,quads:waterCells.length,triangles:2*waterCells.length},rejects:rejected,landmark_ids:[...landmarkIds].sort(),culling:{cell_size_m:128,near_m:170,far_m:450,presets:["low","medium","high"]},caveat:"Minimum theoretical one-surface draw batches and source-asset triangle arithmetic, not measured GPU performance; some scene assets contain multiple surfaces."};
  files["content/scenery/manifest.json"]=JSON.stringify(manifest,null,2)+"\n";
  files["content/scenery/lake/water_cells_v1.json"]=JSON.stringify({schema_version:1,water_height_m:lakeLevel,origin_x:ox,origin_z:oz,spacing_m:s,cells:waterCells})+"\n";
  files["content/scenery/metrics.json"]=JSON.stringify(metrics,null,2)+"\n";
@@ -238,7 +241,8 @@ const world=process.argv[2] && !process.argv[2].startsWith("--") ? process.argv[
 const meta=JSON.parse(fs.readFileSync(path.join(world,"world_metadata_v1.json"),"utf8"));
 const graph=JSON.parse(fs.readFileSync(path.join(world,"road_graph_v1.json"),"utf8"));
 const bytes=fs.readFileSync(path.join(world,"terrain_height_r16le.bin"));
-const out=generate(meta,graph,bytes);
+const reservations=JSON.parse(fs.readFileSync(path.join(root,"content/scenery/avoidance/race_gate_reservations_v1.json"),"utf8"));
+const out=generate(meta,graph,bytes,reservations);
 let bad=0;
 for(const [relative,content] of Object.entries(out.files)){
  const target=path.join(root,relative);
