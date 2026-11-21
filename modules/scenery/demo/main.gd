@@ -16,6 +16,7 @@ func _ready() -> void:
 		return
 	_setup_light()
 	_build_terrain_preview()
+	_build_road_preview(staged)
 	camera = Camera3D.new()
 	camera.name = "FlyCamera"
 	camera.current = true
@@ -82,6 +83,77 @@ func _build_terrain_preview() -> void:
 	ground.mesh = mesh
 	ground.material_override = material
 	add_child(ground)
+
+## Read-only preview of every real AB/BA physical corridor as an inspection ribbon.
+## The authoritative collidable road mesh still belongs solely to World Runtime.
+func _build_road_preview(staged: String) -> void:
+	var file: FileAccess = FileAccess.open(staged.path_join("road_graph_v1.json"), FileAccess.READ)
+	if file == null:
+		push_error("[SceneryInspector] Cannot inspect authoritative road graph")
+		return
+	var raw: Variant = JSON.parse_string(file.get_as_text())
+	if not (raw is Dictionary):
+		push_error("[SceneryInspector] Malformed staged road graph")
+		return
+	var graph: Dictionary = raw
+	var lookup: Dictionary = {}
+	for entry in graph.get("lanes", []):
+		if entry is Dictionary:
+			lookup[str(entry.get("id", ""))] = entry
+	var built: int = 0
+	for raw_road in graph.get("roads", []):
+		if not (raw_road is Dictionary):
+			continue
+		var road: Dictionary = raw_road
+		var id: String = str(road.get("id", ""))
+		var forward_id: String = "lane_%s_ab" % id
+		var reverse_id: String = "lane_%s_ba" % id
+		if not lookup.has(forward_id) or not lookup.has(reverse_id):
+			continue
+		var forward: Dictionary = lookup[forward_id]
+		var reverse: Dictionary = lookup[reverse_id]
+		var ab: Array = forward.get("points", [])
+		var ba: Array = reverse.get("points", [])
+		if ab.size() < 2 or ab.size() != ba.size():
+			push_error("[SceneryInspector] Unpaired physical corridor: " + id)
+			return
+		var tool := SurfaceTool.new()
+		tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for i in range(1, ab.size()):
+			var a0: Array = ab[i - 1]
+			var a1: Array = ab[i]
+			var b0: Array = ba[ba.size() - i]
+			var b1: Array = ba[ba.size() - 1 - i]
+			var p := Vector3((float(a0[0]) + float(b0[0])) * 0.5, 0.0, (float(a0[2]) + float(b0[2])) * 0.5)
+			var q := Vector3((float(a1[0]) + float(b1[0])) * 0.5, 0.0, (float(a1[2]) + float(b1[2])) * 0.5)
+			var heading: Vector2 = Vector2(q.x - p.x, q.z - p.z).normalized()
+			if heading.length_squared() < 0.001:
+				continue
+			var right := Vector2(heading.y, -heading.x) * 3.4
+			var left0 := Vector3(p.x - right.x, 0.0, p.z - right.y)
+			var right0 := Vector3(p.x + right.x, 0.0, p.z + right.y)
+			var left1 := Vector3(q.x - right.x, 0.0, q.z - right.y)
+			var right1 := Vector3(q.x + right.x, 0.0, q.z + right.y)
+			for corner in [left0, left1, right0, right0, left1, right1]:
+				var position: Vector3 = corner
+				position.y = terrain.sample_surface_height(position.x, position.z) + 0.2
+				tool.set_normal(Vector3.UP)
+				tool.set_uv(Vector2(position.x / 8.0, position.z / 8.0))
+				tool.add_vertex(position)
+		var mesh: ArrayMesh = tool.commit()
+		if mesh == null:
+			continue
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.27, 0.27, 0.26) if str(forward.get("surface", "asphalt")) == "asphalt" else Color(0.41, 0.34, 0.24)
+		mat.roughness = 0.98
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		var node := MeshInstance3D.new()
+		node.name = "RoadPreview_" + id
+		node.mesh = mesh
+		node.material_override = mat
+		add_child(node)
+		built += 1
+	print("[SceneryInspector] Read-only physical road ribbons built: ", built, " / 16")
 
 func _setup_overlay() -> void:
 	var canvas := CanvasLayer.new()
