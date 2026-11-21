@@ -16,7 +16,11 @@ SHOW = ROOT / "showcase" / "environment_hd"
 DATA = json.loads((SHOW / "data" / "corridor_v1.json").read_text())
 P = DATA["patch"]
 ROUTE = DATA["road_center"]
+SHOTS = json.loads((SHOW / "data" / "camera_shots_v2.json").read_text())["shots"]
+if len(SHOTS) != 6:
+    raise ValueError("Needle Pass requires exactly six fixed shot cameras")
 RENDER = "--render" in sys.argv
+LEGACY_CLIFFS = "--legacy-cliffs" in sys.argv
 
 def bvec(p):
     return Vector((float(p[0]), -float(p[2]), float(p[1])))
@@ -113,9 +117,11 @@ for z in range(P["nz"]-1):
         faces.append((a+1,a+P["nx"],a+P["nx"]+1))
 terrain=mesh_object("CANONICAL TERRAIN, visual only",verts,faces,soil,True)
 
-def ribbon(label,width,lateral,lift,material):
+def ribbon(label,width,lateral,lift,material,conform_edges=False):
     verts=[]
     faces=[]
+    lengths=[]
+    progress=0.0
     for i,point in enumerate(ROUTE):
         a=Vector(ROUTE[max(0,i-1)])
         b=Vector(ROUTE[min(len(ROUTE)-1,i+1)])
@@ -124,20 +130,28 @@ def ribbon(label,width,lateral,lift,material):
         tangent.normalize()
         side=Vector((tangent.z,0,-tangent.x))
         c=Vector(point)+side*lateral+Vector((0,lift,0))
-        verts.extend([bvec(c-side*width*.5),bvec(c+side*width*.5)])
+        for sign in (-1,1):
+            v=c+side*sign*width*.5
+            if conform_edges:
+                v.y=.1*v.y+.9*(surface_y(v.x,v.z)+.07)
+            verts.append(bvec(v))
+        lengths.append(progress)
         if i:
             j=2*(i-1)
             faces.extend([(j,j+2,j+1),(j+1,j+2,j+3)])
+        if i<len(ROUTE)-1:
+            progress+=(Vector(ROUTE[i+1])-Vector(ROUTE[i])).length
     ob=mesh_object(label,verts,faces,material)
-    uv=ob.data.uv_layers.new()
+    uv=ob.data.uv_layers.new(name="Across / arc length 3m tiles")
     for poly in ob.data.polygons:
         for li in poly.loop_indices:
-            v=ob.data.vertices[ob.data.loops[li].vertex_index].co
-            uv.data[li].uv=(v.x*.25,v.y*.25)
+            ix=ob.data.loops[li].vertex_index
+            uv.data[li].uv=((0 if ix%2==0 else width/3.0),lengths[ix//2]/3.0)
     return ob
 
-ribbon("Packed gravel verge",10.2,0,.11,soil)
-ribbon("Asphalt visual, no collider",7,0,.165,asphalt)
+ribbon("Blended outer verge / no collision",13.8,0,.07,soil,True)
+ribbon("Stony road shoulder / no collision",10.2,0,.115,soil,True)
+ribbon("Asphalt visual, no collider",DATA["road_width_m"],0,.165,asphalt)
 for side in [-3.17,3.17]:
     ribbon("Weathered edge paint",.12,side,.187,line_white)
 for side in [-.13,.13]:
@@ -198,17 +212,20 @@ for item in DATA["placements"]:
         continue
     place(model,item["id"],item["p"],item["yaw"],factor,kind in ("rock","boulder"))
 
-for j,i in enumerate([24,45,66]):
-    a=Vector(ROUTE[i-3]);b=Vector(ROUTE[i+3])
-    t=b-a;t.y=0;t.normalize()
-    side=Vector((-t.z,0,t.x))
-    direction=-1 if j==1 else 1
-    c=Vector(ROUTE[i])+side*direction*53
-    c.y=surface_y(c.x,c.z)-1
-    yaw=-math.degrees(math.atan2(t.z,t.x))
-    if direction>0: yaw+=180.0  # Face geology toward the roadway.
-    name="cliff_rockface_b.gltf" if j==1 else "cliff_rockface_a.gltf"
-    place(name,"Cliff_"+str(j),c,yaw,1+.13*j,True)
+# Flat procedural cliffs remain opt-in for old-draft comparison only.
+# Default composition uses actual canonical hillside, not repeating cliff sheets.
+if LEGACY_CLIFFS:
+    for j,i in enumerate([24,45,66]):
+        a=Vector(ROUTE[i-3]);b=Vector(ROUTE[i+3])
+        t=b-a;t.y=0;t.normalize()
+        side=Vector((-t.z,0,t.x))
+        direction=-1 if j==1 else 1
+        c=Vector(ROUTE[i])+side*direction*53
+        c.y=surface_y(c.x,c.z)-1
+        yaw=-math.degrees(math.atan2(t.z,t.x))
+        if direction>0: yaw+=180.0
+        name="cliff_rockface_b.gltf" if j==1 else "cliff_rockface_a.gltf"
+        place(name,"Legacy_Cliff_"+str(j),c,yaw,1+.13*j,True)
 
 for i in [30,31,32,49,50,51]:
     a=Vector(ROUTE[i-1]);b=Vector(ROUTE[i+1])
@@ -219,8 +236,8 @@ for i in [30,31,32,49,50,51]:
     place("guardrail.glb","Road furniture_%d"%i,p,-math.degrees(math.atan2(t.z,t.x)),1.0)
 
 sun_data=bpy.data.lights.new("Sun, 4:45 PM",type='SUN')
-sun_data.energy=2.0
-sun_data.angle=math.radians(1.2)
+sun_data.energy=1.65
+sun_data.angle=math.radians(0.85)
 sun=bpy.data.objects.new("Golden sun",sun_data)
 bpy.context.collection.objects.link(sun)
 sun.rotation_euler=(math.radians(37),math.radians(-20),math.radians(-31))
@@ -237,39 +254,30 @@ bg=nodes.new("ShaderNodeBackground")
 sky=nodes.new("ShaderNodeTexSky")
 sky.sky_type='NISHITA'
 sky.sun_elevation=math.radians(15)
-sky.air_density=1.6
+sky.air_density=1.3
+sky.dust_density=1.2
 world.node_tree.links.new(sky.outputs["Color"],bg.inputs["Color"])
 world.node_tree.links.new(bg.outputs["Background"],out.inputs["Surface"])
 
-VIEW_NAMES=["Road wide","Roadside detail","Forest interior","Rock road transition","Mountain vista","Golden hour"]
-VIEW_INDICES=[8,19,30,46,63,73]
-VIEW_SIDES=[13.0,-7.0,-26.0,18.0,20.0,-15.0]
-VIEW_HEIGHTS=[2.8,1.2,2.1,3.7,31.0,3.0]
-VIEW_AHEAD=[9,2,6,8,12,6]
+# All six cameras use explicit authored world-space shots shared with Godot.
 cameras=[]
-for i,name in enumerate(VIEW_NAMES):
-    index=VIEW_INDICES[i]
-    p=Vector(ROUTE[index])
-    nxt=Vector(ROUTE[min(index+VIEW_AHEAD[i],len(ROUTE)-1)])
-    prev=Vector(ROUTE[max(index-2,0)])
-    d=nxt-prev;d.y=0;d.normalize()
-    side=Vector((d.z,0,-d.x))
-    pos=p+side*VIEW_SIDES[i]+Vector((0,VIEW_HEIGHTS[i],0))
-    if i in (2,4):
-        pos.y=surface_y(pos.x,pos.z)+VIEW_HEIGHTS[i]
-    target=nxt+Vector((0,-2 if i==4 else 1.2,0))
-    cam=bpy.data.cameras.new("CAM_%02d"% (i+1))
-    cam.lens=35
-    obj=bpy.data.objects.new("CAM_%02d_%s"%(i+1,name.replace(" ","_")),cam)
+for index,shot in enumerate(SHOTS):
+    cam=bpy.data.cameras.new("CAM_%s" % shot["id"])
+    cam.type='PERSP'
+    cam.sensor_fit='VERTICAL'
+    cam.sensor_height=24.0
+    cam.lens=24.0/(2.0*math.tan(math.radians(shot["vertical_fov_deg"])*.5))
+    obj=bpy.data.objects.new("CAM_%s_%s" % (shot["id"],shot["name"].replace(" ","_")),cam)
     bpy.context.collection.objects.link(obj)
-    obj.location=bvec(pos)
-    obj.rotation_euler=(bvec(target)-obj.location).to_track_quat('-Z','Y').to_euler()
+    obj.location=bvec(shot["camera"])
+    obj.rotation_euler=(bvec(shot["target"])-obj.location).to_track_quat('-Z','Y').to_euler()
     cameras.append(obj)
 
 scene=bpy.context.scene
 scene.camera=cameras[0]
 scene.render.engine='CYCLES'
-scene.cycles.samples=64
+scene.cycles.samples=96
+scene.cycles.use_denoising=True
 scene.render.resolution_x=1600
 scene.render.resolution_y=900
 scene.render.resolution_percentage=100
@@ -277,7 +285,7 @@ scene.render.image_settings.file_format='PNG'
 scene.view_settings.view_transform='AgX'
 save=SHOW/"NeedlePass_Portfolio.blend"
 bpy.ops.wm.save_as_mainfile(filepath=str(save))
-print("Saved",save,"terrain triangles",(P["nx"]-1)*(P["nz"]-1)*2,"source mesh variants",len(models))
+print("Saved",save,"six fixed shot cameras",len(cameras),"procedural cliff blockouts",LEGACY_CLIFFS)
 if RENDER:
     folder=SHOW/"renders"
     folder.mkdir(exist_ok=True)
