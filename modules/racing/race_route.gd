@@ -46,6 +46,8 @@ static func validate_road_graph(graph: Dictionary) -> String:
 		var rid: String = road["id"]
 		if road_ids.has(rid) or not (road.get("lane_ids") is Array):
 			return "Duplicate road ID or invalid road lanes: " + rid
+		if not (road.get("name") is String) or not (road.get("region") is String):
+			return "Missing road name/region: " + rid
 		road_ids[rid] = road
 	for lane in lanes:
 		if not (lane is Dictionary) or not (lane.get("id") is String) or str(lane.get("id")).is_empty():
