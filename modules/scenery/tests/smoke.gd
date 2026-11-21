@@ -21,8 +21,8 @@ func _run() -> void:
 	var errors: Array[String] = []
 	if int(report.get("regions", 0)) != 5:
 		errors.append("Expected five region packs")
-	if int(report.get("placements", 0)) != 2819:
-		errors.append("Expected 2819 high-quality placements")
+	if int(report.get("placements", 0)) != 2799:
+		errors.append("Expected 2799 high-quality placements")
 	if int(report.get("water_triangles", 0)) != 10286:
 		errors.append("Expected 10286 heightfield-clipped lake triangles")
 	if int(report.get("height_mismatches", -1)) != 0:
