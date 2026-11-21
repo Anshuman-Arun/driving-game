@@ -73,6 +73,7 @@ func _run() -> void:
     _check(sim.junctions.size() == 30, "canonical eight controls plus 22 implicit merges")
     _test_geometry(sim)
     _test_short_connector(sim)
+    _test_nonconflicting_turns()
     _test_opposing_flow()
     _test_cleanup()
     for jid in COMPLEX:
@@ -127,6 +128,24 @@ func _test_geometry(sim) -> void:
             str(jid) + " uses late geometric conflicts, not shared clearance")
         _check(min_length < max_release, str(jid) + " preserves short connector exits")
     _check(sim.movement_junction.size() == 66, "all 66 controlled World turning movements indexed")
+    _check(sim.inbound_stop_offsets.size() == 26, "26 authored approach stop lines indexed")
+    for jid in COMPLEX:
+        var clear := true
+        var offsets_vary := false
+        var first_offset := -1.0
+        for incoming in sim.junctions[jid]["inbound"]:
+            var approach: String = str(incoming)
+            var stop_m: float = float(sim.inbound_stop_offsets[approach])
+            offsets_vary = offsets_vary or first_offset >= 0.0 and absf(stop_m - first_offset) > 0.1
+            first_offset = stop_m
+            var position: Vector3 = sim.graph.get_pose(approach,
+                sim.graph.lane_length(approach) - stop_m)["position"]
+            for movement in sim.movement_junction:
+                if sim.movement_junction[movement] == jid and sim._near_movement(position, str(movement)):
+                    clear = false
+        _check(clear, str(jid) + " every waiting stop line lies outside swept turns")
+        if jid == "junction_alder":
+            _check(offsets_vary, "Alder approach stop positions adapt independently")
 
 
 func _spawn_routed(sim, junction_id: String, turn_id: String) -> int:
@@ -204,11 +223,57 @@ func _test_conflicting_movements(junction_id: String) -> void:
 func _test_short_connector(sim) -> void:
     var found := false
     for movement in sim.movement_release:
-        var len_m: float = sim.graph.lane_length(str(movement))
-        if len_m < 20.0 and float(sim.movement_release[movement]) > len_m:
-            found = true
+        var turn_id: String = str(movement)
+        var len_m: float = sim.graph.lane_length(turn_id)
+        if len_m >= 20.0 or float(sim.movement_release[movement]) <= len_m:
+            continue
+        var jid: String = str(sim.movement_junction[movement])
+        var point: Dictionary = sim._reservation_exit(
+            {"next_lane": turn_id}, jid, sim.junctions[jid])
+        found = point["lane"] != turn_id and float(point["s"]) > 0.0 and (
+            float(point["s"]) < sim.graph.lane_length(str(point["lane"])))
+        if found:
             break
     _check(found, "short turn releases on successor travel lane rather than leaking")
+
+
+func _test_nonconflicting_turns() -> void:
+    var sim = _simulation(9)
+    if sim == null:
+        _check(false, "nonconflicting fixture setup")
+        return
+    var independent: Array[String] = []
+    var turns: Array[String] = []
+    for turn_id in sim.movement_junction:
+        if sim.movement_junction[turn_id] == "junction_alder":
+            turns.append(str(turn_id))
+    turns.sort()
+    for i in range(turns.size()):
+        if independent.size() == 2:
+            break
+        for j in range(i + 1, turns.size()):
+            if not sim.movement_conflicts[turns[i]].has(turns[j]) and (
+                    _incoming(sim, "junction_alder", turns[i]) !=
+                    _incoming(sim, "junction_alder", turns[j])):
+                independent = [turns[i], turns[j]]
+                break
+    _check(independent.size() == 2, "real Alder network includes independent turn movements")
+    if independent.size() != 2:
+        return
+    var first: int = _spawn_routed(sim, "junction_alder", independent[0])
+    var second: int = _spawn_routed(sim, "junction_alder", independent[1])
+    _check(first > 0 and second > 0, "independent approach agents can spawn")
+    if first <= 0 or second <= 0:
+        return
+    sim.agents[first]["reservation_zone"] = "junction_alder"
+    sim.agents[first]["reservation_movement"] = independent[0]
+    sim.agents[first]["reserved_junction"] = "junction_alder@%d" % first
+    sim.reservations[sim.agents[first]["reserved_junction"]] = first
+    sim.agents[second]["stop_done"] = true
+    _check(not sim._junction_blocked(sim.agents[second], "junction_alder",
+        sim.junctions["junction_alder"]), "independent movements are not serialized unnecessarily")
+    sim.despawn_agent(first)
+    _check(sim.reservations.is_empty(), "independent movement ownership cleans up")
 
 
 func _test_opposing_flow() -> void:
