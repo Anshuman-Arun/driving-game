@@ -185,11 +185,21 @@ func validate_pack(pack: Dictionary, simulation: Object) -> bool:
 			for next_id in lanes[lid]["next_lane_ids"]:
 				if not turns.has(next_id):
 					errors.append(jid + " inbound has nonlocal turn " + str(next_id))
+		var last_opposing_crossing: float = -1.0
+		if incoming.size() == 2 and turns.size() == 2 and lanes.has(turns[0]) and lanes.has(turns[1]):
+			last_opposing_crossing = _last_opposing_crossing_m(lanes[turns[0]], lanes[turns[1]])
 		if mode == "pass_through":
 			if incoming.size() != 2 or turns.size() != 2:
 				errors.append(jid + " pass_through is not a two-way continuation")
+			if last_opposing_crossing >= 0.0:
+				errors.append(jid + " opposing turn geometry crosses: pass_through is unsafe")
 		else:
 			controlled += 1
+			if incoming.size() == 2:
+				if last_opposing_crossing < 0.0:
+					errors.append(jid + " controlled two-way node has no crossing")
+				elif _finite(j.get("clearance_m")) and float(j["clearance_m"]) < last_opposing_crossing + 1.5:
+					errors.append(jid + " clearance does not cover its last opposing centerline crossing")
 			if incoming.size() < 2 or turns.size() < 2 or groups.has(jid):
 				errors.append(jid + " duplicate/invalid controlled intersection")
 			if not _finite(j.get("clearance_m")):
@@ -228,6 +238,39 @@ func validate_pack(pack: Dictionary, simulation: Object) -> bool:
 		"implicit_merges": implicit, "error_count": errors.size()}
 	return errors.is_empty()
 
+
+
+func _last_opposing_crossing_m(a: Dictionary, b: Dictionary) -> float:
+	## Exact 2D segment crossings at near-equal 3D height, both arc distances.
+	## Only called for exactly two opposing turn connectors during loading.
+	var first: Array = a["points"]
+	var second: Array = b["points"]
+	var last_s: float = -1.0
+	var first_s: float = 0.0
+	for i in range(first.size() - 1):
+		var p: Vector3 = first[i]
+		var q: Vector3 = first[i + 1]
+		var u := Vector2(q.x - p.x, q.z - p.z)
+		var a_length: float = p.distance_to(q)
+		var second_s: float = 0.0
+		for k in range(second.size() - 1):
+			var r: Vector3 = second[k]
+			var t: Vector3 = second[k + 1]
+			var v := Vector2(t.x - r.x, t.z - r.z)
+			var denom: float = u.cross(v)
+			var b_length: float = r.distance_to(t)
+			if absf(denom) > 0.00000001:
+				var delta := Vector2(r.x - p.x, r.z - p.z)
+				var ua: float = delta.cross(v) / denom
+				var ub: float = delta.cross(u) / denom
+				if ua >= 0.0 and ua <= 1.0 and ub >= 0.0 and ub <= 1.0:
+					var ha: float = lerpf(p.y, q.y, ua)
+					var hb: float = lerpf(r.y, t.y, ub)
+					if absf(ha - hb) <= 2.5:
+						last_s = maxf(last_s, maxf(first_s + ua * a_length, second_s + ub * b_length))
+			second_s += b_length
+		first_s += a_length
+	return last_s
 
 func _unique(values: Array) -> bool:
 	var seen: Dictionary = {}
