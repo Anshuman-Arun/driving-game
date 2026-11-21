@@ -159,6 +159,8 @@ func _test_event(graph: Dictionary, definition: Dictionary, expected: Dictionary
 		if reset_detected:
 			return
 	_check(engine.state == RaceEngine.State.FINISHED, id + " event finishes before timeout")
+	if engine.state != RaceEngine.State.FINISHED:
+		return
 	for racer_id in RACER_IDS:
 		var racer: Dictionary = engine.get_racer(racer_id)
 		_check(bool(racer["finished"]), id + " finished racer " + racer_id)
