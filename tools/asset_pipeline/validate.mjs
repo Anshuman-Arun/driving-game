@@ -73,5 +73,5 @@ for(const asset of manifest.assets){if(seen.has(asset.path))throw Error("duplica
 const expected={vehicle:6,environment:18,texture:14,material:7};if(cars!==expected.vehicle||environment!==expected.environment||textures!==expected.texture||materialFiles!==expected.material)throw Error("unexpected inventory "+JSON.stringify({cars,environment,textures,materialFiles}));
 let supplementary=0,variantTriangles=0;
 for(const asset of manifest.supplementary_variants||[]){const p=join(root,asset.path);if(!existsSync(p))throw Error("missing supplementary "+p);const result=validateModel(new Uint8Array(readFileSync(p)),"glb",false);if(result.triangles!==asset.triangle_count)throw Error("supplementary triangle mismatch "+p);supplementary++;variantTriangles+=result.triangles;}
-if(supplementary!==11||variantTriangles!==12777)throw Error("supplementary inventory count "+supplementary+" / "+variantTriangles);
+if(supplementary!==25||variantTriangles!==16487)throw Error("supplementary inventory count "+supplementary+" / "+variantTriangles);
 console.log(JSON.stringify({success:true,total_primary:total,cars,environment,textures,materialFiles,triangles_primary:triangles,supplementary,triangles_all:triangles+variantTriangles},null,2));
