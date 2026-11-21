@@ -279,11 +279,11 @@ func _asset_path(relative: String) -> String:
 	if relative.begins_with("assets/curated/"):
 		var suffix: String = relative.trim_prefix("assets/curated/")
 		var game_path: String = "res://assets/curated/" + suffix
-		return game_path if ResourceLoader.exists(game_path) else "res://.art_source/" + suffix
+		return game_path if ResourceLoader.exists(game_path) else "res://staged_art/" + suffix
 	if relative.begins_with("content/scenery/models/"):
 		var suffix: String = relative.trim_prefix("content/scenery/models/")
 		var game_path: String = "res://content/scenery/models/" + suffix
-		return game_path if ResourceLoader.exists(game_path) else "res://.models/" + suffix
+		return game_path if ResourceLoader.exists(game_path) else "res://staged_models/" + suffix
 	return ""
 
 func _get_mesh_parts(relative: String) -> Array:
