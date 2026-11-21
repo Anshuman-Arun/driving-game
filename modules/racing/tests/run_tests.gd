@@ -34,6 +34,7 @@ func _initialize() -> void:
 	_test_shortcut_and_missing_checkpoint()
 	_test_out_of_order_checkpoint()
 	_test_reset_replay()
+	_test_coarse_ticks_collision_and_altitude()
 	_test_ai_controls()
 	_test_ai_closed_course()
 	if failures.is_empty():
@@ -218,6 +219,42 @@ func _test_reset_replay() -> void:
 	_drive(e, "a", lap_m, lap_m * 2.0)
 	_check(e.get_racer("a")["lap"] == 3, "reset can replay invalidated lap")
 	_check(e.get_racer("a")["invalid_laps"] == 1, "invalid attempt survives reset")
+
+func _test_coarse_ticks_collision_and_altitude() -> void:
+	var g: Dictionary = {
+		"schema_version": 1, "units": "meters", "coordinate_system": "godot_y_up",
+		"bounds": {"min_x": -1000, "max_x": 1000, "min_z": -1000, "max_z": 1000},
+		"roads": [{"id": "straight_road", "name": "Straight", "region": "test", "lane_ids": ["straight"]}],
+		"lanes": [{"id": "straight", "road_id": "straight_road", "points": [[0, 0, 0], [100, 0, 0]],
+			"width_m": 3.5, "speed_limit_kph": 90, "surface": "asphalt", "next_lane_ids": []}]
+	}
+	var e = RaceEngine.new()
+	_check(e.load_road_graph(g), "straight road graph validates")
+	_check(e.register_racer("a"), "straight test racer registers")
+	var def: Dictionary = {
+		"id": "coarse_tick_sprint", "kind": "sprint", "lane_route": ["straight"],
+		"start_position": [0, 0, 0], "laps": 1, "grid_seconds": 0, "countdown_seconds": 0,
+		"checkpoints": [{"id": "one", "center": [20, 0, 0], "radius_m": 5},
+			{"id": "two", "center": [40, 0, 0], "radius_m": 5}]
+	}
+	_check(e.start_event(def), "coarse tick event loads")
+	e.tick(0.001)
+	e.update_racer_state("a", Vector3(50, 0, 0), Vector3(50, 0, 0))
+	e.tick(1.0)
+	_check(e.get_racer("a")["checkpoint_index"] == 2, "large delta can sweep two gates in correct order")
+	_check(not e.needs_reset("a"), "coarse swept check is not a false positive")
+	e.update_racer_state("a", Vector3(100, 0, 0), Vector3(50, 0, 0))
+	e.tick(1.0)
+	_check(e.get_racer("a")["finished"], "coarse tick completes valid sprint")
+	e = _engine("north_ridge_climb", ["a"])
+	_check(e.report_collision("a", 4.0) and not e.needs_reset("a"), "low-speed contact is tolerated")
+	_check(e.report_collision("a", 18.0) and e.needs_reset("a"), "severe collision requires recovery")
+	_check(e.get_racer("a")["last_invalid_reason"] == "collision_requires_reset", "severe collision classified")
+	_check(e.reset_racer("a").has("position"), "collision reset returns valid pose")
+	var airborne: Vector3 = e.route.sample(2.0) + Vector3(0, 10, 0)
+	e.update_racer_state("a", airborne, Vector3.ZERO)
+	e.tick(0.1)
+	_check(e.needs_reset("a"), "vertical route shortcut rejected")
 
 func _test_ai_controls() -> void:
 	var ai = RacerAI.new()
