@@ -562,7 +562,7 @@
         {
           "at_m": 0,
           "lane_id": "lane_valley_lake_ba",
-          "target_kph": null,
+          "target_kph": 85,
           "speed_limit_kph": 85
         },
         {
@@ -1041,7 +1041,7 @@
         {
           "at_m": 0,
           "lane_id": "lane_valley_lake_ab",
-          "target_kph": null,
+          "target_kph": 85,
           "speed_limit_kph": 85
         },
         {

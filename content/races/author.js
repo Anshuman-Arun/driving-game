@@ -178,7 +178,7 @@ function generate(g, blobSha) {
     return {id:ev.id,simulated_distance_m:rnd(progress),completed_laps:lap,checkpoint_hits:hits,invalid_progress:violations};
   }
   function tangent(sh,s) {
-    const a=sh.sample(s-1.8).p,b=sh.sample(s+1.8).p;
+    const u=sh.closed?s:Math.max(0,Math.min(sh.len,s)); const a=sh.sample(u-1.8).p,b=sh.sample(u+1.8).p;
     const dx=b[0]-a[0],dz=b[2]-a[2],m=Math.hypot(dx,dz);
     return [dx/m,0,dz/m];
   }
@@ -190,7 +190,7 @@ function generate(g, blobSha) {
       const k=angle/18,speed=Math.sqrt((c.seg.surface==="gravel"?2.3:3.3)/Math.max(k,0.0001))*3.6;
       const pBefore=sh.sample(s-12).p,pAfter=sh.sample(s+12).p;
       const grade=Math.abs((pAfter[1]-pBefore[1])/Math.max(1,d2(pBefore,pAfter)));
-      const aim=Math.max(17,Math.min(c.seg.limit, speed, grade>0.09?c.seg.limit*0.83:999));
+      const aim=Math.min(c.seg.limit, speed, grade>0.09?c.seg.limit*0.83:999);
       profile.push({at_m:rnd(s),lane_id:c.seg.lane,target_kph:rnd(aim),speed_limit_kph:c.seg.limit});
     }
     return profile;
