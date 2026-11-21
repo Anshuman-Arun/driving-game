@@ -7,13 +7,15 @@ out="${3:?output directory required}"
 ci_dir="$(cd "${4:?CI scripts directory required}" && pwd)"
 world_dir="${5:-}"
 traffic_module_dir="${6:-}"
+race_dir="${7:-}"
+art_dir="${8:-}"
 mkdir -p "$out"
 out="$(cd "$out" && pwd)"
 summary="$out/SUMMARY.md"
 failures=0
 
 case "$track" in
-  core-qa|world-runtime|game-shell|audio|race-content|racing-production|traffic-content) ;;
+  core-qa|world-runtime|game-shell|audio|race-content|racing-production|traffic-content|vehicle-world|scenery) ;;
   *) echo "::error::Unknown expanded suite: $track" >&2; exit 2 ;;
 esac
 {
@@ -26,6 +28,14 @@ esac
   if [[ -n "$traffic_module_dir" ]]; then
     traffic_module_dir="$(cd "$traffic_module_dir" && pwd)"
     printf 'Traffic module SHA: `%s`\n\n' "$(git -C "$traffic_module_dir" rev-parse HEAD)"
+  fi
+  if [[ -n "$race_dir" ]]; then
+    race_dir="$(cd "$race_dir" && pwd)"
+    printf 'Authoritative Race Content SHA: `%s`\n\n' "$(git -C "$race_dir" rev-parse HEAD)"
+  fi
+  if [[ -n "$art_dir" ]]; then
+    art_dir="$(cd "$art_dir" && pwd)"
+    printf 'Original Art SHA: `%s`\n\n' "$(git -C "$art_dir" rev-parse HEAD)"
   fi
   printf '| Gate | Status |\n| --- | --- |\n'
 } > "$summary"
@@ -105,6 +115,9 @@ case "$track" in
       gate wav-deterministic git diff --exit-code -- modules/audio/assets
       gate godot-import timeout 480 godot --headless --path "$root/modules/audio" --editor --quit
       gate godot-smoke timeout 300 godot --headless --path "$root/modules/audio" --script res://tests/godot_smoke.gd
+      if required_file modules/audio/tests/godot_regression.gd; then
+        gate godot-regression timeout 300 godot --headless --path "$root/modules/audio" --script res://tests/godot_regression.gd
+      fi
     fi
     ;;
   race-content)
@@ -119,10 +132,72 @@ case "$track" in
     fi
     ;;
   racing-production)
-    if required_file modules/racing/project.godot && required_file modules/racing/tests/run_tests.gd; then
-      # Reuse the original racing gates, including the strict Godot log inspection.
-      bash "$ci_dir/run_workstream.sh" racing "$root" "$out" "$ci_dir"
-      exit $?
+    if required_file modules/racing/project.godot \
+      && required_file modules/racing/tests/run_tests.gd \
+      && required_file modules/racing/tests/run_grid_tests.gd \
+      && required_file modules/racing/tests/run_production_tests.gd; then
+      if [[ -z "$world_dir" || -z "$race_dir" ]] \
+        || [[ ! -f "$world_dir/data/world/road_graph_v1.json" ]] \
+        || [[ ! -f "$race_dir/content/races/events_v1.json" ]]; then
+        printf '| authoritative production World/Race JSON | **FAIL (missing)** |\n' >> "$summary"
+        failures=$((failures+1))
+      else
+        # Preserve the original fixture tests, plus both production suites.
+        # Only these authoritative JSON files enter the disposable module.
+        source_dir="$root/modules/racing/.production_ci"
+        mkdir -p "$source_dir"
+        cp "$world_dir/data/world/road_graph_v1.json" "$source_dir/road_graph_v1.json"
+        cp "$race_dir/content/races/events_v1.json" "$source_dir/events_v1.json"
+        gate godot-import timeout 600 godot --headless --path "$root/modules/racing" --editor --quit
+        gate godot-tests timeout 420 godot --headless --path "$root/modules/racing" --script res://tests/run_tests.gd
+        gate godot-grid timeout 420 godot --headless --path "$root/modules/racing" --script res://tests/run_grid_tests.gd
+        gate godot-production timeout 600 godot --headless --path "$root/modules/racing" --script res://tests/run_production_tests.gd -- "--graph=$source_dir/road_graph_v1.json" "--events=$source_dir/events_v1.json"
+      fi
+    fi
+    ;;
+  vehicle-world)
+    if required_file project.godot \
+      && required_file scenes/free_roam/aster_valley.tscn \
+      && required_file tests/integration/vehicle_world.gd; then
+      gate godot-import timeout 720 godot --headless --path "$root" --editor --quit
+      gate godot-free-roam-launch timeout 360 godot --headless --path "$root" --fixed-fps 60 --quit-after 120
+      gate godot-world-drive timeout 900 godot --headless --path "$root" --fixed-fps 60 --script res://tests/integration/vehicle_world.gd
+    fi
+    ;;
+  scenery)
+    if required_file modules/scenery/project.godot \
+      && required_file modules/scenery/tools/stage_dependencies.mjs \
+      && required_file modules/scenery/tests/smoke.gd \
+      && required_file content/scenery/tools/generate.mjs \
+      && required_file content/scenery/tools/models.mjs \
+      && required_file content/scenery/tools/validate.mjs; then
+      if [[ -z "$world_dir" || -z "$art_dir" ]] \
+        || [[ ! -f "$world_dir/data/world/road_graph_v1.json" ]] \
+        || [[ ! -f "$art_dir/assets/curated/MANIFEST.json" ]]; then
+        printf '| authoritative World/Art inputs | **FAIL (missing)** |\n' >> "$summary"
+        failures=$((failures+1))
+      else
+        # The source's staging utility uses git show REF:path. Fetch exact
+        # local checkout objects into the temporary scenery checkout only.
+        gate scenery-world-objects git -C "$root" fetch --no-tags --depth=1 "$world_dir" HEAD
+        gate scenery-art-objects git -C "$root" fetch --no-tags --depth=1 "$art_dir" HEAD
+        if ((failures==0)); then
+          world_sha="$(git -C "$world_dir" rev-parse HEAD)"
+          art_sha="$(git -C "$art_dir" rev-parse HEAD)"
+          gate scenery-stage node modules/scenery/tools/stage_dependencies.mjs "$world_sha" "$art_sha"
+          if ((failures==0)); then
+            gate scenery-generate node content/scenery/tools/generate.mjs modules/scenery/.world_source --check
+            gate scenery-models node content/scenery/tools/models.mjs --check
+            gate scenery-validate node content/scenery/tools/validate.mjs modules/scenery/.world_source
+            gate godot-import timeout 720 godot --headless --path "$root/modules/scenery" --editor --quit
+            gate godot-smoke timeout 720 godot --headless --path "$root/modules/scenery" --script res://tests/smoke.gd
+          else
+            printf '| subsequent scenery suites | NOT EXECUTED (dependency staging failed) |\n' >> "$summary"
+          fi
+        else
+          printf '| subsequent scenery suites | NOT EXECUTED (source object fetch failed) |\n' >> "$summary"
+        fi
+      fi
     fi
     ;;
   traffic-content)
