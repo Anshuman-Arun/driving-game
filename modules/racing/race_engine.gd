@@ -109,7 +109,7 @@ func start_event(definition: Dictionary) -> bool:
 		prepared.append({"id": item["id"], "center": center, "radius_m": float(item["radius_m"]), "s": arc})
 		prev_s = arc
 		seen[item["id"]] = true
-	for optional in ["grid_seconds", "countdown_seconds", "finish_grace_seconds", "max_race_seconds", "max_speed_mps", "corridor_m"]:
+	for optional in ["grid_seconds", "countdown_seconds", "finish_grace_seconds", "max_race_seconds", "max_speed_mps", "corridor_m", "collision_reset_speed_mps"]:
 		if definition.has(optional) and (not RaceRoute._number(definition[optional]) or float(definition[optional]) < 0.0):
 			return _fail("Invalid event parameter: " + optional)
 	route = candidate
@@ -295,6 +295,15 @@ func _advance_racer(id: String, delta: float, elapsed_before: float) -> void:
 		else:
 			r["lap"] = lap + 1
 			r["checkpoint_index"] = 0
+
+func report_collision(id: String, relative_impact_speed_mps: float) -> bool:
+	## Optional notification from real vehicle/collision adapter.
+	## Soft contacts do not invalidate a lap; severe impacts request physical recovery.
+	if state != State.RACING or not racers.has(id) or not is_finite(relative_impact_speed_mps) or relative_impact_speed_mps < 0.0:
+		return false
+	if relative_impact_speed_mps >= float(event.get("collision_reset_speed_mps", 13.0)):
+		_invalidate(id, "collision_requires_reset")
+	return true
 
 func needs_reset(id: String) -> bool:
 	return racers.has(id) and bool(racers[id].get("needs_reset", false))
