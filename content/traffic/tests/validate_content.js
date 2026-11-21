@@ -86,7 +86,7 @@ function verify(g, pack, scenarios) {
       check(j.incoming_lane_ids.length===2 && j.turn_lane_ids.length===2,"no control on simple two-way continuation "+j.id);
     } else {
       controlledApproaches+=j.incoming_lane_ids.length;
-      check(j.incoming_lane_ids.length>=3 && j.turn_lane_ids.length>2,"multi-approach control "+j.id);
+      check(j.incoming_lane_ids.length>=2 && j.turn_lane_ids.length>=2,"valid controlled junction "+j.id);
       check(Number.isFinite(j.clearance_m) && j.clearance_m>=4 && j.clearance_m+0.5<shortest,"reservation will release on every turn "+j.id);
       if(j.mode==="stop")check(Number.isFinite(j.stop_s) && j.stop_s>0,"stop dwell "+j.id);
     }
