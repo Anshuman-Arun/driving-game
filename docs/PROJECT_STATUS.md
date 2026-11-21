@@ -2,6 +2,10 @@
 
 Last updated: 2026-11-21
 
+## Vehicle and world integration
+
+The free-roam integration branch boots the full canonical Aster Valley terrain and roads with the corrected Vela GT. Import, the full-world collision sweep, Core regressions, and three integrated headless and Forward+ routes passed on Godot 4.7.2. See the [vehicle/world validation report](../tests/integration/VEHICLE_WORLD_QA.md) for performance, screenshots, and remaining handling checks.
+
 ## Confirmed
 - GitHub repository Anshuman-Arun/driving-game exists and is private.
 - Design documents, initial prompt, and shared agent workflow are committed on main.
