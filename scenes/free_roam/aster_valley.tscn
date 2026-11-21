@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/integration/aster_valley_drive.gd" id="1_drive"]
+[ext_resource type="Script" path="res://modules/world_runtime/src/world_runtime.gd" id="2_world"]
+
+[sub_resource type="Environment" id="Environment_valley"]
+background_mode = 1
+background_color = Color(0.58, 0.74, 0.87, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.75, 0.82, 0.87, 1)
+ambient_light_energy = 0.65
+
+[node name="AsterValleyFreeRoam" type="Node3D"]
+script = ExtResource("1_drive")
+
+[node name="WorldRuntime" type="Node3D" parent="."]
+script = ExtResource("2_world")
+build_on_ready = false
+build_full_world = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_valley")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.96, -0.52, 0)
+light_energy = 1.2
+shadow_enabled = true
+directional_shadow_max_distance = 180.0

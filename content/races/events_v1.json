@@ -1,0 +1,2134 @@
+{
+  "schema_version": 1,
+  "source_graph": {
+    "branch": "feat/worldgen",
+    "path": "data/world/road_graph_v1.json",
+    "git_blob_sha1": "9bba378d68879df3baed2c97a4885c0adde88406"
+  },
+  "events": [
+    {
+      "id": "alder_street_circuit",
+      "name": "Alder Street Circuit",
+      "description": "Town-block racing across High Street, Station Lane and Chapel Crescent, with tight junction approaches.",
+      "kind": "circuit",
+      "laps": 3,
+      "difficulty": "intermediate",
+      "lane_route": [
+        "lane_alder_depot_ab",
+        "turn_depot_alder_depot_ab__depot_chapel_ab",
+        "lane_depot_chapel_ab",
+        "turn_chapel_depot_chapel_ab__chapel_alder_ab",
+        "lane_chapel_alder_ab",
+        "turn_alder_chapel_alder_ab__alder_depot_ab"
+      ],
+      "start_position": [
+        -628.024,
+        39.996,
+        558.753
+      ],
+      "start_grid": [
+        {
+          "id": "player",
+          "position": [
+            -635.022,
+            39.969,
+            558.906
+          ],
+          "forward": [
+            -1,
+            0,
+            0.017
+          ],
+          "route_s_m": 7
+        },
+        {
+          "id": "rival_1",
+          "position": [
+            -645.021,
+            39.909,
+            559.081
+          ],
+          "forward": [
+            -1,
+            0,
+            0.02
+          ],
+          "route_s_m": 17
+        },
+        {
+          "id": "rival_2",
+          "position": [
+            -655.017,
+            39.837,
+            559.359
+          ],
+          "forward": [
+            -0.999,
+            0,
+            0.039
+          ],
+          "route_s_m": 27
+        },
+        {
+          "id": "rival_3",
+          "position": [
+            -665.002,
+            39.738,
+            559.894
+          ],
+          "forward": [
+            -0.998,
+            0,
+            0.068
+          ],
+          "route_s_m": 37
+        }
+      ],
+      "finish": {
+        "position": [
+          -628.024,
+          39.996,
+          558.753
+        ],
+        "forward": [
+          -0.999,
+          0,
+          -0.033
+        ],
+        "route_s_m": 877.016,
+        "radius_m": 7
+      },
+      "route_length_m": 877.016,
+      "total_race_distance_m": 2631.049,
+      "grid_seconds": 1,
+      "countdown_seconds": 3,
+      "finish_grace_seconds": 25,
+      "max_speed_mps": 65,
+      "max_race_seconds": 1800,
+      "corridor_m": 12,
+      "collision_reset_speed_mps": 13,
+      "checkpoints": [
+        {
+          "id": "alder_street_circuit_cp_01",
+          "center": [
+            -695.696,
+            39.355,
+            564.003
+          ],
+          "radius_m": 5.5
+        },
+        {
+          "id": "alder_street_circuit_cp_02",
+          "center": [
+            -763.787,
+            38.276,
+            600.838
+          ],
+          "radius_m": 5.5
+        },
+        {
+          "id": "alder_street_circuit_cp_03",
+          "center": [
+            -815.432,
+            38.118,
+            656.918
+          ],
+          "radius_m": 5.5
+        },
+        {
+          "id": "alder_street_circuit_cp_04",
+          "center": [
+            -826.965,
+            39.026,
+            730.433
+          ],
+          "radius_m": 5.5
+        },
+        {
+          "id": "alder_street_circuit_cp_05",
+          "center": [
+            -771.329,
+            39.913,
+            784.565
+          ],
+          "radius_m": 5.5
+        },
+        {
+          "id": "alder_street_circuit_cp_06",
+          "center": [
+            -698.375,
+            40,
+            795.773
+          ],
+          "radius_m": 5.5
+        },
+        {
+          "id": "alder_street_circuit_cp_07",
+          "center": [
+            -620.821,
+            40,
+            787.52
+          ],
+          "radius_m": 5.5
+        },
+        {
+          "id": "alder_street_circuit_cp_08",
+          "center": [
+            -544.978,
+            40,
+            770.122
+          ],
+          "radius_m": 5.5
+        },
+        {
+          "id": "alder_street_circuit_cp_09",
+          "center": [
+            -522.457,
+            40,
+            707.625
+          ],
+          "radius_m": 5.5
+        },
+        {
+          "id": "alder_street_circuit_cp_10",
+          "center": [
+            -561.459,
+            40,
+            640.242
+          ],
+          "radius_m": 5.5
+        }
+      ],
+      "ai_speed_guidance": [
+        {
+          "at_m": 0,
+          "lane_id": "lane_alder_depot_ab",
+          "target_kph": 35,
+          "speed_limit_kph": 35
+        },
+        {
+          "at_m": 65,
+          "lane_id": "lane_alder_depot_ab",
+          "target_kph": 35,
+          "speed_limit_kph": 35
+        },
+        {
+          "at_m": 130,
+          "lane_id": "lane_alder_depot_ab",
+          "target_kph": 35,
+          "speed_limit_kph": 35
+        },
+        {
+          "at_m": 195,
+          "lane_id": "turn_depot_alder_depot_ab__depot_chapel_ab",
+          "target_kph": 20,
+          "speed_limit_kph": 20
+        },
+        {
+          "at_m": 260,
+          "lane_id": "lane_depot_chapel_ab",
+          "target_kph": 30,
+          "speed_limit_kph": 30
+        },
+        {
+          "at_m": 325,
+          "lane_id": "lane_depot_chapel_ab",
+          "target_kph": 30,
+          "speed_limit_kph": 30
+        },
+        {
+          "at_m": 390,
+          "lane_id": "lane_depot_chapel_ab",
+          "target_kph": 30,
+          "speed_limit_kph": 30
+        },
+        {
+          "at_m": 455,
+          "lane_id": "lane_chapel_alder_ab",
+          "target_kph": 35,
+          "speed_limit_kph": 35
+        },
+        {
+          "at_m": 520,
+          "lane_id": "lane_chapel_alder_ab",
+          "target_kph": 35,
+          "speed_limit_kph": 35
+        },
+        {
+          "at_m": 585,
+          "lane_id": "lane_chapel_alder_ab",
+          "target_kph": 35,
+          "speed_limit_kph": 35
+        },
+        {
+          "at_m": 650,
+          "lane_id": "lane_chapel_alder_ab",
+          "target_kph": 35,
+          "speed_limit_kph": 35
+        },
+        {
+          "at_m": 715,
+          "lane_id": "lane_chapel_alder_ab",
+          "target_kph": 35,
+          "speed_limit_kph": 35
+        },
+        {
+          "at_m": 780,
+          "lane_id": "lane_chapel_alder_ab",
+          "target_kph": 35,
+          "speed_limit_kph": 35
+        },
+        {
+          "at_m": 845,
+          "lane_id": "lane_chapel_alder_ab",
+          "target_kph": 35,
+          "speed_limit_kph": 35
+        }
+      ],
+      "route_statistics": {
+        "distance_m": 877.016,
+        "asphalt_m": 877.016,
+        "gravel_m": 0,
+        "ascent_m": 2.002,
+        "descent_m": 2.002,
+        "max_abs_grade_pct": 1.524,
+        "min_speed_limit_kph": 20,
+        "max_speed_limit_kph": 35
+      }
+    },
+    {
+      "id": "north_ridge_climb",
+      "name": "North Ridge Climb",
+      "description": "Unbroken lakeside-to-ridgeline uphill run into Serpentine Descent's switchbacks.",
+      "kind": "sprint",
+      "laps": 1,
+      "difficulty": "advanced",
+      "lane_route": [
+        "lane_valley_lake_ba",
+        "turn_valley_valley_lake_ba__ridge_valley_ba",
+        "lane_ridge_valley_ba"
+      ],
+      "start_position": [
+        692.205,
+        30.022,
+        447.505
+      ],
+      "start_grid": [
+        {
+          "id": "player",
+          "position": [
+            685.234,
+            30.049,
+            446.87
+          ],
+          "forward": [
+            -0.996,
+            0,
+            -0.088
+          ],
+          "route_s_m": 7
+        },
+        {
+          "id": "rival_1",
+          "position": [
+            675.269,
+            30.129,
+            446.03
+          ],
+          "forward": [
+            -0.997,
+            0,
+            -0.081
+          ],
+          "route_s_m": 17
+        },
+        {
+          "id": "rival_2",
+          "position": [
+            665.301,
+            30.246,
+            445.236
+          ],
+          "forward": [
+            -0.997,
+            0,
+            -0.078
+          ],
+          "route_s_m": 27
+        },
+        {
+          "id": "rival_3",
+          "position": [
+            655.331,
+            30.401,
+            444.462
+          ],
+          "forward": [
+            -0.997,
+            0,
+            -0.077
+          ],
+          "route_s_m": 37
+        }
+      ],
+      "finish": {
+        "position": [
+          178.131,
+          161.994,
+          -679.539
+        ],
+        "forward": [
+          -0.97,
+          0,
+          -0.244
+        ],
+        "route_s_m": 2393.639,
+        "radius_m": 7
+      },
+      "route_length_m": 2393.639,
+      "total_race_distance_m": 2393.639,
+      "grid_seconds": 1,
+      "countdown_seconds": 3,
+      "finish_grace_seconds": 25,
+      "max_speed_mps": 65,
+      "max_race_seconds": 1800,
+      "corridor_m": 12,
+      "collision_reset_speed_mps": 13,
+      "checkpoints": [
+        {
+          "id": "north_ridge_climb_cp_01",
+          "center": [
+            624.423,
+            31.107,
+            442.077
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_02",
+          "center": [
+            497.049,
+            36.995,
+            429.578
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_03",
+          "center": [
+            371.681,
+            45.938,
+            404.255
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_04",
+          "center": [
+            251.289,
+            55.619,
+            361.444
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_05",
+          "center": [
+            149.07,
+            63.712,
+            285.617
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_06",
+          "center": [
+            64.546,
+            67.846,
+            189.541
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_07",
+          "center": [
+            92.162,
+            68.278,
+            150.876
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_08",
+          "center": [
+            206.21,
+            71.201,
+            93.459
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_09",
+          "center": [
+            183.568,
+            76.739,
+            -6.505
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_10",
+          "center": [
+            94.94,
+            84.658,
+            -97.287
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_11",
+          "center": [
+            124.412,
+            94.292,
+            -218.472
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_12",
+          "center": [
+            216.003,
+            105.033,
+            -302.892
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_13",
+          "center": [
+            340.376,
+            116.223,
+            -277.047
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_14",
+          "center": [
+            462.026,
+            127.159,
+            -285.612
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_15",
+          "center": [
+            540.577,
+            137.535,
+            -384.826
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_16",
+          "center": [
+            529.179,
+            146.708,
+            -507.063
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_17",
+          "center": [
+            442.89,
+            154.227,
+            -600.088
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "north_ridge_climb_cp_18",
+          "center": [
+            323.915,
+            159.477,
+            -645.848
+          ],
+          "radius_m": 6
+        }
+      ],
+      "ai_speed_guidance": [
+        {
+          "at_m": 0,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 65,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 130,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 195,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 260,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 325,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 390,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 455,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 520,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 585,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 650,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 715,
+          "lane_id": "lane_valley_lake_ba",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 780,
+          "lane_id": "turn_valley_valley_lake_ba__ridge_valley_ba",
+          "target_kph": 22.285,
+          "speed_limit_kph": 25
+        },
+        {
+          "at_m": 845,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 910,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 975,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1040,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1105,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1170,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1235,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1300,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1365,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1430,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1495,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1560,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1625,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1690,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1755,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1820,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1885,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1950,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2015,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2080,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2145,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2210,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2275,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2340,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        }
+      ],
+      "route_statistics": {
+        "distance_m": 2393.639,
+        "asphalt_m": 2393.639,
+        "gravel_m": 0,
+        "ascent_m": 132.019,
+        "descent_m": 0.047,
+        "max_abs_grade_pct": 8.882,
+        "min_speed_limit_kph": 25,
+        "max_speed_limit_kph": 85
+      }
+    },
+    {
+      "id": "eastwater_lakeside_sprint",
+      "name": "Eastwater Lakeside Sprint",
+      "description": "Fast sweeping meadow and shoreline asphalt through the lake junction onto South Shore Parkway.",
+      "kind": "sprint",
+      "laps": 1,
+      "difficulty": "beginner",
+      "lane_route": [
+        "lane_valley_lake_ab",
+        "turn_lake_valley_lake_ab__lake_alder_ab",
+        "lane_lake_alder_ab"
+      ],
+      "start_position": [
+        49.168,
+        67.985,
+        176.994
+      ],
+      "start_grid": [
+        {
+          "id": "player",
+          "position": [
+            53.805,
+            67.95,
+            182.238
+          ],
+          "forward": [
+            0.656,
+            0,
+            0.755
+          ],
+          "route_s_m": 7
+        },
+        {
+          "id": "rival_1",
+          "position": [
+            60.321,
+            67.87,
+            189.823
+          ],
+          "forward": [
+            0.648,
+            0,
+            0.762
+          ],
+          "route_s_m": 17
+        },
+        {
+          "id": "rival_2",
+          "position": [
+            66.778,
+            67.752,
+            197.459
+          ],
+          "forward": [
+            0.644,
+            0,
+            0.765
+          ],
+          "route_s_m": 27
+        },
+        {
+          "id": "rival_3",
+          "position": [
+            73.206,
+            67.599,
+            205.12
+          ],
+          "forward": [
+            0.642,
+            0,
+            0.766
+          ],
+          "route_s_m": 37
+        }
+      ],
+      "finish": {
+        "position": [
+          -611.924,
+          40.021,
+          561.312
+        ],
+        "forward": [
+          -0.929,
+          0,
+          -0.37
+        ],
+        "route_s_m": 2184.846,
+        "radius_m": 7
+      },
+      "route_length_m": 2184.846,
+      "total_race_distance_m": 2184.846,
+      "grid_seconds": 1,
+      "countdown_seconds": 3,
+      "finish_grace_seconds": 25,
+      "max_speed_mps": 65,
+      "max_race_seconds": 1800,
+      "corridor_m": 12,
+      "collision_reset_speed_mps": 13,
+      "checkpoints": [
+        {
+          "id": "eastwater_lakeside_sprint_cp_01",
+          "center": [
+            93.18,
+            66.891,
+            228.827
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_02",
+          "center": [
+            183.384,
+            60.903,
+            322.228
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_03",
+          "center": [
+            296.724,
+            51.842,
+            384.611
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_04",
+          "center": [
+            421.75,
+            42.069,
+            419.876
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_05",
+          "center": [
+            550.237,
+            34.013,
+            439.035
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_06",
+          "center": [
+            673.807,
+            30.141,
+            449.324
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_07",
+          "center": [
+            646.001,
+            30.058,
+            481.981
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_08",
+          "center": [
+            535.225,
+            30.509,
+            549.982
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_09",
+          "center": [
+            418.618,
+            31.337,
+            607.234
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_10",
+          "center": [
+            297.721,
+            32.434,
+            654.993
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_11",
+          "center": [
+            174.172,
+            33.717,
+            695.331
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_12",
+          "center": [
+            46.941,
+            35.094,
+            721.31
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_13",
+          "center": [
+            -82.826,
+            36.462,
+            725.027
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_14",
+          "center": [
+            -211.423,
+            37.729,
+            706.747
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_15",
+          "center": [
+            -336.634,
+            38.797,
+            672.231
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "eastwater_lakeside_sprint_cp_16",
+          "center": [
+            -457.999,
+            39.574,
+            625.685
+          ],
+          "radius_m": 6
+        }
+      ],
+      "ai_speed_guidance": [
+        {
+          "at_m": 0,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 65,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 130,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 195,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 260,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 325,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 390,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 455,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 520,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 585,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 650,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 715,
+          "lane_id": "lane_valley_lake_ab",
+          "target_kph": 85,
+          "speed_limit_kph": 85
+        },
+        {
+          "at_m": 780,
+          "lane_id": "turn_lake_valley_lake_ab__lake_alder_ab",
+          "target_kph": 24.098,
+          "speed_limit_kph": 25
+        },
+        {
+          "at_m": 845,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 910,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 975,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1040,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1105,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1170,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1235,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1300,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1365,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1430,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1495,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1560,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1625,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1690,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1755,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1820,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1885,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 1950,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 2015,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 2080,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        },
+        {
+          "at_m": 2145,
+          "lane_id": "lane_lake_alder_ab",
+          "target_kph": 90,
+          "speed_limit_kph": 90
+        }
+      ],
+      "route_statistics": {
+        "distance_m": 2184.846,
+        "asphalt_m": 2184.846,
+        "gravel_m": 0,
+        "ascent_m": 10.212,
+        "descent_m": 38.176,
+        "max_abs_grade_pct": 7.727,
+        "min_speed_limit_kph": 25,
+        "max_speed_limit_kph": 90
+      }
+    },
+    {
+      "id": "green_valley_tour",
+      "name": "Green Valley Tour",
+      "description": "Town-to-farm gravel, ridge climb, wooded descent and an Alder finish.",
+      "kind": "circuit",
+      "laps": 1,
+      "difficulty": "expert",
+      "lane_route": [
+        "lane_alder_market_ab",
+        "turn_market_alder_market_ab__market_valley_ab",
+        "lane_market_valley_ab",
+        "turn_valley_market_valley_ab__ridge_valley_ba",
+        "lane_ridge_valley_ba",
+        "turn_ridge_ridge_valley_ba__cedar_ridge_ba",
+        "lane_cedar_ridge_ba",
+        "turn_cedar_cedar_ridge_ba__alder_cedar_ba",
+        "lane_alder_cedar_ba",
+        "turn_alder_alder_cedar_ba__alder_market_ab"
+      ],
+      "start_position": [
+        -611.85,
+        40.027,
+        560.596
+      ],
+      "start_grid": [
+        {
+          "id": "player",
+          "position": [
+            -604.911,
+            40.105,
+            559.674
+          ],
+          "forward": [
+            0.991,
+            0,
+            -0.13
+          ],
+          "route_s_m": 7
+        },
+        {
+          "id": "rival_1",
+          "position": [
+            -594.996,
+            40.268,
+            558.375
+          ],
+          "forward": [
+            0.992,
+            0,
+            -0.13
+          ],
+          "route_s_m": 17
+        },
+        {
+          "id": "rival_2",
+          "position": [
+            -585.08,
+            40.506,
+            557.079
+          ],
+          "forward": [
+            0.992,
+            0,
+            -0.13
+          ],
+          "route_s_m": 27
+        },
+        {
+          "id": "rival_3",
+          "position": [
+            -575.165,
+            40.81,
+            555.777
+          ],
+          "forward": [
+            0.991,
+            0,
+            -0.131
+          ],
+          "route_s_m": 37
+        }
+      ],
+      "finish": {
+        "position": [
+          -611.85,
+          40.027,
+          560.596
+        ],
+        "forward": [
+          0.991,
+          0,
+          -0.13
+        ],
+        "route_s_m": 4814.099,
+        "radius_m": 7
+      },
+      "route_length_m": 4814.099,
+      "total_race_distance_m": 4814.099,
+      "grid_seconds": 1,
+      "countdown_seconds": 3,
+      "finish_grace_seconds": 25,
+      "max_speed_mps": 65,
+      "max_race_seconds": 1800,
+      "corridor_m": 12,
+      "collision_reset_speed_mps": 13,
+      "checkpoints": [
+        {
+          "id": "green_valley_tour_cp_01",
+          "center": [
+            -544.443,
+            42.113,
+            551.634
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_02",
+          "center": [
+            -404.78,
+            50.322,
+            526.274
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_03",
+          "center": [
+            -277.667,
+            52.911,
+            468.85
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_04",
+          "center": [
+            -163.804,
+            58.096,
+            384.081
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_05",
+          "center": [
+            -61.544,
+            64.442,
+            285.657
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_06",
+          "center": [
+            35.704,
+            67.959,
+            182.184
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_07",
+          "center": [
+            162.144,
+            69.671,
+            119.818
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_08",
+          "center": [
+            211.102,
+            74.85,
+            18.805
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_09",
+          "center": [
+            106.716,
+            83.044,
+            -77.141
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_10",
+          "center": [
+            119.807,
+            93.543,
+            -210.257
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_11",
+          "center": [
+            220.54,
+            105.439,
+            -303.512
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_12",
+          "center": [
+            358.261,
+            117.842,
+            -272.01
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_13",
+          "center": [
+            486.825,
+            129.878,
+            -306.69
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_14",
+          "center": [
+            551.621,
+            141.035,
+            -429.811
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_15",
+          "center": [
+            493.658,
+            150.511,
+            -555.981
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_16",
+          "center": [
+            375.147,
+            157.596,
+            -630.755
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_17",
+          "center": [
+            237.694,
+            161.496,
+            -666.128
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_18",
+          "center": [
+            126.298,
+            161.274,
+            -739.965
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_19",
+          "center": [
+            26.633,
+            156.358,
+            -839.809
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_20",
+          "center": [
+            -111.39,
+            147.883,
+            -866.006
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_21",
+          "center": [
+            -251.752,
+            137.058,
+            -846.994
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_22",
+          "center": [
+            -383.195,
+            125.165,
+            -794.119
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_23",
+          "center": [
+            -502.407,
+            113.452,
+            -717.298
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_24",
+          "center": [
+            -601.731,
+            103.214,
+            -616.581
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_25",
+          "center": [
+            -657.86,
+            95.684,
+            -486.669
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_26",
+          "center": [
+            -693.338,
+            92.125,
+            -349.194
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_27",
+          "center": [
+            -785.512,
+            90.602,
+            -246.013
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_28",
+          "center": [
+            -882.651,
+            85.533,
+            -142.923
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_29",
+          "center": [
+            -862.911,
+            77.956,
+            -17.093
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_30",
+          "center": [
+            -775.075,
+            68.729,
+            93.019
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_31",
+          "center": [
+            -820.777,
+            59.12,
+            222.411
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_32",
+          "center": [
+            -873.925,
+            50.517,
+            350.756
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_33",
+          "center": [
+            -782.694,
+            43.878,
+            455.668
+          ],
+          "radius_m": 6
+        },
+        {
+          "id": "green_valley_tour_cp_34",
+          "center": [
+            -663.689,
+            40.302,
+            533.065
+          ],
+          "radius_m": 6
+        }
+      ],
+      "ai_speed_guidance": [
+        {
+          "at_m": 0,
+          "lane_id": "lane_alder_market_ab",
+          "target_kph": 40,
+          "speed_limit_kph": 40
+        },
+        {
+          "at_m": 65,
+          "lane_id": "lane_alder_market_ab",
+          "target_kph": 40,
+          "speed_limit_kph": 40
+        },
+        {
+          "at_m": 130,
+          "lane_id": "lane_alder_market_ab",
+          "target_kph": 40,
+          "speed_limit_kph": 40
+        },
+        {
+          "at_m": 195,
+          "lane_id": "lane_alder_market_ab",
+          "target_kph": 40,
+          "speed_limit_kph": 40
+        },
+        {
+          "at_m": 260,
+          "lane_id": "lane_alder_market_ab",
+          "target_kph": 40,
+          "speed_limit_kph": 40
+        },
+        {
+          "at_m": 325,
+          "lane_id": "lane_market_valley_ab",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 390,
+          "lane_id": "lane_market_valley_ab",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 455,
+          "lane_id": "lane_market_valley_ab",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 520,
+          "lane_id": "lane_market_valley_ab",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 585,
+          "lane_id": "lane_market_valley_ab",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 650,
+          "lane_id": "lane_market_valley_ab",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 715,
+          "lane_id": "lane_market_valley_ab",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 780,
+          "lane_id": "lane_market_valley_ab",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 845,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 910,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 975,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1040,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1105,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1170,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1235,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1300,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1365,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1430,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1495,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1560,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1625,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1690,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1755,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1820,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1885,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 1950,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2015,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2080,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2145,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2210,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2275,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2340,
+          "lane_id": "lane_ridge_valley_ba",
+          "target_kph": 45,
+          "speed_limit_kph": 45
+        },
+        {
+          "at_m": 2405,
+          "lane_id": "turn_ridge_ridge_valley_ba__cedar_ridge_ba",
+          "target_kph": 25,
+          "speed_limit_kph": 25
+        },
+        {
+          "at_m": 2470,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 2535,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 2600,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 2665,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 2730,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 2795,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 2860,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 2925,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 2990,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 3055,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 3120,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 3185,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 3250,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 3315,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 3380,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 3445,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 3510,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 3575,
+          "lane_id": "lane_cedar_ridge_ba",
+          "target_kph": 55,
+          "speed_limit_kph": 55
+        },
+        {
+          "at_m": 3640,
+          "lane_id": "turn_cedar_cedar_ridge_ba__alder_cedar_ba",
+          "target_kph": 25,
+          "speed_limit_kph": 25
+        },
+        {
+          "at_m": 3705,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 3770,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 3835,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 3900,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 3965,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 49.441,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4030,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4095,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4160,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4225,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 67.194,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4290,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4355,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4420,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4485,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 59.896,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4550,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4615,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4680,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4745,
+          "lane_id": "lane_alder_cedar_ba",
+          "target_kph": 70,
+          "speed_limit_kph": 70
+        },
+        {
+          "at_m": 4810,
+          "lane_id": "turn_alder_alder_cedar_ba__alder_market_ab",
+          "target_kph": 20,
+          "speed_limit_kph": 20
+        }
+      ],
+      "route_statistics": {
+        "distance_m": 4814.099,
+        "asphalt_m": 4282.258,
+        "gravel_m": 531.841,
+        "ascent_m": 122.004,
+        "descent_m": 122.004,
+        "max_abs_grade_pct": 8.882,
+        "min_speed_limit_kph": 20,
+        "max_speed_limit_kph": 70
+      }
+    }
+  ]
+}
