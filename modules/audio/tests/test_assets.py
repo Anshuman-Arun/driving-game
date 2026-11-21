@@ -24,6 +24,9 @@ class AudioAssetsTest(unittest.TestCase):
                 data = wav.readframes(wav.getnframes())
                 samples = struct.unpack("<" + "h" * (len(data) // 2), data)
                 self.assertEqual(samples, synthesize.generate(name))
+                # Check RIFF/fmt/data bytes too; sample equality alone missed
+                # a Python-version-specific all-assets git-diff in Linux CI.
+                self.assertEqual(path.read_bytes(), synthesize.wav_bytes(samples))
                 peak = max(abs(x) for x in samples) / 32768.0
                 self.assertGreater(peak, 0.30)
                 self.assertLessEqual(peak, 0.80)
