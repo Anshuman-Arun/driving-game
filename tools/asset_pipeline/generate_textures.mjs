@@ -26,11 +26,14 @@ function encodePNG(pix,w,h){let raw=new Uint8Array(h*(w*4+1));for(let y=0;y<h;y+
   const check=[];for(const c of name){const x=c.charCodeAt(0);out.push(x);check.push(x)}
   for(const x of data){out.push(x);check.push(x)}
   let c=crc(check);out.push((c>>>24)&255,(c>>>16)&255,(c>>>8)&255,c&255)}
- chunk("IHDR",[(w>>>24)&255,(w>>>16)&255,(w>>>8)&255,w&255,(h>>>24)&255,(h>>>16)&255,(h>>>8)&255,8,6,0,0,0]);
+ chunk("IHDR",[(w>>>24)&255,(w>>>16)&255,(w>>>8)&255,w&255,(h>>>24)&255,(h>>>16)&255,(h>>>8)&255,h&255,8,6,0,0,0]);
  chunk("IDAT",z);chunk("IEND",[]);
  return new Uint8Array(out)}
 function b64(a){let chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",o=[];for(let i=0;i<a.length;i+=3){let x=a[i],y=i+1<a.length?a[i+1]:0,z=i+2<a.length?a[i+2]:0;
   o.push(chars[x>>2],chars[((x&3)<<4)|(y>>4)],i+1<a.length?chars[((y&15)<<2)|(z>>6)]:"=",i+2<a.length?chars[z&63]:"=")}
  return o.join("")}
-function checkPNG(a){if(a[0]!==137||a[1]!==80||a[2]!==78||a[3]!==71||new DataView(a.buffer).getUint32(16)!==256)throw Error("PNG")}
+function checkPNG(a){const d=new DataView(a.buffer,a.byteOffset,a.byteLength),u=n=>d.getUint32(n,false);
+ if(a.length<57||u(0)!==0x89504e47||u(4)!==0x0d0a1a0a||u(8)!==13||u(16)!==256||u(20)!==256||a[24]!==8||a[25]!==6||a[26]!==0||a[27]!==0||a[28]!==0||crc(a.subarray(12,29))!==u(29))throw Error("Invalid PNG IHDR");
+ let off=8,idat=0,last="";while(off<a.length){const n=u(off),type=String.fromCharCode(...a.subarray(off+4,off+8));if(off+12+n>a.length||crc(a.subarray(off+4,off+8+n))!==u(off+8+n))throw Error("Invalid PNG chunk "+type);if(type==="IDAT")idat+=n;last=type;off+=12+n}
+ if(off!==a.length||last!=="IEND"||idat<256*256*4)throw Error("PNG missing image data");}
 mkdirSync("assets/curated/materials",{recursive:true});for(const kind of kinds){for(const normal of [false,true]){const png=encodePNG(pixels(kind,normal),256,256);checkPNG(png);writeFileSync("assets/curated/materials/"+kind+"_"+(normal?"normal":"albedo")+".png",png)}console.log(kind,"256px albedo and tangent-space normal");}
