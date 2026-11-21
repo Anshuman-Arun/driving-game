@@ -4,7 +4,7 @@ Four authored launch events against the **actual** World Agent's 2×2 km `road_g
 
 | Event | Type / laps | One-lap distance | Race distance | Gates | Driving character |
 |---|---|---:|---:|---:|---|
-| Alder Street Circuit | circuit / 3 | 877.016 m | 2,631.048 m | 10 per lap | High Street / station / chapel; low-speed intersections |
+| Alder Street Circuit | circuit / 3 | 877.016 m | 2,631.049 m | 10 per lap | High Street / station / chapel; low-speed intersections |
 | North Ridge Climb | sprint / 1 | 2,393.639 m | 2,393.639 m | 18 | Continuous +132.019 m ascent from Eastwater toward ridge switchbacks |
 | Eastwater Lakeside Sprint | sprint / 1 | 2,184.846 m | 2,184.846 m | 16 | Fast meadow / shoreline asphalt; lake-junction braking |
 | Green Valley Tour | circuit / 1 | 4,814.099 m | 4,814.099 m | 34 | Town, gravel farm link (531.841 m), ridge and cedar forest |
