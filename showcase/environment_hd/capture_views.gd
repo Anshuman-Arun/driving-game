@@ -38,7 +38,6 @@ func _capture_all() -> void:
             push_error("Needle Pass: renderer returned no image")
             quit(1)
             return
-        image.flip_y()
         var output_path := output_dir.path_join("view_%02d.png" % [index + 1])
         if image.save_png(output_path) != OK:
             push_error("Needle Pass: failed to save " + output_path)
