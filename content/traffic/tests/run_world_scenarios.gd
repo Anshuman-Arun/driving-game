@@ -84,8 +84,11 @@ func _run() -> void:
 	var seeds: Array = scenario_data["seeds"] if full else [scenario_data["seeds"][0]]
 	var total_cases := 0
 	var failed_cases := 0
-	for region in scenario_data["regions"]:
-		for population in scenario_data["populations"]:
+	var sites: Array = scenario_data["regions"].duplicate()
+	sites.append_array(scenario_data.get("hotspots", []))
+	for region in sites:
+		var densities: Array = region.get("populations", scenario_data["populations"])
+		for population in densities:
 			for seed in seeds:
 				var first: Dictionary = _case(region, int(population), int(seed), duration_s)
 				var second: Dictionary = _case(region, int(population), int(seed), duration_s)

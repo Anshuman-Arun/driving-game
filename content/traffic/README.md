@@ -6,7 +6,7 @@ This directory contains **road-network-specific authoring**, not an alternative 
 |---|---|
 | controls_v1.json | Versioned inventory of 11 real junctions; eight stop/yield runtime controls and three unimpeded continuations |
 | traffic_content_loader.gd | Validates canonical graph, turn reachability, lane mapping, implicit merges, clearance, duplicates and two-way geometric crossings; applies v1 control array |
-| scenarios_v1.json | Five real regions × 0, 5, 10, 20 active vehicle density targets × three fixed seeds, 90-second full mode |
+| scenarios_v1.json | Five real regions × 0, 5, 10, 20 density targets × three fixed seeds plus two crossing hotspots at 5/20, 90-second full mode |
 | conflict_audit_v1.json | Actual 3D-height-filtered intersection of directed turn-centerline polylines, with release-distance risk estimates |
 | previews/traffic_controls.svg | Top-down SVG traced from the authoritative World graph with the 11 junction markers |
 | JUNCTION_INVENTORY.md | Per-node control decisions, speeds, connector lengths and bottlenecks |

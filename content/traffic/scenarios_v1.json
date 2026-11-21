@@ -68,5 +68,33 @@
     "Simulated vehicle spawn/despawn is viewer-local (175 m spawn / 230 m despawn).",
     "No traffic signal phases or road priority classes are claimed.",
     "Overlook and Orchard: two-way graph nodes with geometrically crossing turn polylines; long-clearance yield controls serialize them."
+  ],
+  "hotspots": [
+    {
+      "id": "overlook_crossing",
+      "junction_id": "junction_overlook",
+      "view_position": [
+        605.22,
+        121.89,
+        -256.82
+      ],
+      "populations": [
+        5,
+        20
+      ]
+    },
+    {
+      "id": "orchard_crossing",
+      "junction_id": "junction_orchard",
+      "view_position": [
+        445.3,
+        59.94,
+        77.61
+      ],
+      "populations": [
+        5,
+        20
+      ]
+    }
   ]
 }

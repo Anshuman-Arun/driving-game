@@ -15,7 +15,7 @@ Source snapshot from World PR #3: road_graph_v1.json, Git blob SHA 9bba378d68879
 | Native GDScript smoke/full scenarios | **No** | Must run after World and Traffic branches integrated; explicitly pending |
 | Actual collision shapes, car-to-car physics, controller feel, Windows FPS | **No** | Requires root game world and manual/engine integration |
 
-**No native runtime PASS claim is made.** The 309 initial checks are source-level connector-side assertions, not execution of the committed Node test file. The later topological and geometry checks use the actual remote canonical JSON. The native tests are authored to detect (rather than hide) global point overlaps and long waits.
+**No native runtime PASS claim is made.** The 309 initial checks are source-level connector-side assertions, not execution of the committed Node test file. The later topological and geometry checks use the actual remote canonical JSON. The native tests also exercise additional Overlook/Orchard 5/20-density hotspots and are authored to detect (rather than hide) global point overlaps and long waits.
 
 ## Candidate crossing conflicts from real connector geometry
 

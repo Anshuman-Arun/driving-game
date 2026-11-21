@@ -123,6 +123,7 @@ function verify(g, pack, scenarios) {
   const merges=[...predecessor.entries()].filter(([,src])=>src.length>1);
   check(merges.length===22 && merges.every(([,src])=>src.every(id=>id.startsWith("turn_"))),"implicit merge controls remain disjoint");
   check(scenarios.regions.length===5 && same(scenarios.populations,[0,5,10,20]),"5 regions and density matrix");
+  check(scenarios.hotspots.length===2 && scenarios.hotspots.every(h=>["junction_overlook","junction_orchard"].includes(h.junction_id) && same(h.populations,[5,20])),"two crossing two-way stress sites");
   check(scenarios.seeds.length===3 && keys(scenarios.seeds).size===3 && scenarios.duration_s===90,"fixed seeds and 90-second soak");
   check(scenarios.regions.every(r=>pack.junctions.some(j=>j.id===r.junction_id) && r.view_position.length===3),"viewer coordinates derived from real nodes");
   return {nodes:11,controlled:6,implicitMerges:merges.length,approaches:controlledApproaches,cases:5*4*3};
