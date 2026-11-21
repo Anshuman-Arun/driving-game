@@ -34,3 +34,7 @@ An audit found sharp cubic turning maneuvers with sub-meter effective radius. Th
 **Integrator requirement:** turn centerlines can travel approximately **21 m away from physical corridor centerlines**. Reconstruct/widen intersection surface pads and collision around actual turn paths; a 6.8 m corridor mesh alone will not support these trajectories. Check junction collider coverage, curbs, NPC tracking and elevation in Godot. Native Terrain3D / Road Generator imports and driving tests remain unverified in this independent PR.
 
 The generated preview `worldgen/previews/junction_detail.svg` overlays all 72 directed turn paths on the actual corridor geometry, with one zoomed panel per junction. Use it to plan collision pads; do not confuse it with a validated Road Generator mesh.
+
+## Asphalt and gravel proportions
+
+The generator validator checks distinct centerline mileage (never counting reverse lanes or turns): 77.88% asphalt and 22.12% gravel at seed 20261121. It rejects paved share outside the design target of 65–80%.

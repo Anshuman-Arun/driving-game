@@ -12,7 +12,7 @@ node worldgen/tests/test_world.js
 node worldgen/tests/test_turns.js
 ```
 
-The first command **overwrites only** the five generated files listed below (all inside the World Agent's exclusive scope). The second command independently builds the same world twice and asserts graph/terrain determinism, exact checked-in file match, topological and geometric validity. The generator itself refuses to export invalid geometry. It is safe to rerun on any operating system with modern Node.
+The first command **overwrites only** the six generated files listed below (all inside the World Agent's exclusive scope). The world-data test independently builds the same world twice and asserts graph/terrain determinism, exact checked-in file match, topological and geometric validity. The generator itself refuses to export invalid geometry. It is safe to rerun on any operating system with modern Node.
 
 ## Generated files
 
@@ -27,6 +27,6 @@ The generator intentionally does **not** edit the Godot project. Terrain3D impor
 
 ## Road design
 
-The main touring loop connects Alder Town → Cedar Woods → North Ridge → Green Valley → Eastwater Lake → Alder Town. Needle Pass is the forest ascent, Serpentine Descent is the mountain switchback showcase, South Shore Parkway is the fast scenic lakeside return. The central farm and old-mill roads form an alternate loop. Quarry Gravel Cut, East Slope Road, Old Mill Road, and Lake View Drive provide 22.12% gravel mileage (77.88% asphalt) and distinct slower mixed-surface choices; a small town triangle adds tight low-speed roads. Intersections are authored as directed bezier turn lanes with exact positional endpoint joins, no U-turns.
+The main touring loop connects Alder Town → Cedar Woods → North Ridge → Green Valley → Eastwater Lake → Alder Town. Needle Pass is the forest ascent, Serpentine Descent is the mountain switchback showcase, South Shore Parkway is the fast scenic lakeside return. The central farm and old-mill roads form an alternate loop. Quarry Gravel Cut, East Slope Road, Old Mill Road, and Lake View Drive provide 22.12% gravel mileage (77.88% asphalt) and distinct slower mixed-surface choices; a small town triangle adds tight low-speed roads. Intersections use directed curvature-constrained turning lanes with exact positional endpoint joins, no U-turns.
 
 The binary heightfield is a *source raster*, not a native Terrain3D resource. It also includes a flattened graded road corridor; the SVG water footprint is schematic and should be replaced by a properly shoreline-masked water mesh at engine integration.
