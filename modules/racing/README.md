@@ -77,3 +77,66 @@ Signals: state_changed(old,new), checkpoint_passed(racer_id,checkpoint_id,lap), 
 fixtures/road_graph_v1.json and fixtures/events_v1.json are **not** the World Agent's canonical map. They model an approximately 845 m Alder town loop (3 laps) and 685 m North Ridge sprint with four gates each. They intentionally do not claim the full design-target route lengths or world integration.
 
 Root project integration must consume actual data/world/road_graph_v1.json from the World Agent, author real event lane IDs and connect VehicleAdapter's set_drive_input to the Core Agent's genuine vehicle controller. The standalone primitive demo does not test real collision, gamepad, Windows export, traffic or performance. See INTEGRATION_NOTES.md and TEST_REPORT.md.
+
+
+## Production race-grid and results interface (feat/production-racing-readiness)
+
+Production `content/races/events_v1.json` contains an optional `start_grid` array (one slot **per registered racer**). Each slot has `id`, `position: [x,y,z]`, `forward: [x,y,z]` and `route_s_m`. `RaceEngine.start_event()` validates unique registered IDs, unit travel headings, route-consistent pose/progress and a start before the first checkpoint. All four production events author `player=7 m`, `rival_1=17 m`, `rival_2=27 m` and `rival_3=37 m`; all racers are seeded at these **independent** physical positions, not at route zero. A missing `start_grid` preserves legacy zero-meter spawns for the existing 156-check suite/demo.
+
+**Host integration contract:**
+
+~~~gdscript
+# Load external world graph and production event catalog first. Register the
+# exact four IDs present in event.start_grid; start_event enters GRID.
+assert(race.start_event(catalog.get_event("alder_street_circuit")))
+for slot in race.get_starting_grid(): # authored order
+    # slot: id, position (Vector3), forward (Vector3), route_s_m, transform (Transform3D)
+    # Vehicle integration owns physically placing and stopping the car.
+    var vehicle: Node3D = cars_by_id[slot["id"]]
+    vehicle.global_transform = slot["transform"]
+    # Host's actual physics-controller velocity must also be reset to ZERO.
+    assert(race.synchronize_racer_spawn(slot["id"], vehicle.global_position))
+
+# During GRID/COUNTDOWN: hold controls/brakes, do not drive.
+# update_racer_state also accepts near-spawn observations in these states.
+# Engine ticks advance GRID -> COUNTDOWN -> RACING, including leftover delta.
+race.tick(delta)
+if race.state == RaceEngine.State.RACING:
+    # Run vehicle physics/AI first, then once per racer:
+    race.update_racer_state("player", player.global_position, player.linear_velocity)
+    # Repeat for all rivals with actual world positions and velocities.
+    race.tick(delta) # exactly once for THIS physics frame (not a second time)
+
+# This is illustrative state-flow pseudocode; call tick only once per frame.
+# When a crash or invalid movement requires recovery:
+if race.needs_reset("rival_1"):
+    var recovery: Dictionary = race.reset_racer("rival_1")
+    # Physically apply recovery.position / recovery.forward and clear velocity.
+    # Reset the corresponding RacerAI tracking after teleporting the car.
+
+# After FINISHED or RESULTS, obtain authoritative sorted per-race results:
+var results: Dictionary = race.get_results() # {} before finish
+# {event_id, elapsed_seconds, state, standings}
+~~~
+
+Use a **single** host physics loop rather than copying the two illustrative `tick` calls above: run state-dependent physics/AI, feed one observation per vehicle, then call `race.tick(delta)` exactly once. GRID/COUNTDOWN physical cars should remain held at their authored start positions (up to 2.5 m sync tolerance, not arbitrary relocation). When the engine enters RACING, live progress and teleport/shortcut checks are enforced at their previous thresholds. On `restart_event()`, the host must physically respawn every car from `get_starting_grid()` and clear velocities/planner tracking. First-lap resets return a racer's authored grid slot; later-lap resets return to route arclength zero for that lap.
+
+Use `RacerAI.configure_event(graph, event_definition)` to retain the existing geometry planner and optionally apply `ai_speed_guidance` as an **additional upper speed cap**. It never raises the speed above curvature-based, lane speed-limit or obstacle-based restrictions. `configure(graph, lane_route, closed)` remains compatible with legacy callers.
+
+## Reproducible tests with authoritative external files
+
+From a local checkout with access to both unmerged source branches, stage the external dependencies into a temporary directory **outside the repository**; do not commit duplicate datasets:
+
+~~~bash
+git fetch origin feat/worldgen feat/race-content
+mkdir -p /tmp/aster-racing-inputs
+git show origin/feat/worldgen:data/world/road_graph_v1.json > /tmp/aster-racing-inputs/road_graph_v1.json
+git show origin/feat/race-content:content/races/events_v1.json > /tmp/aster-racing-inputs/events_v1.json
+
+godot --headless --path modules/racing --editor --quit
+godot --headless --path modules/racing --script res://tests/run_tests.gd
+godot --headless --path modules/racing --script res://tests/run_grid_tests.gd
+godot --headless --path modules/racing --script res://tests/run_production_tests.gd -- --graph=/tmp/aster-racing-inputs/road_graph_v1.json --events=/tmp/aster-racing-inputs/events_v1.json
+~~~
+
+Production test inputs must be the **real** graph and event catalog. The production harness refuses to run when either is missing and asserts route sequence, distance, gate count/order, laps, authored grid transforms, countdown, four-car simulated progress through all gates/laps, finish/result ordering, restart, first-lap recovery, teleport protection and advisory AI speed caps. This is a headless *kinematic route-following* regression, not evidence that real production vehicles, terrain and collision meshes are drivable. See TEST_REPORT.md for what was actually executed.
