@@ -92,7 +92,7 @@ function verify(g, pack, scenarios) {
     }
   }
   check(pack.junctions.length===11 && seenNode.size===11 && seenTurn.size===72 && seenIncoming.size===32,"all nodes/turns/travel lanes covered");
-  check(modes.stop===3 && modes.yield===3 && modes.pass_through===5 && controlledApproaches===22,"3 stop,3 yield,5 continuations,22 controlled approaches");
+  check(modes.stop===3 && modes.yield===5 && modes.pass_through===3 && controlledApproaches===26,"3 stop,5 yield,3 continuations,26 controlled approaches");
   const merges=[...predecessor.entries()].filter(([,src])=>src.length>1);
   check(merges.length===22 && merges.every(([,src])=>src.every(id=>id.startsWith("turn_"))),"implicit merge controls remain disjoint");
   check(scenarios.regions.length===5 && same(scenarios.populations,[0,5,10,20]),"5 regions and density matrix");

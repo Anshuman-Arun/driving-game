@@ -66,6 +66,7 @@
     "Repeat each case twice with the same seed and check state fingerprints.",
     "Separate point-agent spacing from rigid-body contact and FPS measurement.",
     "Simulated vehicle spawn/despawn is viewer-local (175 m spawn / 230 m despawn).",
-    "No traffic signal phases or road priority classes are claimed."
+    "No traffic signal phases or road priority classes are claimed.",
+    "Overlook and Orchard: two-way graph nodes with geometrically crossing turn polylines; long-clearance yield controls serialize them."
   ]
 }

@@ -31,7 +31,7 @@ func apply_pack(pack: Dictionary, simulation: Object) -> bool:
 	if not bool(simulation.call("configure_junctions", native_definitions(pack))):
 		errors.append("native configure_junctions failed: reload graph before retrying; partial mutation possible")
 		return false
-	report["applied_controls"] = 6
+	report["applied_controls"] = 8
 	return true
 
 
@@ -190,7 +190,7 @@ func validate_pack(pack: Dictionary, simulation: Object) -> bool:
 				errors.append(jid + " pass_through is not a two-way continuation")
 		else:
 			controlled += 1
-			if incoming.size() < 3 or turns.size() <= 2 or groups.has(jid):
+			if incoming.size() < 2 or turns.size() < 2 or groups.has(jid):
 				errors.append(jid + " duplicate/invalid controlled intersection")
 			if not _finite(j.get("clearance_m")):
 				errors.append(jid + " clearance is nonnumeric")
@@ -200,7 +200,7 @@ func validate_pack(pack: Dictionary, simulation: Object) -> bool:
 					errors.append(jid + " clearance can be clamped or never released on shortest turn")
 			if mode == "stop" and (not _finite(j.get("stop_s")) or float(j.get("stop_s", 0)) <= 0.0):
 				errors.append(jid + " stop must have positive stop_s")
-	if nodes.size() != 11 or seen_nodes.size() != 11 or seen_turn.size() != 72 or controlled != 6:
+	if nodes.size() != 11 or seen_nodes.size() != 11 or seen_turn.size() != 72 or controlled != 8:
 		errors.append("missing/extra physical junctions, turns, or runtime controls")
 	# Existing merge reservations map turn connectors, not approach travel lanes.
 	var incoming_to: Dictionary = {}

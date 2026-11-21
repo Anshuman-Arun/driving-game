@@ -6,8 +6,8 @@ The graph contains **16 physical corridors, 32 corridor travel lanes, 72 turn co
 
 ## Intersection control design
 
-- **6 true multi-approach junctions** receive `TrafficSimulation.configure_junctions()` entries: 3 all-way stops (Alder, Ridge, Valley) and 3 yields (Cedar, Lake, Pine).
-- **5 degree-two continuations** are inventoried but deliberately do not get runtime controls (Market, Overlook, Orchard, Depot, Chapel). No fabricated junction or unnecessary stop.
+- **8 geometrically conflicting junctions** receive `TrafficSimulation.configure_junctions()` entries: 3 all-way stops (Alder, Ridge, Valley) and 5 yields (Cedar, Lake, Pine, Overlook, Orchard).
+- **3 degree-two continuations** are inventoried but deliberately do not get runtime controls (Market, Depot, Chapel). The geometrically crossing two-way turn paths at Overlook and Orchard are explicitly yield-controlled. No fabricated junction or unnecessary stop.
 - Stop offsets are the simulator's **fixed 2.5 m** constant, not a per-junction feature. Signals cannot alternate conflicting streams under current v1 semantics, so **no signals** are authored.
 - `clearance_m` is deliberately shorter than *every* connector in that junction; a longer value can leak a reservation forever because the simulator only releases on `entered_lane` and before transitioning off the turn connector. This is a **runtime constraint, not proof of collision safety**.
 - The simulator also installs **22 implicit successor-merge zones** on turn connector lanes. The explicit entries map the 20 incoming travel lanes, disjoint from those implicit connector mappings. Two sequential zones may still be encountered on a trip; do not erase or override implicit merges. Exact spatial conflict coverage and guaranteed body collision avoidance require simulator/world integration.
@@ -33,7 +33,7 @@ The graph contains **16 physical corridors, 32 corridor travel lanes, 72 turn co
 **Ridge:** four-arm / 12-turn narrow steep/gravel approach; stoppage on gradients requires native verification.
 **Lake and Pine:** T-junction yields serialize only near conflict entry, without major/minor right-of-way semantics.
 **Cedar:** forest T-junction yield; blind curves and speed transitions warrant real driving review.
-**Overlook/Orchard:** two-way continuation connectors can be long and sharply curved but lack true merging turns; no extra controls.
+**Overlook/Orchard:** opposing long turn connectors cross four times geometrically despite being degree-two nodes. They now share yield reservations with late clearances (64.5 m and 63.0 m) to protect measured centerline crossings.
 
 No per-turn conflict matrix, priority signs, phase groups, per-lane stop offsets or true collision volumes are supported by the v1 simulation. A small geometric clearance **cannot guarantee non-overlap of cars** crossing far portions of the same large junction; native tests intentionally detect and report this rather than declaring collision safety.
 

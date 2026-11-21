@@ -9,7 +9,7 @@
     "physical_junctions": 11
   },
   "simulation_api": "TrafficSimulation.configure_junctions(Array)",
-  "note": "Only stop/yield entries are applied. pass_through entries are audited but deliberately not passed to the API. Runtime stop offset is fixed at 2.5 m in TrafficSimulation.",
+  "note": "Eight stop/yield definitions applied; three pass_through junctions inventoried but excluded. Stop offset fixed at 2.5 m. No priority or signal phases.",
   "junctions": [
     {
       "id": "junction_alder",
@@ -224,7 +224,7 @@
     {
       "id": "junction_overlook",
       "region": "north_ridge",
-      "mode": "pass_through",
+      "mode": "yield",
       "incoming_lane_ids": [
         "lane_overlook_orchard_ba",
         "lane_ridge_overlook_ab"
@@ -237,14 +237,14 @@
         "lane_overlook_orchard_ab",
         "lane_ridge_overlook_ba"
       ],
-      "clearance_m": null,
+      "clearance_m": 64.5,
       "stop_s": null,
-      "note": "Two-way continuous road alignment; no conflicting turn choices and no runtime junction control."
+      "note": "Opposing long directed turn connectors geometrically cross four times; joint yield reservation held until beyond last centerline crossing. No implicit successor merge exists."
     },
     {
       "id": "junction_orchard",
       "region": "green_valley",
-      "mode": "pass_through",
+      "mode": "yield",
       "incoming_lane_ids": [
         "lane_orchard_lake_ba",
         "lane_overlook_orchard_ab"
@@ -257,9 +257,9 @@
         "lane_orchard_lake_ab",
         "lane_overlook_orchard_ba"
       ],
-      "clearance_m": null,
+      "clearance_m": 63,
       "stop_s": null,
-      "note": "Two-way continuous road alignment; no conflicting turn choices and no runtime junction control."
+      "note": "Opposing long directed turn connectors geometrically cross four times; joint yield reservation held until beyond last centerline crossing. No implicit successor merge exists."
     },
     {
       "id": "junction_depot",
