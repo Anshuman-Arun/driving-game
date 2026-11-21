@@ -1,0 +1,650 @@
+{
+  "schema_version": 1,
+  "units": "meters",
+  "coordinate_system": "godot_y_up",
+  "bounds": {
+    "min_x": -160,
+    "max_x": 160,
+    "min_z": -160,
+    "max_z": 160
+  },
+  "roads": [
+    {
+      "id": "r_ew",
+      "name": "Willow Street east-west loop and merge",
+      "region": "test_town",
+      "lane_ids": [
+        "eb_in",
+        "eb_cross",
+        "eb_out1",
+        "eb_out2",
+        "east_turn",
+        "wb_in",
+        "wb_cross",
+        "wb_out",
+        "west_turn",
+        "feeder"
+      ]
+    },
+    {
+      "id": "r_ns",
+      "name": "Aspen Avenue north-south loop",
+      "region": "test_town",
+      "lane_ids": [
+        "sb_in",
+        "sb_cross",
+        "sb_out1",
+        "sb_out2",
+        "south_turn",
+        "nb_in_far",
+        "nb_in",
+        "nb_cross",
+        "nb_out",
+        "north_turn"
+      ]
+    }
+  ],
+  "lanes": [
+    {
+      "id": "eb_in",
+      "road_id": "r_ew",
+      "points": [
+        [
+          -90.0,
+          1.0,
+          2.0
+        ],
+        [
+          -12.0,
+          1.0,
+          2.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "eb_cross"
+      ]
+    },
+    {
+      "id": "eb_cross",
+      "road_id": "r_ew",
+      "points": [
+        [
+          -12.0,
+          1.0,
+          2.0
+        ],
+        [
+          0.0,
+          1.0,
+          2.0
+        ],
+        [
+          12.0,
+          1.0,
+          2.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 35,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "eb_out1"
+      ]
+    },
+    {
+      "id": "eb_out1",
+      "road_id": "r_ew",
+      "points": [
+        [
+          12.0,
+          1.0,
+          2.0
+        ],
+        [
+          50.0,
+          1.0,
+          2.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "eb_out2"
+      ]
+    },
+    {
+      "id": "eb_out2",
+      "road_id": "r_ew",
+      "points": [
+        [
+          50.0,
+          1.0,
+          2.0
+        ],
+        [
+          90.0,
+          1.0,
+          2.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "east_turn"
+      ]
+    },
+    {
+      "id": "east_turn",
+      "road_id": "r_ew",
+      "points": [
+        [
+          90.0,
+          1.0,
+          2.0
+        ],
+        [
+          103.0,
+          1.0,
+          2.0
+        ],
+        [
+          109.0,
+          1.0,
+          0.0
+        ],
+        [
+          112.0,
+          1.0,
+          -5.0
+        ],
+        [
+          110.0,
+          1.0,
+          -12.0
+        ],
+        [
+          104.0,
+          1.0,
+          -16.0
+        ],
+        [
+          96.0,
+          1.0,
+          -14.0
+        ],
+        [
+          91.0,
+          1.0,
+          -9.0
+        ],
+        [
+          90.0,
+          1.0,
+          -2.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 26,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "wb_in"
+      ]
+    },
+    {
+      "id": "wb_in",
+      "road_id": "r_ew",
+      "points": [
+        [
+          90.0,
+          1.0,
+          -2.0
+        ],
+        [
+          12.0,
+          1.0,
+          -2.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "wb_cross"
+      ]
+    },
+    {
+      "id": "wb_cross",
+      "road_id": "r_ew",
+      "points": [
+        [
+          12.0,
+          1.0,
+          -2.0
+        ],
+        [
+          0.0,
+          1.0,
+          -2.0
+        ],
+        [
+          -12.0,
+          1.0,
+          -2.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 35,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "wb_out"
+      ]
+    },
+    {
+      "id": "wb_out",
+      "road_id": "r_ew",
+      "points": [
+        [
+          -12.0,
+          1.0,
+          -2.0
+        ],
+        [
+          -90.0,
+          1.0,
+          -2.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "west_turn"
+      ]
+    },
+    {
+      "id": "west_turn",
+      "road_id": "r_ew",
+      "points": [
+        [
+          -90.0,
+          1.0,
+          -2.0
+        ],
+        [
+          -103.0,
+          1.0,
+          -2.0
+        ],
+        [
+          -109.0,
+          1.0,
+          0.0
+        ],
+        [
+          -112.0,
+          1.0,
+          5.0
+        ],
+        [
+          -110.0,
+          1.0,
+          12.0
+        ],
+        [
+          -104.0,
+          1.0,
+          16.0
+        ],
+        [
+          -96.0,
+          1.0,
+          14.0
+        ],
+        [
+          -91.0,
+          1.0,
+          9.0
+        ],
+        [
+          -90.0,
+          1.0,
+          2.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 25,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "eb_in"
+      ]
+    },
+    {
+      "id": "sb_in",
+      "road_id": "r_ns",
+      "points": [
+        [
+          -2.0,
+          1.0,
+          -90.0
+        ],
+        [
+          -2.0,
+          1.0,
+          -12.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "sb_cross"
+      ]
+    },
+    {
+      "id": "sb_cross",
+      "road_id": "r_ns",
+      "points": [
+        [
+          -2.0,
+          1.0,
+          -12.0
+        ],
+        [
+          -2.0,
+          1.0,
+          0.0
+        ],
+        [
+          -2.0,
+          1.0,
+          12.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 35,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "sb_out1"
+      ]
+    },
+    {
+      "id": "sb_out1",
+      "road_id": "r_ns",
+      "points": [
+        [
+          -2.0,
+          1.0,
+          12.0
+        ],
+        [
+          -2.0,
+          1.0,
+          44.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "sb_out2",
+        "feeder"
+      ]
+    },
+    {
+      "id": "sb_out2",
+      "road_id": "r_ns",
+      "points": [
+        [
+          -2.0,
+          1.0,
+          44.0
+        ],
+        [
+          -2.0,
+          1.0,
+          90.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "south_turn"
+      ]
+    },
+    {
+      "id": "south_turn",
+      "road_id": "r_ns",
+      "points": [
+        [
+          -2.0,
+          1.0,
+          90.0
+        ],
+        [
+          -2.0,
+          1.0,
+          111.0
+        ],
+        [
+          4.0,
+          1.0,
+          116.0
+        ],
+        [
+          18.0,
+          1.0,
+          116.0
+        ],
+        [
+          24.0,
+          1.0,
+          110.0
+        ],
+        [
+          24.0,
+          1.0,
+          96.0
+        ],
+        [
+          2.0,
+          1.0,
+          90.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 26,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "nb_in_far"
+      ]
+    },
+    {
+      "id": "nb_in_far",
+      "road_id": "r_ns",
+      "points": [
+        [
+          2.0,
+          1.0,
+          90.0
+        ],
+        [
+          2.0,
+          1.0,
+          44.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "nb_in"
+      ]
+    },
+    {
+      "id": "nb_in",
+      "road_id": "r_ns",
+      "points": [
+        [
+          2.0,
+          1.0,
+          44.0
+        ],
+        [
+          2.0,
+          1.0,
+          12.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "nb_cross"
+      ]
+    },
+    {
+      "id": "nb_cross",
+      "road_id": "r_ns",
+      "points": [
+        [
+          2.0,
+          1.0,
+          12.0
+        ],
+        [
+          2.0,
+          1.0,
+          0.0
+        ],
+        [
+          2.0,
+          1.0,
+          -12.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 35,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "nb_out"
+      ]
+    },
+    {
+      "id": "nb_out",
+      "road_id": "r_ns",
+      "points": [
+        [
+          2.0,
+          1.0,
+          -12.0
+        ],
+        [
+          2.0,
+          1.0,
+          -90.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 46,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "north_turn"
+      ]
+    },
+    {
+      "id": "north_turn",
+      "road_id": "r_ns",
+      "points": [
+        [
+          2.0,
+          1.0,
+          -90.0
+        ],
+        [
+          2.0,
+          1.0,
+          -112.0
+        ],
+        [
+          -4.0,
+          1.0,
+          -116.0
+        ],
+        [
+          -18.0,
+          1.0,
+          -116.0
+        ],
+        [
+          -23.0,
+          1.0,
+          -110.0
+        ],
+        [
+          -23.0,
+          1.0,
+          -96.0
+        ],
+        [
+          -2.0,
+          1.0,
+          -90.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 26,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "sb_in"
+      ]
+    },
+    {
+      "id": "feeder",
+      "road_id": "r_ew",
+      "points": [
+        [
+          -2.0,
+          1.0,
+          44.0
+        ],
+        [
+          4.0,
+          1.0,
+          42.0
+        ],
+        [
+          18.0,
+          1.0,
+          34.0
+        ],
+        [
+          30.0,
+          1.0,
+          20.0
+        ],
+        [
+          43.0,
+          1.0,
+          7.0
+        ],
+        [
+          50.0,
+          1.0,
+          2.0
+        ]
+      ],
+      "width_m": 3.5,
+      "speed_limit_kph": 28,
+      "surface": "asphalt",
+      "next_lane_ids": [
+        "eb_out2"
+      ]
+    }
+  ]
+}
