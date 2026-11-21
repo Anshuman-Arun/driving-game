@@ -29,7 +29,7 @@ func set_drive_input(new_steer: float, new_throttle: float, new_brake: float, _h
 
 func teleport_to(location: Vector3, forward: Vector3) -> void:
 	global_position = location
-	rotation.y = atan2(forward.x, -forward.z)
+	rotation.y = atan2(-forward.x, -forward.z)
 	speed_mps = 0.0
 	steer = 0.0
 	throttle = 0.0
