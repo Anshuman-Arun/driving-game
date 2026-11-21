@@ -18,7 +18,12 @@ function norm(a){const l=Math.sqrt(dot(a,a))||1;return a.map(x=>x/l)}
 function start(id){return {id,nodes:[{name:"AssetRoot",parent:null,pos:[0,0,0]}],parts:[]}}
 function parent(m,name,from="AssetRoot",pos=[0,0,0]){m.nodes.push({name,parent:from,pos});return name}
 function part(m,name,mat,from="AssetRoot"){const p={name,mat,from,tri:[]};m.parts.push(p);return p}
-function tri(p,a,b,c){p.tri.push([a,b,c])}function quad(p,a,b,c,d){tri(p,a,b,c);tri(p,a,c,d)}
+function tri(p,a,b,c){
+ // Quantize at source so Node, V8 isolates and native math libraries serialize
+ // identical generated geometry despite sub-ULP trigonometric differences.
+ const q=v=>v.map(x=>{const r=Math.round(x*1e6)/1e6;return r===0?0:r});
+ p.tri.push([q(a),q(b),q(c)]);
+}function quad(p,a,b,c,d){tri(p,a,b,c);tri(p,a,c,d)}
 function box(m,name,pos,size,mat,from="AssetRoot"){
  const p=part(m,name,mat,from),[x,y,z]=pos,[a,b,c]=size.map(q=>q/2);
  const P=[[-a,-b,-c],[a,-b,-c],[a,b,-c],[-a,b,-c],[-a,-b,c],[a,-b,c],[a,b,c],[-a,b,c]].map(q=>vadd(q,pos));
@@ -145,7 +150,7 @@ function environment(id){
 }
 function exportGLB(m){
  const b=[],accessors=[],bufferViews=[],meshes=[],nodes=[],lookup={},mats=Object.keys(colors),fview=new DataView(new ArrayBuffer(4));
- const u8=x=>b.push(x&255),u16=x=>{u8(x);u8(x>>8)},f32=x=>{fview.setFloat32(0,x,true);for(let i=0;i<4;i++)u8(fview.getUint8(i))},pad=()=>{while(b.length%4)u8(0)};
+ const u8=x=>b.push(x&255),u16=x=>{u8(x);u8(x>>8)},f32=x=>{const q=Math.round(x*1e6)/1e6;fview.setFloat32(0,q===0?0:q,true);for(let i=0;i<4;i++)u8(fview.getUint8(i))},pad=()=>{while(b.length%4)u8(0)};
  function view(from,length,target){bufferViews.push({buffer:0,byteOffset:from,byteLength:length,target});return bufferViews.length-1}
  function acc(bufferView,count,type,componentType,min,max){const a={bufferView,count,type,componentType};if(min)a.min=min;if(max)a.max=max;accessors.push(a);return accessors.length-1}
  for(const n of m.nodes){lookup[n.name]=nodes.length;nodes.push({name:n.name,translation:n.pos,children:[]})}
