@@ -1,9 +1,11 @@
 // Independent source-only scenery geometry and content validation. Node 20+, no packages.
 // Usage: node content/scenery/tools/validate.mjs path/to/data/world
-export function validate(metadata,graph,terrain,manifest,packs,mask,metrics) {
+export function validate(metadata,graph,terrain,manifest,packs,mask,metrics,reservations) {
  const errors=[],warnings=[],report={};
+ const gateZones=reservations?.zones||[];
  const fail=s=>errors.push(s);
  if(metadata.seed!==20261121 || manifest.seed!==metadata.seed)fail("World/scenery source seed mismatch");
+ if(gateZones.length!==102||reservations.source_pr!==10||reservations.world_graph_blob_sha1!==manifest.sources.road_git_blob||metrics.source_race_exclusion_zones!==102)fail("Race PR #10 exclusion reservation snapshot mismatches");
  if(metadata.coordinate_system!=="godot_y_up"||manifest.coordinate_system!=="godot_y_up")fail("Coordinate convention mismatch");
  if(terrain.length!==502002)fail("R16 bytes must contain exactly 501x501 LE uint16 samples");
  if(graph.lanes.length!==104||graph.roads.length!==27)fail("Authoritative road graph changed");
@@ -49,6 +51,7 @@ export function validate(metadata,graph,terrain,manifest,packs,mask,metrics) {
    if(![x,y,z,scale,item.yaw_deg].every(Number.isFinite)||scale<=0||scale>3.5){fail("Invalid transform "+item.id);continue}
    if(x<-988||x>988||z<-988||z>988)fail("Out-of-bounds "+item.id);
    if(item.district!=="old_quarry" && Math.hypot(x-r.center[0],z-r.center[1])>r.radius_m*.981)fail("Wrong region "+item.id);
+   for(const gate of gateZones)if(Math.hypot(x-gate.x,z-gate.z)<gate.radius_m+def.r*scale+reservations.clearance_margin_m-.005)fail("Race gate clearance "+item.id+" at "+gate.id);
    const surfaceY=surf(x,z),error=Math.abs(y-(surfaceY+Number(item.terrain_offset_m)));
    maxHeightMismatch=Math.max(maxHeightMismatch,error);
    if(error>0.015)fail("Floating/underground pivot "+item.id+" delta="+error);
@@ -103,7 +106,7 @@ export function validate(metadata,graph,terrain,manifest,packs,mask,metrics) {
  report.water_quads=mask.cells.length;report.height_error_max_m=maxHeightMismatch;report.maximum_architecture_foot_relief_m=maxFootRelief;
  report.landmarks=landmarks;report.physical_corridors=physical.length;report.turn_paths=turning.length;report.junctions=junctions.length;
  report.minimum_distance_any_object_to_lane_m=minPhysical;report.minimum_distance_any_object_to_turn_m=minTurn;
- report.foundation_count=foundationCount;report.estimated_multimesh_transform_bytes=total*64;
+ report.foundation_count=foundationCount;report.estimated_multimesh_transform_bytes=total*64;report.verified_race_exclusion_zones=gateZones.length;
  report.warnings=warnings;report.errors=errors;
  return report;
 }
@@ -121,11 +124,12 @@ const terrain=fs.readFileSync(path.join(world,"terrain_height_r16le.bin"));
 const manifest=json("content/scenery/manifest.json"),metrics=json("content/scenery/metrics.json");
 const paths=manifest.region_packs.map(r=>r.path),packs=paths.map(json);
 const mask=json("content/scenery/lake/water_cells_v1.json");
+const reservations=json("content/scenery/avoidance/race_gate_reservations_v1.json");
 const sha=data=>crypto.createHash("sha1").update(Buffer.from("blob "+data.length+"\0")).update(data).digest("hex");
 if(sha(terrain)!==manifest.sources.terrain_git_blob||sha(fs.readFileSync(path.join(world,"road_graph_v1.json")))!==manifest.sources.road_git_blob){
  console.error("FAIL: staged World PR #3 blob SHA does not match pinned authoritative data");process.exit(1);
 }
-const result=validate(metadata,graph,terrain,manifest,packs,mask,metrics);
+const result=validate(metadata,graph,terrain,manifest,packs,mask,metrics,reservations);
 console.log(JSON.stringify(result,null,2));
 if(result.errors.length)process.exit(1);
 console.log("PASS scenery: source geometry, collision-clearance, slope, foundations, water mask, landmarks and draw budgets");
