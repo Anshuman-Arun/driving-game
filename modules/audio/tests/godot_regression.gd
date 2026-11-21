@@ -145,6 +145,28 @@ func _test(audio) -> void:
 			_expect(audio._players["engine_" + band].playing, "new profile loop playing")
 			_expect(not audio._alternate_engines[band].playing, "old profile loop stopped")
 
+	# Rapid selector changes must finish the first fade rather than cut off
+	# the old loops in the middle of a waveform.
+	audio.set_profile("orion_rs")
+	audio.set_profile("kestrel_xr")
+	_expect(audio._queued_profile == "kestrel_xr", "rapid profile switch queued")
+	_expect(audio._current_profile == "orion_rs", "current crossfade preserved")
+	audio._process(0.30)
+	_expect(audio._current_profile == "kestrel_xr" and audio._profile_fading, "queued profile transition begins")
+	audio._process(0.30)
+	_expect(not audio._profile_fading and audio._queued_profile == "", "queued profile transition ends")
+
+	# Collision bursts must be limited and use cached one-shots.
+	audio._process(0.20)
+	var collision_stream = audio._event_streams["collision"]
+	var before_collision: int = audio._event_index
+	audio.trigger_collision(1.0)
+	_expect(audio._event_index != before_collision, "first collision event played")
+	var after_collision: int = audio._event_index
+	audio.trigger_collision(1.0)
+	_expect(audio._event_index == after_collision, "immediate duplicate collision suppressed")
+	_expect(audio._event_streams["collision"] == collision_stream, "collision stream reused")
+
 	# Bound the worst-case simultaneous steady loop gain.
 	audio.update_telemetry({"rpm": 6800.0, "speed_mps": 50.0, "throttle": 1.0,
 		"load": 1.0, "lateral_slip": 1.0, "grip": 0.0, "surface": "asphalt", "on_ground": true})
