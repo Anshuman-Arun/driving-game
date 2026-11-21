@@ -52,7 +52,8 @@ static func diagnose(a: Dictionary, b: Dictionary) -> Dictionary:
 		return {}
 	var kind := "cross_lane_body_overlap"
 	if lid_a == lid_b:
-		kind = "same_lane_rear_end"
+		# Distinct arc positions can geometrically overlap on a hairpin.
+		kind = "same_lane_body_overlap"
 	elif str(a.get("next_lane", "")) != "" and str(a.get("next_lane", "")) == str(b.get("next_lane", "")):
 		kind = "unsafe_merge_body_overlap"
 	elif lid_a.begins_with("turn_") or lid_b.begins_with("turn_"):
