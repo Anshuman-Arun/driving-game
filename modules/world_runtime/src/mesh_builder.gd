@@ -5,7 +5,7 @@ extends RefCounted
 
 const SHOULDER_M := 1.35
 const ROAD_LIFT_M := 0.075
-const PAD_LIFT_M := 0.085
+const PAD_LIFT_M := 0.10
 const OUTER_BURY_M := 0.08
 const PAD_MARGIN_M := 3.0
 const PAD_GRID_M := 2.0
@@ -122,46 +122,80 @@ func _terrain_normal(ix: int, iz: int) -> Vector3:
 	return Vector3(sx, 2.0 * source.spacing_m, sz).normalized()
 
 func _build_terrain(parent: Node3D, cell_count: int) -> void:
-	for iz0 in range(0, source.grid_height - 1, cell_count):
-		for ix0 in range(0, source.grid_width - 1, cell_count):
-			var width: int = mini(cell_count, source.grid_width - 1 - ix0)
-			var depth: int = mini(cell_count, source.grid_height - 1 - iz0)
-			var x0: float = source.origin_x + ix0 * source.spacing_m
-			var z0: float = source.origin_z + iz0 * source.spacing_m
-			var x1: float = x0 + width * source.spacing_m
-			var z1: float = z0 + depth * source.spacing_m
+	var gw: int = source.grid_width
+	var gh: int = source.grid_height
+	var gw_max: int = gw - 1
+	var gh_max: int = gh - 1
+	var spacing: float = source.spacing_m
+	var inv_uv: float = 1.0 / 12.0
+	var two_spacing: float = 2.0 * spacing
+	var ox: float = source.origin_x
+	var oz: float = source.origin_z
+	var samples: PackedFloat32Array = source.height_samples
+	for iz0 in range(0, gh_max, cell_count):
+		for ix0 in range(0, gw_max, cell_count):
+			var width: int = mini(cell_count, gw_max - ix0)
+			var depth: int = mini(cell_count, gh_max - iz0)
+			var x0: float = ox + ix0 * spacing
+			var z0: float = oz + iz0 * spacing
+			var x1: float = x0 + width * spacing
+			var z1: float = z0 + depth * spacing
 			if not _rectangle_in_view(x0, z0, x1, z1):
 				continue
+			var stride: int = width + 1
+			var vert_count: int = stride * (depth + 1)
 			var v := PackedVector3Array()
 			var n := PackedVector3Array()
 			var uv := PackedVector2Array()
 			var ind := PackedInt32Array()
+			v.resize(vert_count)
+			n.resize(vert_count)
+			uv.resize(vert_count)
+			ind.resize(depth * width * 6)
+			var vi := 0
 			for dz in range(depth + 1):
+				var gz: int = iz0 + dz
+				var z: float = oz + gz * spacing
+				var row_off: int = gz * gw
+				var row_up: int = (gz - 1 if gz > 0 else 0) * gw
+				var row_dn: int = (gz + 1 if gz < gh_max else gh_max) * gw
+				var uv_y: float = z * inv_uv
 				for dx in range(width + 1):
 					var gx: int = ix0 + dx
-					var gz: int = iz0 + dz
-					var x: float = source.origin_x + gx * source.spacing_m
-					var z: float = source.origin_z + gz * source.spacing_m
-					v.append(Vector3(x, source.height_index(gx, gz), z))
-					n.append(_terrain_normal(gx, gz))
-					uv.append(Vector2(x / 12.0, z / 12.0))
-			var stride: int = width + 1
+					var x: float = ox + gx * spacing
+					var xl: int = gx - 1 if gx > 0 else 0
+					var xr: int = gx + 1 if gx < gw_max else gw_max
+					var sx: float = samples[row_off + xl] - samples[row_off + xr]
+					var sz: float = samples[row_up + gx] - samples[row_dn + gx]
+					v[vi] = Vector3(x, samples[row_off + gx], z)
+					n[vi] = Vector3(sx, two_spacing, sz).normalized()
+					uv[vi] = Vector2(x * inv_uv, uv_y)
+					vi += 1
+			var ii := 0
 			for dz in range(depth):
+				var row_a: int = dz * stride
+				var row_c: int = row_a + stride
 				for dx in range(width):
-					var a: int = dz * stride + dx
+					var a: int = row_a + dx
 					var b: int = a + 1
-					var c: int = a + stride
+					var c: int = row_c + dx
 					var d: int = c + 1
 					# Godot clockwise +Y-facing winding; split diagonal b--c.
 					# Match sample_surface_height() interpolation exactly.
-					ind.append_array(PackedInt32Array([a, b, c, b, d, c]))
+					ind[ii] = a
+					ind[ii + 1] = b
+					ind[ii + 2] = c
+					ind[ii + 3] = b
+					ind[ii + 4] = d
+					ind[ii + 5] = c
+					ii += 6
 			var mesh := ArrayMesh.new()
 			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(v, n, uv, ind))
 			mesh.surface_set_material(0, materials["terrain"])
 			_attach_mesh(parent, "Terrain_%d_%d" % [ix0, iz0], mesh, 1)
 			stats["terrain_chunks"] += 1
-			stats["terrain_vertices"] += v.size()
-			stats["terrain_triangles"] += ind.size() / 3
+			stats["terrain_vertices"] += vert_count
+			stats["terrain_triangles"] += (depth * width * 2)
 
 func _is_physical_corridor(road: Dictionary) -> bool:
 	# World Agent encodes each physical road as matched AB/BA directed lanes.
@@ -191,7 +225,6 @@ func corridor_points(road: Dictionary) -> PackedVector3Array:
 func _section(points: PackedVector3Array, i: int, half_width: float) -> Array[Vector3]:
 	var previous: Vector3 = points[maxi(0, i - 1)]
 	var following: Vector3 = points[mini(points.size() - 1, i + 1)]
-	var longitudinal := (following - previous).normalized()
 	var tangent := Vector2(following.x - previous.x, following.z - previous.z).normalized()
 	var lateral := Vector2(-tangent.y, tangent.x)
 	var offsets := [-half_width - SHOULDER_M, -half_width, 0.0, half_width, half_width + SHOULDER_M]
@@ -289,18 +322,24 @@ func _convex_hull(raw: Array[Vector2]) -> Array[Vector2]:
 		return raw
 	var ordered: Array[Vector2] = raw.duplicate()
 	ordered.sort_custom(func(a: Vector2, b: Vector2) -> bool:
-		if is_equal_approx(a.x, b.x):
+		if a.x == b.x:
 			return a.y < b.y
 		return a.x < b.x
 	)
-	var lower: Array[Vector2] = []
+	var unique: Array[Vector2] = []
 	for p in ordered:
+		if unique.is_empty() or unique[-1] != p:
+			unique.append(p)
+	if unique.size() < 3:
+		return unique
+	var lower: Array[Vector2] = []
+	for p in unique:
 		while lower.size() > 1 and _cross(lower[-2], lower[-1], p) <= 0.0:
 			lower.pop_back()
 		lower.append(p)
 	var upper: Array[Vector2] = []
-	ordered.reverse()
-	for p in ordered:
+	unique.reverse()
+	for p in unique:
 		while upper.size() > 1 and _cross(upper[-2], upper[-1], p) <= 0.0:
 			upper.pop_back()
 		upper.append(p)
@@ -425,14 +464,69 @@ func _build_junction_pads(parent: Node3D) -> void:
 						uvs.append(Vector2(v.x / 8.0, v.z / 8.0))
 		if vertices.is_empty():
 			continue
+		var skirt_verts := PackedVector3Array()
+		var skirt_norms := PackedVector3Array()
+		var skirt_uvs := PackedVector2Array()
+		_append_pad_skirt(hull, skirt_verts, skirt_norms, skirt_uvs)
 		var mesh := ArrayMesh.new()
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(vertices, normals, uvs, PackedInt32Array()))
 		mesh.surface_set_material(0, materials[group_surfaces[junction]])
-		_attach_mesh(parent, "Junction_" + junction, mesh, 1)
+		var surf_count := 1
+		if not skirt_verts.is_empty():
+			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(skirt_verts, skirt_norms, skirt_uvs, PackedInt32Array()))
+			mesh.surface_set_material(1, materials["shoulder"])
+			surf_count = 2
+		_attach_mesh(parent, "Junction_" + junction, mesh, surf_count)
 		stats["junction_pads"] += 1
 		stats["turn_paths_covered"] += int(turn_counts[junction])
-		stats["junction_vertices"] += vertices.size()
-		stats["junction_triangles"] += vertices.size() / 3
+		stats["junction_vertices"] += vertices.size() + skirt_verts.size()
+		stats["junction_triangles"] += (vertices.size() + skirt_verts.size()) / 3
+
+func _append_pad_skirt(hull: Array[Vector2], verts: PackedVector3Array,
+		norms: PackedVector3Array, uvs: PackedVector2Array) -> void:
+	var n: int = hull.size()
+	if n < 3:
+		return
+	var edge_out: Array[Vector2] = []
+	edge_out.resize(n)
+	for j in range(n):
+		var d: Vector2 = hull[(j + 1) % n] - hull[j]
+		edge_out[j] = Vector2(d.y, -d.x).normalized()
+	var vert_out: Array[Vector2] = []
+	vert_out.resize(n)
+	for j in range(n):
+		var prev_n: Vector2 = edge_out[(j - 1 + n) % n]
+		var next_n: Vector2 = edge_out[j]
+		var avg: Vector2 = (prev_n + next_n).normalized()
+		if avg.length_squared() < 0.001:
+			avg = next_n
+		vert_out[j] = avg * SHOULDER_M
+	var cumulative := 0.0
+	for j in range(n):
+		var j_next: int = (j + 1) % n
+		var a2: Vector2 = hull[j]
+		var b2: Vector2 = hull[j_next]
+		var out_a: Vector2 = a2 + vert_out[j]
+		var out_b: Vector2 = b2 + vert_out[j_next]
+		var edge_len: float = a2.distance_to(b2)
+		if edge_len < 0.001:
+			continue
+		var steps: int = maxi(1, int(ceil(edge_len / PAD_GRID_M)))
+		var step_len: float = edge_len / float(steps)
+		for s in range(steps):
+			var t0: float = float(s) / float(steps)
+			var t1: float = float(s + 1) / float(steps)
+			var in0: Vector2 = a2.lerp(b2, t0)
+			var in1: Vector2 = a2.lerp(b2, t1)
+			var o0: Vector2 = out_a.lerp(out_b, t0)
+			var o1: Vector2 = out_a.lerp(out_b, t1)
+			var v_in0 := _pad_vert(in0)
+			var v_in1 := _pad_vert(in1)
+			var v_o0 := Vector3(o0.x, source.sample_surface_height(o0.x, o0.y) - OUTER_BURY_M, o0.y)
+			var v_o1 := Vector3(o1.x, source.sample_surface_height(o1.x, o1.y) - OUTER_BURY_M, o1.y)
+			_append_quad(verts, norms, uvs, v_o0, v_in0, v_o1, v_in1,
+				0.0, SHOULDER_M / 4.0, cumulative / 4.0, (cumulative + step_len) / 4.0)
+			cumulative += step_len
 
 func _pad_normal(x: float, z: float) -> Vector3:
 	var step := 1.0

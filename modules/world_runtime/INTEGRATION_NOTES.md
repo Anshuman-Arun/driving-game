@@ -46,7 +46,24 @@ Read-only, independently computed against the actual GitHub source files through
 - For 32-cell full-world terrain chunks: predicted 256 terrain chunks, 500,000 terrain triangles. For physical roads: 1,685 centerline segments, 13,480 triangles and 40,440 submitted road vertices. These are geometry-derived predictions and do not count pad triangles (depends on 2 m clipping resolution).
 - Convex turn coverage with initial side offsets was validated for all 11 junction groups, then strengthened by explicit cardinal padding so even extreme turn points have clearance. Run the independent Node preflight after staging to measure padded hull area and clearance.
 
-Godot 4.7.2 executable is not installed in this tool execution container; direct GitHub clone/download fails network resolution. Therefore neither the Godot parser check nor headless mesh/collision raycast tests, GPU measurements or manual driving have been executed here. The exact reproducible Godot commands are in README.md. Treat this workstream as **source-implemented but Godot-runtime verification pending**, not as a runtime-certified integration.
+## Godot 4.7.2 local runtime QA results (Windows / RTX 4050)
+
+Verified directly in Godot 4.7.2 (`4.7.2.stable.official.ed1daf0bf`, Forward+ / Vulkan 1.4.325, NVIDIA GeForce RTX 4050 Laptop GPU at 1920×1080) against staged `origin/feat/worldgen` data:
+
+- **Headless editor import & parser gate**: PASS (0 errors, 0 warnings).
+- **Preview collision & regression smoke test**: PASS (`51` terrain chunks, `7` corridors, `4` junction pads, `62` static colliders, `20/20` Alder junction mid-rays, `60` turn samples, `24/24` road rays, `31` terrain chunk-seam checks, deterministic rebuild verified, `~602 ms` build time).
+- **Full-world collision & regression smoke test**: PASS (`256` terrain chunks, `16` physical corridors, `11` junction pads covering all `72` turn paths, `283` static colliders, `72/72` junction mid-rays, `216` turn samples, `642/642` road deck rays across left/center/right, `196` terrain chunk-seam checks, deterministic rebuild verified, `~2,805 ms` build time).
+- **Dense 2 m corridor sweep (all 16 corridors, left/center/right)**: `20,109 / 20,109` road/junction collider hits, `0` terrain pokes, `0` misses.
+- **1920×1080 RTX 4050 steady-state performance** (warmup & screenshot disk I/O excluded):
+  - **Preview mode** (`104,270` tris, `66,453` verts, `62` colliders, `89.74 MB` static mem, `109.75 MB` VRAM, `650 ms` build): Stationary `119.9 FPS` avg / `113.0–114.7 FPS` 1% low (`0.40–0.44 ms` CPU, `0.88–1.08 ms` GPU); Traversal `119.9 FPS` avg / `114.9 FPS` 1% low (`0.34 ms` CPU, `1.62 ms` GPU, `0` stutter frames).
+  - **Full-world mode** (`520,139` tris, `326,673` verts, `283` colliders, `231.92 MB` static mem, `118.99 MB` VRAM, `2,923 ms` build): Stationary `144.9 FPS` avg / `137.6–141.1 FPS` 1% low (`0.82 ms` CPU, `1.82 ms` GPU, `0` stutters); Traversal `118.2 FPS` avg / `62.2 FPS` 1% low (`0.64 ms` CPU, `1.38 ms` GPU, `2` stutter frames).
+- **Fixes landed in `fix/world-runtime-qa`**:
+  1. Fixed GDScript type-inference parse error on `local_path := get_script().resource_path.get_base_dir()` in `src/world_runtime.gd` and replaced deprecated `Image.create` with `Image.create_empty`.
+  2. Fixed non-transitive `is_equal_approx` comparator in `_convex_hull` (`src/mesh_builder.gd`) that corrupted 7 of 11 junction hulls and dropped Alder Town's junction pad.
+  3. Raised `PAD_LIFT_M` from `0.085` to `0.10` m so road decks no longer poke 1–3 mm above overlapping junction pads.
+  4. Added `1.35 m` terrain-burying perimeter shoulder skirts to all junction pads so pad boundaries have smooth drivable ramps instead of a `10 cm` floating drop-off.
+  5. Pre-allocated terrain chunk vertex/normal/UV/index buffers and inlined height array reads in `_build_terrain`, reducing full-world build time from `~6.2 s` to `~2.5–2.9 s`.
+  6. Freed prior `GeneratedWorld` immediately via `free()` after `remove_child()` on rebuild to prevent transient `2×` static memory spikes.
 
 ## Potential follow-up improvements after engine verification
 

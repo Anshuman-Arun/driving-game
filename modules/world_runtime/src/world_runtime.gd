@@ -48,15 +48,19 @@ func discover_world_directory() -> String:
 		return staged
 	return ""
 
+func _local_dir() -> String:
+	var script_res: Script = get_script()
+	return script_res.resource_path.get_base_dir()
+
 func build_world(directory_override: String = "") -> bool:
 	error_message = ""
 	report = {}
 	if generated_root != null and is_instance_valid(generated_root):
 		remove_child(generated_root)
-		generated_root.queue_free()
+		generated_root.free()
 		generated_root = null
 	var directory: String = directory_override if not directory_override.is_empty() else discover_world_directory()
-	var local_path := get_script().resource_path.get_base_dir()
+	var local_path: String = _local_dir()
 	var loaded = load(local_path.path_join("world_data.gd")).new()
 	if not loaded.load_directory(directory):
 		data = null
@@ -81,7 +85,7 @@ func build_world(directory_override: String = "") -> bool:
 		overrides["gravel"] = gravel_material_override
 	if shoulder_material_override != null:
 		overrides["shoulder"] = shoulder_material_override
-	var builder = load(get_script().resource_path.get_base_dir().path_join("mesh_builder.gd")).new()
+	var builder = load(_local_dir().path_join("mesh_builder.gd")).new()
 	report = builder.build(root, data, full, preview_center_xz,
 		preview_radius_m, terrain_chunk_cells, generate_colliders, overrides)
 	report["source_directory"] = directory
@@ -112,7 +116,7 @@ func get_physical_road_centerlines() -> Array[Dictionary]:
 	var corridors: Array[Dictionary] = []
 	if data == null:
 		return corridors
-	var builder = load(get_script().resource_path.get_base_dir().path_join("mesh_builder.gd")).new()
+	var builder = load(_local_dir().path_join("mesh_builder.gd")).new()
 	builder.source = data
 	for road in data.roads:
 		if not builder._is_physical_corridor(road):
@@ -132,7 +136,7 @@ func create_height_image_rf() -> Image:
 	## Native Terrain3D region import/padding must be performed in its editor tooling.
 	if data == null:
 		return null
-	var img := Image.create(data.grid_width, data.grid_height, false, Image.FORMAT_RF)
+	var img := Image.create_empty(data.grid_width, data.grid_height, false, Image.FORMAT_RF)
 	for iz in range(data.grid_height):
 		for ix in range(data.grid_width):
 			var v: float = data.height_index(ix, iz)
