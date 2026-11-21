@@ -635,9 +635,10 @@ func _apply_setting(key: String, value: Variant) -> void:
 				if node.has_method("set_quality"):
 					node.call("set_quality", factor)
 		"window_mode":
-			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if value == "fullscreen" else DisplayServer.WINDOW_MODE_WINDOWED)
+			if DisplayServer.get_name() != "headless":
+				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if value == "fullscreen" else DisplayServer.WINDOW_MODE_WINDOWED)
 		"resolution":
-			if save.data["settings"]["window_mode"] == "windowed":
+			if DisplayServer.get_name() != "headless" and save.data["settings"]["window_mode"] == "windowed":
 				var halves := str(value).split("x")
 				if halves.size() == 2:
 					DisplayServer.window_set_size(Vector2i(int(halves[0]), int(halves[1])))
