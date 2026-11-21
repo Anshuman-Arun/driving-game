@@ -6,6 +6,14 @@
 - Only `modules/game_shell/` paths were written to `feat/game-shell`. Branch started from main commit `2f6d2a71f48eee09dadd16c86457b4daddc51f07`.
 - Source-controlled scenes, scripts, save migration/recovery, mock transitions and automated Godot test harness authored. GitHub content/branch writes confirmed.
 
+## Executed independent source and repository checks
+
+- GitHub comparison of `main...feat/game-shell`: **13 changed files, 13 within `modules/game_shell/`, zero ownership violations; 1,696 lines added** at the checkpointed scan (later fixes add a few more lines).
+- Enumerated **8 GDScript files plus the standalone scene**, checked relative preloads against the feature-branch Git tree: **zero unresolved references**.
+- Independent balanced-delimiter/source string scan over module GDScript: **zero structural errors detected**. This does **not** substitute for GDScript parsing.
+- Executed **16/16 targeted source-contract checks** against the committed files: eight UI routes; input mappings; v2 schema; seven settings; three cars; four events; temporary/backup/corrupt recovery branches; migration; race results; pause gating; standalone scene linkage; original visuals; authored tests; Forward+ renderer; no network dependency.
+- Authored `tests/run_tests.gd` contains **48 runtime assertions**; these remain **unexecuted** because the Godot binary is not available.
+
 ## Engine/runtime checks — not executable in this environment
 
 The authoring container has **no `godot` or `godot4` binary**. Standard `git` cannot resolve `github.com` from that container, although the connected GitHub app can access and write the repository. Therefore this report **does not claim a Godot parser pass, imported scene pass, visual screenshot, interactive gameplay test, controller test or exported Windows build**.
