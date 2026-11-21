@@ -94,6 +94,7 @@ func start_event(definition: Dictionary) -> bool:
 	var prepared: Array[Dictionary] = []
 	var seen := {}
 	var prev_s := 0.0
+	var prev_radius := 0.0
 	for item in raw_checkpoints:
 		if not (item is Dictionary) or not (item.get("id") is String) or str(item["id"]).is_empty() or seen.has(item["id"]):
 			return _fail("Invalid or repeated checkpoint ID")
@@ -104,10 +105,11 @@ func start_event(definition: Dictionary) -> bool:
 		var center := RaceRoute.point3(item["center"])
 		var projected: Dictionary = candidate.project(center)
 		var arc: float = projected["s"]
-		if projected["distance_m"] > float(item["radius_m"]) or arc <= prev_s + 4.0 or arc >= candidate.length_m - 4.0:
-			return _fail("Checkpoints must be on route, increasing and outside the finish gate")
+		if projected["distance_m"] > float(item["radius_m"]) or arc <= prev_s + prev_radius + float(item["radius_m"]) + 2.0 or arc >= candidate.length_m - 4.0:
+			return _fail("Checkpoints must be on route, non-overlapping, ordered and outside the finish gate")
 		prepared.append({"id": item["id"], "center": center, "radius_m": float(item["radius_m"]), "s": arc})
 		prev_s = arc
+		prev_radius = float(item["radius_m"])
 		seen[item["id"]] = true
 	for optional in ["grid_seconds", "countdown_seconds", "finish_grace_seconds", "max_race_seconds", "max_speed_mps", "corridor_m", "collision_reset_speed_mps"]:
 		if definition.has(optional) and (not RaceRoute._number(definition[optional]) or float(definition[optional]) < 0.0):
@@ -225,6 +227,10 @@ func _advance_racer(id: String, delta: float, elapsed_before: float) -> void:
 	var a: Vector3 = r["position"]
 	var b: Vector3 = r["pending_position"]
 	var movement := a.distance_to(b)
+	var bounds: Dictionary = road_graph["bounds"]
+	if b.x < float(bounds["min_x"]) or b.x > float(bounds["max_x"]) or b.z < float(bounds["min_z"]) or b.z > float(bounds["max_z"]):
+		_invalidate(id, "out_of_bounds")
+		return
 	if movement < 0.00001:
 		return
 	var max_speed: float = float(event.get("max_speed_mps", DEFAULT_MAX_SPEED_MPS))
