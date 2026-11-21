@@ -33,6 +33,7 @@ var _clock := 0.0
 var _current_profile := ""
 var _profile_fading := false
 var _profile_fade := 1.0
+var _queued_profile := ""
 var _outgoing_gains: Dictionary = {}
 var _telemetry: Dictionary = {"rpm": 950.0, "throttle": 0.0, "speed_mps": 0.0, "gear": 1, "surface": "asphalt", "grip": 1.0}
 var _mix_targets: Dictionary = {}
@@ -67,6 +68,11 @@ func _ready() -> void:
 func set_profile(profile: String) -> void:
 	if not PROFILES.has(profile):
 		push_warning("Unknown Aster audio profile: " + profile)
+		return
+	# A second switch during a crossfade is queued instead of cutting off
+	# the outgoing bank in mid-loop.
+	if _profile_fading:
+		_queued_profile = "" if profile == _current_profile else profile
 		return
 	car_profile = profile
 	if _players.is_empty() or _current_profile == profile:
@@ -112,6 +118,12 @@ func bind_gevp_vehicle(vehicle: Node3D) -> void:
 
 func unbind_gevp_vehicle() -> void:
 	bind_gevp_vehicle(null)
+
+
+func _exit_tree() -> void:
+	_disconnect_vehicle()
+	_bound_vehicle = null
+	_tracking_vehicle = false
 
 
 func _disconnect_vehicle() -> void:
@@ -206,7 +218,11 @@ func _process(delta: float) -> void:
 	# Crossfading banks uses complementary fades and never doubles this budget.
 	var peak_sum := 0.0
 	for band in ENGINE_BANDS:
-		peak_sum += float(_gains.get("engine_" + band, 0.0)) * 0.80
+		var key := "engine_" + band
+		var engine_gain := float(_gains.get(key, 0.0))
+		if _profile_fading:
+			engine_gain = maxf(engine_gain, float(_outgoing_gains.get(key, 0.0)))
+		peak_sum += engine_gain * 0.80
 	for name in LOOP_NAMES:
 		peak_sum += float(_gains.get(name, 0.0)) * 0.60
 	var limiter := minf(1.0, LOOP_PEAK_BUDGET / maxf(peak_sum, 0.0001))
@@ -221,6 +237,10 @@ func _process(delta: float) -> void:
 		_profile_fading = false
 		for band in ENGINE_BANDS:
 			(_alternate_engines[band] as AudioStreamPlayer).stop()
+		if _queued_profile != "":
+			var next_profile := _queued_profile
+			_queued_profile = ""
+			set_profile(next_profile)
 
 
 static func compute_targets(t: Dictionary, profile: String = "vela_gt") -> Dictionary:
