@@ -1,0 +1,187 @@
+name: Expanded standalone module validation
+
+on:
+  push:
+    branches: [feat/ci-expansion]
+  pull_request:
+    branches: [feat/ci-validation]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: expanded-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scripts:
+    name: Expanded CI syntax
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Validate executable scripts and whitespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n tools/ci/run_expanded.sh tools/ci/stage_integration.sh
+          python3 -m py_compile tools/ci/check_integration.py
+          git diff --check
+
+  modules:
+    name: "${{ matrix.track }} — ${{ matrix.branch }}"
+    needs: scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - track: core-qa
+            branch: fix/steering-camera-smoothing
+          - track: world-runtime
+            branch: fix/world-runtime-qa
+          - track: game-shell
+            branch: fix/game-shell-runtime-qa
+          - track: audio
+            branch: feat/audio
+          - track: race-content
+            branch: feat/race-content
+          - track: racing-production
+            branch: feat/production-racing-readiness
+    steps:
+      - name: Checkout CI implementation from this commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: ci
+          persist-credentials: false
+      - name: Checkout independently tested workstream branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: "${{ matrix.branch }}"
+          path: worktree
+          persist-credentials: false
+      - name: Checkout authoritative World branch (read-only input)
+        if: matrix.track == 'world-runtime' || matrix.track == 'race-content'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/worldgen
+          path: world-source
+          persist-credentials: false
+      - name: Pin Node.js 22.16.0
+        if: matrix.track == 'world-runtime' || matrix.track == 'race-content'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22.16.0
+      - name: Pin Python 3.12.12
+        if: matrix.track == 'audio'
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12.12"
+      - name: Install checksum-verified Godot 4.7.2
+        if: matrix.track != 'race-content'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ci-out
+          bash ci/tools/ci/install_godot.sh "$RUNNER_TEMP/godot/bin" 2>&1 | tee ci-out/godot-install.log
+      - name: Execute native mandatory gates
+        shell: bash
+        env:
+          TRACK: "${{ matrix.track }}"
+        run: |
+          set -euo pipefail
+          world_dir=""
+          if [[ "$TRACK" == "world-runtime" || "$TRACK" == "race-content" ]]; then
+            world_dir="$GITHUB_WORKSPACE/world-source"
+          fi
+          bash ci/tools/ci/run_expanded.sh "$TRACK" "$GITHUB_WORKSPACE/worktree" "$GITHUB_WORKSPACE/ci-out" "$GITHUB_WORKSPACE/ci/tools/ci" "$world_dir"
+      - name: Exact checked-out sources and test results
+        if: always()
+        shell: bash
+        env:
+          TRACK: "${{ matrix.track }}"
+          BRANCH: "${{ matrix.branch }}"
+        run: |
+          {
+            printf '### %s — %s\n\n' "$TRACK" "$BRANCH"
+            if [[ -d ci/.git ]]; then printf 'CI source SHA: \`%s\`\n\n' "$(git -C ci rev-parse HEAD)"; fi
+            if [[ -d worktree/.git ]]; then printf 'Test source SHA: \`%s\`\n\n' "$(git -C worktree rev-parse HEAD)"; fi
+            if [[ -d world-source/.git ]]; then printf 'Authoritative World SHA: \`%s\`\n\n' "$(git -C world-source rev-parse HEAD)"; fi
+            if [[ -f ci-out/SUMMARY.md ]]; then
+              cat ci-out/SUMMARY.md
+            else
+              printf '**NOT EXECUTED**: checkout or dependency setup blocked execution; see job steps.\n'
+            fi
+            printf '\nLogs are available in this job; no artifact upload is attempted due to the repository quota.\n'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  traffic-content:
+    name: Traffic content — availability-aware
+    needs: scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout CI implementation
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: ci
+          persist-credentials: false
+      - name: Check whether branch exists (without claiming a gate pass)
+        id: availability
+        shell: bash
+        env:
+          GH_TOKEN: "${{ github.token }}"
+        run: |
+          set -euo pipefail
+          response="$(curl --fail-with-body --silent --show-error --retry 2 \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -o "$RUNNER_TEMP/traffic-branch.json" \
+            -w '%{http_code}' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/branches/feat/world-traffic-content" || true)"
+          case "$response" in
+            200) echo "present=true" >> "$GITHUB_OUTPUT" ;;
+            404) echo "present=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::Branch lookup failed with HTTP $response"; exit 1 ;;
+          esac
+      - name: Checkout traffic content when available
+        if: steps.availability.outputs.present == 'true'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: feat/world-traffic-content
+          path: worktree
+          persist-credentials: false
+      - name: Pin Node.js 22.16.0
+        if: steps.availability.outputs.present == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22.16.0
+      - name: Pin Python 3.12.12
+        if: steps.availability.outputs.present == 'true'
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12.12"
+      - name: Execute actual tests only when present
+        if: steps.availability.outputs.present == 'true'
+        shell: bash
+        run: |
+          bash ci/tools/ci/run_expanded.sh traffic-content "$GITHUB_WORKSPACE/worktree" "$GITHUB_WORKSPACE/ci-out" "$GITHUB_WORKSPACE/ci/tools/ci"
+      - name: Publish honest availability status and SHA
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '### Traffic content (optional, not an assertion of readiness)'
+            if [[ -d worktree/.git ]]; then
+              printf 'Source SHA: \`%s\`\n\n' "$(git -C worktree rev-parse HEAD)"
+            fi
+            if [[ -f ci-out/SUMMARY.md ]]; then
+              cat ci-out/SUMMARY.md
+            else
+              echo '**NOT EXECUTED:** no checkout/test source, or setup failed. Inspect logs.'
+            fi
+            echo 'A missing or empty branch is not a passed content gate.'
+          } >> "$GITHUB_STEP_SUMMARY"
