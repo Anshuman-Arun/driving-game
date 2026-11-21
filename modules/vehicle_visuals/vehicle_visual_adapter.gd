@@ -15,9 +15,9 @@ const DEFAULT_HERO := "res://assets/vehicle_upgrade/vela_gt_hero.glb"
 const DEFAULT_MID := "res://assets/vehicle_upgrade/vela_gt_mid.glb"
 const DEFAULT_DISTANT := "res://assets/vehicle_upgrade/vela_gt_distant.glb"
 
-@export_file("*.glb", "*.tscn") var hero_path: String = DEFAULT_HERO
-@export_file("*.glb", "*.tscn") var mid_path: String = DEFAULT_MID
-@export_file("*.glb", "*.tscn") var distant_path: String = DEFAULT_DISTANT
+@export_file("*.glb,*.tscn") var hero_path: String = DEFAULT_HERO
+@export_file("*.glb,*.tscn") var mid_path: String = DEFAULT_MID
+@export_file("*.glb,*.tscn") var distant_path: String = DEFAULT_DISTANT
 @export var mid_distance_m := 27.0
 @export var far_distance_m := 85.0
 @export var auto_lod := true
@@ -125,12 +125,12 @@ func request_lod(requested_lod: int) -> bool:
 		_last_error = "Model root must be a Node3D."
 		return false
 	# Verify everything before changing the active visual or hiding originals.
-	if model.get_node_or_null("Body") == null:
+	if model.find_child("Body", true, false) == null:
 		_last_error = "Prepared model is missing Body."
 		model.free()
 		return false
 	for key: String in WHEEL_KEYS:
-		if model.get_node_or_null("Wheel_" + key + "_Pivot") == null:
+		if model.find_child("Wheel_" + key + "_Pivot", true, false) == null:
 			_last_error = "Prepared model is missing Wheel_" + key + "_Pivot."
 			model.free()
 			return false
@@ -141,14 +141,14 @@ func request_lod(requested_lod: int) -> bool:
 		var wheel_data: Dictionary = _wheel_components[key]
 		var wheel: Node3D = wheel_data["wheel"]
 		var factory_pivot: Node3D = wheel_data["pivot"]
-		var replacement: Node3D = model.get_node("Wheel_" + key + "_Pivot") as Node3D
+		var replacement: Node3D = model.find_child("Wheel_" + key + "_Pivot", true, false) as Node3D
 		replacement.reparent(factory_pivot, false)
-		replacement.transform = Transform3D.IDENTITY
+		replacement.position = Vector3.ZERO # Preserve Blender-authored scale for true tire OD
 		_mounted_nodes.append(replacement)
-		var brake: Node3D = model.get_node_or_null("Brake_" + key) as Node3D
+		var brake: Node3D = model.find_child("Brake_" + key, true, false) as Node3D
 		if brake != null:
 			brake.reparent(wheel, false)
-			brake.transform = Transform3D.IDENTITY
+			brake.position = Vector3.ZERO # Preserve caliper scale and alignment
 			_mounted_nodes.append(brake)
 			_brake_carriers[key] = brake
 		# Factory uses a wheel_node for suspension travel and spin; its rubber
