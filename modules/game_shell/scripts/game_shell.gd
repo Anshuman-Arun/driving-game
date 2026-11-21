@@ -7,6 +7,7 @@ const ShellTheme = preload("shell_theme.gd")
 const Preview = preload("car_preview.gd")
 const Minimap = preload("minimap.gd")
 
+var save_path := SaveService.DEFAULT_PATH
 var save: Variant
 var game: Variant
 var screen: String = "MENU"  # MENU, FREE_ROAM, GARAGE, EVENTS, RACE, RESULTS, PAUSE, SETTINGS
@@ -23,6 +24,7 @@ var race_lap_label: Label
 var race_position_label: Label
 var race_time_label: Label
 var countdown_label: Label
+var settings_error: Label
 var map_view: Variant
 var layout_is_narrow: bool = false
 
@@ -32,7 +34,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	theme = ShellTheme.make()
 	_register_input_defaults()
-	save = SaveService.new()
+	save = SaveService.new(save_path)
 	save.load()
 	game = MockGame.new(save)
 	game.stage_changed.connect(_on_race_stage)
@@ -159,6 +161,7 @@ func _base() -> VBoxContainer:
 	race_position_label = null
 	race_time_label = null
 	countdown_label = null
+	settings_error = null
 	map_view = null
 	first_focus = null
 	layout_is_narrow = get_viewport_rect().size.x < 890.0
@@ -229,6 +232,7 @@ func _action(parent: Node, title: String, on_press: Callable, primary: bool = fa
 	if primary:
 		b.add_theme_stylebox_override("normal", ShellTheme.box(ShellTheme.ACCENT, ShellTheme.ACCENT, 8, 15))
 		b.add_theme_color_override("font_color", ShellTheme.BACK)
+		b.add_theme_color_override("font_focus_color", ShellTheme.BACK)
 	b.pressed.connect(on_press)
 	parent.add_child(b)
 	if first_focus == null and enabled:
@@ -248,7 +252,6 @@ func _heading(parent: Node, title: String, detail: String) -> void:
 	_label(parent, detail, 16, ShellTheme.MUTED)
 
 func _footer(parent: Node, hints: String = "") -> void:
-	_spacer(parent)
 	_label(parent, hints if not hints.is_empty() else "KEYBOARD: ENTER CONFIRM · ESC BACK/PAUSE     GAMEPAD: A CONFIRM · B BACK · START PAUSE", 13, ShellTheme.MUTED)
 
 func _columns(parent: Node) -> BoxContainer:
@@ -268,6 +271,7 @@ func _scroll(parent: Node) -> VBoxContainer:
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
 	parent.add_child(scroll)
 	var v := VBoxContainer.new()
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -288,11 +292,13 @@ func _render() -> void:
 		"PAUSE": _pause(root)
 		"SETTINGS": _settings(root)
 		_: _menu(root)
-	call_deferred("_focus_initial")
+	if first_focus != null:
+		_focus_after_layout(first_focus)
 
-func _focus_initial() -> void:
-	if is_instance_valid(first_focus) and first_focus.is_inside_tree():
-		first_focus.grab_focus()
+func _focus_after_layout(control: Control) -> void:
+	await get_tree().process_frame
+	if is_instance_valid(control) and control.is_inside_tree():
+		control.grab_focus()
 
 func _quality_scale() -> float:
 	var preset: String = str(save.data["settings"]["graphics_quality"])
@@ -377,7 +383,7 @@ func _toggle_map() -> void:
 	_render()
 
 func open_garage() -> void:
-	if screen == "FREE_ROAM" and game.speed_kph > 4.0:
+	if screen in ["FREE_ROAM", "PAUSE"] and game.speed_kph > 4.0:
 		game.set_notice("PARK THE CAR BEFORE ENTERING THE GARAGE")
 		return
 	if screen == "RACE" or (game.stage != "FREE_ROAM" and screen != "MENU" and screen != "PAUSE"):
@@ -422,6 +428,8 @@ func _garage(root: VBoxContainer) -> void:
 		var suffix := "   /   ACTIVE" if save.selected_car() == spec["id"] else ("   /   READY" if unlocked else "   /   LOCKED")
 		var b := _action(left, str(spec["name"]) + suffix, _inspect.bind(str(spec["id"])), inspected_car == spec["id"])
 		b.tooltip_text = str(spec["tagline"])
+		if inspected_car == spec["id"]:
+			first_focus = b
 	_label(left, "UNLOCKS", 13, ShellTheme.MUTED)
 	_label(left, "ORION RS  •  Complete any event\nKESTREL XR  •  Complete three distinct events", 13, ShellTheme.MUTED)
 	_spacer(left)
@@ -431,15 +439,15 @@ func _garage(root: VBoxContainer) -> void:
 	_label(details, str(spec["class"]), 13, ShellTheme.ACCENT)
 	_label(details, str(spec["name"]), 34)
 	_label(details, str(spec["tagline"]), 16, ShellTheme.MUTED)
+	var unlocked: bool = save.is_unlocked(inspected_car)
+	var text := "SELECT VEHICLE" if unlocked else "LOCKED  /  " + str(spec["unlock"])
+	_action(details, text, func(): _choose_car(), true, unlocked)
 	_preview(details, inspected_car)
 	var stat_group := VBoxContainer.new()
 	details.add_child(stat_group)
 	_stat(stat_group, "HANDLING", int(spec["handling"]))
 	_stat(stat_group, "BRAKING", int(spec["braking"]))
 	_label(details, "%d HP     •     %d KG     •     %d KM/H (FICTIONAL SPECS)" % [int(spec["power_hp"]), int(spec["mass_kg"]), int(spec["top_kph"])], 13, ShellTheme.MUTED)
-	var unlocked := save.is_unlocked(inspected_car)
-	var text := "SELECT VEHICLE" if unlocked else "LOCKED  /  " + str(spec["unlock"])
-	_action(details, text, func(): _choose_car(), true, unlocked)
 	_footer(root, "GARAGE DEMO: 3D mesh is original and visual-only. Real GLBs import later from the Art PR.")
 
 func open_events() -> void:
@@ -467,9 +475,7 @@ func _events(root: VBoxContainer) -> void:
 	_footer(root, "E / A  •  EVENT INTERACT     ENTER / A  •  START     ESC / B  •  BACK")
 
 func _start_event(id: String) -> void:
-	if game.start_event(id):
-		screen = "RACE"
-		_render()
+	game.start_event(id)
 
 func _race(root: VBoxContainer) -> void:
 	var event: Dictionary = game.current_event()
@@ -481,18 +487,17 @@ func _race(root: VBoxContainer) -> void:
 	race_position_label = _label(left, "4 / 4", 49, ShellTheme.ACCENT)
 	race_lap_label = _label(left, "LAP 1 / 3", 22, ShellTheme.TEAL)
 	race_time_label = _label(left, "00:00.00", 27)
-	_spacer(left)
-	_label(left, "ORDERED CHECKPOINTS AND AI ARE PROVIDED BY THE SEPARATE RACING MODULE AT INTEGRATION.", 13, ShellTheme.MUTED)
-	_action(left, "PAUSE / RACE OPTIONS", func(): toggle_pause())
+	var telemetry := HBoxContainer.new()
+	left.add_child(telemetry)
+	speed_label = _label(telemetry, "000", 27)
+	_label(telemetry, "KM/H", 13, ShellTheme.MUTED)
+	gear_label = _label(telemetry, "GEAR  1", 15)
+	countdown_label = _label(left, "", 39, ShellTheme.ACCENT)
 	var right := _surface(columns, Vector2(300, 360))
 	_label(right, "LIVE VEHICLE VISUAL  /  MOCK", 14, ShellTheme.ACCENT)
 	_preview(right, save.selected_car())
-	countdown_label = _label(right, "", 48, ShellTheme.ACCENT)
-	countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var widgets := HBoxContainer.new()
-	root.add_child(widgets)
-	_hud_metrics(widgets)
-	_mini_panel(widgets, large_map)
+	_mini_panel(columns, large_map)
+	_action(root, "PAUSE / RACE OPTIONS", func(): toggle_pause())
 	_footer(root, "ESC / START PAUSE   ·   F FINISH MOCK RACE EARLY   ·   M / VIEW MAP")
 	_refresh_hud()
 
@@ -531,7 +536,8 @@ func _pause(root: VBoxContainer) -> void:
 	_label(panel, "IN RACE" if paused_from == "RACE" else "FREE ROAM", 25)
 	_action(panel, "RESUME", func(): toggle_pause(), true)
 	if paused_from == "FREE_ROAM":
-		_action(panel, "GARAGE", func(): open_garage())
+		var parked: bool = game.speed_kph <= 4.0
+		_action(panel, "GARAGE" if parked else "PARK TO ENTER GARAGE", func(): open_garage(), false, parked)
 	_action(panel, "SETTINGS", func(): open_settings())
 	_action(panel, "ABANDON RACE & FREE ROAM" if paused_from == "RACE" else "RETURN TO MAIN MENU", func(): _leave_pause())
 	_footer(root, "ESC / START TO RESUME    B / BACK TO RESUME")
@@ -570,7 +576,10 @@ func _setting_option(parent: Node, title: String, key: String, values: Array) ->
 	for value in values:
 		chooser.add_item(str(value).to_upper())
 	chooser.select(maxi(0, values.find(save.data["settings"][key])))
-	chooser.item_selected.connect(func(index: int): _save_option(key, values[index]))
+	chooser.item_selected.connect(func(index: int):
+		if not _save_option(key, values[index]):
+			chooser.select(values.find(save.data["settings"][key]))
+	)
 	row.add_child(chooser)
 	if first_focus == null:
 		first_focus = chooser
@@ -589,8 +598,9 @@ func _setting_slider(parent: Node, title: String, key: String) -> void:
 	slider.custom_minimum_size = Vector2(140, 29)
 	parent.add_child(slider)
 	slider.value_changed.connect(func(value: float):
-		amount.text = "%d%%" % int(roundf(value * 100.0))
-		_save_option(key, value)
+		if not _save_option(key, value):
+			slider.set_value_no_signal(float(save.data["settings"][key]))
+		amount.text = "%d%%" % int(roundf(slider.value * 100.0))
 	)
 	if first_focus == null:
 		first_focus = slider
@@ -614,13 +624,18 @@ func _settings(root: VBoxContainer) -> void:
 	_setting_slider(audio, "SFX VOLUME", "sfx_volume")
 	_label(audio, "Music/SFX volumes persist; separate buses become active once the integrated project provides them.", 13, ShellTheme.MUTED)
 	_action(v, "SAVE & BACK", func(): _go_back(), true)
-	_footer(root, "WASD / ARROWS OR LEFT STICK + DPAD NAVIGATE    ENTER / A CONFIRM    ESC / B BACK")
+	settings_error = _label(root, "", 15, Color("#ff8b7f"))
+	settings_error.hide()
+	_footer(root, "ARROWS / D-PAD NAVIGATE    ENTER / A CONFIRM    ESC / B BACK")
 
-func _save_option(key: String, value: Variant) -> void:
-	if save.set_setting(key, value):
+func _save_option(key: String, value: Variant) -> bool:
+	var saved: bool = save.set_setting(key, value)
+	if saved:
 		_apply_setting(key, value)
-	else:
-		game.set_notice("COULD NOT SAVE SETTING: " + save.last_error)
+	if is_instance_valid(settings_error):
+		settings_error.text = save.last_error
+		settings_error.visible = not saved
+	return saved
 
 func _apply_all_settings() -> void:
 	for key in save.data["settings"].keys():
@@ -637,6 +652,8 @@ func _apply_setting(key: String, value: Variant) -> void:
 		"window_mode":
 			if DisplayServer.get_name() != "headless":
 				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if value == "fullscreen" else DisplayServer.WINDOW_MODE_WINDOWED)
+				if value == "windowed":
+					_apply_setting("resolution", save.data["settings"]["resolution"])
 		"resolution":
 			if DisplayServer.get_name() != "headless" and save.data["settings"]["window_mode"] == "windowed":
 				var halves := str(value).split("x")

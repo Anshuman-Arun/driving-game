@@ -36,7 +36,7 @@ func _draw() -> void:
 	_line([Vector2(.42,.70),Vector2(.53,.84),Vector2(.75,.78)], ROAD, 3.0)
 	_line([Vector2(.22,.33),Vector2(.35,.43),Vector2(.46,.51)], ROAD, 2.0)
 	if show_events:
-		for uv in [Vector2(.17,.82),Vector2(.53,.22),Vector2(.76,.70),Vector2(.55,.60)]:
+		for uv: Vector2 in [Vector2(.17,.82),Vector2(.53,.22),Vector2(.76,.70),Vector2(.55,.60)]:
 			var center := uv * size
 			draw_circle(center, 7.5, HIGHLIGHT)
 			draw_circle(center, 3.1, BG)

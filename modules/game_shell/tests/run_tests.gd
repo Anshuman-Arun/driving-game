@@ -80,6 +80,15 @@ func _run() -> void:
 	_ok(is_equal_approx(float(migrated["settings"]["music_volume"]), 0.25), "V1 options migrate")
 	_ok(int(JSON.parse_string(FileAccess.get_file_as_string(v1_path))["schema_version"]) == 2, "V1 persisted as v2")
 
+	var implicit_v1 := test_root + "/implicit_v1.json"
+	_put(implicit_v1, JSON.stringify({"credits": 125}))
+	var implicit := Save.new(implicit_v1)
+	implicit.load()
+	_ok(implicit.last_status == "migrated_v1" and int(implicit.data["credits"]) == 125,
+		"Versionless legacy save migrates")
+	_ok(Save.is_valid_v2(JSON.parse_string(FileAccess.get_file_as_string(implicit_v1))),
+		"Versionless migration writes schema 2")
+
 	## Temp recovery after interrupted write. Backup path absent, corrupt primary quarantined.
 	var temp_path := test_root + "/temp.json"
 	var generated: Dictionary = Save.defaults()
@@ -121,6 +130,7 @@ func _run() -> void:
 
 	## Instantiate actual shell and exercise menu/pause/race transition callbacks.
 	var app := Shell.new()
+	app.save_path = test_root + "/shell.json"
 	get_root().add_child(app)
 	_ok(app.screen == "MENU" and app.first_focus != null, "Menu created with keyboard/gamepad focus target")
 	app.enter_free_roam()
@@ -129,6 +139,11 @@ func _run() -> void:
 	_ok(app.screen == "PAUSE" and app.game.paused, "Pause opens and freezes mock")
 	app.toggle_pause()
 	_ok(app.screen == "FREE_ROAM" and not app.game.paused, "Pause resumes")
+	app.game.speed_kph = 25.0
+	app.toggle_pause()
+	app.open_garage()
+	_ok(app.screen == "PAUSE", "Moving car cannot bypass the garage gate by pausing")
+	app.toggle_pause()
 	app.open_events()
 	_ok(app.screen == "EVENTS", "Race discovery accessible")
 	app._start_event("eastwater_dash")
@@ -137,6 +152,12 @@ func _run() -> void:
 	_ok(app.screen == "RESULTS", "Results UI transition")
 	app._return_from_race()
 	_ok(app.screen == "FREE_ROAM", "Race returns to HUD")
+	app.open_settings()
+	var blocked := app.save_path + ".tmp"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(blocked))
+	_ok(not app._save_option("controller_sensitivity", 0.1), "A blocked temp path rejects the setting")
+	_ok(is_equal_approx(float(app.save.data["settings"]["controller_sensitivity"]), 0.65)
+		and app.settings_error.visible, "Write failure keeps the saved value and reports a visible error")
 	app.queue_free()
 
 	print("GAME SHELL TESTS: %d checks, %d failures" % [checks, fails.size()])
