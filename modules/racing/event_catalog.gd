@@ -6,7 +6,13 @@ var last_error: String = ""
 func parse_text(json_text: String) -> bool:
 	events.clear()
 	last_error = ""
-	var parsed: Variant = JSON.parse_string(json_text)
+	# JSON.parse_string() emits an engine ERROR for intentionally malformed input.
+	# Use the instance parser so invalid user-authored files are a normal rejection.
+	var parser := JSON.new()
+	if parser.parse(json_text) != OK:
+		last_error = "Invalid event JSON: " + parser.get_error_message()
+		return false
+	var parsed: Variant = parser.data
 	if not (parsed is Dictionary) or parsed.get("schema_version") != 1 or not (parsed.get("events") is Array):
 		last_error = "Expected {schema_version:1, events:[...]}"
 		return false
