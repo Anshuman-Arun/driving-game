@@ -21,7 +21,8 @@ func _step(frames: int) -> void:
 		await physics_frame
 
 func _run() -> void:
-	var scene := load("res://scenes/prototypes/driving_test.tscn").instantiate() as Node3D
+	var packed_scene: PackedScene = load("res://scenes/prototypes/driving_test.tscn")
+	var scene := packed_scene.instantiate() as Node3D
 	_check(scene != null, "test scene instantiates")
 	if scene == null:
 		quit(1)
@@ -37,9 +38,9 @@ func _run() -> void:
 		quit(1)
 		return
 	_check(world.road_points.size() > 100, "long spline sampled for road")
-	_check(world.get_node("PavedRoad/CollisionShape3D").shape != null, "asphalt collision shape exists")
-	_check(world.get_node("Grass/CollisionShape3D").shape != null, "grass collision shape exists")
-	_check(world.get_node("GradedShoulder/CollisionShape3D").shape != null, "dirt shoulder collision shape exists")
+	_check((world.get_node("PavedRoad/CollisionShape3D") as CollisionShape3D).shape != null, "asphalt collision shape exists")
+	_check((world.get_node("Grass/CollisionShape3D") as CollisionShape3D).shape != null, "grass collision shape exists")
+	_check((world.get_node("GradedShoulder/CollisionShape3D") as CollisionShape3D).shape != null, "dirt shoulder collision shape exists")
 	_check(car.wheel_array.size() == 4, "four GEVP raycast wheels initialized")
 	_check(car.is_ready, "GEVP vehicle initialized drivetrain")
 	_check(cam.current, "chase camera current")
