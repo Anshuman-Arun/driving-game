@@ -108,6 +108,9 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 	if manifest.get("schema_version") != 1 or manifest.get("seed") != 20261121:
 		return _fail("Scenery source contract or seed mismatch")
 	var world_meta: Dictionary = {}
+	var graph: Dictionary = {}
+	if _world != null and _world.has_method("get_road_graph"):
+		graph = _world.call("get_road_graph")
 	if _world != null and _world.has_method("get_world_metadata") and _world.has_method("get_surface_height_at"):
 		world_meta = _world.call("get_world_metadata")
 	else:
@@ -118,6 +121,15 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 		world_meta = _terrain.metadata
 	if world_meta.get("seed") != manifest.get("seed") or world_meta.get("regions", []).size() != 5:
 		return _fail("World metadata does not match the five canonical scenery regions")
+	if graph.is_empty() and not _source_dir.is_empty():
+		var raw_graph: Variant = _read_json(_source_dir.path_join("road_graph_v1.json"))
+		if raw_graph is Dictionary:
+			graph = raw_graph
+	if not graph.is_empty():
+		var graph_lanes: Array = graph.get("lanes", [])
+		var graph_roads: Array = graph.get("roads", [])
+		if graph_lanes.size() != 104 or graph_roads.size() != 27:
+			return _fail("Scenery authored against 16 physical corridors and 72 turns; graph differs")
 	var root := Node3D.new()
 	root.name = "SceneryGenerated"
 	add_child(root)
@@ -194,7 +206,7 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 				far_nodes = _make_batches(cell_root, items, far_parts, "Far")
 		batches += near_nodes.size() + far_nodes.size()
 		var coord := Vector2((float(record["cell_x"]) + 0.5) * 128.0, (float(record["cell_z"]) + 0.5) * 128.0)
-		_cells.append({"origin": coord, "asset": asset_id, "max_distance": float(desc.get("draw", 300.0)), "near": near_nodes, "far": far_nodes})
+		_cells.append({"origin": coord, "asset": asset_id, "kind": str(desc.get("kind", "")), "max_distance": float(desc.get("draw", 300.0)), "near": near_nodes, "far": far_nodes})
 	var water_triangles: int = 0
 	if render_lake:
 		water_triangles = _build_lake(root, manifest)
@@ -215,7 +227,7 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 	return true
 
 func _quality_keeps(item: Dictionary) -> bool:
-	if quality >= 2 or item.get("tag") == "landmark" or item.get("tag") == "streetwall":
+	if quality >= 2 or item.get("tag") == "landmark" or item.get("tag") == "streetwall" or str(item.get("asset", "")) in ["guardrail", "barrier", "warning", "lamp"]:
 		return true
 	var threshold: int = 2 if quality == 0 else 3
 	var value: int = int(str(item.get("id", "")).hash()) & 0x7fffffff
@@ -392,8 +404,14 @@ func _update_culling(force: bool) -> void:
 		var center: Vector2 = c["origin"]
 		var d: float = Vector2(player_pos.x - center.x, player_pos.z - center.y).length()
 		var asset_range: float = float(c["max_distance"])
-		var near_visible: bool = d <= minf(asset_range, near_distance_m) + 96.0
-		var far_visible: bool = not near_visible and d <= minf(asset_range, far_distance_m) + 96.0
+		var near_visible: bool
+		var far_visible: bool = false
+		if (c["far"] as Array).is_empty():
+			var only_range: float = asset_range if c["kind"] == "landmark" else minf(asset_range, far_distance_m)
+			near_visible = d <= only_range + 96.0
+		else:
+			near_visible = d <= minf(asset_range, near_distance_m) + 96.0
+			far_visible = not near_visible and d <= minf(asset_range, far_distance_m) + 96.0
 		if not force and quality == 0 and d > far_distance_m + 256.0:
 			near_visible = false
 			far_visible = false
