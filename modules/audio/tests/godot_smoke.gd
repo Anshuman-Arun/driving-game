@@ -18,7 +18,7 @@ func _initialize() -> void:
 	root.add_child.call_deferred(audio)
 	call_deferred("_check_audio", audio)
 
-func _check_audio(audio: Node) -> void:
+func _check_audio(audio) -> void:
 	assert(audio._players.size() == 11)
 	audio.set_profile("orion_rs")
 	assert(audio.car_profile == "orion_rs")
