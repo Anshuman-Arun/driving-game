@@ -25,11 +25,12 @@ run_required() {
   (cd "$worktree" && "$@") 2>&1 | tee "$out/$name.log"
   rc=${PIPESTATUS[0]}
   set -e
-  # Godot editors sometimes return zero despite reporting a parser/import error.
-  # Do not scrape test-script output: intentional negative tests can emit errors.
-  if [[ "$name" == godot-import || "$name" == art-import ]]; then
-    if grep -Eiq '(^|[[:space:]])(SCRIPT ERROR:|ERROR:|Parse Error:)' "$out/$name.log"; then
-      echo "::error::Godot editor logged a parse/import error in $name.log"
+  # Godot 4.7.2 may exit zero even when the importer or a GDScript suite
+  # reports parse/runtime errors. Those errors always invalidate a headless pass,
+  # including when a compromised test runner prints a misleading PASS counter.
+  if [[ "$name" == godot-import || "$name" == godot-tests || "$name" == art-import ]]; then
+    if grep -Eiq '(^|[[:space:]])(SCRIPT ERROR:|ERROR:|Parse Error:|FAIL:)' "$out/$name.log"; then
+      echo "::error::Godot logged a parser/runtime/import/test error in $name.log"
       rc=1
     fi
   fi
