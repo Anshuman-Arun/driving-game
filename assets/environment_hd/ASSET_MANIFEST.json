@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "title": "Aster Valley – Needle Pass HD showcase",
+  "authoring_date": "2026-11-21",
+  "license_policy": "Only individually verified CC0-1.0 material sets and project-authored/project-curated CC0 models. This file does not relicense upstream material authors.",
+  "source_contract": {
+    "road_graph": "data/world/road_graph_v1.json",
+    "road_sha": "9bba378d68879df3baed2c97a4885c0adde88406",
+    "heightfield": "data/world/terrain_height_r16le.bin",
+    "heightfield_sha": "d951ce11a831dad5430b4c7157e2296f73c6b151",
+    "scenery_reference_pr": 23
+  },
+  "asset_sets": [
+    {
+      "id": "asphalt_02",
+      "name": "Asphalt 02",
+      "author": "Rob Tuytel / Poly Haven",
+      "origin": "https://polyhaven.com/a/asphalt_02",
+      "license": "CC0-1.0",
+      "license_evidence": "https://polyhaven.com/license",
+      "mirror": "https://github.com/adithya-s-k/RCForge/tree/main/public/scenery",
+      "source_readme": "https://github.com/adithya-s-k/RCForge/blob/main/public/scenery/README.md",
+      "images": [
+        "textures/asphalt_color.jpg",
+        "textures/asphalt_rough.jpg"
+      ],
+      "resolution": "1024x1024",
+      "included_maps": [
+        "albedo",
+        "roughness"
+      ],
+      "missing_maps": [
+        "normal"
+      ],
+      "note": "Source normal image exceeded the connected file transfer limit; deliberately NOT included, no surrogate normal fabricated."
+    },
+    {
+      "id": "ground_093c",
+      "name": "Ground 093C",
+      "author": "ambientCG / Lennart Demes",
+      "origin": "https://ambientcg.com/view?id=Ground093C",
+      "license": "CC0-1.0",
+      "license_evidence": "https://docs.ambientcg.com/license/",
+      "mirror": "https://github.com/Kevin-Liu-01/Claude-of-Tanks/tree/main/public/textures/terrain",
+      "images": [
+        "textures/ground_color.jpg",
+        "textures/ground_rough.jpg"
+      ],
+      "resolution": "1024x1024",
+      "included_maps": [
+        "albedo",
+        "roughness"
+      ],
+      "missing_maps": [
+        "normal"
+      ],
+      "note": "Full normal map was inaccessible through the connected transfer; no fabricated normal."
+    },
+    {
+      "id": "rock_063",
+      "name": "Rock 063",
+      "author": "ambientCG / Lennart Demes",
+      "origin": "https://ambientcg.com/view?id=Rock063",
+      "license": "CC0-1.0",
+      "license_evidence": "https://docs.ambientcg.com/license/",
+      "mirror": "https://github.com/Kevin-Liu-01/Claude-of-Tanks/tree/main/public/textures/terrain",
+      "images": [
+        "textures/rock_color.jpg",
+        "textures/rock_normal.jpg",
+        "textures/rock_rough.jpg"
+      ],
+      "resolution": "1024x1024",
+      "included_maps": [
+        "albedo",
+        "OpenGL tangent-space normal",
+        "roughness"
+      ],
+      "missing_maps": []
+    },
+    {
+      "id": "aster_authored",
+      "name": "Needle Pass authored cliff, fir, fern",
+      "author": "Original Aster Valley geometry authored in this branch, reproducible via tools/environment_hd/generate_models.mjs",
+      "origin": null,
+      "license": "CC0-1.0 project-art policy",
+      "license_evidence": "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
+      "images": [],
+      "models": [
+        "models/cliff_rockface_a.gltf",
+        "models/cliff_rockface_b.gltf",
+        "models/cedar_fir_a.gltf",
+        "models/cedar_fir_b.gltf",
+        "models/fern_clump.gltf"
+      ]
+    },
+    {
+      "id": "curated_reuse",
+      "name": "Aster Valley curated original GLBs",
+      "author": "Aster Valley original curated Art PR #7",
+      "origin": "https://github.com/Anshuman-Arun/driving-game/pull/7",
+      "license": "CC0-1.0",
+      "license_evidence": "assets/curated/ORIGINAL_ASSETS_LICENSE.md",
+      "models": [
+        "models/pine_lod0.glb",
+        "models/pine_lod1.glb",
+        "models/boulder.glb",
+        "models/shrub.glb",
+        "models/guardrail.glb"
+      ]
+    },
+    {
+      "id": "scenery_arch",
+      "name": "Cedar Stone Arch original PR #23 geometry",
+      "author": "Aster Valley scenery agent, PR #23",
+      "origin": "https://github.com/Anshuman-Arun/driving-game/pull/23",
+      "license": "CC0-1.0",
+      "license_evidence": "content/scenery/models/MODEL_CREDITS.md (PR #23)",
+      "models": [
+        "models/stone_arch.gltf"
+      ]
+    }
+  ],
+  "excluded_sources": [
+    {
+      "name": "Fab / Megascans",
+      "reason": "Acquisition-specific licensing and no connected premium account; no Megascans assets included."
+    },
+    {
+      "name": "Unverified scan/model sites",
+      "reason": "License or provenance not independently validated; no content copied."
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://showcase/environment_hd/world.gd" id="1_world"]
+
+[node name="NeedlePass_ArtOverlay_ONLY" type="Node3D"]
+script = ExtResource("1_world")
+add_lighting = false
+render_terrain_visual = false
+render_road_visual = false

@@ -1,0 +1,17 @@
+; Standalone, self-contained after running tools/environment_hd/stage.mjs from repo root.
+; Uses Forward+ by default. This subproject intentionally does not own root project.godot.
+config_version=5
+
+[application]
+config/name="Aster Valley — Needle Pass Environment Art"
+run/main_scene="res://standalone.tscn"
+config/features=PackedStringArray("4.7", "Forward Plus")
+
+[display]
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="forward_plus"
+renderer/rendering_method.mobile="mobile"

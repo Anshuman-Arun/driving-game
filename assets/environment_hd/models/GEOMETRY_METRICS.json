@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "method": "Gltf mesh primitive accessor counts from authored generator; no Blender/Godot runtime tests",
+  "units": "triangles",
+  "generated_on": "2026-11-21",
+  "models": [
+    {
+      "file": "cliff_rockface_a.gltf",
+      "triangles": 6060,
+      "vertices": 18180,
+      "materials": 2,
+      "file_bytes": 874752
+    },
+    {
+      "file": "cliff_rockface_b.gltf",
+      "triangles": 6060,
+      "vertices": 18180,
+      "materials": 2,
+      "file_bytes": 874750
+    },
+    {
+      "file": "cedar_fir_a.gltf",
+      "triangles": 7568,
+      "vertices": 22704,
+      "materials": 3,
+      "file_bytes": 1092829
+    },
+    {
+      "file": "cedar_fir_b.gltf",
+      "triangles": 6010,
+      "vertices": 18030,
+      "materials": 3,
+      "file_bytes": 868470
+    },
+    {
+      "file": "fern_clump.gltf",
+      "triangles": 598,
+      "vertices": 1794,
+      "materials": 2,
+      "file_bytes": 88212
+    }
+  ],
+  "source_triangle_sum": 26296,
+  "source_material_slots_sum": 12,
+  "source_model_bytes_sum": 3799013,
+  "important": "These counts cover only the five new authored glTF files; this is not scene triangle count, visible triangles or draw calls. Legacy GLBs and instanced copies are excluded."
+}
