@@ -104,33 +104,40 @@ static func mount(car: Vehicle, car_id: String) -> bool:
 
 
 static func _polish_materials(model: Node3D) -> void:
+	var local_materials := {}
 	for node in model.find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
 		if mi == null or mi.mesh == null:
 			continue
-		var lname := mi.name.to_lower()
 		var surf_count := mi.mesh.get_surface_count()
 		for s in range(surf_count):
 			var base_mat := mi.get_active_material(s)
 			if not (base_mat is StandardMaterial3D):
 				continue
-			var mat := base_mat as StandardMaterial3D
+			if local_materials.has(base_mat):
+				mi.set_surface_override_material(s, local_materials[base_mat])
+				continue
+			var mat := base_mat.duplicate() as StandardMaterial3D
+			local_materials[base_mat] = mat
+			mi.set_surface_override_material(s, mat)
+			mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+			mat.roughness = maxf(mat.roughness, 0.18)
 			var mname := mat.resource_name.to_lower()
-			if lname == "body_shell" or "carpaint" in mname:
+			if "carpaint" in mname:
 				mat.clearcoat_enabled = true
 				mat.clearcoat = 1.0
-				mat.clearcoat_roughness = 0.03
+				mat.clearcoat_roughness = 0.24
 				mat.metallic = maxf(mat.metallic, 0.78)
-				mat.roughness = minf(mat.roughness, 0.14)
-			elif lname == "body_glass" or "glass" in mname:
+				mat.roughness = maxf(mat.roughness, 0.25)
+			elif "glass" in mname:
 				mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 				mat.albedo_color.a = clampf(mat.albedo_color.a, 0.26, 0.38)
-				mat.roughness = 0.04
+				mat.roughness = 0.23
 				mat.metallic = 0.12
 				mat.clearcoat_enabled = true
 				mat.clearcoat = 1.0
-				mat.clearcoat_roughness = 0.02
-				mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+				mat.clearcoat_roughness = 0.27
+				mat.cull_mode = BaseMaterial3D.CULL_BACK
 			elif "tire" in mname:
 				mat.albedo_color = Color(0.018, 0.019, 0.022, 1.0)
 				mat.metallic = 0.0
@@ -138,10 +145,10 @@ static func _polish_materials(model: Node3D) -> void:
 				mat.metallic_specular = 0.22
 			elif "taillight" in mname:
 				mat.albedo_color = Color(0.26, 0.012, 0.015, 1.0)
-				mat.roughness = 0.08
+				mat.roughness = 0.20
 				mat.clearcoat_enabled = true
 				mat.clearcoat = 1.0
-				mat.clearcoat_roughness = 0.04
+				mat.clearcoat_roughness = 0.23
 				mat.emission_enabled = true
 				mat.emission = Color(0.95, 0.015, 0.012)
 				mat.emission_energy_multiplier = 0.45

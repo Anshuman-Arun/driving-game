@@ -28,6 +28,11 @@ var scenery: SceneryRuntime
 var _pending_vehicle_id := ""
 
 var _controls := DriveInput.new()
+var steering_sensitivity: float:
+	set(value):
+		_controls.steering_sensitivity = clampf(value, 0.0, 1.0)
+	get:
+		return _controls.steering_sensitivity
 var _lane_spans: Array[PackedVector3Array] = []
 var _bounds: Rect2
 var _reset_requested := false

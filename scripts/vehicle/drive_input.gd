@@ -8,6 +8,8 @@ const STEER_DEADZONE := 0.14
 const TRIGGER_DEADZONE := 0.05
 const LOOK_DEADZONE := 0.22
 
+var steering_sensitivity := 0.65
+
 static func install() -> void:
 	for action in ["drive_throttle", "drive_brake", "drive_left", "drive_right", "drive_handbrake", "drive_reset", "drive_camera", "drive_pause"]:
 		if not InputMap.has_action(action):
@@ -66,7 +68,7 @@ func sample() -> Dictionary:
 		var abs_stick := absf(stick)
 		if abs_stick > STEER_DEADZONE:
 			var remapped := clampf((abs_stick - STEER_DEADZONE) / (1.0 - STEER_DEADZONE), 0.0, 1.0)
-			steer = -signf(stick) * pow(remapped, 1.35) # GEVP expects positive = left.
+			steer = -signf(stick) * pow(remapped, 2.0 - steering_sensitivity) # GEVP expects positive = left.
 		var rt := Input.get_joy_axis(device, JOY_AXIS_TRIGGER_RIGHT)
 		if rt > TRIGGER_DEADZONE:
 			throttle = maxf(throttle, clampf((rt - TRIGGER_DEADZONE) / (1.0 - TRIGGER_DEADZONE), 0.0, 1.0))

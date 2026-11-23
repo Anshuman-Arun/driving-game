@@ -9,6 +9,8 @@ extends Node3D
 ## - GPUParticles3D tire smoke (Road) and dust (Dirt/Grass) on slip/speed
 ## - Subtle exhaust shift flash on high-RPM upshifts
 
+const TirePuff = preload("res://assets/ui/dashboard/tire_puff.png")
+
 var _vehicle: Vehicle
 var _caliper_pairs: Array[Dictionary] = []
 var _headlight_mats: Array[StandardMaterial3D] = []
@@ -121,15 +123,17 @@ func _create_tire_particles() -> void:
 		_vehicle.rear_left_wheel,
 		_vehicle.rear_right_wheel,
 	]
-	var smoke_quad := _make_particle_quad(Color(0.86, 0.88, 0.90, 0.34), 0.52)
-	var dust_quad := _make_particle_quad(Color(0.58, 0.48, 0.36, 0.42), 0.58)
+	var smoke_quad := _make_particle_quad(Color(0.83, 0.86, 0.89, 0.33), 0.74)
+	var dust_quad := _make_particle_quad(Color(0.65, 0.53, 0.40, 0.40), 0.76)
+	var smoke_motion := _particle_motion(1.30)
+	var dust_motion := _particle_motion(1.80)
 
 	for i in range(wheels.size()):
 		var wheel := wheels[i]
 		if wheel == null:
 			continue
-		var smoke := _make_emitter("TireSmoke_%d" % i, smoke_quad, 18, 0.75, 1.3)
-		var dust := _make_emitter("TireDust_%d" % i, dust_quad, 18, 0.65, 1.8)
+		var smoke := _make_emitter("TireSmoke_%d" % i, smoke_quad, 14, 0.75, smoke_motion)
+		var dust := _make_emitter("TireDust_%d" % i, dust_quad, 14, 0.65, dust_motion)
 		add_child(smoke)
 		add_child(dust)
 		_wheel_fx.append({
@@ -147,6 +151,7 @@ func _make_particle_quad(tint: Color, quad_size: float) -> QuadMesh:
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 	mat.albedo_color = tint
+	mat.albedo_texture = TirePuff
 	mat.vertex_color_use_as_albedo = true
 	mat.no_depth_test = false
 	mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
@@ -154,7 +159,7 @@ func _make_particle_quad(tint: Color, quad_size: float) -> QuadMesh:
 	return quad
 
 
-func _make_emitter(node_name: String, mesh: Mesh, amount: int, lifetime: float, spread_vel: float) -> GPUParticles3D:
+func _make_emitter(node_name: String, mesh: Mesh, amount: int, lifetime: float, motion: ParticleProcessMaterial) -> GPUParticles3D:
 	var p := GPUParticles3D.new()
 	p.name = node_name
 	p.amount = amount
@@ -162,24 +167,39 @@ func _make_emitter(node_name: String, mesh: Mesh, amount: int, lifetime: float, 
 	p.emitting = false
 	p.local_coords = false
 	p.draw_pass_1 = mesh
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	p.process_material = motion
+	return p
+
+
+func _particle_motion(spread_vel: float) -> ParticleProcessMaterial:
 	var proc := ParticleProcessMaterial.new()
 	proc.direction = Vector3(0.0, 0.65, 0.4)
 	proc.spread = 38.0
 	proc.initial_velocity_min = spread_vel * 0.4
 	proc.initial_velocity_max = spread_vel
 	proc.gravity = Vector3(0.0, 0.45, 0.0)
-	proc.scale_min = 0.65
-	proc.scale_max = 1.65
+	proc.scale_min = 0.48
+	proc.scale_max = 1.25
+	proc.angle_min = -180.0
+	proc.angle_max = 180.0
+	var growth := Curve.new()
+	growth.add_point(Vector2(0, 0.44))
+	growth.add_point(Vector2(1, 1))
+	var growth_texture := CurveTexture.new()
+	growth_texture.curve = growth
+	proc.scale_curve = growth_texture
 	proc.damping_min = 1.2
 	proc.damping_max = 2.0
 	var grad := Gradient.new()
-	grad.set_color(0, Color(1.0, 1.0, 1.0, 0.75))
+	grad.set_color(0, Color(1.0, 1.0, 1.0, 0.0))
+	grad.add_point(0.16, Color(1.0, 1.0, 1.0, 0.85))
+	grad.add_point(0.46, Color(1.0, 1.0, 1.0, 0.55))
 	grad.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
 	var grad_tex := GradientTexture1D.new()
 	grad_tex.gradient = grad
 	proc.color_ramp = grad_tex
-	p.process_material = proc
-	return p
+	return proc
 
 
 func _process(delta: float) -> void:
@@ -237,18 +257,22 @@ func _process(delta: float) -> void:
 		if wheel == null or wheel.wheel_node == null:
 			continue
 		var is_rear := wheel == _vehicle.rear_left_wheel or wheel == _vehicle.rear_right_wheel
-		var contact_local := wheel.position + Vector3(0.0, wheel.wheel_node.position.y - wheel.tire_radius * 0.82, 0.0)
-		smoke.position = contact_local
-		dust.position = contact_local
 		if not wheel.is_colliding():
 			smoke.emitting = false
 			dust.emitting = false
 			continue
 		var slip := wheel.slip_vector.length()
 		var surface := wheel.surface_type
+		var contact := wheel.position + Vector3(0.0, wheel.wheel_node.position.y - wheel.tire_radius * 0.82, 0.0)
 		if surface == "Dirt" or surface == "Grass":
 			smoke.emitting = false
-			dust.emitting = speed > 3.5 or slip > 0.30 or (drifting and is_rear)
+			var lifting_dust := speed > 3.5 or slip > 0.30 or (drifting and is_rear)
+			if lifting_dust:
+				dust.position = contact
+			dust.emitting = lifting_dust
 		else:
 			dust.emitting = false
-			smoke.emitting = (drifting and is_rear and speed > 3.5) or (slip > 0.42 and speed > 2.5) or (handbrake and speed > 4.5)
+			var smoking := (drifting and is_rear and speed > 3.5) or (slip > 0.42 and speed > 2.5) or (handbrake and speed > 4.5)
+			if smoking:
+				smoke.position = contact
+			smoke.emitting = smoking

@@ -62,3 +62,7 @@ Updated: 2026-11-22. Machine-readable ledger: `assets/forza_env/ASSET_LICENSES_F
 | `car_vela_gt` | https://raw.githubusercontent.com/achrefelouafi/GrassSystemThreeJS/main/public/porsche_911.glb | achrefelouafi/GrassSystemThreeJS contributors | MIT / CC-BY 4.0 | `assets/curated/models/vehicles/vela_gt.glb` |
 | `car_orion_rs` | https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CarConcept/glTF-Binary/CarConcept.glb | Eric Chadwick / Darmstadt Graphics Group GmbH (based on CC0 public domain concept car by Unity Fan) | CC-BY 4.0 International | `assets/curated/models/vehicles/orion_rs.glb` |
 | `car_kestrel_xr` | https://raw.githubusercontent.com/ionathansideras/3d-configurator/main/public/models/porsche.glb | ionathansideras/3d-configurator contributors | MIT / CC-BY | `assets/curated/models/vehicles/kestrel_xr.glb` |
+
+## Interface fonts
+
+Barlow Condensed Bold Italic and Barlow Semi Condensed SemiBold by Jeremy Tribby are bundled under the SIL Open Font License 1.1. The fonts came from the [Google Fonts Barlow families](https://github.com/google/fonts/tree/main/ofl/barlowcondensed). The [license notice](../assets/ui/fonts/OFL.txt) ships beside them.

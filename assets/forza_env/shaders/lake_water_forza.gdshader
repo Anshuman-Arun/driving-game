@@ -39,8 +39,10 @@ void fragment() {
 	// Broad dual-scrolling normal map swells.
 	vec2 uv_a = xz * ripple_scale_a + TIME * ripple_speed_a;
 	vec2 uv_b = xz * ripple_scale_b + TIME * ripple_speed_b;
-	vec3 na = texture(water_normal, uv_a).rgb * 2.0 - 1.0;
-	vec3 nb = texture(water_normal, uv_b).rgb * 2.0 - 1.0;
+	vec2 a = texture(water_normal, uv_a).rg * 2.0 - 1.0;
+	vec2 b = texture(water_normal, uv_b).rg * 2.0 - 1.0;
+	vec3 na = vec3(a, sqrt(max(0.0, 1.0 - dot(a, a))));
+	vec3 nb = vec3(b, sqrt(max(0.0, 1.0 - dot(b, b))));
 	vec3 blended_n = normalize(vec3((na.xy + nb.xy) * 0.55, max(na.z * nb.z, 0.35)));
 
 	// Depth reconstruction (Godot 4.3+ Vulkan / Forward+ reverse-Z safe via INV_PROJECTION_MATRIX).

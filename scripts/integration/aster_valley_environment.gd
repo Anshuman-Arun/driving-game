@@ -10,19 +10,23 @@ const MAT_GRAVEL_PATH := "res://assets/forza_env/materials/road_gravel_forza.tre
 const MAT_SHOULDER_PATH := "res://assets/forza_env/materials/road_shoulder_forza.tres"
 
 static func apply_environment(root: Node3D) -> void:
-	var vp := root.get_viewport()
-	if vp != null:
-		vp.msaa_3d = Viewport.MSAA_2X
-		vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA
-		vp.use_debanding = true
-		if vp.scaling_3d_scale < 1.0:
-			vp.scaling_3d_scale = 1.0
+	if not root.get("shell_managed"):
+		apply_quality(root.get_viewport(), "medium")
 	var world_env := root.get_node_or_null("WorldEnvironment") as WorldEnvironment
 	if world_env != null:
 		world_env.environment = build_environment()
 	var sun := root.get_node_or_null("Sun") as DirectionalLight3D
 	if sun != null:
 		configure_sun(sun)
+
+static func apply_quality(viewport: Viewport, preset: String) -> void:
+	var low := preset == "low"
+	viewport.scaling_3d_scale = 0.85 if low else 1.0
+	viewport.msaa_3d = Viewport.MSAA_2X if preset == "high" else Viewport.MSAA_DISABLED
+	var forward_plus := RenderingServer.get_current_rendering_method() == "forward_plus"
+	viewport.use_taa = forward_plus and not low
+	viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED if viewport.use_taa else Viewport.SCREEN_SPACE_AA_FXAA
+	viewport.use_debanding = false
 
 static func build_environment() -> Environment:
 	var env := Environment.new()
@@ -42,15 +46,7 @@ static func build_environment() -> Environment:
 	env.tonemap_exposure = 1.05
 	env.tonemap_white = 6.0
 
-	# Smooth half-res SSAO without stochastic SSIL grain (keeps >= 60 FPS).
-	env.ssao_enabled = true
-	env.ssao_radius = 1.1
-	env.ssao_intensity = 0.55
-	env.ssao_power = 1.25
-	env.ssao_detail = 0.0
-	env.ssao_horizon = 0.08
-	env.ssao_light_affect = 0.2
-
+	env.ssao_enabled = false
 	env.ssil_enabled = false
 
 	# Subtle HDR bloom for sunlight glints, headlights, and brake lights.
@@ -84,7 +80,7 @@ static func build_environment() -> Environment:
 
 static func _build_sky() -> Sky:
 	var sky := Sky.new()
-	sky.process_mode = Sky.PROCESS_MODE_REALTIME
+	sky.process_mode = Sky.PROCESS_MODE_QUALITY
 	sky.radiance_size = Sky.RADIANCE_SIZE_256
 	if ResourceLoader.exists(HDRI_SKY_PATH):
 		var tex := ResourceLoader.load(HDRI_SKY_PATH) as Texture2D
@@ -115,7 +111,7 @@ static func configure_sun(sun: DirectionalLight3D) -> void:
 	sun.light_energy = 2.3
 	sun.light_indirect_energy = 1.0
 	sun.light_specular = 1.0
-	sun.light_angular_distance = 0.65
+	sun.light_angular_distance = 0.0
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	sun.directional_shadow_max_distance = 450.0
@@ -123,7 +119,7 @@ static func configure_sun(sun: DirectionalLight3D) -> void:
 	sun.directional_shadow_split_2 = 0.22
 	sun.directional_shadow_split_3 = 0.52
 	sun.directional_shadow_blend_splits = true
-	sun.shadow_blur = 1.4
+	sun.shadow_blur = 1.15
 	sun.shadow_bias = 0.04
 	sun.shadow_normal_bias = 1.4
 
