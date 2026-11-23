@@ -107,19 +107,92 @@ func _render() -> void:
 			node.add_theme_constant_override("shadow_offset_x", 2)
 			node.add_theme_constant_override("shadow_offset_y", 2)
 
+func _navigation(root: VBoxContainer, active: String) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	root.add_child(row)
+	_label(row, "ASTER VALLEY   /   OPEN ROAD", 13, ShellTheme.TEAL)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(spacer)
+	_nav_tab(row, "HOME", _main_menu, active == "HOME")
+	_nav_tab(row, "GARAGE", open_garage, active == "GARAGE")
+	_nav_tab(row, "SETTINGS", open_settings, active == "SETTINGS")
+
+func _nav_tab(parent: Node, title: String, on_press: Callable, selected: bool) -> Button:
+	var button := Button.new()
+	button.text = title
+	button.custom_minimum_size = Vector2(104, 38)
+	button.focus_mode = Control.FOCUS_ALL
+	button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	button.add_theme_font_size_override("font_size", 13)
+	button.add_theme_color_override("font_color", ShellTheme.TEXT if selected else ShellTheme.MUTED)
+	button.add_theme_stylebox_override("normal", ShellTheme.box(
+		ShellTheme.PANEL_ALT if selected else Color.TRANSPARENT,
+		ShellTheme.TEAL if selected else Color.TRANSPARENT, 6, 10))
+	button.add_theme_stylebox_override("hover", ShellTheme.box(ShellTheme.PANEL_ALT, ShellTheme.ACCENT, 6, 10))
+	button.add_theme_stylebox_override("pressed", ShellTheme.box(ShellTheme.TEAL, ShellTheme.TEAL, 6, 10))
+	button.pressed.connect(on_press)
+	parent.add_child(button)
+	return button
+
+func _surface_ratio(inner: VBoxContainer, ratio: float) -> void:
+	var panel := inner.get_parent().get_parent() as Control
+	if panel != null:
+		panel.size_flags_stretch_ratio = ratio
+
+func _metric(parent: Node, caption: String, value: String) -> void:
+	var block := VBoxContainer.new()
+	block.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	block.add_theme_constant_override("separation", 2)
+	parent.add_child(block)
+	_label(block, caption, 11, ShellTheme.MUTED)
+	_label(block, value, 19, ShellTheme.TEXT)
+
 func _menu(root: VBoxContainer) -> void:
-	var body := _columns(_scroll(root))
-	var left := _surface(body, Vector2(290, 450))
-	_heading(left, "ASTER\nVALLEY", "Explore the valley in your selected car.")
-	_spacer(left)
-	_action(left, "PLAY  /  FREE ROAM", enter_free_roam, true)
-	_action(left, "GARAGE  /  03 VEHICLES", open_garage)
-	_action(left, "SETTINGS", open_settings)
-	_action(left, "QUIT TO DESKTOP", func(): get_tree().quit())
-	var right := _surface(body, Vector2(320, 420))
-	_label(right, "CURRENT DRIVE   •   " + Catalog.car_name(save.selected_car()), 16, ShellTheme.ACCENT)
-	_preview(right, save.selected_car())
-	_footer(root)
+	_navigation(root, "HOME")
+	var body := _columns(root)
+	var intro := _surface(body, Vector2(300, 390))
+	_surface_ratio(intro, 0.78)
+	_label(intro, "FREE ROAM   /   ALDER TOWN", 14, ShellTheme.TEAL)
+	_label(intro, "TAKE THE\nSCENIC ROUTE.", 48)
+	_label(intro, "A mountain valley made for the drive you choose. Find your line through town, forest and ridge.", 16, ShellTheme.MUTED)
+	_spacer(intro)
+	var credentials := HBoxContainer.new()
+	credentials.add_theme_constant_override("separation", 10)
+	intro.add_child(credentials)
+	_label(credentials, "OFFLINE", 12, ShellTheme.ACCENT)
+	_label(credentials, "3 ORIGINAL CARS", 12, ShellTheme.TEAL)
+	_label(credentials, "FREE ROAM", 12, ShellTheme.MUTED)
+	var start := _action(intro, "START DRIVING   /   FREE ROAM", enter_free_roam, true)
+	start.custom_minimum_size = Vector2(0, 58)
+	var shortcuts := HBoxContainer.new()
+	shortcuts.add_theme_constant_override("separation", 10)
+	intro.add_child(shortcuts)
+	_action(shortcuts, "GARAGE   /   03 CARS", open_garage)
+	_action(shortcuts, "SETTINGS", open_settings)
+	_action(intro, "QUIT TO DESKTOP", func(): get_tree().quit())
+	var showcase := _surface(body, Vector2(360, 390))
+	_surface_ratio(showcase, 1.22)
+	var car_id := save.selected_car()
+	var car_info: Dictionary = Catalog.car(car_id)
+	var preset: Dictionary = PlayerCarFactory.PRESETS[car_id]
+	var frame := HBoxContainer.new()
+	showcase.add_child(frame)
+	_label(frame, "LIVE SHOWROOM", 13, ShellTheme.TEAL)
+	var live_tag := _label(frame, "CURRENT VEHICLE", 12, ShellTheme.MUTED)
+	live_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_label(showcase, str(car_info.get("class", "SPORTS CAR")).to_upper(), 13, ShellTheme.ACCENT)
+	_label(showcase, Catalog.car_name(car_id), 30)
+	_preview(showcase, car_id)
+	var specs := HBoxContainer.new()
+	specs.add_theme_constant_override("separation", 14)
+	showcase.add_child(specs)
+	_metric(specs, "TORQUE", "%d Nm" % roundi(float(preset["torque"])))
+	_metric(specs, "WEIGHT", "%d kg" % roundi(float(preset["mass"])))
+	_metric(specs, "DRIVE", "AWD" if float(preset["front_split"]) > 0.0 else "RWD")
+	_footer(root, "ENTER / A DRIVE   •   GARAGE TO CHANGE CAR   •   ESC / B BACK   •   F11 FULLSCREEN")
 
 func _preview(parent: Node, car_id: String) -> void:
 	var preview := Preview.new()
@@ -136,9 +209,9 @@ func _preview(parent: Node, car_id: String) -> void:
 	preview.turntable.rotation.y = 3.12
 	var view := preview.viewport.get_camera_3d()
 	view.keep_aspect = Camera3D.KEEP_WIDTH
-	view.fov = 42.0
+	view.fov = 43.0
 	view.position = Vector3(5.0, 2.7, 6.2)
-	view.look_at(Vector3(0.0, 0.72, 0.0))
+	view.look_at(Vector3(0.0, 0.72, 0.0), Vector3.UP)
 
 func enter_free_roam() -> void:
 	if drive == null:
@@ -157,29 +230,58 @@ func open_garage() -> void:
 		game.set_paused(true)
 
 func _garage(root: VBoxContainer) -> void:
-	_heading(root, "THE GARAGE", "Select a car. Your choice is saved for the next drive.")
+	_navigation(root, "GARAGE")
+	_heading(root, "YOUR GARAGE", "Choose the car you want to take into Aster Valley.")
 	var body := _columns(_scroll(root))
-	var collection := _surface(body, Vector2(290, 350))
-	for spec: Dictionary in Catalog.CARS:
-		var id: String = spec["id"]
-		var title: String = spec["name"]
-		if save.selected_car() == id:
-			title += "  /  ACTIVE"
-		var car_button := _action(collection, title, _inspect.bind(id), inspected_car == id)
+	var collection := _surface(body, Vector2(260, 360))
+	_surface_ratio(collection, 0.72)
+	_label(collection, "YOUR COLLECTION   /   03", 13, ShellTheme.ACCENT)
+	var cars: Array = Catalog.CARS
+	for index in range(cars.size()):
+		var item: Dictionary = cars[index]
+		var id := str(item["id"])
+		var info: Dictionary = Catalog.car(id)
+		var status := "CURRENT" if save.selected_car() == id else "READY"
+		var card := _action(collection, "%02d   /   %s   •   %s" % [
+			index + 1, Catalog.car_name(id).to_upper(), status],
+			_inspect.bind(id), inspected_car == id)
+		card.custom_minimum_size = Vector2(0, 58)
+		card.add_theme_font_size_override("font_size", 16)
+		_label(collection, str(info.get("class", "SPORTS CAR")).to_upper() + "   •   " + str(info.get("tagline", "")), 12, ShellTheme.MUTED)
 		if inspected_car == id:
-			first_focus = car_button
+			first_focus = card
 	_spacer(collection)
-	_action(collection, "BACK", _go_back)
-	var details := _surface(body, Vector2(340, 350))
+	_label(collection, "SELECT A VEHICLE TO VIEW ITS LIVE SHOWROOM MODEL.", 12, ShellTheme.TEAL)
+	_action(collection, "BACK TO HOME", _main_menu)
+
+	var details := _surface(body, Vector2(360, 430))
+	_surface_ratio(details, 1.28)
+	var info: Dictionary = Catalog.car(inspected_car)
 	var preset: Dictionary = PlayerCarFactory.PRESETS[inspected_car]
-	_label(details, Catalog.car_name(inspected_car), 34)
-	_label(details, "%d kg    •    %d Nm    •    %s" % [
-		preset["mass"], preset["torque"], "AWD" if preset["front_split"] > 0.0 else "RWD"], 16, ShellTheme.TEAL)
-	_action(details, "SELECT VEHICLE", _choose_car, true)
+	_label(details, str(info.get("class", "SPORTS CAR")).to_upper() + "   /   ASTER VALLEY COLLECTION", 13, ShellTheme.TEAL)
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 12)
+	details.add_child(title_row)
+	var title := _label(title_row, Catalog.car_name(inspected_car), 40)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var choice := "CURRENT CAR" if save.selected_car() == inspected_car else "SELECT THIS CAR"
+	var select := _action(title_row, choice, _choose_car, true)
+	select.size_flags_horizontal = Control.SIZE_SHRINK_END
+	select.custom_minimum_size = Vector2(220, 54)
+	_label(details, str(info.get("tagline", "")), 16, ShellTheme.MUTED)
 	_preview(details, inspected_car)
+	var specs := HBoxContainer.new()
+	specs.add_theme_constant_override("separation", 14)
+	details.add_child(specs)
+	_metric(specs, "POWER", "%d hp" % int(info.get("power_hp", 0)))
+	_metric(specs, "TORQUE", "%d Nm" % roundi(float(preset["torque"])))
+	_metric(specs, "WEIGHT", "%d kg" % roundi(float(preset["mass"])))
+	_metric(specs, "DRIVETRAIN", "AWD" if float(preset["front_split"]) > 0.0 else "RWD")
+	if save.selected_car() == inspected_car:
+		_label(details, "ACTIVE FOR YOUR NEXT DRIVE", 12, ShellTheme.ACCENT)
 	if not game.notification.is_empty():
-		_label(details, game.notification, 15, ShellTheme.TEAL)
-	_footer(root)
+		_label(details, game.notification, 14, ShellTheme.TEAL)
+	_footer(root, "↑ / ↓ CHOOSE CAR   •   ENTER / A SELECT   •   ESC / B BACK")
 
 func _choose_car() -> void:
 	if screen != "GARAGE" or game.speed_kph > 4.0 or not PlayerCarFactory.PRESETS.has(inspected_car):
