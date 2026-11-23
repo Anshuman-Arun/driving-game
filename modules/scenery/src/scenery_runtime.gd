@@ -16,6 +16,7 @@ signal scenery_failed(reason: String)
 @export var render_lake: bool = true
 
 var report: Dictionary = {}
+var mesh_overrides: Dictionary = {}
 var error_message: String = ""
 var _world: Node = null
 var _terrain = null
@@ -287,6 +288,8 @@ func _asset_path(relative: String) -> String:
 	return ""
 
 func _get_mesh_parts(relative: String) -> Array:
+	if mesh_overrides.has(relative):
+		return [{"mesh": mesh_overrides[relative], "local": Transform3D.IDENTITY}]
 	if _mesh_cache.has(relative):
 		return _mesh_cache[relative]
 	var parts: Array = []

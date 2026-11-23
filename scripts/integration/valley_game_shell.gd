@@ -100,6 +100,8 @@ func _apply_all_settings() -> void:
 func _apply_setting(key: String, value: Variant) -> void:
 	if key == "graphics_quality":
 		ValleyEnvironment.apply_quality(get_viewport(), str(value))
+		if drive != null:
+			drive.graphics_preset = str(value)
 	elif key == "controller_sensitivity":
 		if drive != null:
 			drive.steering_sensitivity = float(value)
@@ -145,6 +147,8 @@ func _render() -> void:
 	_hud.name = "DrivingHUD"
 	add_child(_hud)
 	_hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if drive != null:
+		_hud.set_regions(drive.world.get_world_metadata().get("regions", []))
 	_hud_tick = 1.0
 
 func _on_viewport_resized() -> void:
@@ -583,6 +587,7 @@ func enter_free_roam() -> void:
 	if drive == null:
 		drive = FreeRoam.instantiate()
 		drive.shell_managed = true
+		drive.graphics_preset = str(save.data["settings"]["graphics_quality"])
 		drive.steering_sensitivity = float(save.data["settings"]["controller_sensitivity"])
 		drive.scenery_enabled = bool(ProjectSettings.get_setting("aster_valley/visuals/scenery_enabled", true))
 		drive.queue_vehicle_selection(save.selected_car())

@@ -66,3 +66,15 @@ Updated: 2026-11-22. Machine-readable ledger: `assets/forza_env/ASSET_LICENSES_F
 ## Interface fonts
 
 Barlow Condensed Bold Italic and Barlow Semi Condensed SemiBold by Jeremy Tribby are bundled under the SIL Open Font License 1.1. The fonts came from the [Google Fonts Barlow families](https://github.com/google/fonts/tree/main/ofl/barlowcondensed). The [license notice](../assets/ui/fonts/OFL.txt) ships beside them.
+
+## Valley terrain and foliage
+
+The textures below use the [Poly Haven CC0 license](https://polyhaven.com/license) and ship in `assets/valley_art/`.
+
+| Use | Source | Author | Local files |
+|---|---|---|---|
+| Meadow ground | [Leafy Grass](https://polyhaven.com/a/leafy_grass) | Charlotte Baglioni | `meadow_albedo.jpg`, `meadow_normal.jpg` |
+| Woodland ground and canopy detail | [Leaves Forest Ground](https://polyhaven.com/a/leaves_forest_ground) | Dario Barresi, Dimitrios Savva | `leaf_litter_albedo.jpg` |
+| Mossy cliffs | [Mossy Rock](https://polyhaven.com/a/mossy_rock) | Rob Tuytel | `moss_rock_albedo.jpg` |
+| Pine branches | [Pine Tree 01](https://polyhaven.com/a/pine_tree_01) | Rico Cilliers, Rob Tuytel | `pine_cutout.png`, cropped and packed from twig diffuse and alpha |
+| Grass tufts | [Grass Medium 01](https://polyhaven.com/a/grass_medium_01) | Rico Cilliers, Rob Tuytel | `grass_cutout.png`, cropped and packed from diffuse and alpha |

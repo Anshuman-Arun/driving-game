@@ -20,6 +20,9 @@ uniform sampler2D shore_albedo : source_color, filter_linear_mipmap_anisotropic,
 uniform sampler2D shore_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D shore_roughness : filter_linear_mipmap_anisotropic, repeat_enable;
 
+uniform sampler2D leaf_litter : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D moss_rock : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+
 uniform float grass_scale : hint_range(0.02, 0.5) = 0.11;
 uniform float forest_scale : hint_range(0.02, 0.5) = 0.13;
 uniform float rock_scale : hint_range(0.02, 0.5) = 0.085;
@@ -155,6 +158,7 @@ void fragment() {
 	// Multi-scale organic noise for anti-tiling blend & macro biome color variation.
 	float anti_tile_w = smoothstep(0.25, 0.75, fbm2(xz * 0.018));
 	float macro_n = fbm2(xz * 0.0055);
+	float fields = value_noise(xz * 0.011 + vec2(12.0, 33.0));
 	float detail_n = value_noise(xz * 0.045);
 
 	// Distance-based blend favors coarser scale slightly in the far distance to avoid moire.
@@ -171,39 +175,38 @@ void fragment() {
 	float wet_w = 1.0 - smoothstep(water_level_m - 0.1, water_level_m + 0.85, shore_h);
 
 	// 2) Forest floor: higher elevation + Cedar Woods northwest region + organic patches.
-	float cedar_region = smoothstep(100.0, -280.0, xz.x) * smoothstep(220.0, -60.0, xz.y);
-	float elev_forest = smoothstep(68.0, 118.0, h + (macro_n - 0.5) * 18.0);
+	float cedar_region = (1.0 - smoothstep(-280.0, 100.0, xz.x)) * (1.0 - smoothstep(-60.0, 220.0, xz.y));
+	float elev_forest = smoothstep(56.0, 114.0, h + (macro_n - 0.5) * 18.0);
 	float forest_w = clamp(max(elev_forest, cedar_region * 0.82) * smoothstep(0.22, 0.68, macro_n + 0.18), 0.0, 1.0);
 	forest_w *= (1.0 - shore_w);
 
 	// 3) Steep cliff / alpine rock: slope-driven (17..33 deg) + high North Ridge peaks.
 	float slope = 1.0 - clamp(n.y, 0.0, 1.0);
-	float rock_slope = smoothstep(0.045, 0.165, slope + (detail_n - 0.5) * 0.035);
-	float rock_alpine = smoothstep(125.0, 175.0, h + (macro_n - 0.5) * 18.0) * 0.85;
+	float rock_slope = smoothstep(0.100, 0.295, slope + (detail_n - 0.5) * 0.13);
+	float moss_bank = smoothstep(0.36, 0.68, fields) * (1.0 - smoothstep(102.0, 168.0, h));
+	float rock_alpine = smoothstep(133.0, 196.0, h + (macro_n - 0.5) * 18.0) * 0.85;
 	float rock_w = clamp(max(rock_slope, rock_alpine), 0.0, 1.0);
 
 	// Triplanar weights for rock.
 	vec3 tri_w = pow(abs(n), vec3(5.0));
 	tri_w /= max(dot(tri_w, vec3(1.0)), 0.0001);
 
-	// Sample grass + forest floor (planar anti-tiled).
-	vec3 col_grass = sample_planar_albedo(grass_albedo, xz, grass_scale, dist_blend) * grass_tint;
-	float rgh_grass = sample_planar_mono(grass_roughness, xz, grass_scale, dist_blend);
-	vec3 n_grass = sample_planar_world_normal(grass_normal, xz, grass_scale, dist_blend, n, eff_normal_strength * 0.80);
-
-	// Lush alpine meadow macro variation (sunlit clover vs deep emerald patches).
-	vec3 meadow_warm = vec3(1.05, 1.01, 0.84);
-	vec3 meadow_cool = vec3(0.80, 0.95, 0.80);
-	col_grass *= mix(meadow_cool, meadow_warm, smoothstep(0.22, 0.78, macro_n));
-	col_grass *= mix(0.94, 1.04, detail_n);
-
-	vec3 col_forest = sample_planar_albedo(forest_albedo, xz, forest_scale, dist_blend) * forest_tint;
-	float rgh_forest = sample_planar_mono(forest_roughness, xz, forest_scale, dist_blend);
-	vec3 n_forest = sample_planar_world_normal(forest_normal, xz, forest_scale, dist_blend, n, eff_normal_strength * 0.85);
-
-	vec3 base_col = mix(col_grass, col_forest, forest_w);
-	float base_rgh = mix(rgh_grass, rgh_forest, forest_w);
-	vec3 base_n = normalize(mix(n_grass, n_forest, forest_w));
+	// Meadow and woodland share the coarse biome blend, but keep separate materials up close.
+	vec3 meadow_tone = mix(vec3(0.64, 0.87, 0.55), vec3(1.17, 0.99, 0.64), smoothstep(0.24, 0.79, fields));
+	vec3 base_col = sample_planar_albedo(grass_albedo, xz, grass_scale, dist_blend) * grass_tint * meadow_tone;
+	float base_rgh = sample_planar_mono(grass_roughness, xz, grass_scale, dist_blend);
+	vec3 base_n = sample_planar_world_normal(grass_normal, xz, grass_scale, dist_blend, n, eff_normal_strength * 0.78);
+	float autumn = smoothstep(0.48, 0.79, detail_n * 0.62 + fields * 0.38);
+	float town_hedges = (1.0 - smoothstep(130.0, 410.0, distance(xz, vec2(-625.0, 510.0))));
+	if (forest_w > 0.06 || autumn * town_hedges > 0.10) {
+		vec3 woodland = sample_planar_albedo(forest_albedo, xz, forest_scale, dist_blend) * forest_tint;
+		vec3 scattered_leaves = texture(leaf_litter, xz * 0.42).rgb * vec3(0.89, 0.83, 0.73);
+		woodland = mix(woodland, scattered_leaves, 0.22 + autumn * 0.65);
+		float blend_forest = max(forest_w * 0.90, autumn * town_hedges * 0.54);
+		base_col = mix(base_col, woodland, blend_forest);
+		base_rgh = mix(base_rgh, sample_planar_mono(forest_roughness, xz, forest_scale, dist_blend), blend_forest);
+		base_n = normalize(mix(base_n, sample_planar_world_normal(forest_normal, xz, forest_scale, dist_blend, n, eff_normal_strength * 0.78), blend_forest));
+	}
 
 	// Blend shoreline when near lake elevation.
 	if (shore_w > 0.005) {
@@ -223,7 +226,11 @@ void fragment() {
 	if (rock_w > 0.005) {
 		vec3 col_rock = sample_triplanar_albedo(rock_albedo, world_pos, tri_w, rock_scale, dist_blend) * rock_tint;
 		// Subtle geological stratification & macro shading on mountain cliffs.
-		float strata = 0.93 + 0.12 * sin(h * 0.42 + macro_n * 6.0);
+		float strata = 0.89 + 0.16 * sin(h * 0.33 + xz.x * 0.021 + macro_n * 8.0);
+		if (moss_bank > 0.06) {
+			vec3 lichen = sample_triplanar_albedo(moss_rock, world_pos, tri_w, 0.19, dist_blend);
+			col_rock = mix(col_rock, lichen * vec3(0.78, 0.88, 0.77), moss_bank * 0.73);
+		}
 		col_rock *= strata * mix(0.92, 1.05, detail_n);
 		float rgh_rock = sample_triplanar_mono(rock_roughness, world_pos, tri_w, rock_scale, dist_blend);
 		vec3 n_rock = sample_triplanar_world_normal(rock_normal, world_pos, n, tri_w, rock_scale, eff_normal_strength * 1.15);
@@ -234,7 +241,7 @@ void fragment() {
 	}
 
 	// Subtle macro luminance breakup across the 2x2 km valley.
-	base_col *= mix(0.90, 1.08, value_noise(xz * 0.0028));
+	base_col *= mix(0.84, 1.13, value_noise(xz * 0.0028));
 
 	ALBEDO = base_col;
 	ROUGHNESS = clamp(base_rgh * 0.78 + 0.18, 0.24, 0.98);

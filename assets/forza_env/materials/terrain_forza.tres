@@ -1,8 +1,8 @@
-[gd_resource type="ShaderMaterial" load_steps=14 format=3]
+[gd_resource type="ShaderMaterial" load_steps=16 format=3]
 
 [ext_resource type="Shader" path="res://assets/forza_env/shaders/terrain_forza.gdshader" id="1_shader"]
-[ext_resource type="Texture2D" path="res://assets/forza_env/textures/grass/albedo.jpg" id="2_ga"]
-[ext_resource type="Texture2D" path="res://assets/forza_env/textures/grass/normal.png" id="3_gn"]
+[ext_resource type="Texture2D" path="res://assets/valley_art/meadow_albedo.jpg" id="2_ga"]
+[ext_resource type="Texture2D" path="res://assets/valley_art/meadow_normal.jpg" id="3_gn"]
 [ext_resource type="Texture2D" path="res://assets/forza_env/textures/grass/roughness.png" id="4_gr"]
 [ext_resource type="Texture2D" path="res://assets/forza_env/textures/forest_floor/albedo.jpg" id="5_fa"]
 [ext_resource type="Texture2D" path="res://assets/forza_env/textures/forest_floor/normal.png" id="6_fn"]
@@ -13,6 +13,9 @@
 [ext_resource type="Texture2D" path="res://assets/forza_env/textures/shore/albedo.jpg" id="11_sa"]
 [ext_resource type="Texture2D" path="res://assets/forza_env/textures/shore/normal.png" id="12_sn"]
 [ext_resource type="Texture2D" path="res://assets/forza_env/textures/shore/roughness.png" id="13_sr"]
+
+[ext_resource type="Texture2D" path="res://assets/valley_art/leaf_litter_albedo.jpg" id="14_litter"]
+[ext_resource type="Texture2D" path="res://assets/valley_art/moss_rock_albedo.jpg" id="15_moss"]
 
 [resource]
 render_priority = 0
@@ -29,14 +32,16 @@ shader_parameter/rock_roughness = ExtResource("10_rr")
 shader_parameter/shore_albedo = ExtResource("11_sa")
 shader_parameter/shore_normal = ExtResource("12_sn")
 shader_parameter/shore_roughness = ExtResource("13_sr")
-shader_parameter/grass_scale = 0.11
+shader_parameter/leaf_litter = ExtResource("14_litter")
+shader_parameter/moss_rock = ExtResource("15_moss")
+shader_parameter/grass_scale = 0.27
 shader_parameter/forest_scale = 0.13
 shader_parameter/rock_scale = 0.085
 shader_parameter/shore_scale = 0.16
 shader_parameter/water_level_m = 5.35
 shader_parameter/shore_height_m = 7.4
 shader_parameter/normal_strength = 0.52
-shader_parameter/grass_tint = Color(0.46, 0.68, 0.36, 1)
-shader_parameter/forest_tint = Color(0.56, 0.58, 0.46, 1)
+shader_parameter/grass_tint = Color(0.67, 0.83, 0.53, 1)
+shader_parameter/forest_tint = Color(0.70, 0.72, 0.49, 1)
 shader_parameter/rock_tint = Color(0.76, 0.78, 0.82, 1)
 shader_parameter/shore_tint = Color(0.84, 0.8, 0.72, 1)

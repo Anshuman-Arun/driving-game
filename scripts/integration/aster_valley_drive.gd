@@ -4,6 +4,7 @@ extends Node3D
 signal vehicle_spawned(body: Vehicle, car_id: String)
 
 const WorldRuntime = preload("res://modules/world_runtime/src/world_runtime.gd")
+const Vegetation = preload("valley_vegetation.gd")
 const SceneryRuntime = preload("res://modules/scenery/src/scenery_runtime.gd")
 const CuratedCar = preload("curated_car_visual.gd")
 const ValleyEnvironment = preload("aster_valley_environment.gd")
@@ -25,6 +26,12 @@ var active_vehicle_id := PlayerCarFactory.DEFAULT_CAR
 var shell_managed := false
 var scenery_enabled := false
 var scenery: SceneryRuntime
+var vegetation: Vegetation
+var graphics_preset := "medium":
+	set(value):
+		graphics_preset = value
+		if is_instance_valid(vegetation):
+			vegetation.set_graphics(value)
 var _pending_vehicle_id := ""
 
 var _controls := DriveInput.new()
@@ -76,6 +83,10 @@ func _ready() -> void:
 func set_scenery_enabled(enabled: bool) -> bool:
 	scenery_enabled = enabled
 	if not enabled:
+		if vegetation != null:
+			remove_child(vegetation)
+			vegetation.queue_free()
+			vegetation = null
 		if scenery != null:
 			remove_child(scenery)
 			scenery.queue_free()
@@ -88,11 +99,22 @@ func set_scenery_enabled(enabled: bool) -> bool:
 	var layer := SceneryRuntime.new()
 	layer.name = "Scenery"
 	layer.generate_selective_colliders = false
+	vegetation = Vegetation.new()
+	vegetation.name = "ValleyVegetation"
+	add_child(vegetation)
+	vegetation.build(world, graphics_preset)
+	var pine_mesh := vegetation.conifer_mesh()
+	if pine_mesh != null:
+		for model in ["pine_tree_lod0.glb", "pine_tree_lod1.glb"]:
+			layer.mesh_overrides["assets/curated/models/environment/" + model] = pine_mesh
 	add_child(layer)
 	if not layer.build_scenery(world):
 		scenery_enabled = false
 		remove_child(layer)
 		layer.queue_free()
+		remove_child(vegetation)
+		vegetation.queue_free()
+		vegetation = null
 		return false
 	scenery = layer
 	return true

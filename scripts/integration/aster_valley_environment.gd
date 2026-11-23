@@ -33,12 +33,12 @@ static func build_environment() -> Environment:
 	env.background_mode = Environment.BG_SKY
 	env.sky = _build_sky()
 	env.sky_rotation = Vector3(0.0, 0.42, 0.0)
-	env.background_energy_multiplier = 1.05
+	env.background_energy_multiplier = 0.97
 
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_sky_contribution = 0.85
 	env.ambient_light_color = Color(0.76, 0.84, 0.94)
-	env.ambient_light_energy = 0.72
+	env.ambient_light_energy = 0.67
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 
 	# Filmic AgX tonemapping with calibrated exposure for golden afternoon.
@@ -74,8 +74,8 @@ static func build_environment() -> Environment:
 	# Subtle Forza Horizon color polish.
 	env.adjustment_enabled = true
 	env.adjustment_brightness = 1.01
-	env.adjustment_contrast = 1.05
-	env.adjustment_saturation = 1.07
+	env.adjustment_contrast = 1.09
+	env.adjustment_saturation = 1.12
 	return env
 
 static func _build_sky() -> Sky:
@@ -106,22 +106,22 @@ static func _build_sky() -> Sky:
 
 static func configure_sun(sun: DirectionalLight3D) -> void:
 	# Warm golden-afternoon elevation (~32 deg) casting sculptural valley shadows.
-	sun.rotation = Vector3(-0.56, -0.78, 0.0)
-	sun.light_color = Color(1.0, 0.94, 0.84)
+	sun.rotation = Vector3(-0.60, -1.46, 0.0)
+	sun.light_color = Color(1.0, 0.91, 0.78)
 	sun.light_energy = 2.3
 	sun.light_indirect_energy = 1.0
 	sun.light_specular = 1.0
 	sun.light_angular_distance = 0.0
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
-	sun.directional_shadow_max_distance = 450.0
-	sun.directional_shadow_split_1 = 0.08
-	sun.directional_shadow_split_2 = 0.22
+	sun.directional_shadow_max_distance = 345.0
+	sun.directional_shadow_split_1 = 0.065
+	sun.directional_shadow_split_2 = 0.21
 	sun.directional_shadow_split_3 = 0.52
 	sun.directional_shadow_blend_splits = true
 	sun.shadow_blur = 1.15
-	sun.shadow_bias = 0.04
-	sun.shadow_normal_bias = 1.4
+	sun.shadow_bias = 0.024
+	sun.shadow_normal_bias = 0.82
 
 static func apply_world_materials(world: Node) -> void:
 	if world == null:
