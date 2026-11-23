@@ -370,14 +370,21 @@ func _build_lake(root: Node3D, manifest: Dictionary) -> int:
 			st.set_uv(Vector2(pt.x / 24.0, pt.z / 24.0))
 			st.add_vertex(pt)
 		tris += 2
+	st.generate_tangents()
 	var mesh: ArrayMesh = st.commit()
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.09, 0.32, 0.39, 0.80)
-	mat.metallic = 0.07
-	mat.roughness = 0.17
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	var mat: Material = null
+	var lake_mat_path := "res://assets/forza_env/materials/lake_water_forza.tres"
+	if ResourceLoader.exists(lake_mat_path):
+		mat = ResourceLoader.load(lake_mat_path) as Material
+	if mat == null:
+		var fallback := StandardMaterial3D.new()
+		fallback.albedo_color = Color(0.09, 0.32, 0.39, 0.80)
+		fallback.metallic = 0.07
+		fallback.roughness = 0.17
+		fallback.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		fallback.cull_mode = BaseMaterial3D.CULL_DISABLED
+		fallback.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		mat = fallback
 	var surface := MeshInstance3D.new()
 	surface.name = "EastwaterTerrainContouredWater"
 	surface.mesh = mesh

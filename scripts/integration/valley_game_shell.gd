@@ -133,12 +133,12 @@ func _preview(parent: Node, car_id: String) -> void:
 		preview.turntable.remove_child(child)
 		child.queue_free()
 	preview.turntable.add_child(model)
-	preview.turntable.rotation.y = 3.12
+	preview.turntable.rotation.y = 2.52
 	var view := preview.viewport.get_camera_3d()
 	view.keep_aspect = Camera3D.KEEP_WIDTH
-	view.fov = 42.0
-	view.position = Vector3(5.0, 2.7, 6.2)
-	view.look_at(Vector3(0.0, 0.72, 0.0))
+	view.fov = 38.0
+	view.position = Vector3(5.05, 1.92, 5.85)
+	view.look_at(Vector3(0.0, 0.58, 0.0))
 
 func enter_free_roam() -> void:
 	if drive == null:

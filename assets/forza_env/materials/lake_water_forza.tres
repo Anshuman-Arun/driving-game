@@ -1,0 +1,20 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3]
+
+[ext_resource type="Shader" path="res://assets/forza_env/shaders/lake_water_forza.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/water/normal.png" id="2_normal"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/water_normal = ExtResource("2_normal")
+shader_parameter/shallow_color = Color(0.05, 0.28, 0.32, 1)
+shader_parameter/deep_color = Color(0.015, 0.08, 0.16, 1)
+shader_parameter/sky_tint = Color(0.45, 0.66, 0.88, 1)
+shader_parameter/ripple_scale_a = 0.012
+shader_parameter/ripple_scale_b = 0.024
+shader_parameter/ripple_speed_a = Vector2(0.01, 0.006)
+shader_parameter/ripple_speed_b = Vector2(-0.008, 0.012)
+shader_parameter/normal_strength = 0.18
+shader_parameter/depth_fade_m = 0.85
+shader_parameter/depth_color_m = 4.0
+shader_parameter/foam_depth_m = 0.22

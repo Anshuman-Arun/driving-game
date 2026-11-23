@@ -1,0 +1,322 @@
+{
+  "assets": [
+    {
+      "asset_id": "tex_asphalt",
+      "polyhaven_slug": "asphalt_02",
+      "source_url": "https://polyhaven.com/a/asphalt_02",
+      "author": "Rob Tuytel",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/asphalt/albedo.jpg",
+        "assets/forza_env/textures/asphalt/normal.png",
+        "assets/forza_env/textures/asphalt/roughness.png",
+        "assets/forza_env/textures/asphalt/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_gravel",
+      "polyhaven_slug": "sandy_gravel_02",
+      "source_url": "https://polyhaven.com/a/sandy_gravel_02",
+      "author": "Dario Barresi",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/gravel/albedo.jpg",
+        "assets/forza_env/textures/gravel/normal.png",
+        "assets/forza_env/textures/gravel/roughness.png",
+        "assets/forza_env/textures/gravel/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_shoulder",
+      "polyhaven_slug": "brown_mud_03",
+      "source_url": "https://polyhaven.com/a/brown_mud_03",
+      "author": "Rob Tuytel",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/shoulder/albedo.jpg",
+        "assets/forza_env/textures/shoulder/normal.png",
+        "assets/forza_env/textures/shoulder/roughness.png",
+        "assets/forza_env/textures/shoulder/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_grass",
+      "polyhaven_slug": "forrest_ground_01",
+      "source_url": "https://polyhaven.com/a/forrest_ground_01",
+      "author": "Rob Tuytel",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/grass/albedo.jpg",
+        "assets/forza_env/textures/grass/normal.png",
+        "assets/forza_env/textures/grass/roughness.png",
+        "assets/forza_env/textures/grass/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_forest_floor",
+      "polyhaven_slug": "forest_leaves_04",
+      "source_url": "https://polyhaven.com/a/forest_leaves_04",
+      "author": "Rob Tuytel",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/forest_floor/albedo.jpg",
+        "assets/forza_env/textures/forest_floor/normal.png",
+        "assets/forza_env/textures/forest_floor/roughness.png",
+        "assets/forza_env/textures/forest_floor/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_rock",
+      "polyhaven_slug": "rock_face_03",
+      "source_url": "https://polyhaven.com/a/rock_face_03",
+      "author": "Dario Barresi, Rico Cilliers",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/rock/albedo.jpg",
+        "assets/forza_env/textures/rock/normal.png",
+        "assets/forza_env/textures/rock/roughness.png",
+        "assets/forza_env/textures/rock/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_shore",
+      "polyhaven_slug": "coast_sand_03",
+      "source_url": "https://polyhaven.com/a/coast_sand_03",
+      "author": "Rob Tuytel",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/shore/albedo.jpg",
+        "assets/forza_env/textures/shore/normal.png",
+        "assets/forza_env/textures/shore/roughness.png",
+        "assets/forza_env/textures/shore/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_bark",
+      "polyhaven_slug": "pine_bark",
+      "source_url": "https://polyhaven.com/a/pine_bark",
+      "author": "Dimitrios Savva",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/bark/albedo.jpg",
+        "assets/forza_env/textures/bark/normal.png",
+        "assets/forza_env/textures/bark/roughness.png",
+        "assets/forza_env/textures/bark/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_wood_planks",
+      "polyhaven_slug": "wood_planks",
+      "source_url": "https://polyhaven.com/a/wood_planks",
+      "author": "Amal Kumar",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/wood_planks/albedo.jpg",
+        "assets/forza_env/textures/wood_planks/normal.png",
+        "assets/forza_env/textures/wood_planks/roughness.png",
+        "assets/forza_env/textures/wood_planks/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_roof_slate",
+      "polyhaven_slug": "roof_slates_03",
+      "source_url": "https://polyhaven.com/a/roof_slates_03",
+      "author": "Rob Tuytel",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/roof_slate/albedo.jpg",
+        "assets/forza_env/textures/roof_slate/normal.png",
+        "assets/forza_env/textures/roof_slate/roughness.png",
+        "assets/forza_env/textures/roof_slate/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_stone_wall",
+      "polyhaven_slug": "patterned_cobblestone",
+      "source_url": "https://polyhaven.com/a/patterned_cobblestone",
+      "author": "Rob Tuytel",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/stone_wall/albedo.jpg",
+        "assets/forza_env/textures/stone_wall/normal.png",
+        "assets/forza_env/textures/stone_wall/roughness.png",
+        "assets/forza_env/textures/stone_wall/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_corrugated_metal",
+      "polyhaven_slug": "corrugated_iron",
+      "source_url": "https://polyhaven.com/a/corrugated_iron",
+      "author": "Jenelle van Heerden, Dimitrios Savva",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/corrugated_metal/albedo.jpg",
+        "assets/forza_env/textures/corrugated_metal/normal.png",
+        "assets/forza_env/textures/corrugated_metal/roughness.png",
+        "assets/forza_env/textures/corrugated_metal/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "tex_hay",
+      "polyhaven_slug": "thatch_roof_angled",
+      "source_url": "https://polyhaven.com/a/thatch_roof_angled",
+      "author": "Rob Tuytel, Dimitrios Savva",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/textures/hay/albedo.jpg",
+        "assets/forza_env/textures/hay/normal.png",
+        "assets/forza_env/textures/hay/roughness.png",
+        "assets/forza_env/textures/hay/ao.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "hdri_outdoor_sky",
+      "polyhaven_slug": "kloofendal_48d_partly_cloudy_puresky",
+      "source_url": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
+      "author": "Greg Zaal, Jarod Guest",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/hdri/outdoor_sky.hdr"
+      ],
+      "resolution": "2k HDR"
+    },
+    {
+      "asset_id": "hdri_garage_studio",
+      "polyhaven_slug": "studio_small_09",
+      "source_url": "https://polyhaven.com/a/studio_small_09",
+      "author": "Sergej Majboroda",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/forza_env/hdri/garage_studio.hdr"
+      ],
+      "resolution": "2k HDR"
+    },
+    {
+      "asset_id": "model_boulder_01",
+      "polyhaven_slug": "boulder_01",
+      "source_url": "https://polyhaven.com/a/boulder_01",
+      "author": "Rico Cilliers",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/curated/models/environment/boulder.glb"
+      ],
+      "notes": "Decimated in Blender 4.5 to ~1.5k-2.2k tris, normalized to manifest footprint & Y=0 base."
+    },
+    {
+      "asset_id": "model_rock_07",
+      "polyhaven_slug": "rock_07",
+      "source_url": "https://polyhaven.com/a/rock_07",
+      "author": "Jenelle van Heerden",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/curated/models/environment/rock_cluster.glb"
+      ],
+      "notes": "Decimated in Blender 4.5 to ~1.5k-2.2k tris, normalized to manifest footprint & Y=0 base."
+    },
+    {
+      "asset_id": "tex_water_normal",
+      "source_url": "local://tools/forza_assets/generate_water_normal.py",
+      "author": "Project procedural FFT generator",
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "local_files": [
+        "assets/forza_env/textures/water/normal.png"
+      ],
+      "resolution": "2048x2048"
+    },
+    {
+      "asset_id": "scenery_procedural_models",
+      "source_url": "local://tools/forza_assets/{gen_nature,gen_roadside,gen_buildings}.py",
+      "author": "Project procedural glTF/GLB generator (embedding Poly Haven CC0 PBR textures)",
+      "license": "CC0",
+      "license_url": "https://polyhaven.com/license",
+      "local_files": [
+        "assets/curated/models/environment/pine_tree_lod0.glb",
+        "assets/curated/models/environment/pine_tree_lod1.glb",
+        "assets/curated/models/environment/broadleaf_tree.glb",
+        "assets/curated/models/environment/shrub_cluster.glb",
+        "assets/curated/models/environment/boulder.glb",
+        "assets/curated/models/environment/rock_cluster.glb",
+        "assets/curated/models/environment/guardrail_4m.glb",
+        "assets/curated/models/environment/concrete_barrier.glb",
+        "assets/curated/models/environment/wood_fence.glb",
+        "assets/curated/models/environment/street_lamp.glb",
+        "assets/curated/models/environment/warning_sign.glb",
+        "assets/curated/models/environment/bollard.glb",
+        "assets/curated/models/environment/hay_bale.glb",
+        "content/scenery/models/town_house.gltf",
+        "content/scenery/models/barn.gltf",
+        "content/scenery/models/garage.gltf",
+        "content/scenery/models/windmill.gltf",
+        "content/scenery/models/stone_arch.gltf",
+        "content/scenery/models/overlook.gltf",
+        "content/scenery/models/pier.gltf",
+        "content/scenery/models/quarry_hopper.gltf"
+      ],
+      "notes": "All models use CC0 Poly Haven PBR textures & match content/scenery/manifest.json footprints."
+    },
+    {
+      "asset_id": "car_vela_gt",
+      "source_url": "https://raw.githubusercontent.com/achrefelouafi/GrassSystemThreeJS/main/public/porsche_911.glb",
+      "author": "achrefelouafi/GrassSystemThreeJS contributors",
+      "license": "MIT / CC-BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "local_files": [
+        "assets/curated/models/vehicles/vela_gt.glb"
+      ],
+      "notes": "Vela GT hero sports car."
+    },
+    {
+      "asset_id": "car_orion_rs",
+      "source_url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CarConcept/glTF-Binary/CarConcept.glb",
+      "author": "Eric Chadwick / Darmstadt Graphics Group GmbH (based on CC0 public domain concept car by Unity Fan)",
+      "license": "CC-BY 4.0 International",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "local_files": [
+        "assets/curated/models/vehicles/orion_rs.glb"
+      ],
+      "notes": "Orion RS sports coupe."
+    },
+    {
+      "asset_id": "car_kestrel_xr",
+      "source_url": "https://raw.githubusercontent.com/ionathansideras/3d-configurator/main/public/models/porsche.glb",
+      "author": "ionathansideras/3d-configurator contributors",
+      "license": "MIT / CC-BY",
+      "license_url": "https://github.com/ionathansideras/3d-configurator",
+      "local_files": [
+        "assets/curated/models/vehicles/kestrel_xr.glb"
+      ],
+      "notes": "Kestrel XR supercar (Porsche 918 Spyder Weissach)."
+    }
+  ]
+}

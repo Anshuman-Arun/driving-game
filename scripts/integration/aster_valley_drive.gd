@@ -6,6 +6,7 @@ signal vehicle_spawned(body: Vehicle, car_id: String)
 const WorldRuntime = preload("res://modules/world_runtime/src/world_runtime.gd")
 const SceneryRuntime = preload("res://modules/scenery/src/scenery_runtime.gd")
 const CuratedCar = preload("curated_car_visual.gd")
+const ValleyEnvironment = preload("aster_valley_environment.gd")
 const ALDER_START := Vector3(-575.0, 0.0, 545.0)
 const JUNCTION_CLEARANCE_M := 26.0
 const SPAWN_HEIGHT_M := 0.58
@@ -37,6 +38,8 @@ func _ready() -> void:
 	var started := Time.get_ticks_msec()
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	DriveInput.install()
+	ValleyEnvironment.apply_environment(self)
+	ValleyEnvironment.apply_world_materials(world)
 	if not world.build_world():
 		push_error("Aster Valley could not load: " + world.error_message)
 		get_tree().quit(1)

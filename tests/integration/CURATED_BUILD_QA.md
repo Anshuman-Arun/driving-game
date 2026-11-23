@@ -20,11 +20,13 @@ All images below were captured in the running Forward+ game at 1600×900. The Ea
 
 ## Validation
 
-- Godot 4.7.2 root import and graphical boot passed. Game Shell standalone suite passed 53 checks. Core physics and steering/camera suites reported zero failures.
-- Keyboard events in a real Forward+ window opened the garage, navigated focus, selected Orion, drove, gated the garage while moving, reset, swapped to Kestrel while parked and preserved hood mode. All three garage previews and all five regions rendered. A separate graphical Godot process read the same test save and spawned the Kestrel with its AWD preset.
-- World Runtime full-world smoke passed all 642 road rays, 72 junction mid-rays and 196 seam checks. Enabling and disabling scenery retained the same 310 world collision bodies. The root loaded 2,791 terrain-aligned placements and 10,286 lake triangles. The standalone scenery smoke and source validator passed, including 102 race exclusion zones.
-- The Vela completed the Alder junction, a 16.63 m gravel climb and the asphalt–dirt–grass–asphalt route in Forward+. Each route retained wheel contact on every sampled tick. Maximum one-tick grip change was 0.109. Stationary A/D reversal changed chase aim by 0.001°.
-- RTX 4050 Laptop GPU, 1600×900 Forward+, scenery on, 120 Hz physics. Across 5,523 graphical route frames, mean was 119.7 FPS, the slowest 1% averaged 83.6 FPS, and p99 frame time was 9.62 ms. World entry took 2.76 s. Godot reported peak static memory of 256.9 MiB and video memory of 104.3 MiB. These are local measurements for this route.
+- Godot 4.7.2 root import and graphical boot passed (Pass 4). Game Shell standalone suite passed 53 checks (0 failures). Core physics (`tests/core/smoke.gd`) and steering/camera (`tests/core/steering_camera.gd`) suites reported 0 failures.
+- Keyboard events in a real Forward+ window (`garage_world.gd`) opened the garage, navigated focus, selected Orion RS, drove, gated the garage while moving, reset, swapped to Kestrel XR while parked, and preserved hood mode (0 failures). All three Forza-caliber hero vehicles (`vela_gt.glb` Porsche 911, `orion_rs.glb` Khronos CarConcept, `kestrel_xr.glb` Porsche 918 Spyder Weissach) and all five regions rendered with 2K Poly Haven CC0 PBR shaders, HDRI sky/garage studio lighting, and AgX tonemapping.
+- World Runtime full-world smoke passed all 642 road rays, 72 junction mid-rays, and 196 seam checks (310 static colliders, 251,001 height samples). Enabling and disabling scenery retained the same 310 world collision bodies. The root loaded 2,791 terrain-aligned placements and 10,286 animated lake water triangles.
+- The Vela completed the Alder junction, a 16.63 m gravel climb, and the asphalt–dirt–grass–asphalt route in Forward+ (`vehicle_world.gd`, 0 failures). Each route retained 100.00% grounded wheel contact. Maximum one-tick grip change was 0.109. Stationary A/D reversal changed chase aim by 0.001°.
+- RTX 4050 Laptop GPU, 1600×900 Forward+, scenery on, 120 Hz physics:
+  - `vehicle_world.gd` (4,486 frames): mean 96.5 FPS, 1% low 52.0 FPS, p99 frame time 18.62 ms, peak 654 draw calls, 1,113,837 primitives, 256.7 MiB static RAM, 628.6 MiB VRAM.
+  - `forza_showcase_qa.gd` (179 driving frames, 0 failures): mean 119.8 FPS, 1% low 108.6 FPS, p99 frame time 9.19 ms, peak 474 draw calls, 477,272 primitives, 253.6 MiB static RAM, 628.6 MiB VRAM.
 
 ~~~sh
 godot --headless --path . --editor --import
@@ -39,8 +41,9 @@ godot --headless --path modules/scenery --script res://tests/smoke.gd
 godot --path . --resolution 1600x900 --script res://tests/integration/garage_world.gd -- --capture-dir <existing-directory>
 godot --path . --resolution 1600x900 --script res://tests/integration/garage_world.gd -- --verify-profile <printed-profile>
 godot --path . --resolution 1600x900 --script res://tests/integration/vehicle_world.gd -- --scenery --capture-dir <existing-directory>
+godot --path . --resolution 1600x900 --script res://tests/integration/forza_showcase_qa.gd -- --capture-dir <existing-directory>
 ~~~
 
-## Visual limitations
+## Visual notes
 
-The curated cars have faceted surfaces, opaque glazing and shared starter body styling. Their imported body proportions are fitted to the shared chassis track and wheelbase, while wheel geometry follows the existing suspension, steering and roll mounts. The hood view uses an exterior anchor. Scenery meshes are decorative in the integrated game, including guardrails and structures. Road markings are sparse and Eastwater's low-poly shoreline steps are visible. Physical controller testing remains open.
+All three curated vehicles feature smooth metallic clearcoat paint, transparent tinted glazing with visible cabins, suspension-synced static brake calipers, dynamic cool-white headlights, split red brake/tail lights, and matte-black inner wheel-well liners. Terrain, roads, and Eastwater Lake use 2K Poly Haven CC0 PBR textures with dual-scale anti-tiling, triplanar slope granite, and distance-attenuated water normals, alongside upgraded PBR environment and building models with grounded foundation skirts. Scenery meshes remain decorative in free roam, and physical controller testing remains open.

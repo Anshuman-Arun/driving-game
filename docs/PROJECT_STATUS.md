@@ -1,6 +1,10 @@
 # Project status — single current-state log
 
-Last updated: 2026-11-21
+Last updated: 2026-11-23
+
+## Forza visual fidelity overhaul (`feat/forza-fidelity-overhaul`)
+
+Upgraded all three hero vehicles (`vela_gt.glb` Porsche 911, `orion_rs.glb` Khronos CarConcept, `kestrel_xr.glb` Porsche 918 Spyder Weissach), environment/building models, 2K Poly Haven CC0 PBR terrain/road/water shaders, HDRI outdoor & garage studio lighting, and `VehicleVisualFX` (headlights, split brake lights, reverse lights, steering wheel rotation, tire smoke/dust, exhaust flash). Four-pass Godot 4.7.2 Forward+ QA (`1600x900`, scenery on, RTX 4050 Laptop GPU) passed with 0 failures across all headless suites (`game_shell` 53/53, `core/smoke`, `steering_camera`, `world_runtime -- --full-world` 642/642 road rays) and graphical suites (`garage_world.gd`, `vehicle_world.gd` 96.5 FPS mean, `forza_showcase_qa.gd` 119.8 FPS mean, 628.6 MiB VRAM). See [CURATED_BUILD_QA.md](../tests/integration/CURATED_BUILD_QA.md) and [ASSET_LICENSES.md](ASSET_LICENSES.md).
 
 ## Curated vehicle and scenery integration
 

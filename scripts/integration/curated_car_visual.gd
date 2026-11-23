@@ -1,8 +1,9 @@
 extends RefCounted
-## Compatibility for the authored AssetRoot / Body_Shell / Wheel_*_Pivot GLBs.
+## Compatibility & Forza-grade visual rigging for authored AssetRoot / Body_Shell / Wheel_*_Pivot GLBs.
 
 const DIRECTORY := "res://assets/curated/models/vehicles/"
 const CORNERS := ["FL", "FR", "RL", "RR"]
+const VisualFX = preload("res://scripts/integration/vehicle_visual_fx.gd")
 
 
 static func load_model(car_id: String) -> Node3D:
@@ -23,6 +24,7 @@ static func load_model(car_id: String) -> Node3D:
 	if body == null or body.mesh == null or _wheel_pivots(model).is_empty():
 		model.free()
 		return null
+	_polish_materials(model)
 	model.name = "CuratedCar"
 	return model
 
@@ -49,10 +51,16 @@ static func mount(car: Vehicle, car_id: String) -> bool:
 
 	var track := wheels[1].position.x - wheels[0].position.x
 	var wheelbase := wheels[2].position.z - wheels[0].position.z
-	model.scale = Vector3(track / asset_track, 1.0, wheelbase / asset_wheelbase)
-	# Center the arches on the loaded ride height, with room for suspension travel.
-	model.position.y = wheels[0].position.y - 0.15 - pivots[0].position.y
+	var sx := track / asset_track
+	var sz := wheelbase / asset_wheelbase
+	# Keep vertical proportion harmonized with track/wheelbase so there is zero squash/stretch.
+	var sy := clampf((sx + sz) * 0.5, 0.94, 1.06)
+	model.scale = Vector3(sx, sy, sz)
+	# Center the wheel arches cleanly on the loaded resting ride height with full steer & bump clearance.
+	model.position.y = wheels[0].position.y - 0.105 - pivots[0].position.y * sy
+
 	var fallback_wheels: Array[Node3D] = []
+	var caliper_pairs: Array[Dictionary] = []
 	for i in range(wheels.size()):
 		var mount_point := wheels[i].wheel_node
 		for child in mount_point.get_children():
@@ -61,18 +69,86 @@ static func mount(car: Vehicle, car_id: String) -> bool:
 		var pivot := pivots[i]
 		var tire := pivot.get_node("Tire_" + CORNERS[i]) as MeshInstance3D
 		var radius := tire.get_aabb().size.y * 0.5
+		var wheel_scale := wheels[i].tire_radius / radius
 		for child in pivot.find_children("*", "", true, false):
 			child.owner = null
 		pivot.owner = null
 		pivot.get_parent().remove_child(pivot)
 		# The imported geometry already uses the GEVP roll axis (+X).
-		pivot.transform = Transform3D.IDENTITY.scaled(Vector3.ONE * (wheels[i].tire_radius / radius))
+		pivot.transform = Transform3D.IDENTITY.scaled(Vector3.ONE * wheel_scale)
 		mount_point.add_child(pivot)
+
+		# Mount static Brake_{CORNER} caliper onto Wheel itself (NEVER inside wheel.wheel_node!)
+		# so wheel.wheel_node keeps exact child_count == 3 and calipers steer + track suspension without spinning.
+		var caliper := model.find_child("Brake_" + CORNERS[i], true, false) as Node3D
+		if caliper != null:
+			for child in caliper.find_children("*", "", true, false):
+				child.owner = null
+			caliper.owner = null
+			caliper.get_parent().remove_child(caliper)
+			caliper.transform = Transform3D.IDENTITY.scaled(Vector3.ONE * wheel_scale)
+			caliper.position = Vector3(0.0, mount_point.position.y, 0.0)
+			wheels[i].add_child(caliper)
+			caliper_pairs.append({"wheel": wheels[i], "caliper": caliper})
+
 	car.add_child(model)
+
+	var fx := VisualFX.new()
+	fx.setup(car, model, caliper_pairs)
+	car.add_child(fx)
+
 	fallback.hide()
 	for visual in fallback_wheels:
 		visual.hide()
 	return true
+
+
+static func _polish_materials(model: Node3D) -> void:
+	for node in model.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi == null or mi.mesh == null:
+			continue
+		var lname := mi.name.to_lower()
+		var surf_count := mi.mesh.get_surface_count()
+		for s in range(surf_count):
+			var base_mat := mi.get_active_material(s)
+			if not (base_mat is StandardMaterial3D):
+				continue
+			var mat := base_mat as StandardMaterial3D
+			var mname := mat.resource_name.to_lower()
+			if lname == "body_shell" or "carpaint" in mname:
+				mat.clearcoat_enabled = true
+				mat.clearcoat = 1.0
+				mat.clearcoat_roughness = 0.03
+				mat.metallic = maxf(mat.metallic, 0.78)
+				mat.roughness = minf(mat.roughness, 0.14)
+			elif lname == "body_glass" or "glass" in mname:
+				mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				mat.albedo_color.a = clampf(mat.albedo_color.a, 0.26, 0.38)
+				mat.roughness = 0.04
+				mat.metallic = 0.12
+				mat.clearcoat_enabled = true
+				mat.clearcoat = 1.0
+				mat.clearcoat_roughness = 0.02
+				mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			elif "tire" in mname:
+				mat.albedo_color = Color(0.018, 0.019, 0.022, 1.0)
+				mat.metallic = 0.0
+				mat.roughness = 0.88
+				mat.metallic_specular = 0.22
+			elif "taillight" in mname:
+				mat.albedo_color = Color(0.26, 0.012, 0.015, 1.0)
+				mat.roughness = 0.08
+				mat.clearcoat_enabled = true
+				mat.clearcoat = 1.0
+				mat.clearcoat_roughness = 0.04
+				mat.emission_enabled = true
+				mat.emission = Color(0.95, 0.015, 0.012)
+				mat.emission_energy_multiplier = 0.45
+			elif "caliper" in mname:
+				mat.clearcoat_enabled = true
+				mat.clearcoat = 0.85
+				mat.clearcoat_roughness = 0.06
 
 
 static func _wheel_pivots(model: Node3D) -> Array[Node3D]:

@@ -1,6 +1,9 @@
 extends SubViewportContainer
-## Original primitive 3D showcase model; not a physics mesh or the Art PR GLB.
+## Forza-style 3D Garage Showroom preview with studio HDRI IBL, 3-point softbox lighting,
+## reflective circular turntable plinth, and fallback primitive preview.
 const Catalog = preload("car_catalog.gd")
+const STUDIO_HDRI_PATH := "res://assets/forza_env/hdri/garage_studio.hdr"
+
 var viewport: SubViewport
 var turntable: Node3D
 var body_parts: Array[MeshInstance3D] = []
@@ -14,41 +17,151 @@ func _ready() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	viewport = SubViewport.new()
-	viewport.size = Vector2i(640, 400)
+	viewport.size = Vector2i(800, 500)
 	viewport.own_world_3d = true
+	viewport.msaa_3d = Viewport.MSAA_4X
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(viewport)
+
 	var world := Node3D.new()
 	viewport.add_child(world)
+
+	var env := Environment.new()
+	env.tonemap_mode = Environment.TONE_MAPPER_AGX
+	env.tonemap_exposure = 1.08
+	env.ssao_enabled = true
+	env.ssao_radius = 0.9
+	env.ssao_intensity = 1.15
+	env.glow_enabled = true
+	env.glow_intensity = 0.35
+	env.glow_bloom = 0.14
+	env.glow_hdr_threshold = 1.15
+
+	var hdri: Texture2D = null
+	if ResourceLoader.exists(STUDIO_HDRI_PATH):
+		hdri = load(STUDIO_HDRI_PATH) as Texture2D
+	if hdri != null:
+		var sky := Sky.new()
+		var sky_mat := PanoramaSkyMaterial.new()
+		sky_mat.panorama = hdri
+		sky.sky_material = sky_mat
+		env.sky = sky
+		env.background_mode = Environment.BG_SKY
+		env.background_energy_multiplier = 0.42
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+		env.ambient_light_sky_contribution = 0.72
+		env.ambient_light_energy = 0.85
+		env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+	else:
+		env.background_mode = Environment.BG_COLOR
+		env.background_color = Color("#111922")
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		env.ambient_light_color = Color("#b8ccd9")
+		env.ambient_light_energy = 0.85
+
 	var environment := WorldEnvironment.new()
-	environment.environment = Environment.new()
-	environment.environment.background_mode = Environment.BG_COLOR
-	environment.environment.background_color = Color("#172936")
-	environment.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.environment.ambient_light_color = Color("#b6ccdc")
-	environment.environment.ambient_light_energy = 0.8
+	environment.environment = env
 	world.add_child(environment)
+
 	var camera := Camera3D.new()
-	camera.position = Vector3(6.2, 3.7, 7.2)
+	camera.fov = 38.0
+	camera.position = Vector3(5.05, 1.92, 5.85)
 	world.add_child(camera)
-	camera.look_at(Vector3(0, 0.7, 0), Vector3.UP)
+	camera.look_at(Vector3(0, 0.58, 0), Vector3.UP)
 	camera.current = true
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-45, -32, 0)
-	sun.light_energy = 1.8
-	world.add_child(sun)
+
+	# 3-Point Studio Softbox Lighting
+	var key := DirectionalLight3D.new()
+	key.name = "StudioKeyLight"
+	key.rotation_degrees = Vector3(-48, -36, 0)
+	key.light_color = Color(1.0, 0.97, 0.93)
+	key.light_energy = 1.85
+	key.shadow_enabled = true
+	key.shadow_blur = 1.8
+	world.add_child(key)
+
+	var rim := SpotLight3D.new()
+	rim.name = "StudioRimLight"
+	rim.position = Vector3(-4.2, 3.2, -4.6)
+	rim.light_color = Color(0.76, 0.88, 1.0)
+	rim.light_energy = 3.2
+	rim.spot_range = 16.0
+	rim.spot_angle = 48.0
+	world.add_child(rim)
+	rim.look_at(Vector3(0.0, 0.65, 0.0), Vector3.UP)
+
 	var fill := OmniLight3D.new()
-	fill.position = Vector3(-3, 3.5, -4)
-	fill.light_energy = 1.4
-	fill.omni_range = 13.0
+	fill.name = "StudioFillLight"
+	fill.position = Vector3(3.8, 2.4, 2.6)
+	fill.light_color = Color(1.0, 0.92, 0.82)
+	fill.light_energy = 1.1
+	fill.omni_range = 12.0
 	world.add_child(fill)
+
 	turntable = Node3D.new()
 	world.add_child(turntable)
-	_part(world, Vector3(14.0, 0.08, 14.0), Vector3(0, -0.11, 0), Color("#243641"))
-	for i in range(-6, 7):
-		_part(world, Vector3(0.016, 0.004, 12.0), Vector3(float(i), -0.063, 0), Color("#35515b"))
-		_part(world, Vector3(12.0, 0.004, 0.016), Vector3(0, -0.063, float(i)), Color("#35515b"))
+
+	_build_showroom_floor(world)
 	set_car(current_id)
+
+func _build_showroom_floor(world: Node3D) -> void:
+	# Dark reflective showroom floor
+	var floor_mesh := CylinderMesh.new()
+	floor_mesh.top_radius = 12.0
+	floor_mesh.bottom_radius = 12.0
+	floor_mesh.height = 0.08
+	floor_mesh.radial_segments = 48
+	var floor_node := MeshInstance3D.new()
+	floor_node.name = "ShowroomFloor"
+	floor_node.mesh = floor_mesh
+	floor_node.position = Vector3(0.0, -0.055, 0.0)
+	var floor_mat := StandardMaterial3D.new()
+	floor_mat.albedo_color = Color("#12171d")
+	floor_mat.metallic = 0.32
+	floor_mat.roughness = 0.22
+	floor_mat.clearcoat_enabled = true
+	floor_mat.clearcoat = 0.65
+	floor_mat.clearcoat_roughness = 0.12
+	floor_node.material_override = floor_mat
+	world.add_child(floor_node)
+
+	# Sleek circular turntable plinth
+	var plinth_mesh := CylinderMesh.new()
+	plinth_mesh.top_radius = 3.05
+	plinth_mesh.bottom_radius = 3.15
+	plinth_mesh.height = 0.03
+	plinth_mesh.radial_segments = 64
+	var plinth := MeshInstance3D.new()
+	plinth.name = "ShowroomPlinth"
+	plinth.mesh = plinth_mesh
+	plinth.position = Vector3(0.0, -0.015, 0.0)
+	var plinth_mat := StandardMaterial3D.new()
+	plinth_mat.albedo_color = Color("#182029")
+	plinth_mat.metallic = 0.45
+	plinth_mat.roughness = 0.16
+	plinth_mat.clearcoat_enabled = true
+	plinth_mat.clearcoat = 0.8
+	plinth_mat.clearcoat_roughness = 0.08
+	plinth.material_override = plinth_mat
+	world.add_child(plinth)
+
+	# Subtle glowing studio accent ring around plinth perimeter
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 3.04
+	ring_mesh.outer_radius = 3.10
+	ring_mesh.rings = 64
+	ring_mesh.ring_segments = 12
+	var ring := MeshInstance3D.new()
+	ring.name = "ShowroomAccentRing"
+	ring.mesh = ring_mesh
+	ring.position = Vector3(0.0, -0.012, 0.0)
+	var ring_mat := StandardMaterial3D.new()
+	ring_mat.albedo_color = Color("#4db8d6")
+	ring_mat.emission_enabled = true
+	ring_mat.emission = Color("#48b8d8")
+	ring_mat.emission_energy_multiplier = 1.6
+	ring.material_override = ring_mat
+	world.add_child(ring)
 
 func _material(tint: Color, metallic: float = 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -118,4 +231,4 @@ func set_quality(scale: float) -> void:
 
 func _process(delta: float) -> void:
 	if orbit_enabled and turntable != null:
-		turntable.rotate_y(delta * 0.13)
+		turntable.rotate_y(delta * 0.14)

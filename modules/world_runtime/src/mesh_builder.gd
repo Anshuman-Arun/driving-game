@@ -34,7 +34,7 @@ func build(parent: Node3D, world: Variant, all_chunks: bool, focus_xz: Vector2,
 		"turn_paths_covered": 0, "generation_ms": 0,
 		"estimated_vertex_bytes": 0
 	}
-	_material_setup(overrides)
+	_material_setup(overrides, parent)
 	var started := Time.get_ticks_msec()
 	var terrain := Node3D.new()
 	terrain.name = "TerrainChunks"
@@ -55,7 +55,7 @@ func build(parent: Node3D, world: Variant, all_chunks: bool, focus_xz: Vector2,
 		int(stats["road_vertices"]) + int(stats["junction_vertices"])) * 32
 	return stats.duplicate(true)
 
-func _material_setup(overrides: Dictionary) -> void:
+func _material_setup(overrides: Dictionary, parent: Node3D = null) -> void:
 	for name in ["terrain", "asphalt", "gravel", "shoulder"]:
 		if overrides.has(name) and overrides[name] is Material:
 			materials[name] = overrides[name]
@@ -75,6 +75,13 @@ func _material_setup(overrides: Dictionary) -> void:
 			"shoulder":
 				mat.albedo_color = Color(0.36, 0.33, 0.28)
 		materials[name] = mat
+	if overrides.has("junction_asphalt") and overrides["junction_asphalt"] is Material:
+		materials["junction_asphalt"] = overrides["junction_asphalt"]
+	elif parent != null and parent.get_parent() != null and parent.get_parent().has_meta("junction_asphalt_material_override"):
+		var meta_mat: Variant = parent.get_parent().get_meta("junction_asphalt_material_override")
+		materials["junction_asphalt"] = meta_mat if meta_mat is Material else materials["asphalt"]
+	else:
+		materials["junction_asphalt"] = materials["asphalt"]
 
 func _in_view(x: float, z: float, margin: float = 0.0) -> bool:
 	return full_world or Vector2(x, z).distance_to(focus) <= radius_m + margin
@@ -87,15 +94,61 @@ func _rectangle_in_view(x0: float, z0: float, x1: float, z1: float) -> bool:
 	return Vector2(px, pz).distance_to(focus) <= radius_m
 
 func _new_arrays(vertices: PackedVector3Array, normals: PackedVector3Array,
-		uvs: PackedVector2Array, indices: PackedInt32Array) -> Array:
+		uvs: PackedVector2Array, indices: PackedInt32Array,
+		tangents: PackedFloat32Array = PackedFloat32Array()) -> Array:
 	var arr := []
 	arr.resize(Mesh.ARRAY_MAX)
 	arr[Mesh.ARRAY_VERTEX] = vertices
 	arr[Mesh.ARRAY_NORMAL] = normals
 	arr[Mesh.ARRAY_TEX_UV] = uvs
+	if not tangents.is_empty():
+		arr[Mesh.ARRAY_TANGENT] = tangents
 	if not indices.is_empty():
 		arr[Mesh.ARRAY_INDEX] = indices
 	return arr
+
+func _compute_triangle_tangents(verts: PackedVector3Array, norms: PackedVector3Array,
+		uvs: PackedVector2Array) -> PackedFloat32Array:
+	var count := verts.size()
+	var tangents := PackedFloat32Array()
+	tangents.resize(count * 4)
+	var i := 0
+	while i + 2 < count:
+		var p0: Vector3 = verts[i]
+		var p1: Vector3 = verts[i + 1]
+		var p2: Vector3 = verts[i + 2]
+		var uv0: Vector2 = uvs[i]
+		var uv1: Vector2 = uvs[i + 1]
+		var uv2: Vector2 = uvs[i + 2]
+		var e1: Vector3 = p1 - p0
+		var e2: Vector3 = p2 - p0
+		var du1: float = uv1.x - uv0.x
+		var dv1: float = uv1.y - uv0.y
+		var du2: float = uv2.x - uv0.x
+		var dv2: float = uv2.y - uv0.y
+		var denom: float = du1 * dv2 - du2 * dv1
+		var t_raw := Vector3.RIGHT
+		var b_raw := Vector3.BACK
+		if absf(denom) > 0.0000001:
+			var inv_d: float = 1.0 / denom
+			t_raw = (e1 * dv2 - e2 * dv1) * inv_d
+			b_raw = (e2 * du1 - e1 * du2) * inv_d
+		for k in range(3):
+			var n: Vector3 = norms[i + k]
+			var t: Vector3 = t_raw - n * n.dot(t_raw)
+			if t.length_squared() < 0.000001:
+				t = Vector3.RIGHT - n * n.x
+				if t.length_squared() < 0.000001:
+					t = Vector3.FORWARD
+			t = t.normalized()
+			var w: float = -1.0 if n.cross(t).dot(b_raw) < 0.0 else 1.0
+			var off: int = (i + k) * 4
+			tangents[off] = t.x
+			tangents[off + 1] = t.y
+			tangents[off + 2] = t.z
+			tangents[off + 3] = w
+		i += 3
+	return tangents
 
 func _attach_mesh(parent: Node3D, label: String, mesh: ArrayMesh, material_count: int,
 		surface: String) -> void:
@@ -172,10 +225,12 @@ func _build_terrain(parent: Node3D, cell_count: int) -> void:
 			var v := PackedVector3Array()
 			var n := PackedVector3Array()
 			var uv := PackedVector2Array()
+			var tang := PackedFloat32Array()
 			var ind := PackedInt32Array()
 			v.resize(vert_count)
 			n.resize(vert_count)
 			uv.resize(vert_count)
+			tang.resize(vert_count * 4)
 			ind.resize(depth * width * 6)
 			var vi := 0
 			for dz in range(depth + 1):
@@ -192,9 +247,16 @@ func _build_terrain(parent: Node3D, cell_count: int) -> void:
 					var xr: int = gx + 1 if gx < gw_max else gw_max
 					var sx: float = samples[row_off + xl] - samples[row_off + xr]
 					var sz: float = samples[row_up + gx] - samples[row_dn + gx]
+					var nv := Vector3(sx, two_spacing, sz).normalized()
+					var tv := Vector3(1.0 - nv.x * nv.x, -nv.y * nv.x, -nv.z * nv.x).normalized()
 					v[vi] = Vector3(x, samples[row_off + gx], z)
-					n[vi] = Vector3(sx, two_spacing, sz).normalized()
+					n[vi] = nv
 					uv[vi] = Vector2(x * inv_uv, uv_y)
+					var toff: int = vi * 4
+					tang[toff] = tv.x
+					tang[toff + 1] = tv.y
+					tang[toff + 2] = tv.z
+					tang[toff + 3] = -1.0
 					vi += 1
 			var ii := 0
 			for dz in range(depth):
@@ -215,7 +277,7 @@ func _build_terrain(parent: Node3D, cell_count: int) -> void:
 					ind[ii + 5] = c
 					ii += 6
 			var mesh := ArrayMesh.new()
-			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(v, n, uv, ind))
+			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(v, n, uv, ind, tang))
 			mesh.surface_set_material(0, materials["terrain"])
 			_attach_mesh(parent, "Terrain_%d_%d" % [ix0, iz0], mesh, 1, "terrain")
 			stats["terrain_chunks"] += 1
@@ -329,10 +391,12 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 		return
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
-		_new_arrays(pavement_verts, pavement_norms, pavement_uv, PackedInt32Array()))
+		_new_arrays(pavement_verts, pavement_norms, pavement_uv, PackedInt32Array(),
+			_compute_triangle_tangents(pavement_verts, pavement_norms, pavement_uv)))
 	mesh.surface_set_material(0, materials[surface])
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
-		_new_arrays(shoulder_verts, shoulder_norms, shoulder_uv, PackedInt32Array()))
+		_new_arrays(shoulder_verts, shoulder_norms, shoulder_uv, PackedInt32Array(),
+			_compute_triangle_tangents(shoulder_verts, shoulder_norms, shoulder_uv)))
 	mesh.surface_set_material(1, materials["shoulder"])
 	_attach_mesh(parent, "Road_" + road["id"], mesh, 2, surface)
 	stats["physical_corridors"] += 1
@@ -494,11 +558,17 @@ func _build_junction_pads(parent: Node3D) -> void:
 		var skirt_uvs := PackedVector2Array()
 		_append_pad_skirt(hull, skirt_verts, skirt_norms, skirt_uvs)
 		var mesh := ArrayMesh.new()
-		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(vertices, normals, uvs, PackedInt32Array()))
-		mesh.surface_set_material(0, materials[group_surfaces[junction]])
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
+			_new_arrays(vertices, normals, uvs, PackedInt32Array(),
+				_compute_triangle_tangents(vertices, normals, uvs)))
+		var pad_surface: String = group_surfaces[junction]
+		var pad_mat: Material = materials["junction_asphalt"] if pad_surface == "asphalt" else materials[pad_surface]
+		mesh.surface_set_material(0, pad_mat)
 		var surf_count := 1
 		if not skirt_verts.is_empty():
-			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _new_arrays(skirt_verts, skirt_norms, skirt_uvs, PackedInt32Array()))
+			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
+				_new_arrays(skirt_verts, skirt_norms, skirt_uvs, PackedInt32Array(),
+					_compute_triangle_tangents(skirt_verts, skirt_norms, skirt_uvs)))
 			mesh.surface_set_material(1, materials["shoulder"])
 			surf_count = 2
 		_attach_mesh(parent, "Junction_" + junction, mesh, surf_count, group_surfaces[junction])
