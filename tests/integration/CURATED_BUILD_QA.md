@@ -20,13 +20,13 @@ All images below were captured in the running Forward+ game at 1600×900. The Ea
 
 ## Validation
 
-- Godot 4.7.2 root import and graphical boot passed (Pass 4). Game Shell standalone suite passed 53 checks (0 failures). Core physics (`tests/core/smoke.gd`) and steering/camera (`tests/core/steering_camera.gd`) suites reported 0 failures.
+- Godot 4.7.2 root import and graphical boot passed (Pass 6). Game Shell standalone suite passed 53 checks (0 failures). Core physics (`tests/core/smoke.gd`), steering/camera (`tests/core/steering_camera.gd`), and drift/Xbox controller (`tests/core/drift_and_controller.gd`: `36.1°` peak drift slip at `14.12 m/s`, `0.1°` recovery, Forza right-stick orbit & recenter, Free Roam A-button safety) suites all reported 0 failures.
 - Keyboard events in a real Forward+ window (`garage_world.gd`) opened the garage, navigated focus, selected Orion RS, drove, gated the garage while moving, reset, swapped to Kestrel XR while parked, and preserved hood mode (0 failures). All three Forza-caliber hero vehicles (`vela_gt.glb` Porsche 911, `orion_rs.glb` Khronos CarConcept, `kestrel_xr.glb` Porsche 918 Spyder Weissach) and all five regions rendered with 2K Poly Haven CC0 PBR shaders, HDRI sky/garage studio lighting, and AgX tonemapping.
 - World Runtime full-world smoke passed all 642 road rays, 72 junction mid-rays, and 196 seam checks (310 static colliders, 251,001 height samples). Enabling and disabling scenery retained the same 310 world collision bodies. The root loaded 2,791 terrain-aligned placements and 10,286 animated lake water triangles.
 - The Vela completed the Alder junction, a 16.63 m gravel climb, and the asphalt–dirt–grass–asphalt route in Forward+ (`vehicle_world.gd`, 0 failures). Each route retained 100.00% grounded wheel contact. Maximum one-tick grip change was 0.109. Stationary A/D reversal changed chase aim by 0.001°.
-- RTX 4050 Laptop GPU, 1600×900 Forward+, scenery on, 120 Hz physics:
-  - `vehicle_world.gd` (4,486 frames): mean 96.5 FPS, 1% low 52.0 FPS, p99 frame time 18.62 ms, peak 654 draw calls, 1,113,837 primitives, 256.7 MiB static RAM, 628.6 MiB VRAM.
-  - `forza_showcase_qa.gd` (179 driving frames, 0 failures): mean 119.8 FPS, 1% low 108.6 FPS, p99 frame time 9.19 ms, peak 474 draw calls, 477,272 primitives, 253.6 MiB static RAM, 628.6 MiB VRAM.
+- RTX 4050 Laptop GPU, Forward+ (2x MSAA + FXAA + debanding + 16x Aniso + half-res smooth SSAO, SSIL off), scenery on, 120 Hz physics:
+  - `forza_showcase_qa.gd` (1600×900, 179 driving frames, 0 failures): mean 88.1 FPS, 1% low 67.1 FPS, p99 frame time 14.68 ms, peak 475 draw calls, 477,272 primitives, 261.4 MiB static RAM, 648.9 MiB VRAM.
+  - `vehicle_world.gd` (3440×1440 ultrawide, 1,857 frames, 0 failures): mean 39.9 FPS, 1% low 16.5 FPS, p99 frame time 53.27 ms, peak 870 draw calls, 1,228,065 primitives, 275.0 MiB static RAM, 972.5 MiB VRAM.
 
 ~~~sh
 godot --headless --path . --editor --import

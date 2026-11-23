@@ -16,6 +16,6 @@ shader_parameter/shoulder_roughness = ExtResource("4_rough")
 shader_parameter/shoulder_ao = ExtResource("5_ao")
 shader_parameter/grass_albedo = ExtResource("6_grass")
 shader_parameter/world_tile_scale = 0.32
-shader_parameter/normal_depth = 0.95
+shader_parameter/normal_depth = 0.5
 shader_parameter/shoulder_tint = Color(0.74, 0.7, 0.62, 1)
 shader_parameter/grass_tint = Color(0.46, 0.68, 0.36, 1)

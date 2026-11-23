@@ -225,15 +225,18 @@ func _process(delta: float) -> void:
 		else:
 			_exhaust_light.light_energy = 0.0
 
-	# 6. Tire smoke (Road) and dust (Dirt/Grass)
+	# 6. Tire smoke (Road) and dust (Dirt/Grass), boosted by DriftController!
 	var speed := _vehicle.speed
 	var handbrake := _vehicle.handbrake_input > 0.1
+	var drift := _vehicle.get_node_or_null("DriftController")
+	var drifting := drift != null and (bool(drift.get("is_drifting")) or float(drift.get("drift_intensity")) > 0.22)
 	for item in _wheel_fx:
 		var wheel := item["wheel"] as Wheel
 		var smoke := item["smoke"] as GPUParticles3D
 		var dust := item["dust"] as GPUParticles3D
 		if wheel == null or wheel.wheel_node == null:
 			continue
+		var is_rear := wheel == _vehicle.rear_left_wheel or wheel == _vehicle.rear_right_wheel
 		var contact_local := wheel.position + Vector3(0.0, wheel.wheel_node.position.y - wheel.tire_radius * 0.82, 0.0)
 		smoke.position = contact_local
 		dust.position = contact_local
@@ -245,7 +248,7 @@ func _process(delta: float) -> void:
 		var surface := wheel.surface_type
 		if surface == "Dirt" or surface == "Grass":
 			smoke.emitting = false
-			dust.emitting = speed > 3.5 or slip > 0.30
+			dust.emitting = speed > 3.5 or slip > 0.30 or (drifting and is_rear)
 		else:
 			dust.emitting = false
-			smoke.emitting = (slip > 0.42 and speed > 2.5) or (handbrake and speed > 4.5)
+			smoke.emitting = (drifting and is_rear and speed > 3.5) or (slip > 0.42 and speed > 2.5) or (handbrake and speed > 4.5)

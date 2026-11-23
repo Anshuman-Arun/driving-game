@@ -119,6 +119,7 @@ func _physics_process(delta: float) -> void:
 		if next_id != active_vehicle_id and adapter.get_speed_mps() <= PARKED_LIMIT_MPS:
 			_spawn_vehicle(next_id, vehicle_body.transform)
 	if shell_managed and get_tree().paused:
+		_stop_haptics()
 		return
 	_reset_cooldown = maxf(0.0, _reset_cooldown - delta)
 	var p := vehicle_body.global_position
@@ -129,12 +130,53 @@ func _physics_process(delta: float) -> void:
 		_reset_cooldown = 0.5
 	_reset_requested = false
 	if get_tree().paused:
+		_stop_haptics()
 		return
 	if _camera_requested:
 		_camera_requested = false
 		camera.cycle()
 	var input := _controls.sample()
 	adapter.set_drive_input(input["steer"], input["throttle"], input["brake"], input["handbrake"])
+	if vehicle_body != null and not vehicle_body.freeze:
+		camera.set_look_input(_controls.sample_look())
+	else:
+		camera.set_look_input(Vector2.ZERO)
+	_update_haptics()
+
+func _exit_tree() -> void:
+	_stop_haptics()
+
+func _update_haptics() -> void:
+	var pads := Input.get_connected_joypads()
+	if pads.is_empty() or vehicle_body == null:
+		return
+	var device := pads[0]
+	var weak := 0.0
+	var strong := 0.0
+	var drift := vehicle_body.get_node_or_null("DriftController")
+	if drift != null and bool(drift.get("is_drifting")):
+		var intensity := float(drift.get("drift_intensity"))
+		weak = clampf(0.22 + intensity * 0.48, 0.0, 0.72)
+		strong = clampf(intensity * 0.35, 0.0, 0.40)
+	var speed := adapter.get_speed_mps()
+	if speed > 4.0:
+		var offroad := false
+		for w in vehicle_body.wheel_array:
+			if w.is_colliding() and (w.surface_type == "Dirt" or w.surface_type == "Grass"):
+				offroad = true
+				break
+		if offroad:
+			var speed_w := clampf(speed / 28.0, 0.15, 0.55)
+			weak = maxf(weak, speed_w * 0.55)
+			strong = maxf(strong, speed_w * 0.32)
+	if weak > 0.02 or strong > 0.02:
+		Input.start_joy_vibration(device, weak, strong, 0.12)
+	else:
+		Input.stop_joy_vibration(device)
+
+func _stop_haptics() -> void:
+	for device in Input.get_connected_joypads():
+		Input.stop_joy_vibration(device)
 
 func queue_vehicle_selection(car_id: String) -> void:
 	if not PlayerCarFactory.PRESETS.has(car_id):

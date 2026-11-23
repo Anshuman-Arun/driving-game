@@ -302,7 +302,7 @@ func _focus_after_layout(control: Control) -> void:
 
 func _quality_scale() -> float:
 	var preset: String = str(save.data["settings"]["graphics_quality"])
-	return 0.67 if preset == "low" else (0.82 if preset == "medium" else 1.0)
+	return 0.85 if preset == "low" else 1.0
 
 func _preview(parent: Node, car_id: String) -> void:
 	var preview := Preview.new()
@@ -644,8 +644,12 @@ func _apply_all_settings() -> void:
 func _apply_setting(key: String, value: Variant) -> void:
 	match key:
 		"graphics_quality":
-			var factor := 0.67 if value == "low" else (0.82 if value == "medium" else 1.0)
-			get_viewport().scaling_3d_scale = factor
+			var factor := 0.85 if value == "low" else 1.0
+			var vp := get_viewport()
+			vp.scaling_3d_scale = factor
+			vp.msaa_3d = Viewport.MSAA_DISABLED if value == "low" else Viewport.MSAA_2X
+			vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA
+			vp.use_debanding = true
 			for node in find_children("*", "SubViewportContainer", true, false):
 				if node.has_method("set_quality"):
 					node.call("set_quality", factor)

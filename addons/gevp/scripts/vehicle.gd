@@ -61,6 +61,8 @@ extends RigidBody3D
 @export var braking_speed := 10.0
 ## Multiplies the automatically calculated brake force.
 @export var brake_force_multiplier := 1.0
+## Runtime multiplier applied to handbrake_force (modulated by DriftController for Forza-style drift entry).
+var handbrake_force_scale := 1.0
 ## Ratio of total brake force applied as front wheels : back wheels. If this value is
 ## below 0.0, this value will be automatically calculated instead.
 @export var front_brake_bias := -1.0
@@ -652,7 +654,7 @@ func process_braking(delta : float) -> void:
 		is_braking = false
 	
 	brake_force = brake_amount * max_brake_force
-	handbrake_force = handbrake_input * max_handbrake_force
+	handbrake_force = handbrake_input * max_handbrake_force * handbrake_force_scale
 
 func process_steering(delta : float) -> void:
 	var steering_slip := get_max_steering_slip_angle()
@@ -886,10 +888,11 @@ func process_axle_drive(axle : Axle, torque : float, drive_inertia : float, delt
 		drive_inertia = 0.0
 	
 	var allow_abs := true
+	var axle_brake_force := brake_force
 	
 	## If the handbrake in engaged, disable the antilock brakes
 	if axle.handbrake:
-		brake_force += handbrake_force
+		axle_brake_force += handbrake_force
 		allow_abs = false
 	
 	## If enough torque is applied to the axle, lock to wheel speeds and add
@@ -910,8 +913,8 @@ func process_axle_drive(axle : Axle, torque : float, drive_inertia : float, delt
 	var rotation_sum := 0.0
 	var split := (axle.rotation_split + 1.0) * 0.5
 	axle.applied_split = axle.rotation_split
-	rotation_sum += axle.wheels[0].process_torque(torque * split, drive_inertia, brake_force * 0.5 * axle.brake_bias, allow_abs, delta)
-	rotation_sum += axle.wheels[1].process_torque(torque * (1.0 - split), drive_inertia, brake_force * 0.5 * axle.brake_bias, allow_abs, delta)
+	rotation_sum += axle.wheels[0].process_torque(torque * split, drive_inertia, axle_brake_force * 0.5 * axle.brake_bias, allow_abs, delta)
+	rotation_sum += axle.wheels[1].process_torque(torque * (1.0 - split), drive_inertia, axle_brake_force * 0.5 * axle.brake_bias, allow_abs, delta)
 	axle.rotation_split = clampf(rotation_sum, -1.0, 1.0)
 
 func process_forces(delta : float) -> void:

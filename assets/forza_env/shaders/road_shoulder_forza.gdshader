@@ -10,7 +10,7 @@ uniform sampler2D shoulder_ao : filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D grass_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 
 uniform float world_tile_scale = 0.32;
-uniform float normal_depth : hint_range(0.0, 2.0) = 0.95;
+uniform float normal_depth : hint_range(0.0, 2.0) = 0.50;
 uniform vec3 shoulder_tint : source_color = vec3(0.74, 0.70, 0.62);
 uniform vec3 grass_tint : source_color = vec3(0.46, 0.68, 0.36);
 
@@ -63,11 +63,13 @@ void fragment() {
 	vec3 col = mix(dirt_col, grass_col, tuft_mask * 0.42);
 	col *= mix(0.88, 1.10, macro_var);
 
+	float cam_dist = length(VERTEX);
+	float dist_n = mix(1.0, 0.22, smoothstep(16.0, 90.0, cam_dist));
 	ALBEDO = col;
 	ROUGHNESS = clamp(base_rgh * 0.65 + 0.30, 0.58, 0.98);
 	METALLIC = 0.0;
 	SPECULAR = 0.28;
 	AO = mix(1.0, base_ao, 0.55);
 	NORMAL_MAP = tex_n;
-	NORMAL_MAP_DEPTH = normal_depth;
+	NORMAL_MAP_DEPTH = normal_depth * dist_n;
 }

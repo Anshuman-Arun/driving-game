@@ -4,6 +4,7 @@ extends RefCounted
 ## Physics are provided by DAShoe1 Easy Vehicle Physics Vehicle/Wheel.
 const VehicleScript = preload("res://addons/gevp/scripts/vehicle.gd")
 const WheelScript = preload("res://addons/gevp/scripts/wheel.gd")
+const DriftControllerScript = preload("res://scripts/vehicle/drift_controller.gd")
 
 const DEFAULT_CAR := "vela_gt"
 const PRESETS := {
@@ -151,6 +152,8 @@ static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
 	car.add_child(mounts)
 	_marker(mounts, "Hood", Vector3(0.0, 0.86, -0.92))
 	_marker(mounts, "Cockpit", Vector3(-0.34, 0.94, -0.05))
+	var drift := DriftControllerScript.new()
+	car.add_child(drift)
 	return car
 
 static func _marker(parent: Node3D, label: String, offset: Vector3) -> void:

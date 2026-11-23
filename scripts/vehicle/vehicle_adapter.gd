@@ -71,6 +71,9 @@ func reset_to(pose: Transform3D) -> void:
 		wheel.spin = 0.0
 		wheel.previous_compression = 0.0
 		wheel.previous_global_position = wheel.global_position
+	var drift := vehicle.get_node_or_null("DriftController")
+	if drift != null and drift.has_method("reset"):
+		drift.call("reset")
 	vehicle.freeze = false
 	vehicle.sleeping = false
 	vehicle.reset_physics_interpolation()

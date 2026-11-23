@@ -52,9 +52,11 @@ func _ready() -> void:
 	_render()
 
 func _input(event: InputEvent) -> void:
-	# B is the handbrake on the road and Back only when a menu is open.
-	if screen == "FREE_ROAM" and event.is_action("shell_back") and event is InputEventJoypadButton:
-		return
+	# While driving in FREE_ROAM, A is Drift/Handbrake and B is unused; never let them trigger UI actions!
+	if screen == "FREE_ROAM" and event is InputEventJoypadButton:
+		var jb := event as InputEventJoypadButton
+		if jb.button_index == JOY_BUTTON_A or jb.button_index == JOY_BUTTON_B:
+			return
 	if event.is_action("shell_interact") or event.is_action("shell_map") or event.is_action("shell_finish_mock"):
 		return
 	super._input(event)
@@ -79,7 +81,12 @@ func _process(delta: float) -> void:
 	if drive == null or drive.adapter == null:
 		speed_label.text = "Loading Aster Valley…"
 		return
-	speed_label.text = "%03d km/h   •   GEAR %s" % [roundi(game.speed_kph), drive.adapter.get_gear_display()]
+	var drift_badge := ""
+	if drive.vehicle_body != null:
+		var drift := drive.vehicle_body.get_node_or_null("DriftController")
+		if drift != null and bool(drift.get("is_drifting")):
+			drift_badge = "   •   DRIFT"
+	speed_label.text = "%03d km/h   •   GEAR %s%s" % [roundi(game.speed_kph), drive.adapter.get_gear_display(), drift_badge]
 	car_label.text = Catalog.car_name(drive.active_vehicle_id)
 	notification_label.text = game.notification if game.notification_s > 0.0 else ""
 
@@ -99,7 +106,7 @@ func _render() -> void:
 	speed_label = _label(stack, "Loading Aster Valley…", 27)
 	notification_label = _label(stack, "", 16, ShellTheme.TEAL)
 	_spacer(stack)
-	_footer(stack, "WASD DRIVE   •   SPACE HANDBRAKE   •   C CAMERA   •   R RESET   •   G GARAGE WHILE PARKED   •   ESC PAUSE   •   F11 FULLSCREEN")
+	_footer(stack, "RT/W DRIVE · LT/S BRAKE · A/SPACE DRIFT · LB/C CAMERA · RS LOOK · Y/R RESET · X/G GARAGE · START/ESC PAUSE")
 	for node in stack.get_children():
 		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		if node is Label:

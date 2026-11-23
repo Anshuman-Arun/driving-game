@@ -1,14 +1,20 @@
 class_name DriveInput
 extends RefCounted
-## All input actions are installed in one place before the first physics frame.
-## Godot's action strengths retain analog triggers and left stick deflection.
+## All driving input actions (Keyboard + Xbox Series Controller) installed in one place.
+## Analog triggers and sticks use clean deadzones and Forza-style smooth response curves.
 
 const DEADZONE := 0.16
+const STEER_DEADZONE := 0.14
+const TRIGGER_DEADZONE := 0.05
+const LOOK_DEADZONE := 0.22
 
 static func install() -> void:
 	for action in ["drive_throttle", "drive_brake", "drive_left", "drive_right", "drive_handbrake", "drive_reset", "drive_camera", "drive_pause"]:
 		if not InputMap.has_action(action):
 			InputMap.add_action(action, DEADZONE)
+		else:
+			InputMap.action_erase_events(action)
+	# Keyboard bindings
 	_add_key("drive_throttle", KEY_W)
 	_add_key("drive_throttle", KEY_UP)
 	_add_key("drive_brake", KEY_S)
@@ -21,13 +27,14 @@ static func install() -> void:
 	_add_key("drive_reset", KEY_R)
 	_add_key("drive_camera", KEY_C)
 	_add_key("drive_pause", KEY_ESCAPE)
+	# Xbox Series controller bindings
 	_add_axis("drive_throttle", JOY_AXIS_TRIGGER_RIGHT, 1.0)
 	_add_axis("drive_brake", JOY_AXIS_TRIGGER_LEFT, 1.0)
 	_add_axis("drive_left", JOY_AXIS_LEFT_X, -1.0)
 	_add_axis("drive_right", JOY_AXIS_LEFT_X, 1.0)
-	_add_button("drive_handbrake", JOY_BUTTON_B)
+	_add_button("drive_handbrake", JOY_BUTTON_A)
+	_add_button("drive_camera", JOY_BUTTON_LEFT_SHOULDER)
 	_add_button("drive_reset", JOY_BUTTON_Y)
-	_add_button("drive_camera", JOY_BUTTON_RIGHT_STICK)
 	_add_button("drive_pause", JOY_BUTTON_START)
 
 static func _add_key(action: StringName, key: Key) -> void:
@@ -47,16 +54,46 @@ static func _add_button(action: StringName, button: JoyButton) -> void:
 	InputMap.action_add_event(action, event)
 
 func sample() -> Dictionary:
+	# Preserve linear action strength for keyboard / automated Input.action_press tests.
 	var steer := Input.get_axis("drive_right", "drive_left")
-	# Preserve raw stick deflection and its priority over keyboard steering.
+	var throttle := Input.get_action_strength("drive_throttle")
+	var brake := Input.get_action_strength("drive_brake")
+	var handbrake := Input.get_action_strength("drive_handbrake") > 0.35
+
+	# Physical Xbox Series gamepad axes with smooth deadzones and steering curve.
 	for device in Input.get_connected_joypads():
 		var stick := Input.get_joy_axis(device, JOY_AXIS_LEFT_X)
-		if absf(stick) > DEADZONE:
-			steer = -stick  # Easy Vehicle Physics expects positive = left.
-			break
+		var abs_stick := absf(stick)
+		if abs_stick > STEER_DEADZONE:
+			var remapped := clampf((abs_stick - STEER_DEADZONE) / (1.0 - STEER_DEADZONE), 0.0, 1.0)
+			steer = -signf(stick) * pow(remapped, 1.35) # GEVP expects positive = left.
+		var rt := Input.get_joy_axis(device, JOY_AXIS_TRIGGER_RIGHT)
+		if rt > TRIGGER_DEADZONE:
+			throttle = maxf(throttle, clampf((rt - TRIGGER_DEADZONE) / (1.0 - TRIGGER_DEADZONE), 0.0, 1.0))
+		var lt := Input.get_joy_axis(device, JOY_AXIS_TRIGGER_LEFT)
+		if lt > TRIGGER_DEADZONE:
+			brake = maxf(brake, clampf((lt - TRIGGER_DEADZONE) / (1.0 - TRIGGER_DEADZONE), 0.0, 1.0))
+		if Input.is_joy_button_pressed(device, JOY_BUTTON_A):
+			handbrake = true
+		break
+
 	return {
 		"steer": steer,
-		"throttle": Input.get_action_strength("drive_throttle"),
-		"brake": Input.get_action_strength("drive_brake"),
-		"handbrake": Input.get_action_strength("drive_handbrake") > 0.35,
+		"throttle": throttle,
+		"brake": brake,
+		"handbrake": handbrake,
 	}
+
+func sample_look() -> Vector2:
+	for device in Input.get_connected_joypads():
+		var raw := Vector2(
+			Input.get_joy_axis(device, JOY_AXIS_RIGHT_X),
+			Input.get_joy_axis(device, JOY_AXIS_RIGHT_Y)
+		)
+		var mag := raw.length()
+		if mag > LOOK_DEADZONE:
+			var remapped := clampf((mag - LOOK_DEADZONE) / (1.0 - LOOK_DEADZONE), 0.0, 1.0)
+			return (raw / mag) * remapped
+		if Input.is_joy_button_pressed(device, JOY_BUTTON_RIGHT_STICK):
+			return Vector2(0.0, 1.0) # Quick look-back on R3 click
+	return Vector2.ZERO

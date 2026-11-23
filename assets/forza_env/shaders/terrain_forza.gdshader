@@ -27,7 +27,7 @@ uniform float shore_scale : hint_range(0.02, 0.5) = 0.16;
 
 uniform float water_level_m = 5.35;
 uniform float shore_height_m = 7.4;
-uniform float normal_strength : hint_range(0.0, 2.0) = 0.95;
+uniform float normal_strength : hint_range(0.0, 2.0) = 0.52;
 
 uniform vec3 grass_tint : source_color = vec3(0.46, 0.68, 0.36);
 uniform vec3 forest_tint : source_color = vec3(0.56, 0.58, 0.46);
@@ -160,6 +160,8 @@ void fragment() {
 	// Distance-based blend favors coarser scale slightly in the far distance to avoid moire.
 	float cam_dist = length(VERTEX);
 	float dist_blend = clamp(anti_tile_w * 0.65 + smoothstep(45.0, 260.0, cam_dist) * 0.35, 0.15, 0.85);
+	// Smoothly attenuate high-frequency normal detail over distance to eliminate shimmering grain.
+	float eff_normal_strength = normal_strength * mix(1.0, 0.22, smoothstep(16.0, 90.0, cam_dist));
 
 	// Biome weights:
 	// 1) Shoreline sand/pebbles near Eastwater Lake (y < ~7.4m)
@@ -187,17 +189,17 @@ void fragment() {
 	// Sample grass + forest floor (planar anti-tiled).
 	vec3 col_grass = sample_planar_albedo(grass_albedo, xz, grass_scale, dist_blend) * grass_tint;
 	float rgh_grass = sample_planar_mono(grass_roughness, xz, grass_scale, dist_blend);
-	vec3 n_grass = sample_planar_world_normal(grass_normal, xz, grass_scale, dist_blend, n, normal_strength * 0.85);
+	vec3 n_grass = sample_planar_world_normal(grass_normal, xz, grass_scale, dist_blend, n, eff_normal_strength * 0.80);
 
 	// Lush alpine meadow macro variation (sunlit clover vs deep emerald patches).
-	vec3 meadow_warm = vec3(1.06, 1.02, 0.80);
-	vec3 meadow_cool = vec3(0.76, 0.95, 0.76);
+	vec3 meadow_warm = vec3(1.05, 1.01, 0.84);
+	vec3 meadow_cool = vec3(0.80, 0.95, 0.80);
 	col_grass *= mix(meadow_cool, meadow_warm, smoothstep(0.22, 0.78, macro_n));
-	col_grass *= mix(0.88, 1.08, detail_n);
+	col_grass *= mix(0.94, 1.04, detail_n);
 
 	vec3 col_forest = sample_planar_albedo(forest_albedo, xz, forest_scale, dist_blend) * forest_tint;
 	float rgh_forest = sample_planar_mono(forest_roughness, xz, forest_scale, dist_blend);
-	vec3 n_forest = sample_planar_world_normal(forest_normal, xz, forest_scale, dist_blend, n, normal_strength * 0.9);
+	vec3 n_forest = sample_planar_world_normal(forest_normal, xz, forest_scale, dist_blend, n, eff_normal_strength * 0.85);
 
 	vec3 base_col = mix(col_grass, col_forest, forest_w);
 	float base_rgh = mix(rgh_grass, rgh_forest, forest_w);
@@ -207,7 +209,7 @@ void fragment() {
 	if (shore_w > 0.005) {
 		vec3 col_shore = sample_planar_albedo(shore_albedo, xz, shore_scale, dist_blend) * shore_tint;
 		float rgh_shore = sample_planar_mono(shore_roughness, xz, shore_scale, dist_blend);
-		vec3 n_shore = sample_planar_world_normal(shore_normal, xz, shore_scale, dist_blend, n, normal_strength * 0.75);
+		vec3 n_shore = sample_planar_world_normal(shore_normal, xz, shore_scale, dist_blend, n, eff_normal_strength * 0.72);
 		// Wet darkening & gloss near waterline.
 		col_shore *= mix(1.0, 0.54, wet_w);
 		rgh_shore = mix(rgh_shore, 0.28, wet_w);
@@ -221,10 +223,10 @@ void fragment() {
 	if (rock_w > 0.005) {
 		vec3 col_rock = sample_triplanar_albedo(rock_albedo, world_pos, tri_w, rock_scale, dist_blend) * rock_tint;
 		// Subtle geological stratification & macro shading on mountain cliffs.
-		float strata = 0.92 + 0.14 * sin(h * 0.42 + macro_n * 6.0);
-		col_rock *= strata * mix(0.86, 1.08, detail_n);
+		float strata = 0.93 + 0.12 * sin(h * 0.42 + macro_n * 6.0);
+		col_rock *= strata * mix(0.92, 1.05, detail_n);
 		float rgh_rock = sample_triplanar_mono(rock_roughness, world_pos, tri_w, rock_scale, dist_blend);
-		vec3 n_rock = sample_triplanar_world_normal(rock_normal, world_pos, n, tri_w, rock_scale, normal_strength * 1.1);
+		vec3 n_rock = sample_triplanar_world_normal(rock_normal, world_pos, n, tri_w, rock_scale, eff_normal_strength * 1.15);
 
 		base_col = mix(base_col, col_rock, rock_w);
 		base_rgh = mix(base_rgh, rgh_rock, rock_w);

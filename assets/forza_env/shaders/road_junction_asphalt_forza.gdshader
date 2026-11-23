@@ -10,7 +10,7 @@ uniform sampler2D asphalt_roughness : filter_linear_mipmap_anisotropic, repeat_e
 uniform sampler2D asphalt_ao : filter_linear_mipmap_anisotropic, repeat_enable;
 
 uniform float world_tile_scale = 0.34;
-uniform float normal_depth : hint_range(0.0, 2.0) = 0.85;
+uniform float normal_depth : hint_range(0.0, 2.0) = 0.45;
 uniform vec3 asphalt_tint : source_color = vec3(0.84, 0.85, 0.87);
 
 varying vec3 world_pos;
@@ -66,11 +66,13 @@ void fragment() {
 	float rough = base_rgh * 0.68 + 0.24 - scuff * 0.05;
 	rough -= smoothstep(0.55, 0.85, macro_var) * 0.05;
 
+	float cam_dist = length(VERTEX);
+	float dist_n = mix(1.0, 0.22, smoothstep(16.0, 90.0, cam_dist));
 	ALBEDO = col;
 	ROUGHNESS = clamp(rough, 0.38, 0.96);
 	METALLIC = 0.0;
 	SPECULAR = 0.44;
 	AO = mix(1.0, base_ao, 0.55);
 	NORMAL_MAP = tex_n;
-	NORMAL_MAP_DEPTH = normal_depth;
+	NORMAL_MAP_DEPTH = normal_depth * dist_n;
 }

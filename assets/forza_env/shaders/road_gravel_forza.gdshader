@@ -11,7 +11,7 @@ uniform sampler2D gravel_ao : filter_linear_mipmap_anisotropic, repeat_enable;
 uniform float road_uv_width = 1.70;
 uniform float detail_tile_u = 1.8;
 uniform float detail_tile_v = 2.8;
-uniform float normal_depth : hint_range(0.0, 2.0) = 1.15;
+uniform float normal_depth : hint_range(0.0, 2.0) = 0.62;
 
 uniform vec3 gravel_tint : source_color = vec3(0.66, 0.63, 0.58);
 uniform vec3 rut_tint : source_color = vec3(0.68, 0.65, 0.60);
@@ -83,11 +83,13 @@ void fragment() {
 	col *= mix(1.0, 1.10, center_crown * (0.5 + 0.5 * fine_var));
 	col = mix(col, edge_berm_color, edge_berm * 0.48);
 
+	float cam_dist = length(VERTEX);
+	float dist_n = mix(1.0, 0.22, smoothstep(16.0, 90.0, cam_dist));
 	ALBEDO = col;
 	ROUGHNESS = clamp(base_rgh * 0.65 + 0.30 - ruts * 0.06, 0.55, 0.98);
 	METALLIC = 0.0;
 	SPECULAR = 0.28;
 	AO = mix(1.0, base_ao, 0.6);
 	NORMAL_MAP = tex_n;
-	NORMAL_MAP_DEPTH = mix(normal_depth, normal_depth * 0.75, ruts * 0.4);
+	NORMAL_MAP_DEPTH = mix(normal_depth, normal_depth * 0.75, ruts * 0.4) * dist_n;
 }

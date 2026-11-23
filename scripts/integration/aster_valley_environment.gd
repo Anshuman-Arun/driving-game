@@ -10,6 +10,13 @@ const MAT_GRAVEL_PATH := "res://assets/forza_env/materials/road_gravel_forza.tre
 const MAT_SHOULDER_PATH := "res://assets/forza_env/materials/road_shoulder_forza.tres"
 
 static func apply_environment(root: Node3D) -> void:
+	var vp := root.get_viewport()
+	if vp != null:
+		vp.msaa_3d = Viewport.MSAA_2X
+		vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA
+		vp.use_debanding = true
+		if vp.scaling_3d_scale < 1.0:
+			vp.scaling_3d_scale = 1.0
 	var world_env := root.get_node_or_null("WorldEnvironment") as WorldEnvironment
 	if world_env != null:
 		world_env.environment = build_environment()
@@ -35,19 +42,16 @@ static func build_environment() -> Environment:
 	env.tonemap_exposure = 1.05
 	env.tonemap_white = 6.0
 
-	# Grounded contact shadows and subtle sky bounce.
+	# Smooth half-res SSAO without stochastic SSIL grain (keeps >= 60 FPS).
 	env.ssao_enabled = true
-	env.ssao_radius = 1.4
-	env.ssao_intensity = 1.3
-	env.ssao_power = 1.45
-	env.ssao_detail = 0.45
+	env.ssao_radius = 1.1
+	env.ssao_intensity = 0.55
+	env.ssao_power = 1.25
+	env.ssao_detail = 0.0
 	env.ssao_horizon = 0.08
-	env.ssao_light_affect = 0.25
+	env.ssao_light_affect = 0.2
 
-	env.ssil_enabled = true
-	env.ssil_radius = 4.5
-	env.ssil_intensity = 0.42
-	env.ssil_sharpness = 0.9
+	env.ssil_enabled = false
 
 	# Subtle HDR bloom for sunlight glints, headlights, and brake lights.
 	env.glow_enabled = true

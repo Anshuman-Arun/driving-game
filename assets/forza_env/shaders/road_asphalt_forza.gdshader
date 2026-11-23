@@ -13,7 +13,7 @@ uniform sampler2D asphalt_ao : filter_linear_mipmap_anisotropic, repeat_enable;
 uniform float road_uv_width = 1.70;
 uniform float detail_tile_u = 1.6;
 uniform float detail_tile_v = 2.6;
-uniform float normal_depth : hint_range(0.0, 2.0) = 0.85;
+uniform float normal_depth : hint_range(0.0, 2.0) = 0.45;
 
 uniform vec3 asphalt_tint : source_color = vec3(0.84, 0.85, 0.87);
 uniform vec3 center_stripe_color : source_color = vec3(0.86, 0.65, 0.14);
@@ -115,11 +115,13 @@ void fragment() {
 	// Subtle damp micro-specular sheen variation.
 	rough -= smoothstep(0.55, 0.85, macro_var) * 0.05;
 
+	float cam_dist = length(VERTEX);
+	float dist_n = mix(1.0, 0.22, smoothstep(16.0, 90.0, cam_dist));
 	ALBEDO = col;
 	ROUGHNESS = clamp(rough, 0.36, 0.96);
 	METALLIC = 0.0;
 	SPECULAR = mix(0.42, 0.56, tire_wear * 0.6 + any_paint * 0.4);
 	AO = mix(1.0, base_ao, 0.55);
 	NORMAL_MAP = tex_n;
-	NORMAL_MAP_DEPTH = mix(normal_depth, normal_depth * 0.55, any_paint * 0.5);
+	NORMAL_MAP_DEPTH = mix(normal_depth, normal_depth * 0.55, any_paint * 0.5) * dist_n;
 }
