@@ -25,9 +25,12 @@ var _previous_look_yaw := 0.0
 var _look_pitch := 0.0
 var _previous_look_pitch := 0.0
 var _look_release_timer := 0.0
+var _ray_params := PhysicsRayQueryParameters3D.new()
 
 func setup(car: RigidBody3D) -> void:
 	target = car
+	_ray_params.collision_mask = 1
+	_ray_params.exclude = [car.get_rid()]
 	var hood := car.get_node_or_null("CameraMounts/Hood") as Marker3D
 	_hood_mount = hood.transform if hood != null else Transform3D(Basis.IDENTITY, HOOD_MOUNT)
 	# The camera writes render-frame transforms in world space.
@@ -92,8 +95,9 @@ func _physics_process(delta: float) -> void:
 		return
 	var pivot := pose.origin + CHASE_PIVOT
 	var offset := _chase_offset(_yaw + _look_yaw, _look_pitch)
-	var params := PhysicsRayQueryParameters3D.create(pivot, pivot + offset, 1, [target.get_rid()])
-	var hit := get_world_3d().direct_space_state.intersect_ray(params)
+	_ray_params.from = pivot
+	_ray_params.to = pivot + offset
+	var hit := get_world_3d().direct_space_state.intersect_ray(_ray_params)
 	var limit := 1.0 if hit.is_empty() else 0.88 * pivot.distance_to(hit.position) / offset.length()
 	# Clip both interpolation endpoints when obstructed. Ease the camera back out.
 	_previous_clearance = minf(_clearance, limit)

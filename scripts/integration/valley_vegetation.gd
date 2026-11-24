@@ -141,6 +141,7 @@ func _sync_cells(position: Vector3) -> void:
 	var center := Vector2i(floori(position.x / GROUND_CELL), floori(position.z / GROUND_CELL))
 	var camera_xz := Vector2(position.x, position.z)
 	var shadow_radius: float = [124.0, 190.0, 242.0][_quality]
+	var shadow_radius_sq := shadow_radius * shadow_radius
 	var detail_radius: float = [150.0, 210.0, 280.0][_quality]
 	for key: Vector3i in _canopy:
 		var middle := Vector2((key.x + 0.5) * CANOPY_CELL, (key.y + 0.5) * CANOPY_CELL)
@@ -152,7 +153,7 @@ func _sync_cells(position: Vector3) -> void:
 			var mesh := _meshes[key.z] if distance < cutoff * cutoff else _distant_trees[key.z]
 			if multimesh.mesh != mesh:
 				multimesh.mesh = mesh
-		var shadow_mode := (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if distance < shadow_radius * shadow_radius
+		var shadow_mode := (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if distance < shadow_radius_sq
 			else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
 		if batch.cast_shadow != shadow_mode:
 			batch.cast_shadow = shadow_mode

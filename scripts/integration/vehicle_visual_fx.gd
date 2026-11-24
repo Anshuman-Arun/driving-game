@@ -12,6 +12,7 @@ extends Node3D
 const TirePuff = preload("res://assets/ui/dashboard/tire_puff.png")
 
 var _vehicle: Vehicle
+var _drift_controller: DriftController
 var _caliper_pairs: Array[Dictionary] = []
 var _headlight_mats: Array[StandardMaterial3D] = []
 var _taillight_mats: Array[StandardMaterial3D] = []
@@ -23,6 +24,8 @@ var _steering_base_basis: Basis = Basis.IDENTITY
 var _wheel_fx: Array[Dictionary] = []
 
 var _brake_blend: float = 0.0
+var _prev_tail_energy: float = -1.0
+var _prev_reversing: bool = false
 var _prev_gear: int = 0
 var _exhaust_flash_t: float = 0.0
 
@@ -30,6 +33,7 @@ var _exhaust_flash_t: float = 0.0
 func setup(vehicle: Vehicle, model: Node3D, caliper_pairs: Array[Dictionary]) -> void:
 	name = "VehicleVisualFX"
 	_vehicle = vehicle
+	_drift_controller = vehicle.get_node_or_null("DriftController") as DriftController
 	_caliper_pairs = caliper_pairs
 
 	_bind_lights(model)
@@ -217,16 +221,20 @@ func _process(delta: float) -> void:
 	var braking := _vehicle.brake_input > 0.05 or _vehicle.handbrake_input > 0.1
 	_brake_blend = move_toward(_brake_blend, 1.0 if braking else 0.0, delta * 14.0)
 	var tail_energy := lerpf(0.45, 2.8, _brake_blend)
-	for mat in _taillight_mats:
-		mat.emission_energy_multiplier = tail_energy
-	if _brake_light != null:
-		_brake_light.light_energy = lerpf(0.08, 0.85, _brake_blend)
+	if not is_equal_approx(tail_energy, _prev_tail_energy):
+		_prev_tail_energy = tail_energy
+		for mat in _taillight_mats:
+			mat.emission_energy_multiplier = tail_energy
+		if _brake_light != null:
+			_brake_light.light_energy = lerpf(0.08, 0.85, _brake_blend)
 
 	# 3. Reverse lights
 	var reversing := _vehicle.current_gear == -1
-	var rev_energy := 4.4 if reversing else 0.05
-	for mat in _reverselight_mats:
-		mat.emission_energy_multiplier = rev_energy
+	if reversing != _prev_reversing:
+		_prev_reversing = reversing
+		var rev_energy := 4.4 if reversing else 0.05
+		for mat in _reverselight_mats:
+			mat.emission_energy_multiplier = rev_energy
 
 	# 4. Steering wheel rotation
 	if _steering_wheel != null and is_instance_valid(_steering_wheel):
@@ -248,8 +256,7 @@ func _process(delta: float) -> void:
 	# 6. Tire smoke (Road) and dust (Dirt/Grass), boosted by DriftController!
 	var speed := _vehicle.speed
 	var handbrake := _vehicle.handbrake_input > 0.1
-	var drift := _vehicle.get_node_or_null("DriftController")
-	var drifting := drift != null and (bool(drift.get("is_drifting")) or float(drift.get("drift_intensity")) > 0.22)
+	var drifting := _drift_controller != null and (_drift_controller.is_drifting or _drift_controller.drift_intensity > 0.22)
 	for item in _wheel_fx:
 		var wheel := item["wheel"] as Wheel
 		var smoke := item["smoke"] as GPUParticles3D

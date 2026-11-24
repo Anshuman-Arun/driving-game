@@ -18,6 +18,7 @@ var _handbrake_entry_t: float = 0.0
 var _base_stability_yaw: float = 5.2
 var _base_tcs_slip: float = 6.0
 var _base_countersteer: float = 0.75
+var _rear_wheels: Array[Wheel] = []
 var _initialized: bool = false
 
 
@@ -34,6 +35,7 @@ func _capture_baselines() -> void:
 	_base_stability_yaw = vehicle.stability_yaw_strength
 	_base_tcs_slip = vehicle.traction_control_max_slip
 	_base_countersteer = vehicle.countersteer_assist
+	_rear_wheels = [vehicle.rear_left_wheel, vehicle.rear_right_wheel]
 	_initialized = true
 
 
@@ -167,8 +169,7 @@ func _blend_drift(target: float, delta: float) -> void:
 
 	# Drop REAR lateral grip & stiffness during drift; restore smoothly on exit.
 	if _drift_blend > 0.001:
-		var rear_wheels: Array[Wheel] = [vehicle.rear_left_wheel, vehicle.rear_right_wheel]
-		for w in rear_wheels:
+		for w in _rear_wheels:
 			if w == null or w.surface_type.is_empty():
 				continue
 			var base_cof: float = vehicle.coefficient_of_friction.get(w.surface_type, 2.0)

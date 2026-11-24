@@ -10,6 +10,18 @@ const MUTED := Color("#a9b5b4")
 const MINT := Color("#8ef5cf")
 const REDLINE := Color("#ff8967")
 const MAP_SIZE := 199.0
+const TACH_LABELS: Array[String] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+
+static var _mph_strings: Array[String] = []
+
+static func _get_mph_string(val: int) -> String:
+	if _mph_strings.is_empty():
+		_mph_strings.resize(320)
+		for i in 320:
+			_mph_strings[i] = str(i)
+	if val >= 0 and val < _mph_strings.size():
+		return _mph_strings[val]
+	return str(val)
 
 var _map := ColorRect.new()
 var _map_material := ShaderMaterial.new()
@@ -118,7 +130,8 @@ func _draw_instruments(center: Vector2) -> void:
 		var inner := 101.0 if major else 107.5
 		draw_line(center + ray * inner, center + ray * RADIUS, REDLINE if proportion >= 0.87 else Color("#eae4d7c9"), 1.5 if major else 0.8, true)
 		if major:
-			var label := str(index / 4)
+			var major_idx := index / 4
+			var label: String = TACH_LABELS[major_idx] if major_idx < TACH_LABELS.size() else str(major_idx)
 			_outline_text(BODY, label, center + ray * 86.0 + Vector2(0, 4), 13, WHITE)
 	var needle := Vector2.from_angle(rev_end)
 	draw_line(center + needle * 80.0, center + needle * 112.5, Color("#101b23d9"), 6, true)
@@ -127,7 +140,7 @@ func _draw_instruments(center: Vector2) -> void:
 	draw_circle(gear, 22, Color("#13272c9c"), true, -1, true)
 	draw_arc(gear, 21.5, 0, TAU, 43, MINT, 1.6, true)
 	_outline_text(DISPLAY, _gear, gear + Vector2(0, 11), 32, WHITE)
-	_outline_text(DISPLAY, str(_mph), center + Vector2(27, 84), 92, WHITE)
+	_outline_text(DISPLAY, _get_mph_string(_mph), center + Vector2(27, 84), 92, WHITE)
 	_outline_text(BODY, "MPH", center + Vector2(82, 23), 17, WHITE)
 	if _drifting:
 		_outline_text(BODY, "DRIFT", center + Vector2(13, 111), 15, MINT)

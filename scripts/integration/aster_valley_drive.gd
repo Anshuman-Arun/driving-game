@@ -184,15 +184,15 @@ func _exit_tree() -> void:
 	_stop_haptics()
 
 func _update_haptics() -> void:
-	var pads := Input.get_connected_joypads()
+	var pads := _controls.connected_joypads
 	if pads.is_empty() or vehicle_body == null:
 		return
 	var device := pads[0]
 	var weak := 0.0
 	var strong := 0.0
-	var drift := vehicle_body.get_node_or_null("DriftController")
-	if drift != null and bool(drift.get("is_drifting")):
-		var intensity := float(drift.get("drift_intensity"))
+	var drift := adapter.drift_controller if adapter != null else null
+	if drift != null and drift.is_drifting:
+		var intensity := drift.drift_intensity
 		weak = clampf(0.22 + intensity * 0.48, 0.0, 0.72)
 		strong = clampf(intensity * 0.35, 0.0, 0.40)
 	var speed := adapter.get_speed_mps()
@@ -237,7 +237,7 @@ func _spawn_vehicle(car_id: String, pose: Transform3D) -> void:
 	CuratedCar.mount(vehicle_body, active_vehicle_id)
 	vehicle_spawned.emit(vehicle_body, active_vehicle_id)
 	camera.setup(vehicle_body)
-	camera.far = 3000.0
+	camera.far = 1800.0
 
 func respawn() -> void:
 	var pose: Variant = find_road_pose(vehicle_body.global_position, -vehicle_body.global_basis.z)

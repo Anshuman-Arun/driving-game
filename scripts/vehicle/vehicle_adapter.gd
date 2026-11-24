@@ -1,10 +1,14 @@
 class_name VehicleAdapter
 extends RefCounted
 ## Stable public interface hiding GEVP-specific input and reset implementation.
+const GEAR_NAMES: Array[String] = ["N", "1", "2", "3", "4", "5", "6", "7", "8"]
+
 var vehicle: Vehicle
+var drift_controller: DriftController
 
 func _init(body: Vehicle) -> void:
 	vehicle = body
+	drift_controller = body.get_node_or_null("DriftController") as DriftController
 
 func set_drive_input(steer: float, throttle: float, brake: float, handbrake: bool) -> void:
 	vehicle.steering_input = clampf(steer, -1.0, 1.0)
@@ -37,8 +41,8 @@ func get_gear_display() -> String:
 	var gear: int = vehicle.current_gear
 	if gear < 0:
 		return "R"
-	if gear == 0:
-		return "N"
+	if gear >= 0 and gear < GEAR_NAMES.size():
+		return GEAR_NAMES[gear]
 	return str(gear)
 
 func reset_to(pose: Transform3D) -> void:
@@ -71,9 +75,8 @@ func reset_to(pose: Transform3D) -> void:
 		wheel.spin = 0.0
 		wheel.previous_compression = 0.0
 		wheel.previous_global_position = wheel.global_position
-	var drift := vehicle.get_node_or_null("DriftController")
-	if drift != null and drift.has_method("reset"):
-		drift.call("reset")
+	if drift_controller != null:
+		drift_controller.reset()
 	vehicle.freeze = false
 	vehicle.sleeping = false
 	vehicle.reset_physics_interpolation()

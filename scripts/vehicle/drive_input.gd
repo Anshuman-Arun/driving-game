@@ -9,6 +9,29 @@ const TRIGGER_DEADZONE := 0.05
 const LOOK_DEADZONE := 0.22
 
 var steering_sensitivity := 0.65
+var connected_joypads: Array[int]:
+	get:
+		return _connected_joypads
+
+var _input_state: Dictionary = {
+	"steer": 0.0,
+	"throttle": 0.0,
+	"brake": 0.0,
+	"handbrake": false,
+}
+var _connected_joypads: Array[int] = []
+
+func _init() -> void:
+	_refresh_joypads()
+	Input.joy_connection_changed.connect(_on_joy_connection_changed)
+
+func _refresh_joypads() -> void:
+	_connected_joypads.clear()
+	for pad in Input.get_connected_joypads():
+		_connected_joypads.append(pad)
+
+func _on_joy_connection_changed(_device: int, _connected: bool) -> void:
+	_refresh_joypads()
 
 static func install() -> void:
 	for action in ["drive_throttle", "drive_brake", "drive_left", "drive_right", "drive_handbrake", "drive_reset", "drive_camera", "drive_pause"]:
@@ -63,7 +86,7 @@ func sample() -> Dictionary:
 	var handbrake := Input.get_action_strength("drive_handbrake") > 0.35
 
 	# Physical Xbox Series gamepad axes with smooth deadzones and steering curve.
-	for device in Input.get_connected_joypads():
+	for device in _connected_joypads:
 		var stick := Input.get_joy_axis(device, JOY_AXIS_LEFT_X)
 		var abs_stick := absf(stick)
 		if abs_stick > STEER_DEADZONE:
@@ -79,15 +102,14 @@ func sample() -> Dictionary:
 			handbrake = true
 		break
 
-	return {
-		"steer": steer,
-		"throttle": throttle,
-		"brake": brake,
-		"handbrake": handbrake,
-	}
+	_input_state["steer"] = steer
+	_input_state["throttle"] = throttle
+	_input_state["brake"] = brake
+	_input_state["handbrake"] = handbrake
+	return _input_state
 
 func sample_look() -> Vector2:
-	for device in Input.get_connected_joypads():
+	for device in _connected_joypads:
 		var raw := Vector2(
 			Input.get_joy_axis(device, JOY_AXIS_RIGHT_X),
 			Input.get_joy_axis(device, JOY_AXIS_RIGHT_Y)

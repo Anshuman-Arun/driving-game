@@ -77,6 +77,7 @@ var opposite_wheel : Wheel
 var beam_axle := 0.0
 
 var vehicle : Vehicle
+var _cached_collider: Object = null
 
 func _process(delta : float) -> void:
 	if wheel_node:
@@ -87,6 +88,7 @@ func _process(delta : float) -> void:
 		wheel_node.rotation.x -= (wrapf(spin * delta, 0, TAU))
 		
 func initialize() -> void:
+	enabled = false
 	wheel_node.rotation_order = EULER_ORDER_ZXY
 	wheel_moment = 0.5 * wheel_mass * pow(tire_radius, 2)
 	set_target_position(Vector3.DOWN * (spring_length + tire_radius))
@@ -161,23 +163,30 @@ func process_forces(opposite_compression : float, braking : bool, delta : float)
 		last_collider = get_collider()
 		last_collision_point = get_collision_point()
 		last_collision_normal = get_collision_normal()
-		var surface_groups: Array[StringName] = last_collider.get_groups()
-		for group in surface_groups:
-			if not coefficient_of_friction.has(group):
-				continue
-			var changed_surface: bool = surface_type != group
-			surface_type = group
-			if surface_grip_blend_time > 0.0:
-				_update_surface_grip(1.0 - exp(-delta / surface_grip_blend_time))
-			elif changed_surface:
-				_update_surface_grip(1.0)
-			break
+		if last_collider != _cached_collider:
+			_cached_collider = last_collider
+			var detected_surface := ""
+			if last_collider != null:
+				for key in coefficient_of_friction.keys():
+					if last_collider.is_in_group(key):
+						detected_surface = key
+						break
+			if not detected_surface.is_empty():
+				var changed_surface: bool = surface_type != detected_surface
+				surface_type = detected_surface
+				if surface_grip_blend_time > 0.0:
+					_update_surface_grip(1.0 - exp(-delta / surface_grip_blend_time))
+				elif changed_surface:
+					_update_surface_grip(1.0)
+		elif surface_grip_blend_time > 0.0:
+			_update_surface_grip(1.0 - exp(-delta / surface_grip_blend_time))
 	else:
 		last_collider = null
+		_cached_collider = null
 	
 	var compression := process_suspension(opposite_compression, delta)
 	
-	if is_colliding() and last_collider:
+	if last_collider != null:
 		process_tires(braking, delta)
 		var contact := last_collision_point - vehicle.global_position
 		if spring_force > 0.0:
@@ -205,7 +214,7 @@ func process_forces(opposite_compression : float, braking : bool, delta : float)
 		return 0.0
 
 func process_suspension(opposite_compression : float, delta : float) -> float:
-	if is_colliding() and last_collider:
+	if last_collider != null:
 		spring_current_length = last_collision_point.distance_to(global_position) - tire_radius
 	else:
 		spring_current_length = spring_length

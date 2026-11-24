@@ -361,6 +361,8 @@ func _make_batches(parent: Node3D, items: Array, parts: Array, label: String) ->
 		var draw := MultiMeshInstance3D.new()
 		draw.name = label + "_Part_" + str(k)
 		draw.multimesh = batch
+		if label.begins_with("Far") or parent.name.begins_with("shrub_") or parent.name.begins_with("bollard_") or parent.name.begins_with("warning_"):
+			draw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(draw)
 		nodes.append(draw)
 	return nodes

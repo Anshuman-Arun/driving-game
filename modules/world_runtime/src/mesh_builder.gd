@@ -186,6 +186,8 @@ func _surface_shape(mesh: ArrayMesh, surface_index: int) -> ConcavePolygonShape3
 func _attach_collider(parent: Node3D, label: String, geometry: ConcavePolygonShape3D, surface: String) -> void:
 	var body := StaticBody3D.new()
 	body.name = label
+	body.collision_layer = 1
+	body.collision_mask = 0
 	body.set_meta("world_surface", surface)
 	var group := "Dirt"
 	if surface == "terrain":
