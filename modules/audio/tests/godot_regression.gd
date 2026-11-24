@@ -36,14 +36,14 @@ func _expect(ok: bool, message: String) -> void:
 
 
 func _initialize() -> void:
-	var script_resource = load("res://audio_controller.gd")
+	var script_resource = load("res://modules/audio/audio_controller.gd") if ResourceLoader.exists("res://modules/audio/audio_controller.gd") else load("res://audio_controller.gd")
 	var audio = script_resource.new()
 	root.add_child.call_deferred(audio)
 	call_deferred("_test", audio)
 
 
 func _test(audio) -> void:
-	var script_resource = load("res://telemetry_bridge.gd")
+	var script_resource = load("res://modules/audio/telemetry_bridge.gd") if ResourceLoader.exists("res://modules/audio/telemetry_bridge.gd") else load("res://telemetry_bridge.gd")
 	_expect(audio._players.size() == 11, "eleven loop players created")
 	_expect(audio._alternate_engines.size() == 3, "three crossfade voices created")
 	_expect(audio._event_players.size() == 3, "three bounded event voices created")

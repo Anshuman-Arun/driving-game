@@ -83,7 +83,7 @@ The textures below use the [Poly Haven CC0 license](https://polyhaven.com/licens
 
 ## Premium world and garage runtime conversions
 
-The acquired source packs retain their catalogs and SHA-256 ledgers under `assets/premium_world/`, `assets/premium_garage_world/`, and `assets/audio/recorded/`. The Windows export uses only the runtime derivatives listed here. The recorded-audio branch owns playback integration.
+The acquired source packs retain their catalogs and SHA-256 ledgers under `assets/premium_world/`, `assets/premium_garage_world/`, and `assets/audio/recorded/`. The Windows export uses the adopted visual runtime derivatives listed here.
 
 | Runtime files | Source and license | Changes |
 |---|---|---|
@@ -93,3 +93,17 @@ The acquired source packs retain their catalogs and SHA-256 ledgers under `asset
 | `assets/premium_runtime/solace_gt.glb` and `assets/ui/dashboard/solace_gt.png` | [Electric Grand Tourer](https://tevy.dev/models/electric-gt), tevy CC0 | Decoded meshopt geometry, preserved source textures, adapted the independent wheel and caliper nodes to GEVP, and captured a runtime thumbnail. |
 
 Source authors and package hashes are recorded in the individual ledgers. The two opacity maps have a [separate acquisition record](../assets/premium_world/alpha_fix/README.md).
+
+## Recorded Vehicle and Environment Audio Assets
+
+Updated: 2026-11-23. Machine-readable catalog and hash ledger: `assets/audio/recorded/payload/LICENSES_AND_HASHES.json` and `assets/audio/recorded/catalog.json`.
+
+| Subsystem / Profile | Source URL | Author / Provenance | License | Local Path |
+|---|---|---|---|---|
+| `engine_vela_gt` | [supercar-engine-sound / gt3rs](https://github.com/justinagaudelli-eng/supercar-engine-sound) | Supercars67, NEW CARS 2015, Automotion Media | CC BY 3.0 | `assets/audio/recorded/payload/engines/vela_gt/*.wav` (14 loops) |
+| `engine_kestrel_xr` | [supercar-engine-sound / 765lt](https://github.com/justinagaudelli-eng/supercar-engine-sound) | Hungarian Supercar Spotters, FiExhaust, Supercars67 | CC BY 3.0 | `assets/audio/recorded/payload/engines/kestrel_xr/*.wav` (12 loops) |
+| `engine_orion_rs` | [supercar-engine-sound / four-cyl](https://github.com/justinagaudelli-eng/supercar-engine-sound) | Upstream field recordings | CC BY 3.0 | `assets/audio/recorded/payload/engines/orion_rs/*.wav` (6 loops) |
+| `ambience_wind` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/ambience/mountain_wind_bed.wav` |
+| `tires_roll_gravel` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/tires/roll_gravel.wav` |
+| `tires_screech` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/tires/screech.wav` |
+
