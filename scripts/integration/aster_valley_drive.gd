@@ -10,6 +10,7 @@ const SceneryRuntime = preload("res://modules/scenery/src/scenery_runtime.gd")
 const CuratedCar = preload("curated_car_visual.gd")
 const ValleyEnvironment = preload("aster_valley_environment.gd")
 const PremiumMesh = preload("premium_mesh.gd")
+const ValleyHorizon = preload("valley_horizon.gd")
 const ALDER_START := Vector3(-575.0, 0.0, 545.0)
 const JUNCTION_CLEARANCE_M := 26.0
 const SPAWN_HEIGHT_M := 0.58
@@ -73,6 +74,9 @@ func _ready() -> void:
 	_bounds = Rect2(bounds["min_x"], bounds["min_z"],
 		bounds["max_x"] - bounds["min_x"], bounds["max_z"] - bounds["min_z"])
 	_collect_lane_spans(world.get_road_graph()["lanes"])
+	var horizon := ValleyHorizon.new()
+	horizon.name = "DistantRanges"
+	add_child(horizon)
 	if scenery_enabled:
 		set_scenery_enabled(true)
 
@@ -154,6 +158,9 @@ func _add_adopted_scenery(overrides: Dictionary) -> void:
 	var replacements := {
 		"content/scenery/models/barn.gltf": ["hay_barn_1", Vector3(15, 9, 11)],
 		"content/scenery/models/garage.gltf": ["wooden_garage_1", Vector3(14, 7, 10)],
+		"content/scenery/models/pier.gltf": ["eastwater_pier", Vector3(6, 4, 17)],
+		"assets/curated/models/environment/street_lamp.glb": ["town_lamp", Vector3(1.35, 4.8, 1.35)],
+		"assets/curated/models/environment/shrub_cluster.glb": ["fern", Vector3(2.45, 1.25, 2.45)],
 		"assets/curated/models/environment/boulder.glb": ["moss_rocks", Vector3(3.3, 2.8, 3.3), true],
 		"assets/curated/models/environment/rock_cluster.glb": ["rock_face", Vector3(5.8, 3.8, 4.6)],
 	}

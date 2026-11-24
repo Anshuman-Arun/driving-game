@@ -1,6 +1,10 @@
 # Project status — single current-state log
 
-Last updated: 2026-11-23
+Last updated: 2026-11-24
+
+## Scenic driving and exact supercars (`feat/aster-scenic-supercars`)
+
+The garage has six cars, including BlackCube's Aventador SVJ and Black Snow's McLaren Senna. The supplied meshes share the normal showroom and driving entry points, with measured wheel locations, separate rolling and brake parts, and distinct AWD and RWD presets. The visual pass removes intense road glare, fixes sideways guardrails, adds distant ridges and differentiates meadow and woodland materials. The premium pack now supplies Alder's fuel station and lamps and the Eastwater pier. See [scenic and vehicle QA](SCENIC_SUPERCARS_QA.md).
 
 ## Premium world repair and vehicle art (`feat/world-visual-premium-overhaul`)
 

@@ -5,12 +5,16 @@ const DIRECTORY := "res://assets/curated/models/vehicles/"
 const CORNERS := ["FL", "FR", "RL", "RR"]
 const VisualFX = preload("res://scripts/integration/vehicle_visual_fx.gd")
 const TOURER := "res://assets/premium_runtime/solace_gt.glb"
+const EXACT_MODELS := {
+	"aventador_svj": "res://assets/premium_runtime/aventador_svj.glb",
+	"mclaren_senna": "res://assets/premium_runtime/mclaren_senna.glb",
+}
 
 
 static func load_model(car_id: String) -> Node3D:
 	if not PlayerCarFactory.PRESETS.has(car_id):
 		return null
-	var path := TOURER if car_id == "solace_gt" else DIRECTORY + car_id + ".glb"
+	var path: String = EXACT_MODELS.get(car_id, TOURER if car_id == "solace_gt" else DIRECTORY + car_id + ".glb")
 	if not ResourceLoader.exists(path, "PackedScene"):
 		return null
 	var scene := load(path) as PackedScene
@@ -29,11 +33,44 @@ static func load_model(car_id: String) -> Node3D:
 	if body == null or body.mesh == null or _wheel_pivots(model).is_empty():
 		model.free()
 		return null
-	_polish_materials(model)
 	var paint: Color = PlayerCarFactory.PRESETS[car_id]["paint"]
-	CarMaterialSpec.apply_to_vehicle(model, paint, paint.lightened(0.21))
+	if EXACT_MODELS.has(car_id):
+		_finish_source_materials(model, paint, car_id == "mclaren_senna")
+	else:
+		_polish_materials(model)
+		CarMaterialSpec.apply_to_vehicle(model, paint, paint.lightened(0.21))
 	model.name = "CuratedCar"
 	return model
+
+
+static func _finish_source_materials(model: Node3D, paint: Color, has_cabin: bool) -> void:
+	var body_paint := CarMaterialSpec.create_car_paint(paint, paint.lightened(0.12), 0.021, 0.41, 0.32, 0.60, 0.20)
+	var cache := {}
+	for node: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
+		for surface in node.mesh.get_surface_count():
+			var source := node.get_active_material(surface) as StandardMaterial3D
+			if source == null:
+				continue
+			if source.resource_name == "CarPaint":
+				node.set_surface_override_material(surface, body_paint)
+				continue
+			if not cache.has(source):
+				var material := source.duplicate() as StandardMaterial3D
+				material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+				var label := source.resource_name.to_lower()
+				if label.begins_with("cabinglass"):
+					material.albedo_color = Color(0.053, 0.077, 0.090, 0.58 if has_cabin else 1.0)
+					material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA if has_cabin else BaseMaterial3D.TRANSPARENCY_DISABLED
+					material.metallic = 0.12 if has_cabin else 0.29
+					material.roughness = 0.23
+				elif label == "carbon" or label == "a_carbon":
+					material.albedo_color *= Color(0.63, 0.67, 0.72)
+					material.metallic = minf(material.metallic, 0.23)
+					material.roughness = maxf(material.roughness, 0.44)
+				else:
+					material.roughness = maxf(material.roughness, 0.21)
+				cache[source] = material
+			node.set_surface_override_material(surface, cache[source])
 
 
 static func mount(car: Vehicle, car_id: String) -> bool:

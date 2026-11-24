@@ -88,7 +88,7 @@ func setup(car: RigidBody3D) -> void:
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	top_level = true
 	current = true
-	far = 1800.0
+	far = 4600.0
 	
 	target.get_global_transform_interpolated()
 	snap_to_vehicle()

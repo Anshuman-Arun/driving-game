@@ -297,8 +297,12 @@ func _local_collider_bounds(asset: String) -> AABB:
 func _placement_frame(item: Dictionary) -> Transform3D:
 	var p: Array = item["position"]
 	var yaw := deg_to_rad(float(item.get("yaw_deg", 0.0)))
-	var scale_m := float(item.get("scale", 1.0))
-	return Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scale_m), Vector3(float(p[0]), float(p[1]), float(p[2])))
+	var size := Vector3.ONE * float(item.get("scale", 1.0))
+	if item["asset"] == "guardrail":
+		# The authored bearing points along +Z at zero. The rail beam and collider run along +X.
+		yaw -= PI * 0.5
+		size.x *= 1.38
+	return Transform3D(Basis(Vector3.UP, yaw).scaled_local(size), Vector3(float(p[0]), float(p[1]), float(p[2])))
 
 func _model_bounds(desc: Dictionary) -> AABB:
 	var path := str(desc["path"])
@@ -326,17 +330,21 @@ func _add_collider(root: Node3D, item: Dictionary, asset: String) -> void:
 	var bounds := _local_collider_bounds(asset)
 	var body := StaticBody3D.new()
 	body.name = str(item["id"]) + "_Collision"
-	body.transform = _placement_frame(item)
+	var frame := _placement_frame(item)
+	var size := frame.basis.get_scale()
+	body.transform = Transform3D(frame.basis.orthonormalized(), frame.origin)
 	body.set_meta("roadside_barrier", asset in ["guardrail", "barrier"])
 	root.add_child(body)
 	var shape := CollisionShape3D.new()
 	var box_shape := BoxShape3D.new()
-	box_shape.size = bounds.size
+	box_shape.size = bounds.size * size
 	shape.shape = box_shape
-	shape.position = bounds.get_center()
+	shape.position = bounds.get_center() * size
 	body.add_child(shape)
 
 func _asset_path(relative: String) -> String:
+	if relative.begins_with("assets/premium_runtime/"):
+		return "res://" + relative
 	if relative.begins_with("assets/curated/"):
 		var suffix: String = relative.trim_prefix("assets/curated/")
 		var game_path: String = "res://assets/curated/" + suffix

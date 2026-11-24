@@ -94,6 +94,18 @@ The acquired source packs retain their catalogs and SHA-256 ledgers under `asset
 
 Source authors and package hashes are recorded in the individual ledgers. The two opacity maps have a [separate acquisition record](../assets/premium_world/alpha_fix/README.md).
 
+## Scenic driving and exact supercar assets
+
+| Runtime resource | Attribution | Changes |
+|---|---|---|
+| `assets/premium_runtime/aventador_svj.glb` | [Lamborghini Aventador](https://sketchfab.com/3d-models/lamborghini-aventador-2263b49846d840618046538012720c59) by [BlackCube](https://sketchfab.com/blackcube4), [CC Attribution 4.0](https://creativecommons.org/licenses/by/4.0/). User-supplied archive SHA-256 `d8604344c48157f46735d6b68ceb0304ae4d72c28be1d102ed44e776f26acb6d`. | Evaluated original Blender modifiers, kept exterior shapes and UVs, split the four source wheel assemblies, grouped light emitters, optimized geometry, and tuned materials in Godot. |
+| `assets/premium_runtime/mclaren_senna.glb` | [McLaren Senna Free](https://sketchfab.com/3d-models/mclaren-senna-free-ea3e43a6eb004853a87fe9c58422eb96) by [Black Snow](https://sketchfab.com/BlackSnow02), [CC Attribution 4.0](https://creativecommons.org/licenses/by/4.0/). User-supplied GLB SHA-256 `ffd124e440fad20faa83b633d27225c8138f9ae6b58cb1ee9846549eb6e1333d`. | Reoriented original meshes, removed the overlapping alternative driver seat, retained the regular cockpit, split wheel and brake meshes, grouped emitters, and optimized geometry. |
+| `assets/premium_runtime/town_lamp.glb` | [Street Lamp 01](https://polyhaven.com/a/street_lamp_01), Poly Haven CC0. | Converted the pack's 1K scan and simplified its meshes. |
+| `assets/premium_runtime/eastwater_pier.glb` | [Modular Wooden Pier](https://polyhaven.com/a/modular_wooden_pier), Poly Haven CC0. | Converted and simplified the 1K model, then fit it to the lake parcel. |
+| `assets/premium_runtime/alder_fuel_station.glb` | [Abandoned Fuel Station](https://tevy.dev/models/abandoned-fuel-station), tevy CC0. | Decoded the published lower LOD and placed it in Alder Town. |
+
+The garage thumbnails are live Forward+ captures of the respective rigged derivatives. Original source archives are retained by the owner.
+
 ## Recorded Vehicle and Environment Audio Assets
 
 Updated: 2026-11-23. Machine-readable catalog and hash ledger: `assets/audio/recorded/payload/LICENSES_AND_HASHES.json` and `assets/audio/recorded/catalog.json`.

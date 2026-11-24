@@ -27,7 +27,7 @@ uniform float clearcoat_roughness : hint_range(0.0, 1.0, 0.01) = 0.04;
 group_uniforms Textures;
 uniform sampler2D albedo_texture : hint_default_white, filter_linear_mipmap_anisotropic;
 uniform sampler2D normal_texture : hint_normal, filter_linear_mipmap_anisotropic;
-uniform float normal_scale : hint_range(0.0, 2.0, 0.01) = 1.0;
+uniform float normal_scale : hint_range(0.0, 2.0, 0.01) = 0.0;
 
 varying vec3 v_local_pos;
 varying vec3 v_world_normal;
@@ -43,8 +43,7 @@ void fragment() {
 
 	// Normal mapping (if assigned)
 	if (normal_scale > 0.001) {
-		vec3 n_map = texture(normal_texture, UV).rgb * 2.0 - 1.0;
-		NORMAL_MAP = n_map;
+		NORMAL_MAP = texture(normal_texture, UV).rgb;
 		NORMAL_MAP_DEPTH = normal_scale;
 	}
 

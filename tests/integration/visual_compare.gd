@@ -49,7 +49,12 @@ func run() -> void:
 		shell._inspect("solace_gt")
 		await frames(38)
 		await photo("garage-solace")
-		shell._inspect("vela_gt")
+	for id in ["aventador_svj", "mclaren_senna"]:
+		if PlayerCarFactory.PRESETS.has(id):
+			shell._inspect(id)
+			await frames(38)
+			await photo("garage-" + id)
+	shell._inspect("vela_gt")
 	shell.enter_free_roam()
 	var drive = shell.drive
 	for i in 500:
@@ -79,7 +84,22 @@ func run() -> void:
 			if quality == "medium":
 				await photo(shot[0])
 				Input.action_press("drive_throttle", 0.48)
-			await measure(quality + "-" + shot[0], 52)
+			await measure(quality + "-" + shot[0], 120)
+			Input.action_release("drive_throttle")
+	shell._save_option("graphics_quality", "medium")
+	var regions := [VIEWS[2], VIEWS[4]]
+	for i in regions.size():
+		var id: String = ["aventador_svj", "mclaren_senna"][i]
+		if not PlayerCarFactory.PRESETS.has(id):
+			continue
+		var site: Array = regions[i]
+		var pose = drive.find_road_pose(site[1], site[2])
+		if pose != null:
+			drive._spawn_vehicle(id, pose)
+			await frames(42)
+			await photo("road-" + id)
+			Input.action_press("drive_throttle", 0.66)
+			await measure("medium-" + id, 120)
 			Input.action_release("drive_throttle")
 	quit()
 

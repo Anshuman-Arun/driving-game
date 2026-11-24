@@ -71,7 +71,7 @@ void fragment() {
 	ALBEDO = col * 0.88;
 	ROUGHNESS = clamp(rough, 0.66, 0.96);
 	METALLIC = 0.0;
-	SPECULAR = 0.26;
+	SPECULAR = 0.20;
 	AO = mix(1.0, base_ao, 0.55);
 	NORMAL_MAP = tex_n;
 	NORMAL_MAP_DEPTH = normal_depth * dist_n;

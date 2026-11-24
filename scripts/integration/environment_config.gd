@@ -12,12 +12,12 @@ const FORZA_ENV_PATH := "res://assets/forza_env/materials/forza_environment.tres
 
 # Directional Sunlight Calibration
 # Raking sun angle (~28-35 deg elevation, side-lit across road)
-const SUN_ROTATION := Vector3(-0.52, -1.45, 0.0)
-const SUN_COLOR := Color(1.0, 0.960784, 0.894118, 1.0) # #FFF5E4 warm afternoon sunlight
-const SUN_ENERGY := 2.15
-const SUN_ANGULAR_DISTANCE := 0.29
-const SUN_SHADOW_BIAS := 0.04
-const SUN_SHADOW_NORMAL_BIAS := 0.85
+const SUN_ROTATION := Vector3(-0.66, -1.96, 0.0)
+const SUN_COLOR := Color(1.0, 0.94, 0.82, 1.0)
+const SUN_ENERGY := 1.92
+const SUN_ANGULAR_DISTANCE := 0.62
+const SUN_SHADOW_BIAS := 0.027
+const SUN_SHADOW_NORMAL_BIAS := 0.64
 const SUN_SHADOW_BLUR := 1.25
 const SUN_SHADOW_SPLIT_1 := 0.08
 const SUN_SHADOW_SPLIT_2 := 0.22
@@ -159,7 +159,7 @@ static func configure_sun(sun: DirectionalLight3D, quality: String = QUALITY_ULT
 	sun.light_color = SUN_COLOR
 	sun.light_energy = SUN_ENERGY
 	sun.light_indirect_energy = 1.0
-	sun.light_specular = 1.0
+	sun.light_specular = 0.78
 	sun.light_angular_distance = SUN_ANGULAR_DISTANCE
 
 	sun.shadow_enabled = true
@@ -234,10 +234,18 @@ static func build_environment(quality: String = QUALITY_ULTRA) -> Environment:
 static func configure_environment(env: Environment, quality: String = QUALITY_ULTRA) -> void:
 	if env == null:
 		return
-	env.tonemap_exposure = 0.98
-	env.fog_aerial_perspective = 0.72
-	env.fog_density = 0.00039
-	env.adjustment_saturation = 1.055
+	env.tonemap_exposure = 0.96
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.61, 0.72, 0.90)
+	env.ambient_light_energy = 0.62
+	env.ambient_light_sky_contribution = 0.68
+	env.fog_aerial_perspective = 0.44
+	env.fog_light_color = Color(0.58, 0.72, 0.86)
+	env.fog_sun_scatter = 0.12
+	env.fog_density = 0.00029
+	env.fog_height_density = 0.0
+	env.adjustment_contrast = 1.09
+	env.adjustment_saturation = 1.12
 
 	var q := quality.to_lower()
 	match q:

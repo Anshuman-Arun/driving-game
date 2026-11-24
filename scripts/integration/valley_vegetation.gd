@@ -155,9 +155,11 @@ func _make_batch(offsets: Array, kind: int) -> MultiMeshInstance3D:
 		var seed := _placements[at + 6]
 		var scale := _placements[at + 4]
 		mesh.set_instance_transform(index, _instance_frame(base - center, _placements[at + 3], scale, seed))
-		var tint := Color(0.83, 0.86, 0.79).lerp(Color(1.18, 1.07, 0.86), seed)
-		if kind == 1 and seed > 0.41:
-			tint = Color(1.25, 0.79, 0.45).lerp(Color(1.62, 0.57, 0.31), seed)
+		var tint := Color(0.80, 0.95, 0.81).lerp(Color(1.10, 1.06, 0.83), seed)
+		if kind == 0:
+			tint = Color(0.64, 0.87, 0.76).lerp(Color(0.99, 1.08, 0.80), seed)
+		elif kind == 1 and seed > 0.44:
+			tint = Color(1.36, 0.88, 0.38).lerp(Color(1.80, 0.51, 0.24), seed)
 		mesh.set_instance_color(index, tint)
 	var draw := MultiMeshInstance3D.new()
 	draw.multimesh = mesh

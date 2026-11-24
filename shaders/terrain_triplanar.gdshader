@@ -234,8 +234,13 @@ void fragment() {
 	float forest_w = max(cedar * 0.86, smoothstep(66.0, 134.0, h + (macro_noise - 0.5) * 20.0) * 0.68);
 
 	vec3 col_grass = sample_stochastic_albedo(grass_albedo, xz, grass_scale, dist_blend) * grass_tint;
+	// Windward shaded meadow and sun-dried hay banks have distinct mid-scale tones.
+	float pasture = 1.0 - smoothstep(90.0, 520.0, distance(xz, vec2(115.0, 240.0)));
+	float meadow_break = smoothstep(0.26, 0.73, 0.63 * detail_noise + 0.37 * macro_noise);
+	float dry_bank = meadow_break * max(pasture * 0.86, smoothstep(118.0, 185.0, h));
+	col_grass *= mix(vec3(0.83, 1.025, 0.79), vec3(1.26, 1.07, 0.70), dry_bank);
 	vec3 col_dirt = sample_stochastic_albedo(dirt_albedo, xz, dirt_scale, dist_blend) * dirt_tint;
-	col_dirt *= mix(vec3(1.0), vec3(0.86, 0.99, 0.81), cedar);
+	col_dirt *= mix(vec3(1.0), vec3(0.77, 0.90, 0.78), cedar);
 	vec3 flat_col = mix(col_grass, col_dirt, forest_w * 0.65);
 
 	float rgh_grass = sample_stochastic_mono(grass_roughness, xz, grass_scale, dist_blend);
@@ -268,7 +273,8 @@ void fragment() {
 
 	if (rock_weight > 0.008) {
 		vec3 rock_col = sample_triplanar_albedo(rock_albedo, world_pos, tri_weights, rock_scale, dist_blend) * rock_tint;
-		rock_col *= 1.0 + rock_strata_strength * sin(h * rock_strata_freq + macro_noise * 4.0);
+		float mineral_band = sin(h * rock_strata_freq + xz.x * 0.019 + macro_noise * 5.0);
+		rock_col *= 1.0 + rock_strata_strength * mineral_band;
 		float rock_rgh = 0.85;
 		float rock_ao_val = 1.0;
 		if (use_rock_arm) {

@@ -13,6 +13,18 @@
  },
  "placements": [
   {
+   "id": "alder_town_fuel_station",
+   "asset": "fuel_station",
+   "position": [-542, 42.623, 523],
+   "yaw_deg": 178,
+   "scale": 0.88,
+   "terrain_offset_m": 0,
+   "slope_deg": 3.5,
+   "road_clearance_m": 24.6,
+   "district": "alder_junction",
+   "tag": "landmark"
+  },
+  {
    "id": "alder_town_0001",
    "asset": "garage",
    "position": [

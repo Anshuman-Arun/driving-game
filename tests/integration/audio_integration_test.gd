@@ -7,6 +7,9 @@ extends SceneTree
 ## 5. Camera mix controller binds and transitions cleanly.
 
 func _initialize() -> void:
+	_run.call_deferred()
+
+func _run() -> void:
 	print("\n==================================================")
 	print("  Running Aster Valley Audio Root Integration Test")
 	print("==================================================\n")

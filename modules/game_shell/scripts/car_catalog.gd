@@ -1,12 +1,14 @@
 extends RefCounted
-## Fictional car identities and mock-only presentation statistics.
+## Garage identities and presentation statistics.
 ## Production handling parameters stay with the vehicle physics module.
 
 const CARS := [
 	{"id":"vela_gt", "name":"VELA GT", "class":"GRAND TOURER", "tagline":"Balanced rear-drive precision", "power_hp":315, "mass_kg":1430, "top_kph":245, "handling":78, "braking":76, "accent":"#f2ae65", "unlock":"STARTER"},
 	{"id":"orion_rs", "name":"ORION RS", "class":"LIGHTWEIGHT SPORT", "tagline":"Built for the switchbacks", "power_hp":278, "mass_kg":1190, "top_kph":228, "handling":93, "braking":87, "accent":"#72d5c1", "unlock":"COMPLETE 1 EVENT"},
 	{"id":"kestrel_xr", "name":"KESTREL XR", "class":"TRACK-FOCUSED COUPE", "tagline":"Power with a sharp edge", "power_hp":462, "mass_kg":1540, "top_kph":285, "handling":84, "braking":90, "accent":"#a7abf5", "unlock":"COMPLETE 3 DISTINCT EVENTS"},
-	{"id":"solace_gt", "name":"SOLACE GT", "class":"ALL-WHEEL DRIVE TOURER", "tagline":"Long-distance composure", "power_hp":390, "mass_kg":1620, "top_kph":252, "handling":80, "braking":82, "accent":"#a5dcd8", "unlock":"FREE ROAM"}
+	{"id":"solace_gt", "name":"SOLACE GT", "class":"ALL-WHEEL DRIVE TOURER", "tagline":"Long-distance composure", "power_hp":390, "mass_kg":1620, "top_kph":252, "handling":80, "braking":82, "accent":"#a5dcd8", "unlock":"FREE ROAM"},
+	{"id":"aventador_svj", "name":"AVENTADOR SVJ", "class":"LAMBORGHINI", "tagline":"Naturally aspirated V12 · All-wheel drive", "power_hp":759, "mass_kg":1670, "top_kph":350, "handling":89, "braking":92, "accent":"#f5b657", "unlock":"FREE ROAM"},
+	{"id":"mclaren_senna", "name":"McLAREN SENNA", "class":"McLAREN", "tagline":"Twin-turbo V8 · Rear-wheel drive", "power_hp":789, "mass_kg":1380, "top_kph":335, "handling":97, "braking":98, "accent":"#78c2f0", "unlock":"FREE ROAM"},
 ]
 
 ## Mock durations are deliberately short for demonstration, NOT real course records.

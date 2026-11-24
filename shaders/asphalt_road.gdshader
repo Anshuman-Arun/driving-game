@@ -196,7 +196,7 @@ void fragment() {
 
 	// Paint markings: satin finish
 	float any_paint = clamp(center_paint + edge_paint, 0.0, 1.0);
-	rough = mix(rough, 0.46, any_paint * 0.65);
+	rough = mix(rough, 0.70, any_paint * 0.65);
 
 	// Verge edge: coarse aggregate dirt / gravel
 	rough = mix(rough, 0.86, verge_blend * 0.75);
@@ -212,7 +212,7 @@ void fragment() {
 	ALBEDO = col;
 	ROUGHNESS = rough;
 	METALLIC = 0.0;
-	SPECULAR = mix(0.30, 0.39, wheel_wear * 0.65 + any_paint * 0.35);
+	SPECULAR = mix(0.18, 0.27, wheel_wear * 0.65 + any_paint * 0.35);
 	AO = mix(1.0, base_ao, 0.58);
 	NORMAL_MAP = tex_normal;
 	NORMAL_MAP_DEPTH = mix(normal_depth, normal_depth * 0.55, any_paint * 0.4 + verge_blend * 0.5) * dist_normal_atten;

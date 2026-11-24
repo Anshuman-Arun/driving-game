@@ -54,11 +54,21 @@ func _add_game(profile: String) -> Node:
 	return instance
 
 func _select_next(shell: Shell, car_id: String) -> void:
-	await _key(KEY_DOWN)
+	var focus := root.gui_get_focus_owner()
+	var roster := focus.get_parent() as GridContainer if focus != null else null
+	if car_id == "kestrel_xr" and roster != null and roster.columns == 2:
+		await _key(KEY_DOWN)
+		await _key(KEY_LEFT)
+	else:
+		await _key(KEY_RIGHT)
 	await _key(KEY_ENTER)
 	_check(shell.inspected_car == car_id, "garage focuses " + car_id)
-	await _key(KEY_RIGHT)
 	var button := root.gui_get_focus_owner() as Button
+	for i in 3:
+		if button != null and button.text == "SELECT VEHICLE":
+			break
+		await _key(KEY_RIGHT)
+		button = root.gui_get_focus_owner() as Button
 	_check(button != null and button.text == "SELECT VEHICLE", "keyboard can reach Select Vehicle")
 	await _key(KEY_ENTER)
 	_check(shell.save.selected_car() == car_id, "garage saves " + car_id)
@@ -186,6 +196,32 @@ func _run() -> void:
 	var reopened := Save.new(profile)
 	reopened.load()
 	_check(reopened.selected_car() == "kestrel_xr", "physical car selection persists to disk")
+	for id in ["aventador_svj", "mclaren_senna"]:
+		await _tap("drive_reset")
+		await _ticks(60)
+		shell.open_garage()
+		_check(shell.screen == "GARAGE", "garage reopens for " + id)
+		shell._inspect(id)
+		_assert_preview(shell, id)
+		shell._choose_car()
+		await _ticks(8)
+		_assert_car(drive, id)
+		shell._go_back()
+		await _ticks(50)
+		_check(drive.vehicle_body.wheel_array.all(func(wheel: Wheel) -> bool: return wheel.is_colliding()),
+			id + " settles onto four wheels")
+		Input.action_press("drive_throttle", 0.76)
+		await _ticks(170)
+		Input.action_release("drive_throttle")
+		_check(drive.adapter.get_speed_mps() > 3.0, id + " accelerates on the live chassis")
+		Input.action_press("drive_left", 0.55)
+		await _ticks(20)
+		Input.action_release("drive_left")
+		var wheel := drive.vehicle_body.front_left_wheel
+		_check(absf(wheel.rotation.y) > 0.01 and absf(wheel.wheel_node.rotation.x) > 0.01,
+			id + " steers and rolls its original wheel geometry")
+		reopened.load()
+		_check(reopened.selected_car() == id, id + " survives a save reload")
 	print("GARAGE PROFILE ", profile)
 	instance.queue_free()
 	await _frames()
@@ -200,7 +236,7 @@ func _assert_scenery(drive: Drive) -> void:
 		var rejected := 0
 		for count: int in drive.scenery.report.get("rejected_for_clearance", {}).values():
 			rejected += count
-		_check(drive.scenery.report.get("regions", 0) == 5 and placements + displaced + rejected == 2791
+		_check(drive.scenery.report.get("regions", 0) == 5 and placements + displaced + rejected == 2792
 			and drive.scenery.report.get("height_mismatches", -1) == 0
 			and drive.scenery.report.get("selective_colliders", -1) > 0, "five authored scenery packs built with selective colliders")
 	else:
