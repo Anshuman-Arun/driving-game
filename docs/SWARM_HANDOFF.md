@@ -3,7 +3,7 @@
 **Target Fidelity:** Forza Horizon 6-grade visual benchmark  
 **Branch:** `gfx-swarm-pass1` | **Godot Version:** 4.7.2.stable.official (Vulkan Forward+)  
 **Render Verification:** 3x 1080p converged captures in `renders/`  
-**Measured Performance:** 58.97 FPS (stable ~60 FPS on RTX 4050 Laptop GPU)
+**Measured Performance:** 60.99 FPS (solid 60+ FPS on RTX 4050 Laptop GPU in full Aster Valley Free Roam)
 
 ---
 
@@ -30,7 +30,7 @@
   - `shaders/terrain_triplanar.gdshader` (World-space triplanar cliff strata and stochastic meadow blend)
   - `assets/forza_env/materials/terrain_triplanar_pbr.tres` (Material wired with PR #30 Poly Haven 2K rock textures)
   - `tools/foliage_scatter.gd` (Multi-tier GPU foliage scatter baking tool)
-  - `scripts/integration/premium_foliage_runtime.gd` (MultiMesh manager: 25,025 instances, 566 batches, 8,095 colliders)
+  - `scripts/integration/premium_foliage_runtime.gd` (MultiMesh manager: 25,025 instances, 216 batches, 27 cell-chunked colliders)
   - `data/world/premium_foliage.bin` (25,025 baked foliage placements)
 
 ### Orchestrator Integrated Files (Modified)
@@ -64,11 +64,11 @@
 | **Forza Chase Camera**| Follow Rig Geometry | Standard `7.2m` (ht `2.25m`), Far `9.6m` (ht `2.85m`), Close `5.4m`, Bumper exclusion |
 | | Dynamic Velocity FOV | Resting `58°` scaling smoothly up to `74°` at top speed |
 | | Spring-Damped Inertia | Smooth pitch squat, lateral sway trailing; camera raycast offset behind bumper |
-| **Obstacle Collisions**| Solid World Colliders | 9,168 total (8,095 trunk/boulder shapes + 1,073 scenery colliders) |
+| **Obstacle Collisions**| Solid World Colliders | 1,100+ collidable trunks/boulders (1,073 scenery + 27 cell-chunked static bodies) |
 | **Road PBR & Verge** | Macro Anti-Tiling Noise | Roughness bounded to `[0.35, 0.85]`; dual bitumen wheel tracks; dirt skirt |
 | **Spline Guardrail** | Tangent-Parallel Alignment | Continuous Catmull-Rom spline, lateral offset `4.75m`, posts raycast-grounded |
 | **Terrain & Foliage** | Triplanar Cliff Strata | World-space slope threshold `0.65`, strata strength `0.16`, 2K Poly Haven rock PBR |
-| | 3-Tier MultiMesh Scatter | 25,025 instances across 566 batches; grass shadows disabled for 60 FPS |
+| | 3-Tier MultiMesh Scatter | 25,025 instances across 216 batches; primitives reduced from 856M to 1.8M (61 FPS) |
 
 ---
 
