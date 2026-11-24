@@ -1,5 +1,12 @@
 # Project status — single current-state log
 
+## Recorded audio mix correction (`fix/recorded-audio-mix`, 2026-11-24)
+
+Follow-up to PR #33 (`audio-swarm-pass1`), not a replacement of the asset bank. Recorded engine and chassis own their respective shift, lift-off, impact and suspension events; the old synthetic event pool no longer doubles them. The low-RPM engine mix uses the lowest ON recording at restrained gain when no suitable OFF recording exists, transitioning smoothly into the coast bank near its first anchor. Limiter cuts require applied throttle. Ambient wind now routes through SFX in both the saved and generated layouts. Legacy regressions explicitly select synthetic mode; additional checks cover Kestrel idle/coast blending and recorded event ownership. No new external assets or dependencies.
+
+Godot and the private repository's local checkout are not available in the editing session. Changes and regression assertions are committed, but Godot import, runtime suites, captured waveform quality, and manual audition have not been re-run. The previous audio-swarm QA report is historical evidence for its original commit, not verification of this branch. Existing banks remain audition candidates; Orion remains a temporary pitched recording fallback. Next: run the audio integration and engine/mix/chassis/legacy suites listed in `docs/AUDIO_HANDOFF.md`, then listen to all three cars during idle, acceleration, shifts, lift-off and gravel driving before accepting the PR.
+
+
 Last updated: 2026-11-23
 
 ## Recorded vehicle and environment audio overhaul (`audio-swarm-pass1`)
