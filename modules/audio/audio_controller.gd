@@ -12,6 +12,8 @@ const BusBuilderScript := preload("res://modules/audio/recorded_runtime/mix/bus_
 const AsterAudioTelemetryScript := preload("res://modules/audio/telemetry_bridge.gd")
 
 const PROFILES := {
+	"aventador_svj": {"prefix": "vela", "idle": 900.0, "redline": 8700.0, "gain": 0.90},
+	"mclaren_senna": {"prefix": "kestrel", "idle": 980.0, "redline": 8000.0, "gain": 0.90},
 	"vela_gt": {"prefix": "vela", "idle": 950.0, "redline": 7100.0, "gain": 0.84},
 	"orion_rs": {"prefix": "orion", "idle": 1000.0, "redline": 8500.0, "gain": 0.78},
 	"kestrel_xr": {"prefix": "kestrel", "idle": 800.0, "redline": 6900.0, "gain": 0.94},
@@ -69,18 +71,11 @@ var _suspension_cooldown := 0.0
 var _previous_springs: Dictionary = {}
 
 
-func _init() -> void:
-	if use_recorded_runtime:
-		_setup_recorded_runtime()
-
-
 func _ready() -> void:
-	# Always populate legacy players to maintain regression test interface compatibility
-	_setup_legacy_players()
-
 	if use_recorded_runtime:
 		_setup_recorded_runtime()
 	else:
+		_setup_legacy_players()
 		set_profile(car_profile)
 
 
@@ -95,18 +90,12 @@ func _setup_recorded_runtime() -> void:
 		recorded_engine.set("car_profile", car_profile)
 		recorded_engine.process_mode = Node.PROCESS_MODE_INHERIT
 		add_child(recorded_engine)
-		if recorded_engine.has_method("setup"):
-			recorded_engine.call("setup", car_profile)
-		if recorded_engine.has_method("snap_to_idle"):
-			recorded_engine.call("snap_to_idle")
 
 	if recorded_tires == null:
 		recorded_tires = RecordedTireScript.new()
 		recorded_tires.name = "RecordedTires"
 		recorded_tires.process_mode = Node.PROCESS_MODE_INHERIT
 		add_child(recorded_tires)
-		if is_instance_valid(_bound_vehicle) and recorded_tires.has_method("bind_vehicle"):
-			recorded_tires.call("bind_vehicle", _bound_vehicle)
 
 	if recorded_chassis == null:
 		recorded_chassis = ChassisControllerScript.new()
@@ -212,8 +201,6 @@ func bind_gevp_vehicle(vehicle: Node3D) -> void:
 	_reset_transition_state()
 
 	if use_recorded_runtime:
-		if is_instance_valid(recorded_tires) and recorded_tires.has_method("bind_vehicle"):
-			recorded_tires.call("bind_vehicle", _bound_vehicle)
 		if is_instance_valid(recorded_chassis) and recorded_chassis.has_method("bind_vehicle"):
 			recorded_chassis.call("bind_vehicle", _bound_vehicle)
 		if is_instance_valid(camera_mix) and camera_mix.has_method("bind_vehicle"):
@@ -222,7 +209,7 @@ func bind_gevp_vehicle(vehicle: Node3D) -> void:
 	if not _tracking_vehicle:
 		_reset_telemetry()
 		return
-	if _bound_vehicle is RigidBody3D:
+	if not use_recorded_runtime and _bound_vehicle is RigidBody3D:
 		var body := _bound_vehicle as RigidBody3D
 		if not body.body_entered.is_connected(_on_body_entered):
 			body.body_entered.connect(_on_body_entered)
@@ -260,20 +247,14 @@ func _reset_telemetry() -> void:
 
 func update_telemetry(telemetry: Dictionary) -> void:
 	var gear := int(telemetry.get("gear", 1))
-	if _last_gear > 0 and gear > 0 and gear != _last_gear:
-		if use_recorded_runtime and is_instance_valid(recorded_engine):
-			if recorded_engine.has_method("trigger_gear_shift"):
-				recorded_engine.call("trigger_gear_shift", _last_gear, gear)
+	if not use_recorded_runtime and _last_gear > 0 and gear > 0 and gear != _last_gear:
 		if _play_event("gearshift", 0.55):
 			_shift_timer = 0.23
 	_last_gear = gear
 
 	var throttle := clampf(float(telemetry.get("throttle", 0.0)), 0.0, 1.0)
-	if _last_throttle > 0.48 and throttle < 0.16 and float(telemetry.get("rpm", 0.0)) > 2500.0:
+	if not use_recorded_runtime and _last_throttle > 0.48 and throttle < 0.16 and float(telemetry.get("rpm", 0.0)) > 2500.0:
 		_overrun_timer = 0.75
-		if use_recorded_runtime and is_instance_valid(recorded_engine):
-			if recorded_engine.has_method("trigger_overrun_backfire"):
-				recorded_engine.call("trigger_overrun_backfire")
 	_last_throttle = throttle
 
 	_telemetry.clear()
@@ -284,7 +265,7 @@ func update_telemetry(telemetry: Dictionary) -> void:
 		if is_instance_valid(recorded_engine) and recorded_engine.has_method("update_telemetry"):
 			recorded_engine.call("update_telemetry", telemetry)
 		if is_instance_valid(recorded_tires) and recorded_tires.has_method("update_telemetry"):
-			recorded_tires.call("update_telemetry", telemetry)
+			recorded_tires.call("queue_telemetry", telemetry)
 		if is_instance_valid(recorded_chassis) and recorded_chassis.has_method("update_telemetry"):
 			recorded_chassis.call("update_telemetry", telemetry)
 
@@ -292,14 +273,12 @@ func update_telemetry(telemetry: Dictionary) -> void:
 func trigger_impact(strength: float = 1.0) -> void:
 	if use_recorded_runtime and is_instance_valid(recorded_chassis):
 		if recorded_chassis.has_method("trigger_impact"):
-			recorded_chassis.call("trigger_impact", strength)
+			recorded_chassis.call("trigger_impact", 20.0 * clampf(strength, 0.0, 1.0), strength)
+		return
 	_play_event("collision", clampf(strength, 0.0, 1.0))
 
 
 func trigger_collision(strength: float = 1.0) -> void:
-	if use_recorded_runtime and is_instance_valid(recorded_chassis):
-		if recorded_chassis.has_method("trigger_collision"):
-			recorded_chassis.call("trigger_collision", strength * 20.0)
 	trigger_impact(strength)
 
 
@@ -307,6 +286,7 @@ func trigger_suspension(strength: float = 1.0) -> void:
 	if use_recorded_runtime and is_instance_valid(recorded_chassis):
 		if recorded_chassis.has_method("trigger_suspension"):
 			recorded_chassis.call("trigger_suspension", strength)
+		return
 	_play_event("suspension", clampf(strength, 0.0, 1.0))
 
 
@@ -314,6 +294,7 @@ func trigger_gear_shift(from_gear: int = 1, to_gear: int = 2) -> void:
 	if use_recorded_runtime and is_instance_valid(recorded_engine):
 		if recorded_engine.has_method("trigger_gear_shift"):
 			recorded_engine.call("trigger_gear_shift", from_gear, to_gear)
+		return
 	_play_event("gearshift", 0.55)
 
 
@@ -335,10 +316,21 @@ func _physics_process(_delta: float) -> void:
 		_reset_telemetry()
 		return
 	update_telemetry(AsterAudioTelemetryScript.from_gevp(_bound_vehicle))
-	_monitor_suspension()
+	# Recorded chassis owns its own contact and spring events.
+	if not use_recorded_runtime:
+		_monitor_suspension()
 
 
 func _process(delta: float) -> void:
+	if use_recorded_runtime:
+		# Apply the existing per-car gain control to the actual recorded mix.
+		if is_instance_valid(recorded_engine):
+			recorded_engine.set("master_gain", master_gain)
+		if is_instance_valid(recorded_tires):
+			recorded_tires.set("master_tire_gain", master_gain)
+		if is_instance_valid(recorded_chassis):
+			recorded_chassis.call("set_mix_gains", master_gain, master_gain * ambient_gain)
+		return
 	var step := maxf(delta, 0.0)
 	_clock += step
 	_shift_timer = maxf(0.0, _shift_timer - step)
@@ -453,6 +445,7 @@ func _apply_volume(player: AudioStreamPlayer, gain: float, limiter: float) -> vo
 func _make_player(label: String) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
 	player.name = label.replace(" ", "_")
+	player.bus = &"SFX" if AudioServer.get_bus_index(&"SFX") >= 0 else &"Master"
 	player.volume_db = -80.0
 	add_child(player)
 	return player
@@ -477,8 +470,7 @@ func _set_loop(player: AudioStreamPlayer, name: String) -> void:
 	var sample_frames := int(round(wav.get_length() * float(wav.mix_rate)))
 	wav.loop_end = maxi(1, sample_frames - 1)
 	player.stream = wav
-	if not use_recorded_runtime:
-		player.play()
+	player.play()
 
 
 func _play_event(name: String, strength: float) -> bool:

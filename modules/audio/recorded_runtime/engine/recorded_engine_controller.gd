@@ -11,6 +11,24 @@ const EngineProfileManifestScript := preload("engine_profile_manifest.gd")
 
 # Profile defaults
 const PROFILE_CONFIGS := {
+	# Dedicated hero-car voicings. Banks are explicitly provisional until a
+	# source-cleared V12 / twin-turbo V8 recording set is available.
+	"aventador_svj": {
+		"label": "Aventador SVJ (provisional recorded proxy)",
+		"fallback_bank": "vela_gt", "idle_rpm": 900.0, "redline_rpm": 8700.0,
+		"gain": 0.98, "intake_ratio": 0.48, "rpm_ms": 35.0,
+		"throttle_ms": 60.0, "shift_ms": 125.0, "shift_depth": 0.22,
+		"shift_gain": 0.32, "overrun_gain": 0.37, "intake_lag_ms": 60.0,
+		"load_curve": 0.85
+	},
+	"mclaren_senna": {
+		"label": "McLaren Senna (provisional recorded V8 proxy)",
+		"fallback_bank": "kestrel_xr", "idle_rpm": 980.0, "redline_rpm": 8000.0,
+		"gain": 0.94, "intake_ratio": 0.62, "rpm_ms": 42.0,
+		"throttle_ms": 75.0, "shift_ms": 85.0, "shift_depth": 0.42,
+		"shift_gain": 0.20, "overrun_gain": 0.23, "intake_lag_ms": 165.0,
+		"load_curve": 1.12
+	},
 	"vela_gt": {
 		"label": "Vela GT (Flat-Six)",
 		"idle_rpm": 950.0,
@@ -46,8 +64,8 @@ const HALF_PI := PI * 0.5
 @export_range(40.0, 150.0, 1.0) var throttle_smoothing_ms: float = 80.0
 
 # Pitch scaling limits
-@export var min_pitch_clamp: float = 0.75
-@export var max_pitch_clamp: float = 1.35
+@export var min_pitch_clamp: float = 0.65
+@export var max_pitch_clamp: float = 1.55
 @export var sub_idle_min_pitch: float = 0.45
 
 # Rev limiter settings
@@ -68,6 +86,8 @@ var _manifest: RefCounted = null
 var _manifest_cache: Dictionary = {}
 var _exhaust_players: Dictionary = {} # filename -> AudioStreamPlayer
 var _intake_players: Dictionary = {} # filename -> AudioStreamPlayer
+var _reflection_players: Dictionary = {} # wet-only mirrors of active exhaust loops
+var _prepared_loops: Dictionary = {}
 var _shift_player: AudioStreamPlayer = null
 var _overrun_player: AudioStreamPlayer = null
 var _overrun_burst_players: Array[AudioStreamPlayer] = []
@@ -77,9 +97,12 @@ var _smoothed_rpm: float = 950.0
 var _target_throttle: float = 0.0
 var _smoothed_throttle: float = 0.0
 var _last_raw_throttle: float = 0.0
+var _intake_load: float = 0.0
+var _active_bank: String = ""
 
 var _current_gear: int = 1
-var _last_gear: int = 1
+var _last_gear: int = -999
+var _live_shift: bool = false
 var _idle_rpm: float = 950.0
 var _redline_rpm: float = 8500.0
 
@@ -113,26 +136,36 @@ func set_profile(profile_name: String) -> void:
 		push_warning("RecordedEngineController: Unknown car profile: " + profile_name + ", defaulting to vela_gt")
 		profile_name = "vela_gt"
 
+	if _manifest != null and car_profile == profile_name:
+		return
 	car_profile = profile_name
 	var cfg: Dictionary = PROFILE_CONFIGS[profile_name]
 	_idle_rpm = float(cfg["idle_rpm"])
 	_redline_rpm = float(cfg["redline_rpm"])
-	if _manifest != null and _manifest.profile_name == profile_name:
-		return
-
+	rpm_smoothing_ms = float(cfg.get("rpm_ms", 45.0))
+	throttle_smoothing_ms = float(cfg.get("throttle_ms", 80.0))
+	torque_cut_duration_ms = float(cfg.get("shift_ms", 110.0))
+	torque_cut_depth = float(cfg.get("shift_depth", 0.20))
+	# Prefer a real dedicated bank when installed. Existing proxies remain
+	# explicit, and their original manifests and attribution are unchanged.
+	var bank := profile_name
+	var manifest_path := "res://assets/audio/recorded/payload/engines/%s/manifest.json" % profile_name
+	if not FileAccess.file_exists(manifest_path):
+		bank = str(cfg.get("fallback_bank", profile_name))
 	var manifest: RefCounted = null
-	if _manifest_cache.has(profile_name):
-		manifest = _manifest_cache[profile_name]
+	if _manifest_cache.has(bank):
+		manifest = _manifest_cache[bank]
 	else:
-		manifest = EngineProfileManifestScript.load_for_profile(profile_name)
+		manifest = EngineProfileManifestScript.load_for_profile(bank)
 		if manifest != null:
-			_manifest_cache[profile_name] = manifest
+			_manifest_cache[bank] = manifest
 
 	if manifest == null:
 		push_error("RecordedEngineController: Failed to load manifest for " + profile_name)
 		return
 
 	_manifest = manifest
+	_active_bank = bank
 	_rebuild_loop_players()
 
 
@@ -141,7 +174,10 @@ func snap_to_idle() -> void:
 	_smoothed_rpm = _idle_rpm
 	_target_throttle = 0.0
 	_smoothed_throttle = 0.0
+	_intake_load = 0.0
 	_last_raw_throttle = 0.0
+	_last_gear = -999
+	_live_shift = false
 	_shift_timer = 0.0
 	_shift_envelope = 1.0
 	_is_on_limiter = false
@@ -149,12 +185,19 @@ func snap_to_idle() -> void:
 	_limiter_envelope = 1.0
 	_overrun_cooldown_timer = 0.0
 	_active_overrun_burst.clear()
+	# Reset all active one-shots, not just pending bursts. A previous car's
+	# exhaust crackle or gear clunk must never bleed into the next car's idle.
+	for voice in [_shift_player, _overrun_player]:
+		if is_instance_valid(voice):
+			voice.stop()
+	for voice in _overrun_burst_players:
+		voice.stop()
 	_apply_audio_blend()
 
 
 func update_telemetry(t: Dictionary) -> void:
 	var raw_rpm := float(t.get("rpm", _idle_rpm))
-	var raw_throttle := clampf(float(t.get("throttle", 0.0)), 0.0, 1.0)
+	var raw_throttle := clampf(float(t.get("engine_throttle", t.get("throttle", 0.0))), 0.0, 1.0)
 	var gear := int(t.get("gear", _current_gear))
 
 	if t.has("idle_rpm"):
@@ -167,9 +210,16 @@ func update_telemetry(t: Dictionary) -> void:
 	_target_rpm = maxf(100.0, raw_rpm)
 	_target_throttle = raw_throttle
 
-	# Check for gear shift
-	if _last_gear != -999 and gear != 0 and _last_gear != 0 and gear != _last_gear:
+	# GEVP cuts torque before current_gear changes. Start the audio cut at
+	# that actual shift edge, and do not play another clunk on completion.
+	var requested := int(t.get("requested_gear", gear))
+	var live_shift := bool(t.get("shift_active", false)) and gear > 0 and requested > 0
+	if live_shift and not _live_shift:
+		trigger_gear_shift(gear, requested)
+	elif not live_shift and not _live_shift and _last_gear > 0 and gear > 0 and gear != _last_gear:
+		# Fallback for external telemetry producers without shift state.
 		trigger_gear_shift(_last_gear, gear)
+	_live_shift = live_shift
 	_last_gear = gear
 	_current_gear = gear
 
@@ -185,7 +235,8 @@ func trigger_gear_shift(_from_gear: int = 1, _to_gear: int = 2) -> void:
 func trigger_overrun_backfire() -> void:
 	if _overrun_player != null and _overrun_player.stream != null:
 		var pitch := randf_range(0.92, 1.15)
-		var vol := randf_range(0.70, 1.0) * master_gain
+		var event_gain := float(PROFILE_CONFIGS[car_profile].get("overrun_gain", 0.40))
+		var vol := randf_range(0.8, 1.15) * event_gain * master_gain
 		_overrun_player.pitch_scale = pitch
 		_overrun_player.volume_db = linear_to_db(maxf(0.0001, vol))
 		if _overrun_player.is_inside_tree():
@@ -200,7 +251,7 @@ func trigger_overrun_backfire() -> void:
 		_active_overrun_burst.append({
 			"delay": cumulative_delay,
 			"pitch": randf_range(0.85, 1.30),
-			"gain": randf_range(0.40, 0.85)
+			"gain": randf_range(0.15, 0.35)
 		})
 
 
@@ -226,18 +277,27 @@ func _process(delta: float) -> void:
 
 	var throttle_alpha := 1.0 - exp(-dt / maxf(0.001, throttle_smoothing_ms * 0.001))
 	_smoothed_throttle = lerpf(_smoothed_throttle, _target_throttle, throttle_alpha)
+	var cfg: Dictionary = PROFILE_CONFIGS[car_profile]
+	var lag := float(cfg.get("intake_lag_ms", 80.0)) * 0.001
+	var intake_tau := lag if _target_throttle > _intake_load else 0.055
+	_intake_load = lerpf(_intake_load, _target_throttle, 1.0 - exp(-dt / maxf(0.001, intake_tau)))
 
 	# 2. Update gear shift torque-cut envelope
-	if _shift_timer > 0.0:
+	if _live_shift:
+		_shift_timer = 0.0
+		_shift_envelope = lerpf(_shift_envelope, torque_cut_depth, 1.0 - exp(-dt / 0.015))
+	elif _shift_timer > 0.0:
 		_shift_timer = maxf(0.0, _shift_timer - dt)
 		var dur := maxf(0.001, torque_cut_duration_ms * 0.001)
 		var progress := 1.0 - (_shift_timer / dur)
 		_shift_envelope = lerpf(torque_cut_depth, 1.0, smoothstep(0.10, 1.0, progress))
 	else:
-		_shift_envelope = 1.0
+		_shift_envelope = lerpf(_shift_envelope, 1.0, 1.0 - exp(-dt / 0.050))
+		if _shift_envelope > 0.999:
+			_shift_envelope = 1.0
 
 	# 3. Update rev limiter stutter envelope
-	if _smoothed_rpm >= _redline_rpm * 0.985:
+	if _smoothed_rpm >= _redline_rpm * 0.985 and _smoothed_throttle > 0.55 and not _live_shift:
 		_is_on_limiter = true
 		_limiter_phase = fmod(_limiter_phase + dt * limiter_frequency, 1.0)
 		var in_cut: bool = _limiter_phase < limiter_cut_ratio
@@ -296,17 +356,11 @@ func _apply_audio_blend() -> void:
 
 	var overall_gain := base_profile_gain * master_gain * _shift_envelope * _limiter_envelope
 
-	# Constant-power ON vs OFF load layer blend
-	var on_layer_gain: float
-	var off_layer_gain: float
-
-	if _manifest.has_off_layer:
-		on_layer_gain = sin(_smoothed_throttle * HALF_PI)
-		off_layer_gain = cos(_smoothed_throttle * HALF_PI)
-	else:
-		# Single layer fallback (e.g. Orion RS)
-		on_layer_gain = lerpf(0.40, 1.0, _smoothed_throttle)
-		off_layer_gain = 0.0
+	# Shared with the diagnostic helper so the tested curve is the live curve.
+	var shaped_load := pow(_smoothed_throttle, float(cfg.get("load_curve", 1.0)))
+	var load_gains := compute_load_gains(_smoothed_rpm, shaped_load, _manifest.off_anchors)
+	var on_layer_gain := load_gains.x
+	var off_layer_gain := load_gains.y
 
 	# Calculate per-layer active anchor gains and pitch scales
 	var on_data := _compute_layer_anchors("on", _smoothed_rpm)
@@ -325,13 +379,18 @@ func _apply_audio_blend() -> void:
 		var layer_weight: float = on_layer_gain if layer == "on" else off_layer_gain
 
 		var anchor_gain: float = float(anchor_data.get("gains", {}).get(fname, 0.0))
-		var anchor_pitch: float = float(anchor_data.get("pitches", {}).get(fname, 1.0))
+		var nominal_pitch := clampf(_smoothed_rpm / maxf(1.0, float(loop_entry["rpm"])), sub_idle_min_pitch, max_pitch_clamp)
+		var anchor_pitch: float = float(anchor_data.get("pitches", {}).get(fname, nominal_pitch))
+		# Inaudible loops still track the engine clock. This keeps the
+		# filtered intake copy and its exhaust counterpart in step.
+		player.pitch_scale = anchor_pitch
 
 		var final_gain := anchor_gain * layer_weight * file_gain * overall_gain
 		_set_anchor_voice(player, final_gain, anchor_pitch)
+		_update_reflection_voice(fname, player, final_gain, anchor_pitch)
 
 	# 2. Update Intake Players (induction roar on ON loops, scaled by throttle)
-	var intake_throttle_boost := pow(_smoothed_throttle, 1.2) * intake_ratio
+	var intake_throttle_boost := pow(_intake_load, 1.2) * intake_ratio
 	for anchor in _manifest.on_anchors:
 		var fname: String = str(anchor["file"])
 		if not _intake_players.has(fname):
@@ -340,74 +399,84 @@ func _apply_audio_blend() -> void:
 		var file_gain: float = float(anchor.get("gain", 1.0))
 
 		var anchor_gain: float = float(on_data.get("gains", {}).get(fname, 0.0))
-		var anchor_pitch: float = float(on_data.get("pitches", {}).get(fname, 1.0))
+		var nominal_pitch := clampf(_smoothed_rpm / maxf(1.0, float(anchor["rpm"])), sub_idle_min_pitch, max_pitch_clamp)
+		var anchor_pitch: float = float(on_data.get("pitches", {}).get(fname, nominal_pitch))
+		player.pitch_scale = anchor_pitch
 
-		var intake_gain := anchor_gain * intake_throttle_boost * file_gain * overall_gain
-		_set_anchor_voice(player, intake_gain, anchor_pitch)
+		# The current intake is derived from the same ON recording, not an
+		# independent microphone. Keep it subordinate to the exhaust layer.
+		var intake_gain := anchor_gain * intake_throttle_boost * on_layer_gain * file_gain * overall_gain
+		var direct: AudioStreamPlayer = _exhaust_players.get(fname)
+		var offset := direct.get_playback_position() if is_instance_valid(direct) and direct.playing else 0.0
+		_set_anchor_voice(player, intake_gain, anchor_pitch, offset)
 
-
-func _set_anchor_voice(player: AudioStreamPlayer, gain: float, pitch: float) -> void:
-	# Stop its decoder below -80 dB. The existing adjacent-anchor crossfade
-	# brings each loop in at an inaudible level before it carries the engine note.
+# Keep the scenic branch's active-loop optimization: never run every decoder.
+# Start the filtered intake copy at the direct exhaust playback position.
+func _set_anchor_voice(player: AudioStreamPlayer, gain: float, pitch: float, offset: float = 0.0) -> void:
+	player.pitch_scale = pitch
 	if gain <= 0.0001:
-		if player.volume_db > -80.0:
-			player.volume_db = -80.0
+		player.volume_db = -80.0
 		if player.playing:
 			player.stop()
 		return
 	player.volume_db = linear_to_db(gain)
-	player.pitch_scale = pitch
 	if player.is_inside_tree() and not player.playing:
-		player.play()
+		player.play(offset)
 
 
 func _compute_layer_anchors(layer: String, rpm: float) -> Dictionary:
-	var anchors: Array = _manifest.get_anchors_for_layer(layer)
-	if anchors.is_empty():
-		return {"gains": {}, "pitches": {}}
+	return compute_anchor_pair(_manifest.find_bracketing_anchors(layer, rpm), rpm,
+		min_pitch_clamp, max_pitch_clamp, sub_idle_min_pitch)
 
-	var gains: Dictionary = {}
-	var pitches: Dictionary = {}
 
-	var bracket: Dictionary = _manifest.find_bracketing_anchors(layer, rpm)
+# Crossfade only where both recordings can be pitched to the same nominal RPM.
+# Broad linear blends outside this overlap produce two different firing frequencies.
+static func compute_anchor_pair(bracket: Dictionary, rpm: float, min_pitch: float = 0.65,
+		max_pitch: float = 1.55, idle_pitch: float = 0.45) -> Dictionary:
+	var gains := {}
+	var pitches := {}
 	if bracket.is_empty():
 		return {"gains": gains, "pitches": pitches}
-
-	var low_anchor: Dictionary = bracket["low"]
-	var high_anchor: Dictionary = bracket["high"]
-	var is_single: bool = bool(bracket.get("is_single", false))
-	var t: float = float(bracket.get("t", 0.0))
-
-	var low_file: String = str(low_anchor["file"])
-	var high_file: String = str(high_anchor["file"])
-	var low_rpm: float = float(low_anchor["rpm"])
-	var high_rpm: float = float(high_anchor["rpm"])
-
-	var is_sub_idle := rpm < low_rpm
-
-	if is_single or low_file == high_file:
-		var target_file := high_file if t >= 1.0 else low_file
-		var target_rpm := high_rpm if t >= 1.0 else low_rpm
-		gains[target_file] = 1.0
-		pitches[target_file] = _calc_pitch(rpm, target_rpm, is_sub_idle)
+	var low: Dictionary = bracket["low"]
+	var high: Dictionary = bracket["high"]
+	var low_file := str(low["file"])
+	var high_file := str(high["file"])
+	var low_rpm := maxf(1.0, float(low["rpm"]))
+	var high_rpm := maxf(1.0, float(high["rpm"]))
+	if bool(bracket.get("is_single", false)) or low_file == high_file:
+		gains[low_file] = 1.0
+		pitches[low_file] = clampf(rpm / low_rpm, idle_pitch if rpm < low_rpm else min_pitch, max_pitch)
 	else:
-		# Constant-power cos/sin crossfade between adjacent anchors
-		gains[low_file] = cos(t * HALF_PI)
-		gains[high_file] = sin(t * HALF_PI)
-		pitches[low_file] = _calc_pitch(rpm, low_rpm, is_sub_idle)
-		pitches[high_file] = _calc_pitch(rpm, high_rpm, false)
-
+		var start := maxf(low_rpm, high_rpm * min_pitch)
+		var finish := minf(high_rpm, low_rpm * max_pitch)
+		var blend := smoothstep(start, finish, rpm) if finish > start else float(bracket.get("t", 0.0))
+		gains[low_file] = cos(blend * HALF_PI)
+		gains[high_file] = sin(blend * HALF_PI)
+		pitches[low_file] = clampf(rpm / low_rpm, min_pitch, max_pitch)
+		pitches[high_file] = clampf(rpm / high_rpm, min_pitch, max_pitch)
 	return {"gains": gains, "pitches": pitches}
 
 
-func _calc_pitch(current_rpm: float, anchor_rpm: float, is_sub_idle: bool) -> float:
-	var ratio := current_rpm / maxf(1.0, anchor_rpm)
-	if is_sub_idle:
-		return clampf(ratio, sub_idle_min_pitch, max_pitch_clamp)
-	return clampf(ratio, min_pitch_clamp, max_pitch_clamp)
+func _update_reflection_voice(fname: String, direct: AudioStreamPlayer, gain: float, pitch: float) -> void:
+	if not _reflection_players.has(fname):
+		return
+	var mirror: AudioStreamPlayer = _reflection_players[fname]
+	mirror.pitch_scale = pitch
+	mirror.volume_db = linear_to_db(maxf(0.0001, gain))
+	if gain > 0.001 and direct.playing and not mirror.playing:
+		mirror.play(direct.get_playback_position())
+	elif gain <= 0.001 and mirror.playing:
+		mirror.stop()
 
 
 func _rebuild_loop_players() -> void:
+	for mirror in _reflection_players.values():
+		if is_instance_valid(mirror):
+			mirror.stop()
+			remove_child(mirror)
+			mirror.queue_free()
+	_reflection_players.clear()
+	_prepared_loops.clear()
 	# Stop and cleanup existing loop players
 	for p in _exhaust_players.values():
 		if is_instance_valid(p):
@@ -435,9 +504,9 @@ func _rebuild_loop_players() -> void:
 	for loop_entry in _manifest.loops:
 		var fname: String = str(loop_entry["file"])
 		var full_path: String = str(loop_entry["full_path"])
-		var wav := EngineWavLoaderScript.load_wav(full_path)
+		var wav := EngineWavLoaderScript.load_engine_loop(full_path)
 		if wav != null:
-			EngineWavLoaderScript.configure_loop(wav, true)
+			_prepared_loops[fname] = wav
 			var player := AudioStreamPlayer.new()
 			player.name = "Exhaust_" + fname.get_basename()
 			player.bus = safe_exhaust_bus
@@ -445,16 +514,22 @@ func _rebuild_loop_players() -> void:
 			player.volume_db = -80.0
 			add_child(player)
 			_exhaust_players[fname] = player
+			if AudioServer.get_bus_index(&"Exhaust_Reflection") >= 0:
+				var mirror := AudioStreamPlayer.new()
+				mirror.name = "Reflection_" + fname.get_basename()
+				mirror.bus = &"Exhaust_Reflection"
+				mirror.stream = wav
+				mirror.volume_db = -80.0
+				add_child(mirror)
+				_reflection_players[fname] = mirror
 		else:
 			push_warning("RecordedEngineController: Could not load exhaust loop: " + full_path)
 
 	# Create Intake players for ON loops in manifest
 	for anchor in _manifest.on_anchors:
 		var fname: String = str(anchor["file"])
-		var full_path: String = str(anchor["full_path"])
-		var wav := EngineWavLoaderScript.load_wav(full_path)
+		var wav: AudioStreamWAV = _prepared_loops.get(fname)
 		if wav != null:
-			EngineWavLoaderScript.configure_loop(wav, true)
 			var player := AudioStreamPlayer.new()
 			player.name = "Intake_" + fname.get_basename()
 			player.bus = safe_intake_bus
@@ -463,7 +538,7 @@ func _rebuild_loop_players() -> void:
 			add_child(player)
 			_intake_players[fname] = player
 		else:
-			push_warning("RecordedEngineController: Could not load intake loop: " + full_path)
+			push_warning("RecordedEngineController: Could not load intake loop: " + fname)
 
 
 func _init_auxiliary_players() -> void:
@@ -506,7 +581,7 @@ func _init_auxiliary_players() -> void:
 func _play_shift_clunk() -> void:
 	if _shift_player != null and _shift_player.stream != null:
 		_shift_player.pitch_scale = randf_range(0.95, 1.05)
-		_shift_player.volume_db = linear_to_db(maxf(0.0001, 0.70 * master_gain))
+		_shift_player.volume_db = linear_to_db(maxf(0.0001, float(PROFILE_CONFIGS[car_profile].get("shift_gain", 0.30)) * master_gain))
 		if _shift_player.is_inside_tree():
 			_shift_player.play()
 
@@ -517,76 +592,36 @@ func _resolve_bus(bus_name: StringName) -> StringName:
 	return &"Master"
 
 
+# Avoid forcing a coasting recording to extreme pitch at idle. Below the first
+# usable OFF anchor, use the low ON recording at restrained volume. Blend back
+# into the actual coast bank before reaching its lowest recorded RPM.
+static func compute_load_gains(rpm: float, throttle: float, off_anchors: Array) -> Vector2:
+	var load := clampf(throttle, 0.0, 1.0)
+	var fallback := lerpf(0.40, 1.0, load)
+	if off_anchors.is_empty():
+		return Vector2(fallback, 0.0)
+	var first_off := maxf(1.0, float(off_anchors[0]["rpm"]))
+	var availability := smoothstep(first_off * 0.75, first_off, rpm)
+	var angle := (1.0 - load) * HALF_PI * availability
+	var level := lerpf(fallback, 1.0, availability)
+	return Vector2(0.0 if angle >= HALF_PI else cos(angle), sin(angle)) * level
+
+
 # Pure calculation helper for deterministic testing and analysis
 static func compute_blend_state(rpm: float, throttle: float, manifest_data: Dictionary) -> Dictionary:
 	var manifest := EngineProfileManifestScript.new()
 	manifest.parse_dictionary(manifest_data)
 
-	var clamped_throttle := clampf(throttle, 0.0, 1.0)
-	var on_layer_gain: float
-	var off_layer_gain: float
+	var load_gains := compute_load_gains(rpm, throttle, manifest.off_anchors)
+	var on_layer_gain := load_gains.x
+	var off_layer_gain := load_gains.y
 
-	if manifest.has_off_layer:
-		on_layer_gain = sin(clamped_throttle * HALF_PI)
-		off_layer_gain = cos(clamped_throttle * HALF_PI)
-	else:
-		on_layer_gain = lerpf(0.40, 1.0, clamped_throttle)
-		off_layer_gain = 0.0
-
-	var on_anchors := manifest.on_anchors
-	var off_anchors := manifest.off_anchors
-
-	var on_gains: Dictionary = {}
-	var on_pitches: Dictionary = {}
-	var off_gains: Dictionary = {}
-	var off_pitches: Dictionary = {}
-
-	# On anchors
-	var on_bracket := manifest.find_bracketing_anchors("on", rpm)
-	if not on_bracket.is_empty():
-		var low_a: Dictionary = on_bracket["low"]
-		var high_a: Dictionary = on_bracket["high"]
-		var is_s: bool = bool(on_bracket.get("is_single", false))
-		var t: float = float(on_bracket.get("t", 0.0))
-		var low_f: String = str(low_a["file"])
-		var high_f: String = str(high_a["file"])
-		var low_r: float = float(low_a["rpm"])
-		var high_r: float = float(high_a["rpm"])
-
-		if is_s or low_f == high_f:
-			var tf := high_f if t >= 1.0 else low_f
-			var tr := high_r if t >= 1.0 else low_r
-			on_gains[tf] = 1.0
-			on_pitches[tf] = clampf(rpm / tr, 0.45, 1.35)
-		else:
-			on_gains[low_f] = cos(t * HALF_PI)
-			on_gains[high_f] = sin(t * HALF_PI)
-			on_pitches[low_f] = clampf(rpm / low_r, 0.45, 1.35)
-			on_pitches[high_f] = clampf(rpm / high_r, 0.75, 1.35)
-
-	# Off anchors
-	if manifest.has_off_layer:
-		var off_bracket := manifest.find_bracketing_anchors("off", rpm)
-		if not off_bracket.is_empty():
-			var low_a: Dictionary = off_bracket["low"]
-			var high_a: Dictionary = off_bracket["high"]
-			var is_s: bool = bool(off_bracket.get("is_single", false))
-			var t: float = float(off_bracket.get("t", 0.0))
-			var low_f: String = str(low_a["file"])
-			var high_f: String = str(high_a["file"])
-			var low_r: float = float(low_a["rpm"])
-			var high_r: float = float(high_a["rpm"])
-
-			if is_s or low_f == high_f:
-				var tf := high_f if t >= 1.0 else low_f
-				var tr := high_r if t >= 1.0 else low_r
-				off_gains[tf] = 1.0
-				off_pitches[tf] = clampf(rpm / tr, 0.45, 1.35)
-			else:
-				off_gains[low_f] = cos(t * HALF_PI)
-				off_gains[high_f] = sin(t * HALF_PI)
-				off_pitches[low_f] = clampf(rpm / low_r, 0.45, 1.35)
-				off_pitches[high_f] = clampf(rpm / high_r, 0.75, 1.35)
+	var on_state := compute_anchor_pair(manifest.find_bracketing_anchors("on", rpm), rpm)
+	var off_state := compute_anchor_pair(manifest.find_bracketing_anchors("off", rpm), rpm) if manifest.has_off_layer else {"gains": {}, "pitches": {}}
+	var on_gains: Dictionary = on_state["gains"]
+	var on_pitches: Dictionary = on_state["pitches"]
+	var off_gains: Dictionary = off_state["gains"]
+	var off_pitches: Dictionary = off_state["pitches"]
 
 	# Calculate power sums to verify constant-power blending
 	var on_power_sum := 0.0

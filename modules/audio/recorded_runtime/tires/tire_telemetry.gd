@@ -151,6 +151,16 @@ static func from_dictionary(t: Dictionary) -> Dictionary:
 		var raw_w: Dictionary = t["surface_weights"]
 		for s in weights.keys():
 			weights[s] = clampf(float(raw_w.get(s, 0.0)), 0.0, 1.0)
+	elif t.has("surface_counts") and t["surface_counts"] is Dictionary:
+		var counts: Dictionary = t["surface_counts"]
+		var total := 0.0
+		for s in weights.keys():
+			total += maxf(0.0, float(counts.get(s, 0)))
+		if total > 0.0:
+			for s in weights.keys():
+				weights[s] = maxf(0.0, float(counts.get(s, 0))) / total
+		else:
+			weights[primary_surface] = 1.0
 	else:
 		weights[primary_surface] = 1.0
 

@@ -4,6 +4,7 @@ extends Node
 ## Owns surface roll loops (asphalt, gravel, grass), tire scrub, and screech.
 
 const AsterTireTelemetryScript := preload("tire_telemetry.gd")
+const EngineWavLoaderScript := preload("../engine/engine_wav_loader.gd")
 
 # --- Thresholds and Tuning Constants ---
 const SCRUB_MIN_SLIP := 0.15
@@ -118,6 +119,12 @@ func unbind_vehicle() -> void:
 	_bound_vehicle = null
 
 
+## Store the root controller's single telemetry sample; envelopes advance once
+## in _physics_process using the real physics delta.
+func queue_telemetry(t: Dictionary) -> void:
+	_telemetry = AsterTireTelemetryScript.from_dictionary(t)
+
+
 ## Update tire audio directly from a telemetry dictionary (e.g. from AsterAudioTelemetry or QA test harness).
 func update_telemetry(t: Dictionary, delta: float = 0.0167) -> void:
 	_telemetry = AsterTireTelemetryScript.from_dictionary(t)
@@ -179,7 +186,9 @@ func _process_tires(delta: float) -> void:
 
 	# Gate by minimum speed and ground contact
 	var target_scrub := scrub_raw * _speed_gate * _ground_factor
-	var target_screech := screech_raw * _speed_gate * _ground_factor
+	# Rubber squeal is principally an asphalt sound; loose surfaces churn instead.
+	var paved_fraction := float(_surface_weights[AsterTireTelemetryScript.SURFACE_ASPHALT])
+	var target_screech := screech_raw * _speed_gate * _ground_factor * paved_fraction
 
 	# 6. Attack (~80ms) and Release (~180ms) Envelopes
 	var scrub_tau := ATTACK_TIME_S if target_scrub > _scrub_envelope else RELEASE_TIME_S
@@ -199,7 +208,7 @@ func _process_tires(delta: float) -> void:
 
 	# Boost gravel texture during slip / churn
 	if slip > 0.15:
-		gravel_gain += smoothstep(0.15, 0.8, slip) * 0.35 * _ground_factor * float(_surface_weights[AsterTireTelemetryScript.SURFACE_GRAVEL])
+		gravel_gain += smoothstep(0.15, 0.8, slip) * 0.35 * _ground_factor * _speed_gate * float(_surface_weights[AsterTireTelemetryScript.SURFACE_GRAVEL])
 
 	# 8. Pitch Modulation for Scrub and Screech
 	var scrub_pitch := clampf(0.72 + (speed / 40.0) * 0.18 + slip * 0.10, 0.65, 0.95)
@@ -250,8 +259,8 @@ func _create_players() -> void:
 	_roll_gravel_player = _build_player("RollGravel", [PATH_ROLL_GRAVEL_RECORDED, PATH_ROLL_GRAVEL_FALLBACK])
 	_roll_grass_player = _build_player("RollGrass", [PATH_ROLL_GRASS_RECORDED, PATH_ROLL_GRASS_FALLBACK])
 
-	# Scrub uses screech.wav (or tire_skid fallback), pitched down for heavy rubber friction
-	_scrub_player = _build_player("TireScrub", [PATH_SCREECH_RECORDED, PATH_SCRUB_FALLBACK])
+	# Use a separate friction texture rather than doubling the same squeal recording.
+	_scrub_player = _build_player("TireScrub", [PATH_SCRUB_FALLBACK, PATH_SCREECH_RECORDED])
 	# Screech uses screech.wav for high-slip screech
 	_screech_player = _build_player("TireScreech", [PATH_SCREECH_RECORDED, PATH_SCREECH_FALLBACK])
 
@@ -273,7 +282,9 @@ func _build_player(player_name: String, candidate_paths: Array) -> AudioStreamPl
 
 	var stream: AudioStreamWAV = null
 	for path in candidate_paths:
-		stream = _load_wav_stream(str(path))
+		if not FileAccess.file_exists(str(path)) and not ResourceLoader.exists(str(path)):
+			continue
+		stream = EngineWavLoaderScript.load_engine_loop(str(path))
 		if stream != null:
 			break
 
@@ -292,7 +303,7 @@ static func _setup_seamless_loop(wav: AudioStreamWAV) -> void:
 	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	wav.loop_begin = 0
 	var sample_frames := int(round(wav.get_length() * float(wav.mix_rate)))
-	wav.loop_end = maxi(1, sample_frames - 1)
+	wav.loop_end = maxi(1, sample_frames)
 
 
 ## Robust WAV loader supporting both imported resources and direct filesystem PCM16 WAV buffers.
@@ -394,7 +405,7 @@ static func compute_tire_targets(telemetry: Dictionary, state: Dictionary, delta
 		screech_raw = clampf(0.35 + 0.65 * ((slip - SCREECH_EXIT_THRESHOLD) / (1.0 - SCREECH_EXIT_THRESHOLD)), 0.0, 1.0)
 
 	var target_scrub := scrub_raw * speed_gate * ground_factor
-	var target_screech := screech_raw * speed_gate * ground_factor
+	var target_screech := screech_raw * speed_gate * ground_factor * (1.0 if surface == AsterTireTelemetryScript.SURFACE_ASPHALT else 0.0)
 
 	# 5. Envelope smoothing
 	var scrub_tau := ATTACK_TIME_S if target_scrub > scrub_envelope else RELEASE_TIME_S

@@ -32,6 +32,9 @@ var _target_wind_gain: float = 0.0
 var _target_cutoff_hz: float = 800.0
 var _target_pitch: float = 1.0
 var _speed_mps: float = 0.0
+var vehicle_mix_gain: float = 1.0
+var environment_mix_gain: float = 1.0
+var _current_ambience_gain: float = 0.0
 
 
 func _ready() -> void:
@@ -63,7 +66,7 @@ func _setup_ambience_player() -> void:
 	if stream != null:
 		ChassisWavLoader.configure_loop(stream, true)
 		_player_ambience.stream = stream
-		_player_ambience.volume_db = linear_to_db(maxf(0.0001, ambience_gain))
+		_player_ambience.volume_db = -80.0
 		add_child(_player_ambience)
 		_player_ambience.play()
 	else:
@@ -78,9 +81,7 @@ func _setup_wind_player() -> void:
 	_player_wind.bus = bus_name
 
 	var stream := ChassisWavLoader.load_wav(wind_asset_path)
-	if stream == null:
-		# Fallback to ambience bed if wind asset is missing
-		stream = ChassisWavLoader.load_wav(ambience_asset_path)
+	# Do not duplicate the ambient bed if the aerodynamic source is missing.
 
 	if stream != null:
 		ChassisWavLoader.configure_loop(stream, true)
@@ -98,15 +99,8 @@ func _setup_lowpass_filter() -> void:
 	if bus_idx < 0:
 		return
 
-	# Check if an AudioEffectLowPassFilter or AudioEffectFilter already exists on wind_bus
-	for i in range(AudioServer.get_bus_effect_count(bus_idx)):
-		var effect := AudioServer.get_bus_effect(bus_idx, i)
-		if effect is AudioEffectLowPassFilter:
-			_wind_lpf = effect as AudioEffectLowPassFilter
-			_owns_lpf = false
-			return
-
-	# Otherwise, create and attach our own lowpass filter to wind_bus
+	# Separate speed shaping from the camera's existing cabin lowpass.
+	# Cascaded filters retain both effects instead of fighting every frame.
 	_wind_lpf = AudioEffectLowPassFilter.new()
 	_wind_lpf.cutoff_hz = lpf_min_hz
 	_wind_lpf.resonance = 0.5
@@ -139,7 +133,10 @@ func _process(delta: float) -> void:
 	var step: float = maxf(delta, 0.001)
 	var alpha: float = 1.0 - exp(-step * 10.0)
 
-	_current_wind_gain = lerpf(_current_wind_gain, _target_wind_gain, alpha)
+	_current_wind_gain = lerpf(_current_wind_gain, _target_wind_gain * vehicle_mix_gain, alpha)
+	_current_ambience_gain = lerpf(_current_ambience_gain, ambience_gain * environment_mix_gain, alpha)
+	if is_instance_valid(_player_ambience):
+		_player_ambience.volume_db = linear_to_db(maxf(0.0001, _current_ambience_gain))
 	_current_cutoff_hz = lerpf(_current_cutoff_hz, _target_cutoff_hz, alpha)
 	_current_pitch = lerpf(_current_pitch, _target_pitch, alpha)
 

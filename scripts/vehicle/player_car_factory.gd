@@ -14,7 +14,7 @@ const PRESETS := {
 	"kestrel_xr": {"name": "KestrelXR", "mass": 1540.0, "torque": 575.0, "final_drive": 3.3, "front_split": 0.35, "paint": Color(0.33, 0.22, 0.52), "idle_rpm": 800.0, "max_rpm": 6900.0},
 	"solace_gt": {"name": "SolaceGT", "mass": 1620.0, "torque": 510.0, "final_drive": 3.45, "front_split": 0.20, "paint": Color("#447b82"), "idle_rpm": 950.0, "max_rpm": 7100.0},
 	"aventador_svj": {"name": "AventadorSVJ", "mass": 1670.0, "torque": 720.0, "final_drive": 3.52, "front_split": 0.28, "paint": Color("#ed9f35"), "idle_rpm": 900.0, "max_rpm": 8700.0, "half_track": Vector2(0.8864, 0.9052), "half_wheelbase": 1.3408, "radii": Vector2(0.3074, 0.3668), "widths": Vector2(255, 355), "body_length": 4.75},
-	"mclaren_senna": {"name": "McLarenSenna", "mass": 1380.0, "torque": 800.0, "final_drive": 3.31, "front_split": 0.0, "paint": Color("#2b82ba"), "idle_rpm": 980.0, "max_rpm": 8000.0, "half_track": Vector2(0.8432, 0.8432), "half_wheelbase": 1.2678, "radii": Vector2(0.3458, 0.3458), "widths": Vector2(245, 315), "body_length": 4.58, "audio_profile": "kestrel_xr"},
+	"mclaren_senna": {"name": "McLarenSenna", "mass": 1380.0, "torque": 800.0, "final_drive": 3.31, "front_split": 0.0, "paint": Color("#2b82ba"), "idle_rpm": 980.0, "max_rpm": 8000.0, "half_track": Vector2(0.8432, 0.8432), "half_wheelbase": 1.2678, "radii": Vector2(0.3458, 0.3458), "widths": Vector2(245, 315), "body_length": 4.58, "audio_profile": "mclaren_senna"},
 }
 
 static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
