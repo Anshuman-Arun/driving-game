@@ -1,0 +1,32 @@
+name: Hero continuous-recording research
+on:
+  push:
+    branches: [feat/hero-supercar-audio]
+    paths: ['modules/audio/tools/continuous_sweep_research.py', '.github/workflows/hero-sweep-research.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          lfs: false
+          persist-credentials: false
+      - name: Prepare analysis environment
+        run: |
+          python -m venv "$RUNNER_TEMP/audio-research-venv"
+          "$RUNNER_TEMP/audio-research-venv/bin/pip" install numpy scipy
+          command -v ffmpeg
+      - name: Analyze original continuous recordings (audition only)
+        run: |
+          "$RUNNER_TEMP/audio-research-venv/bin/python" modules/audio/tools/continuous_sweep_research.py --download --output "$RUNNER_TEMP/hero-sweep-research"
+      - name: Upload candidate reports and previews
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: hero-sweep-research
+          path: ${{ runner.temp }}/hero-sweep-research/
+          retention-days: 7
