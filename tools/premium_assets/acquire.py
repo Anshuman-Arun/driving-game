@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import shutil
 import tempfile
 import time
 from urllib.parse import urlsplit, unquote
@@ -148,25 +149,54 @@ def acquire():
             folder = root / ("models" if kind == "model" else "textures") / slug
             start = len(all_files)
             stats = {}
-            if kind == "model":
-                entry, _ = pick(files, res, ("gltf",), ("gltf",))
-                name = safe_rel(urlsplit(entry["url"]).path.rsplit("/", 1)[-1])
-                model = folder / name
-                fetch(entry, model, root, all_files)
-                for rel, dep in sorted(entry.get("include", {}).items()):
-                    fetch(dep, folder / safe_rel(rel), root, all_files)
-                stats = check_gltf(model)
-                stats["entrypoint"] = model.relative_to(root).as_posix()
-            elif kind == "texture":
-                for role, (names, formats) in MAPS.items():
-                    entry, fmt = pick(files, res, names, formats)
-                    fetch(entry, folder / (role + "." + fmt), root, all_files)
-                stats["maps"] = [x["path"] for x in all_files[start:]]
-            else:
-                raise ValueError("Unknown kind: " + kind)
+            try:
+                if kind == "model":
+                    entry, _ = pick(files, res, ("gltf",), ("gltf",))
+                    deps = entry.get("include", {})
+                    source_size = int(entry["size"]) + sum(int(d["size"]) for d in deps.values())
+                    # Geometry is resolution-independent; lowering texture resolution
+                    # does not rescue multi-hundred-MB geometry buffers.
+                    oversize = any(int(d["size"]) > MAX_FILE for d in [entry, *deps.values()])
+                    if oversize or source_size > 90 * 1024 * 1024:
+                        stats = {"status": "texture_only", "source_package_bytes": source_size,
+                                 "reason": "Source geometry/package exceeds game repository source budget"}
+                        print("  geometry omitted:", source_size, "bytes", flush=True)
+                        for rel, dep in sorted(deps.items()):
+                            relpath = safe_rel(rel)
+                            if relpath.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp"):
+                                continue
+                            if int(dep["size"]) > MAX_FILE or sum(x["size"] for x in all_files[start:]) + int(dep["size"]) > 45 * 1024 * 1024:
+                                print("  texture omitted by per-asset budget:", rel, flush=True)
+                                continue
+                            fetch(dep, folder / relpath, root, all_files)
+                        if len(all_files) == start:
+                            raise ValueError("Oversized model has no usable separate textures")
+                        stats["maps"] = [x["path"] for x in all_files[start:]]
+                    else:
+                        name = safe_rel(urlsplit(entry["url"]).path.rsplit("/", 1)[-1])
+                        model = folder / name
+                        fetch(entry, model, root, all_files)
+                        for rel, dep in sorted(deps.items()):
+                            fetch(dep, folder / safe_rel(rel), root, all_files)
+                        stats = check_gltf(model)
+                        stats.update(status="complete", entrypoint=model.relative_to(root).as_posix())
+                elif kind == "texture":
+                    for role, (names, formats) in MAPS.items():
+                        entry, fmt = pick(files, res, names, formats)
+                        fetch(entry, folder / (role + "." + fmt), root, all_files)
+                    stats = {"status": "complete", "maps": [x["path"] for x in all_files[start:]]}
+                else:
+                    raise ValueError("Unknown kind: " + kind)
+            except (ValueError, OSError, KeyError) as exc:
+                shutil.rmtree(folder, ignore_errors=True)
+                del all_files[start:]
+                stats = {"status": "unavailable", "reason": str(exc)}
+                print("  asset unavailable:", slug, str(exc), flush=True)
             entries.append({**asset, **stats, "source_url": "https://polyhaven.com/a/" + slug,
                             "authors": all_meta[slug].get("authors", {}),
                             "license": "CC0-1.0", "files": all_files[start:]})
+        if not all_files:
+            raise ValueError("No usable assets downloaded; refusing to install an empty pack")
         lock = {"provider": "Poly Haven", "license_url": catalog["license_url"],
                 "assets": entries, "bytes": sum(f["size"] for f in all_files)}
         (root / "LICENSES_AND_HASHES.json").write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
@@ -188,11 +218,14 @@ def verify(root=DEST):
                 raise ValueError("Missing, duplicate or changed file: " + str(path))
             paths.add(item["path"])
             total += item["size"]
-        if asset["kind"] == "model":
+        if asset["kind"] == "model" and asset["status"] == "complete":
             check_gltf(root / safe_rel(asset["entrypoint"]))
+        if asset["status"] == "unavailable" and asset["files"]:
+            raise ValueError("Unavailable asset contains files")
     if total != lock["bytes"]:
         raise ValueError("Lock total differs")
-    print(f"Verified {len(lock['assets'])} assets / {len(paths)} files / {total:,} bytes")
+    counts = {state: sum(a["status"] == state for a in lock["assets"]) for state in ("complete", "texture_only", "unavailable")}
+    print(f"Verified {counts} / {len(paths)} files / {total:,} bytes")
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
