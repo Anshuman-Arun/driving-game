@@ -173,6 +173,15 @@ func execute_suite(tree: SceneTree, output_json_path: String = "res://tests/inte
 		push_error(err_msg)
 		return full_report
 
+	# Capture the engine bus separately so ambience cannot mask a silent engine.
+	var exhaust_idx := AudioServer.get_bus_index(&"Engine_Exhaust")
+	if exhaust_idx < 0:
+		full_report["errors"].append("Engine_Exhaust bus missing")
+		return full_report
+	var exhaust_capture := AudioEffectCapture.new()
+	exhaust_capture.buffer_length = 5.0
+	AudioServer.add_bus_effect(exhaust_idx, exhaust_capture)
+
 	# Attach AudioEffectCapture to Master bus
 	var capture := AudioEffectCapture.new()
 	capture.buffer_length = 5.0
@@ -222,6 +231,7 @@ func execute_suite(tree: SceneTree, output_json_path: String = "res://tests/inte
 			tree,
 			profile,
 			capture,
+			exhaust_capture,
 			engine_controller,
 			tire_controller,
 			chassis_controller,
@@ -262,6 +272,10 @@ func execute_suite(tree: SceneTree, output_json_path: String = "res://tests/inte
 			AudioServer.remove_bus_effect(master_idx, i)
 			break
 
+	for i in range(AudioServer.get_bus_effect_count(exhaust_idx)):
+		if AudioServer.get_bus_effect(exhaust_idx, i) == exhaust_capture:
+			AudioServer.remove_bus_effect(exhaust_idx, i)
+			break
 	await AudioTestCleanup.drain(tree)
 
 	# Summarize overall results
@@ -304,6 +318,7 @@ func _run_profile_simulation(
 	tree: SceneTree,
 	profile: String,
 	capture: AudioEffectCapture,
+	exhaust_capture: AudioEffectCapture,
 	engine_node: Node,
 	tire_node: Node,
 	chassis_node: Node,
@@ -325,6 +340,23 @@ func _run_profile_simulation(
 
 	# Drain buffer prior to run
 	capture.clear_buffer()
+	exhaust_capture.clear_buffer()
+	var exhaust_discarded_before := exhaust_capture.get_discarded_frames()
+	var exhaust_frames := 0
+	var exhaust_peak := 0.0
+	var exhaust_idle_peak := 0.0
+	var audition_file: FileAccess = null
+	var audition_path := ""
+	var audition_dir := OS.get_environment("ASTER_AUDIO_CAPTURE_DIR")
+	if not audition_dir.is_empty():
+		var dir := ProjectSettings.globalize_path(audition_dir)
+		DirAccess.make_dir_recursive_absolute(dir)
+		audition_path = dir.path_join(profile + ".wav")
+		audition_file = FileAccess.open(audition_path, FileAccess.WRITE)
+		if audition_file == null:
+			push_error("Could not create audition WAV: " + audition_path)
+			return {"profile": profile, "passed": false, "error": "Cannot write audition WAV"}
+		_write_wav_header(audition_file, 0)
 	var discarded_before := capture.get_discarded_frames()
 	var next_tick_usec := Time.get_ticks_usec()
 
@@ -379,11 +411,30 @@ func _run_profile_simulation(
 		while Time.get_ticks_usec() < next_tick_usec:
 			await tree.process_frame
 
+		# Drain engine stem and require actual engine output at idle.
+		var exhaust_avail := exhaust_capture.get_frames_available()
+		if exhaust_avail > 0:
+			var exhaust_buffer := exhaust_capture.get_buffer(exhaust_avail)
+			exhaust_frames += exhaust_buffer.size()
+			for sample in exhaust_buffer:
+				var stem_peak := maxf(absf(sample.x), absf(sample.y))
+				exhaust_peak = maxf(exhaust_peak, stem_peak)
+				if current_scenario == "idle_stationary":
+					exhaust_idle_peak = maxf(exhaust_idle_peak, stem_peak)
+
 		# Drain captured audio buffer
 		var avail := capture.get_frames_available()
 		if avail > 0:
 			var buffer: PackedVector2Array = capture.get_buffer(avail)
 			total_frames_captured += buffer.size()
+			if audition_file != null:
+				var pcm := PackedByteArray()
+				pcm.resize(buffer.size() * 4)
+				for sample_index in range(buffer.size()):
+					var sample: Vector2 = buffer[sample_index]
+					pcm.encode_s16(sample_index * 4, roundi(clampf(sample.x, -1.0, 1.0) * 32767.0))
+					pcm.encode_s16(sample_index * 4 + 2, roundi(clampf(sample.y, -1.0, 1.0) * 32767.0))
+				audition_file.store_buffer(pcm)
 			var scen_dict: Dictionary = scenario_metrics[current_scenario]
 
 			for v in buffer:
@@ -424,6 +475,12 @@ func _run_profile_simulation(
 					consecutive_flat_count = 0
 				last_sample_val = frame_peak
 
+	if audition_file != null:
+		audition_file.seek(0)
+		_write_wav_header(audition_file, total_frames_captured)
+		audition_file.close()
+		print("Audition WAV: " + audition_path)
+
 	# Finalize overall metrics for profile
 	var peak_dbfs := _linear_to_db(max_peak_linear)
 	var rms_linear := sqrt(sum_squares / float(maxi(total_frames_captured, 1)))
@@ -454,7 +511,9 @@ func _run_profile_simulation(
 	var no_clipping := (clipped_samples == 0 and hard_flats == 0)
 	var discarded := capture.get_discarded_frames() - discarded_before
 	var sufficient_frames := total_frames_captured >= int(bench.get_total_duration() * AudioServer.get_mix_rate() * 0.85)
-	var profile_passed := (is_signal_present and has_headroom and no_clipping and all_scenarios_ok and sufficient_frames and discarded == 0)
+	var exhaust_ok := exhaust_frames >= int(bench.get_total_duration() * AudioServer.get_mix_rate() * 0.85) and exhaust_peak > 0.005 and exhaust_idle_peak > 0.001 and exhaust_capture.get_discarded_frames() == exhaust_discarded_before
+	var profile_passed := (is_signal_present and has_headroom and no_clipping and all_scenarios_ok and sufficient_frames and discarded == 0 and exhaust_ok)
+	print("  Exhaust stem: %d frames, peak %.2f dBFS, idle peak %.2f dBFS, passed=%s" % [exhaust_frames, _linear_to_db(exhaust_peak), _linear_to_db(exhaust_idle_peak), str(exhaust_ok)])
 
 	return {
 		"profile": profile,
@@ -462,6 +521,11 @@ func _run_profile_simulation(
 		"is_signal_present": is_signal_present,
 		"has_headroom": has_headroom,
 		"total_frames_captured": total_frames_captured,
+		"exhaust_frames": exhaust_frames,
+		"exhaust_peak_dbfs": _linear_to_db(exhaust_peak),
+		"exhaust_idle_peak_dbfs": _linear_to_db(exhaust_idle_peak),
+		"exhaust_signal_ok": exhaust_ok,
+		"audition_wav": audition_path,
 		"discarded_frames": discarded,
 		"sufficient_frames": sufficient_frames,
 		"all_scenarios_ok": all_scenarios_ok,
@@ -475,6 +539,23 @@ func _run_profile_simulation(
 		"hard_flats": hard_flats,
 		"scenarios": scenario_metrics
 	}
+
+
+static func _write_wav_header(file: FileAccess, frames: int) -> void:
+	var rate := roundi(AudioServer.get_mix_rate())
+	var bytes := frames * 4
+	file.store_buffer("RIFF".to_ascii_buffer())
+	file.store_32(36 + bytes)
+	file.store_buffer("WAVEfmt ".to_ascii_buffer())
+	file.store_32(16)
+	file.store_16(1)
+	file.store_16(2)
+	file.store_32(rate)
+	file.store_32(rate * 4)
+	file.store_16(4)
+	file.store_16(16)
+	file.store_buffer("data".to_ascii_buffer())
+	file.store_32(bytes)
 
 
 static func _linear_to_db(linear: float) -> float:
