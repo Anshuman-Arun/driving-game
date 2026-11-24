@@ -356,6 +356,9 @@ func _run_profile_simulation(
 	var exhaust_idle_energy := 0.0
 	var exhaust_idle_frames := 0
 	var audition_file: FileAccess = null
+	var stem_file: FileAccess = null
+	var trace_file: FileAccess = null
+	var stem_path := ""
 	var audition_path := ""
 	var audition_dir := OS.get_environment("ASTER_AUDIO_CAPTURE_DIR")
 	if not audition_dir.is_empty():
@@ -367,6 +370,14 @@ func _run_profile_simulation(
 			push_error("Could not create audition WAV: " + audition_path)
 			return {"profile": profile, "passed": false, "error": "Cannot write audition WAV"}
 		_write_wav_header(audition_file, 0)
+		stem_path = dir.path_join(profile + "_exhaust_only.wav")
+		stem_file = FileAccess.open(stem_path, FileAccess.WRITE)
+		trace_file = FileAccess.open(dir.path_join(profile + "_rpm_trace.csv"), FileAccess.WRITE)
+		if stem_file == null or trace_file == null:
+			push_error("Could not open isolated exhaust/telemetry audition files")
+			return {"profile": profile, "passed": false, "error": "Cannot write isolated audition files"}
+		_write_wav_header(stem_file, 0)
+		trace_file.store_csv_line(PackedStringArray(["capture_frame", "time_s", "rpm", "smoothed_rpm", "throttle", "gear", "scenario"]))
 	var discarded_before := capture.get_discarded_frames()
 	var next_tick_usec := Time.get_ticks_usec()
 
@@ -384,6 +395,8 @@ func _run_profile_simulation(
 	while not bench.is_finished():
 		var t: Dictionary = bench.step()
 		var scenario: String = str(t.get("scenario", "unknown"))
+		if trace_file != null:
+			trace_file.store_csv_line(PackedStringArray([str(total_frames_captured), str(bench.current_time), str(t.get("rpm", 0.0)), str(engine_node.get("_smoothed_rpm")), str(t.get("throttle", 0.0)), str(t.get("gear", 0)), scenario]))
 
 		if scenario != current_scenario:
 			current_scenario = scenario
@@ -426,6 +439,8 @@ func _run_profile_simulation(
 		if exhaust_avail > 0:
 			var exhaust_buffer := exhaust_capture.get_buffer(exhaust_avail)
 			exhaust_frames += exhaust_buffer.size()
+			if stem_file != null:
+				_store_stereo_pcm(stem_file, exhaust_buffer)
 			for sample in exhaust_buffer:
 				var stem_peak := maxf(absf(sample.x), absf(sample.y))
 				exhaust_peak = maxf(exhaust_peak, stem_peak)
@@ -440,13 +455,7 @@ func _run_profile_simulation(
 			var buffer: PackedVector2Array = capture.get_buffer(avail)
 			total_frames_captured += buffer.size()
 			if audition_file != null:
-				var pcm := PackedByteArray()
-				pcm.resize(buffer.size() * 4)
-				for sample_index in range(buffer.size()):
-					var sample: Vector2 = buffer[sample_index]
-					pcm.encode_s16(sample_index * 4, roundi(clampf(sample.x, -1.0, 1.0) * 32767.0))
-					pcm.encode_s16(sample_index * 4 + 2, roundi(clampf(sample.y, -1.0, 1.0) * 32767.0))
-				audition_file.store_buffer(pcm)
+				_store_stereo_pcm(audition_file, buffer)
 			var scen_dict: Dictionary = scenario_metrics[current_scenario]
 
 			for v in buffer:
@@ -492,6 +501,13 @@ func _run_profile_simulation(
 		_write_wav_header(audition_file, total_frames_captured)
 		audition_file.close()
 		print("Audition WAV: " + audition_path)
+	if stem_file != null:
+		stem_file.seek(0)
+		_write_wav_header(stem_file, exhaust_frames)
+		stem_file.close()
+		print("Isolated exhaust WAV: " + stem_path)
+	if trace_file != null:
+		trace_file.close()
 
 	# Finalize overall metrics for profile
 	var peak_dbfs := _linear_to_db(max_peak_linear)
@@ -546,6 +562,7 @@ func _run_profile_simulation(
 		"exhaust_idle_frames": exhaust_idle_frames,
 		"exhaust_signal_ok": exhaust_ok,
 		"audition_wav": audition_path,
+		"isolated_exhaust_wav": stem_path,
 		"discarded_frames": discarded,
 		"sufficient_frames": sufficient_frames,
 		"all_scenarios_ok": all_scenarios_ok,
@@ -559,6 +576,16 @@ func _run_profile_simulation(
 		"hard_flats": hard_flats,
 		"scenarios": scenario_metrics
 	}
+
+
+static func _store_stereo_pcm(file: FileAccess, buffer: PackedVector2Array) -> void:
+	var pcm := PackedByteArray()
+	pcm.resize(buffer.size() * 4)
+	for sample_index in range(buffer.size()):
+		var sample: Vector2 = buffer[sample_index]
+		pcm.encode_s16(sample_index * 4, roundi(clampf(sample.x, -1.0, 1.0) * 32767.0))
+		pcm.encode_s16(sample_index * 4 + 2, roundi(clampf(sample.y, -1.0, 1.0) * 32767.0))
+	file.store_buffer(pcm)
 
 
 static func _write_wav_header(file: FileAccess, frames: int) -> void:
