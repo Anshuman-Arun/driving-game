@@ -18,6 +18,7 @@ func _initialize() -> void:
 	failures += _test_envelope_attack_release()
 	failures += _test_airborne_fade()
 	failures += _test_surface_switching()
+	failures += _test_mixed_contact_and_loose_surface()
 
 	print("==================================================")
 	if failures == 0:
@@ -306,4 +307,18 @@ func _test_surface_switching() -> int:
 
 	controller.queue_free()
 	print("  PASS: Surface switching verified.")
+	return 0
+
+
+func _test_mixed_contact_and_loose_surface() -> int:
+	var telemetry := AsterTireTelemetry.from_dictionary({"surface": "asphalt", "surface_counts": {"asphalt": 2, "gravel": 1, "grass": 1}})
+	var weights: Dictionary = telemetry["surface_weights"]
+	if not (is_equal_approx(float(weights["asphalt"]), 0.5) and is_equal_approx(float(weights["gravel"]), 0.25) and is_equal_approx(float(weights["grass"]), 0.25)):
+		printerr("Mixed contact distribution lost")
+		return 1
+	var gravel := RecordedTireController.compute_tire_targets({"speed_mps": 25.0, "slip_amount": 0.9, "surface": "gravel", "on_ground": true}, {}, 0.2)
+	var asphalt := RecordedTireController.compute_tire_targets({"speed_mps": 25.0, "slip_amount": 0.9, "surface": "asphalt", "on_ground": true}, {}, 0.2)
+	if float(gravel["screech_envelope"]) > 0.001 or float(asphalt["screech_envelope"]) < 0.1:
+		printerr("Paved and loose surface squeal must differ")
+		return 1
 	return 0
