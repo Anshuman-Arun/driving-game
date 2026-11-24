@@ -4,6 +4,10 @@ extends SceneTree
 ## godot --headless --script tests/integration/audio_qa/run_audio_qa.gd
 
 func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
 	print("\nStarting Aster Valley Audio QA Integration Suite...")
 	var runner_script = load("res://modules/audio/recorded_runtime/qa/audio_capture_runner.gd")
 	if not runner_script:
