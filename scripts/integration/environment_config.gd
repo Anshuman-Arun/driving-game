@@ -14,12 +14,11 @@ const FORZA_ENV_PATH := "res://assets/forza_env/materials/forza_environment.tres
 # Raking sun angle (~28-35 deg elevation, side-lit across road)
 const SUN_ROTATION := Vector3(-0.52, -1.45, 0.0)
 const SUN_COLOR := Color(1.0, 0.960784, 0.894118, 1.0) # #FFF5E4 warm afternoon sunlight
-const SUN_ENERGY := 2.8
-const SUN_ANGULAR_DISTANCE := 0.5
+const SUN_ENERGY := 2.15
+const SUN_ANGULAR_DISTANCE := 0.29
 const SUN_SHADOW_BIAS := 0.04
 const SUN_SHADOW_NORMAL_BIAS := 0.85
-const SUN_SHADOW_BLUR := 2.0
-const SUN_SHADOW_MAX_DISTANCE := 450.0
+const SUN_SHADOW_BLUR := 1.25
 const SUN_SHADOW_SPLIT_1 := 0.08
 const SUN_SHADOW_SPLIT_2 := 0.22
 const SUN_SHADOW_SPLIT_3 := 0.52
@@ -170,7 +169,7 @@ static func configure_sun(sun: DirectionalLight3D, quality: String = QUALITY_ULT
 	sun.shadow_normal_bias = SUN_SHADOW_NORMAL_BIAS
 	sun.shadow_blur = SUN_SHADOW_BLUR
 
-	sun.directional_shadow_max_distance = SUN_SHADOW_MAX_DISTANCE
+	sun.directional_shadow_max_distance = {"low": 175.0, "medium": 270.0, "high": 350.0}.get(quality, 380.0)
 	sun.directional_shadow_split_1 = SUN_SHADOW_SPLIT_1
 	sun.directional_shadow_split_2 = SUN_SHADOW_SPLIT_2
 	sun.directional_shadow_split_3 = SUN_SHADOW_SPLIT_3
@@ -235,6 +234,10 @@ static func build_environment(quality: String = QUALITY_ULTRA) -> Environment:
 static func configure_environment(env: Environment, quality: String = QUALITY_ULTRA) -> void:
 	if env == null:
 		return
+	env.tonemap_exposure = 0.98
+	env.fog_aerial_perspective = 0.72
+	env.fog_density = 0.00039
+	env.adjustment_saturation = 1.055
 
 	var q := quality.to_lower()
 	match q:
@@ -280,7 +283,7 @@ static func configure_environment(env: Environment, quality: String = QUALITY_UL
 		QUALITY_HIGH:
 			env.ssao_enabled = true
 			env.ssao_radius = 1.3
-			env.ssao_intensity = 1.1
+			env.ssao_intensity = 0.82
 
 			env.ssil_enabled = false
 
@@ -289,16 +292,14 @@ static func configure_environment(env: Environment, quality: String = QUALITY_UL
 			env.glow_enabled = true
 			env.glow_normalized = true
 			env.glow_intensity = 0.24
-			env.glow_bloom = 0.10
+			env.glow_bloom = 0.055
 			env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 			env.glow_hdr_threshold = 1.15
 
 			env.sdfgi_enabled = false
 
 		QUALITY_MEDIUM:
-			env.ssao_enabled = true
-			env.ssao_radius = 1.2
-			env.ssao_intensity = 1.0
+			env.ssao_enabled = false
 
 			env.ssil_enabled = false
 			env.ssr_enabled = false
@@ -306,7 +307,7 @@ static func configure_environment(env: Environment, quality: String = QUALITY_UL
 			env.glow_enabled = true
 			env.glow_normalized = true
 			env.glow_intensity = 0.20
-			env.glow_bloom = 0.08
+			env.glow_bloom = 0.045
 			env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 			env.glow_hdr_threshold = 1.2
 

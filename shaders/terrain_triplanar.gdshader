@@ -230,10 +230,12 @@ void fragment() {
 
 	// Sample Flat Layer: Blend Meadow Grass and Forest Dirt
 	// Forest dirt dominates higher elevation and northwestern woodland
-	float forest_w = clamp(smoothstep(45.0, 110.0, h + (macro_noise - 0.5) * 20.0), 0.0, 1.0);
+	float cedar = (1.0 - smoothstep(110.0, 450.0, length(xz - vec2(-772.0, -256.0))));
+	float forest_w = max(cedar * 0.86, smoothstep(66.0, 134.0, h + (macro_noise - 0.5) * 20.0) * 0.68);
 
 	vec3 col_grass = sample_stochastic_albedo(grass_albedo, xz, grass_scale, dist_blend) * grass_tint;
 	vec3 col_dirt = sample_stochastic_albedo(dirt_albedo, xz, dirt_scale, dist_blend) * dirt_tint;
+	col_dirt *= mix(vec3(1.0), vec3(0.86, 0.99, 0.81), cedar);
 	vec3 flat_col = mix(col_grass, col_dirt, forest_w * 0.65);
 
 	float rgh_grass = sample_stochastic_mono(grass_roughness, xz, grass_scale, dist_blend);
@@ -264,40 +266,33 @@ void fragment() {
 		flat_n = normalize(mix(flat_n, n_shore, shore_w));
 	}
 
-	// Sample Rock Cliff (Triplanar Projection)
-	vec3 rock_col = sample_triplanar_albedo(rock_albedo, world_pos, tri_weights, rock_scale, dist_blend) * rock_tint;
-
-	// Geological strata: crisp vertical bands along mountain faces
-	float strata = 1.0 + rock_strata_strength * sin(h * rock_strata_freq + macro_noise * 4.0);
-	rock_col *= strata;
-
-	float rock_rgh = 0.85;
-	float rock_ao_val = 1.0;
-	if (use_rock_arm) {
-		vec3 arm = sample_triplanar_arm(rock_arm, world_pos, tri_weights, rock_scale, dist_blend);
-		rock_ao_val = arm.r;
-		rock_rgh = arm.g;
-	} else {
-		rock_rgh = sample_triplanar_mono(rock_roughness, world_pos, tri_weights, rock_scale, dist_blend);
-		rock_ao_val = sample_triplanar_mono(rock_ao, world_pos, tri_weights, rock_scale, dist_blend);
+	if (rock_weight > 0.008) {
+		vec3 rock_col = sample_triplanar_albedo(rock_albedo, world_pos, tri_weights, rock_scale, dist_blend) * rock_tint;
+		rock_col *= 1.0 + rock_strata_strength * sin(h * rock_strata_freq + macro_noise * 4.0);
+		float rock_rgh = 0.85;
+		float rock_ao_val = 1.0;
+		if (use_rock_arm) {
+			vec3 arm = sample_triplanar_arm(rock_arm, world_pos, tri_weights, rock_scale, dist_blend);
+			rock_ao_val = arm.r;
+			rock_rgh = arm.g;
+		} else {
+			rock_rgh = sample_triplanar_mono(rock_roughness, world_pos, tri_weights, rock_scale, dist_blend);
+			rock_ao_val = sample_triplanar_mono(rock_ao, world_pos, tri_weights, rock_scale, dist_blend);
+		}
+		vec3 rock_n = sample_triplanar_world_normal(rock_normal, world_pos, n, tri_weights, rock_scale, eff_normal_str);
+		flat_col = mix(flat_col, rock_col, rock_weight);
+		flat_rgh = mix(flat_rgh, rock_rgh, rock_weight);
+		flat_ao = mix(flat_ao, rock_ao_val, rock_weight);
+		flat_n = normalize(mix(flat_n, rock_n, rock_weight));
 	}
-	vec3 rock_n = sample_triplanar_world_normal(rock_normal, world_pos, n, tri_weights, rock_scale, eff_normal_str * 1.15);
-
-	// Blend between Flat ground (grass/dirt) and Rock Cliff based on slope
-	vec3 final_albedo = mix(flat_col, rock_col, rock_weight);
-	float final_roughness = mix(flat_rgh, rock_rgh, rock_weight);
-	float final_ao = mix(flat_ao, rock_ao_val, rock_weight);
-	vec3 final_normal = normalize(mix(flat_n, rock_n, rock_weight));
 
 	// Stochastic macro luminance variation eliminating tiling on distant hills
 	float macro_lum = 1.0 + (macro_noise - 0.5) * (macro_luminance_mod * 2.0);
-	final_albedo *= macro_lum;
-
-	ALBEDO = final_albedo;
-	ROUGHNESS = clamp(final_roughness * 0.85 + 0.12, 0.22, 0.98);
+	ALBEDO = flat_col * macro_lum;
+	ROUGHNESS = clamp(flat_rgh * 0.85 + 0.12, 0.22, 0.98);
 	METALLIC = 0.0;
 	SPECULAR = mix(0.35, 0.55, wet_w * shore_w);
-	AO = clamp(final_ao, 0.3, 1.0);
+	AO = clamp(flat_ao, 0.3, 1.0);
 	AO_LIGHT_AFFECT = 0.65;
-	NORMAL = normalize((VIEW_MATRIX * vec4(final_normal, 0.0)).xyz);
+	NORMAL = normalize((VIEW_MATRIX * vec4(flat_n, 0.0)).xyz);
 }

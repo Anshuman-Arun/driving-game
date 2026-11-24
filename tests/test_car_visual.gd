@@ -77,11 +77,11 @@ func _init() -> void:
 		success = false
 
 	var glass_mat := CarMaterialSpec.create_glass()
-	if not is_equal_approx(glass_mat.roughness, 0.03) or not is_equal_approx(glass_mat.metallic, 0.1) or not is_equal_approx(glass_mat.metallic_specular, 0.95):
+	if not is_equal_approx(glass_mat.roughness, 0.12) or not is_equal_approx(glass_mat.metallic, 0.04) or not is_equal_approx(glass_mat.albedo_color.a, 0.36):
 		printerr("FAILED: Glass material parameters mismatch: roughness=", glass_mat.roughness, " metallic=", glass_mat.metallic, " specular=", glass_mat.metallic_specular)
 		success = false
 	else:
-		print("  PASSED: Glass material verified (roughness=0.03, metallic=0.1, specular=0.95).")
+		print("  PASSED: Partially transparent glass with a restrained gloss layer.")
 
 	var tire_mat := CarMaterialSpec.create_tire()
 	if not is_equal_approx(tire_mat.roughness, 0.85) or not tire_mat.albedo_color.is_equal_approx(Color("#1A1A1A")):

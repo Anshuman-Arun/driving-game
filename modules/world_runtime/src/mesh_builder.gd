@@ -4,6 +4,7 @@ extends RefCounted
 ## Turning lanes contribute only to broad collidable junction pads, not road strips.
 
 const RoadworksArt = preload("roadworks_art.gd")
+const RoadClearance = preload("road_clearance.gd")
 
 const SHOULDER_M := 1.35
 const ROAD_LIFT_M := 0.075
@@ -20,6 +21,7 @@ var radius_m: float = 460.0
 var materials: Dictionary = {}
 var stats: Dictionary = {}
 var roadworks: Dictionary = {}
+var clearance := RoadClearance.new()
 
 func build(parent: Node3D, world: Variant, all_chunks: bool, focus_xz: Vector2,
 		region_radius: float, terrain_chunk_cells: int, colliders: bool,
@@ -165,6 +167,10 @@ func _attach_mesh(parent: Node3D, label: String, mesh: ArrayMesh, material_count
 	instance.mesh = mesh
 	parent.add_child(instance)
 	stats["mesh_surface_count"] += material_count
+	if surface in ["asphalt", "gravel"]:
+		var pose := instance.global_transform if instance.is_inside_tree() else instance.transform
+		for index in mesh.get_surface_count():
+			clearance.add_surface(mesh, index, pose)
 	if not make_colliders:
 		return
 	if mesh.get_surface_count() == 1:
@@ -382,6 +388,7 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 	var pavement_verts := PackedVector3Array()
 	var pavement_norms := PackedVector3Array()
 	var pavement_uv := PackedVector2Array()
+	var pavement_metric_uv := PackedVector2Array()
 	var shoulder_verts := PackedVector3Array()
 	var shoulder_norms := PackedVector3Array()
 	var shoulder_uv := PackedVector2Array()
@@ -417,6 +424,16 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 		_append_quad(pavement_verts, pavement_norms, pavement_uv,
 			a[2], a[3], b[2], b[3], half_width / 4.0, half_width * 2.0 / 4.0,
 			cumulative / 8.0, (cumulative + length) / 8.0)
+		var actual_a := Vector2(a[3].x - a[2].x, a[3].z - a[2].z).length() / 4.0
+		var actual_b := Vector2(b[3].x - b[2].x, b[3].z - b[2].z).length() / 4.0
+		var v0 := cumulative / 8.0
+		var v1 := end / 8.0
+		var start := Vector2(0, v0)
+		var finish := Vector2(0, v1)
+		pavement_metric_uv.append_array(PackedVector2Array([
+			Vector2(-actual_a, v0), Vector2(-actual_b, v1), start, start, Vector2(-actual_b, v1), finish,
+			start, finish, Vector2(actual_a, v0), Vector2(actual_a, v0), finish, Vector2(actual_b, v1),
+		]))
 		_append_quad(shoulder_verts, shoulder_norms, shoulder_uv,
 			a[3], a[4], b[3], b[4], 0.0, SHOULDER_M / 4.0,
 			cumulative / 4.0, (cumulative + length) / 4.0)
@@ -424,9 +441,10 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 	if pavement_verts.is_empty():
 		return
 	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
-		_new_arrays(pavement_verts, pavement_norms, pavement_uv, PackedInt32Array(),
-			_compute_triangle_tangents(pavement_verts, pavement_norms, pavement_uv)))
+	var pavement := _new_arrays(pavement_verts, pavement_norms, pavement_uv, PackedInt32Array(),
+		_compute_triangle_tangents(pavement_verts, pavement_norms, pavement_metric_uv))
+	pavement[Mesh.ARRAY_TEX_UV2] = pavement_metric_uv
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, pavement)
 	mesh.surface_set_material(0, materials[surface])
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
 		_new_arrays(shoulder_verts, shoulder_norms, shoulder_uv, PackedInt32Array(),

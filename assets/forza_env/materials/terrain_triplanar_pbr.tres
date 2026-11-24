@@ -1,9 +1,9 @@
 [gd_resource type="ShaderMaterial" load_steps=16 format=3]
 
 [ext_resource type="Shader" path="res://shaders/terrain_triplanar.gdshader" id="1_shader"]
-[ext_resource type="Texture2D" path="res://assets/premium_world/payload/models/rock_face_02/textures/rock_face_02_diff_2k.jpg" id="2_rad"]
-[ext_resource type="Texture2D" path="res://assets/premium_world/payload/models/rock_face_02/textures/rock_face_02_nor_gl_2k.jpg" id="3_rn"]
-[ext_resource type="Texture2D" path="res://assets/premium_world/payload/models/rock_face_02/textures/rock_face_02_arm_2k.jpg" id="4_rarm"]
+[ext_resource type="Texture2D" path="res://assets/premium_runtime/cliff_albedo.jpg" id="2_rad"]
+[ext_resource type="Texture2D" path="res://assets/premium_runtime/cliff_normal.jpg" id="3_rn"]
+[ext_resource type="Texture2D" path="res://assets/premium_runtime/cliff_arm.jpg" id="4_rarm"]
 [ext_resource type="Texture2D" path="res://assets/forza_env/textures/rock/roughness.png" id="5_rr"]
 [ext_resource type="Texture2D" path="res://assets/forza_env/textures/rock/ao.png" id="6_rao"]
 [ext_resource type="Texture2D" path="res://assets/valley_art/meadow_albedo.jpg" id="7_ga"]
@@ -21,9 +21,9 @@
 [resource]
 render_priority = 0
 shader = ExtResource("1_shader")
-shader_parameter/slope_threshold = 0.65
-shader_parameter/slope_blend_margin = 0.12
-shader_parameter/normal_strength = 0.85
+shader_parameter/slope_threshold = 0.76
+shader_parameter/slope_blend_margin = 0.14
+shader_parameter/normal_strength = 0.62
 shader_parameter/rock_albedo = ExtResource("2_rad")
 shader_parameter/rock_normal = ExtResource("3_rn")
 shader_parameter/rock_arm = ExtResource("4_rarm")
@@ -32,7 +32,7 @@ shader_parameter/rock_ao = ExtResource("6_rao")
 shader_parameter/use_rock_arm = true
 shader_parameter/rock_scale = 0.075
 shader_parameter/rock_tint = Color(0.85, 0.84, 0.82, 1)
-shader_parameter/rock_strata_strength = 0.16
+shader_parameter/rock_strata_strength = 0.08
 shader_parameter/rock_strata_freq = 0.22
 shader_parameter/triplanar_sharpness = 6.0
 shader_parameter/grass_albedo = ExtResource("7_ga")

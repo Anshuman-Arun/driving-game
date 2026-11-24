@@ -22,11 +22,11 @@ const COLOR_TAILLIGHT_EMISSION := Color(3.5, 0.1, 0.1)
 static func create_car_paint(
 	body_color: Color = COLOR_DEEP_RED,
 	grazing_color: Color = COLOR_GRAZING_WARM,
-	flake_intensity: float = 0.18,
-	metallic: float = 0.80,
-	roughness: float = 0.18,
-	clearcoat: float = 1.0,
-	clearcoat_roughness: float = 0.04
+	flake_intensity: float = 0.038,
+	metallic: float = 0.52,
+	roughness: float = 0.30,
+	clearcoat: float = 0.69,
+	clearcoat_roughness: float = 0.14
 ) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
 	mat.shader = CAR_PAINT_SHADER
@@ -35,10 +35,10 @@ static func create_car_paint(
 	mat.set_shader_parameter("fresnel_power", 2.6)
 	mat.set_shader_parameter("flake_intensity", flake_intensity)
 	mat.set_shader_parameter("flake_scale", 320.0)
-	mat.set_shader_parameter("flake_color", Color(0.85, 0.18, 0.10, 1.0))
+	mat.set_shader_parameter("flake_color", body_color.lightened(0.26))
 	mat.set_shader_parameter("metallic", metallic)
 	mat.set_shader_parameter("roughness", roughness)
-	mat.set_shader_parameter("specular", 0.70)
+	mat.set_shader_parameter("specular", 0.46)
 	mat.set_shader_parameter("clearcoat", clearcoat)
 	mat.set_shader_parameter("clearcoat_roughness", clearcoat_roughness)
 	return mat
@@ -48,14 +48,14 @@ static func create_car_paint(
 static func create_glass() -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.resource_name = "CarGlass_Tinted"
-	mat.albedo_color = Color(0.02, 0.03, 0.04, 0.88)
-	mat.roughness = 0.03
-	mat.metallic = 0.1
-	mat.metallic_specular = 0.95
+	mat.albedo_color = Color(0.055, 0.080, 0.10, 0.36)
+	mat.roughness = 0.12
+	mat.metallic = 0.04
+	mat.metallic_specular = 0.56
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.clearcoat_enabled = true
-	mat.clearcoat = 1.0
-	mat.clearcoat_roughness = 0.02
+	mat.clearcoat = 0.48
+	mat.clearcoat_roughness = 0.15
 	mat.cull_mode = BaseMaterial3D.CULL_BACK
 	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	return mat
@@ -160,6 +160,9 @@ static func apply_to_vehicle(
 	var diffuser_mat := create_diffuser()
 	var taillight_mat := create_taillight(3.0)
 	var headlight_mat := create_headlight(2.5)
+	taillight_mat.albedo_color = Color(0.29, 0.012, 0.021)
+	taillight_mat.emission_energy_multiplier = 0.28
+	headlight_mat.emission_energy_multiplier = 0.25
 	var caliper_mat := create_caliper()
 	var rim_mat := create_rim()
 
@@ -183,7 +186,7 @@ static func apply_to_vehicle(
 			var assigned_mat: Material = null
 
 			# Heuristic 1: Inspect material resource name
-			if "carpaint" in mat_name or "paint" in mat_name:
+			if "carpaint" in mat_name or mat_name in ["paint_body", "paint"]:
 				assigned_mat = paint_mat
 			elif "glass" in mat_name or "window" in mat_name or "windshield" in mat_name:
 				assigned_mat = glass_mat
@@ -191,17 +194,17 @@ static func apply_to_vehicle(
 				assigned_mat = tire_mat
 			elif "diffuser" in mat_name or "splitter" in mat_name or "grille" in mat_name or "skirt" in mat_name:
 				assigned_mat = diffuser_mat
-			elif "taillight" in mat_name or "tail_light" in mat_name or "brakelight" in mat_name:
+			elif "taillight" in mat_name or "tail_light" in mat_name or "brakelight" in mat_name or mat_name == "light_rear":
 				assigned_mat = taillight_mat
-			elif "headlight" in mat_name or "head_light" in mat_name:
+			elif "headlight" in mat_name or "head_light" in mat_name or mat_name == "light_front":
 				assigned_mat = headlight_mat
 			elif "caliper" in mat_name:
 				assigned_mat = caliper_mat
-			elif "rim" in mat_name or "hub" in mat_name or "wheel" in mat_name:
+			elif "rim" in mat_name or "hub" in mat_name or "alloy" in mat_name:
 				assigned_mat = rim_mat
 
 			# Heuristic 2: Inspect node and parent names if material name didn't match
-			if assigned_mat == null:
+			if assigned_mat == null and mat_name.is_empty():
 				if "body_shell" in node_name or "sculptedbody" in node_name or "nose" in node_name or "roof" in node_name or "mirror" in node_name:
 					assigned_mat = paint_mat
 				elif "cabin" in node_name or "glass" in node_name or "window" in node_name:

@@ -11,6 +11,7 @@ const PRESETS := {
 	"vela_gt": {"name": "VelaGT", "mass": 1390.0, "torque": 480.0, "final_drive": 3.6, "front_split": 0.0, "paint": Color(0.075, 0.21, 0.41)},
 	"orion_rs": {"name": "OrionRS", "mass": 1190.0, "torque": 380.0, "final_drive": 3.9, "front_split": 0.0, "paint": Color(0.08, 0.45, 0.34)},
 	"kestrel_xr": {"name": "KestrelXR", "mass": 1540.0, "torque": 575.0, "final_drive": 3.3, "front_split": 0.35, "paint": Color(0.33, 0.22, 0.52)},
+	"solace_gt": {"name": "SolaceGT", "mass": 1620.0, "torque": 510.0, "final_drive": 3.45, "front_split": 0.20, "paint": Color("#447b82")},
 }
 
 static func create(car_id: String = DEFAULT_CAR) -> Vehicle:

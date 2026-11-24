@@ -57,7 +57,7 @@ static func is_valid_v2(payload: Variant) -> bool:
 	if not Catalog.car_ids().has(payload["selected_car"]):
 		return false
 	var unlocked: Variant = payload.get("unlocked_cars")
-	if not (unlocked is Array) or unlocked.is_empty() or unlocked.size() > 3:
+	if not (unlocked is Array) or unlocked.is_empty() or unlocked.size() > Catalog.CARS.size():
 		return false
 	var unique := {}
 	for id in unlocked:

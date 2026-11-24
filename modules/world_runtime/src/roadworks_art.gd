@@ -102,7 +102,12 @@ static func build_water(parent: Node3D, pools: Array, material: Material) -> voi
 		var water_level := float(pool["height"])
 		for cell: Array in pool["cells"]:
 			var at := Vector3(-1000.0 + float(cell[0]) * 4.0, water_level, -1000.0 + float(cell[1]) * 4.0)
-			_quad(builder, at, at + Vector3(4, 0, 0), at + Vector3(0, 0, 4), at + Vector3(4, 0, 4))
+			for offset: Vector3 in [Vector3.ZERO, Vector3(4, 0, 0), Vector3(0, 0, 4), Vector3(4, 0, 0), Vector3(4, 0, 4), Vector3(0, 0, 4)]:
+				var point := at + offset
+				builder.set_normal(Vector3.UP)
+				builder.set_uv(Vector2(point.x, point.z) / 24.0)
+				builder.add_vertex(point)
+		builder.generate_tangents()
 		builder.set_material(material)
 		var mesh := MeshInstance3D.new()
 		mesh.name = "CrossingWater"

@@ -80,3 +80,16 @@ The textures below use the [Poly Haven CC0 license](https://polyhaven.com/licens
 | Broadleaf canopy | [Tree Small 02](https://polyhaven.com/a/tree_small_02) | Rico Cilliers | `broadleaf_spray.png`, assembled from leaf diffuse and alpha |
 | Building walls | [White Plaster 02](https://polyhaven.com/a/white_plaster_02) | Rob Tuytel | `plaster.jpg`, `plaster_normal.jpg` |
 | Grass tufts | [Grass Medium 01](https://polyhaven.com/a/grass_medium_01) | Rico Cilliers, Rob Tuytel | `grass_cutout.png`, cropped and packed from diffuse and alpha |
+
+## Premium world and garage runtime conversions
+
+The acquired source packs retain their catalogs and SHA-256 ledgers under `assets/premium_world/`, `assets/premium_garage_world/`, and `assets/audio/recorded/`. The Windows export uses only the runtime derivatives listed here. The recorded-audio branch owns playback integration.
+
+| Runtime files | Source and license | Changes |
+|---|---|---|
+| `assets/premium_runtime/{fir,fern}.glb` | [Fir Sapling Medium](https://polyhaven.com/a/fir_sapling_medium) and [Fern 02](https://polyhaven.com/a/fern_02), Poly Haven CC0 | Simplified geometry, restored the original UV-matched opacity, applied alpha scissor, and fit to existing planting scale. |
+| `assets/premium_runtime/{moss_rocks,rock_face}.glb` and `cliff_*.jpg` | [Rock Moss Set 02](https://polyhaven.com/a/rock_moss_set_02) and [Rock Face 02](https://polyhaven.com/a/rock_face_02), Poly Haven CC0 | Simplified scans, selected the largest individual mossy rock, and reused the matching cliff color, OpenGL normal, and packed ARM maps. |
+| `assets/premium_runtime/{village_house,village_shop,wooden_garage,hay_barn}_1.glb` | [Village House](https://tevy.dev/models/village-house), [Village Shop](https://tevy.dev/models/village-shop), [Garage](https://tevy.dev/models/garage), [Hay Barn](https://tevy.dev/models/hay-barn), tevy CC0 | Converted published lower LODs to Godot-readable GLB and fit them to existing lots. |
+| `assets/premium_runtime/solace_gt.glb` and `assets/ui/dashboard/solace_gt.png` | [Electric Grand Tourer](https://tevy.dev/models/electric-gt), tevy CC0 | Decoded meshopt geometry, preserved source textures, adapted the independent wheel and caliper nodes to GEVP, and captured a runtime thumbnail. |
+
+Source authors and package hashes are recorded in the individual ledgers. The two opacity maps have a [separate acquisition record](../assets/premium_world/alpha_fix/README.md).

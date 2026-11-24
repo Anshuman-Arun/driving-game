@@ -433,7 +433,10 @@ func _garage(root: VBoxContainer) -> void:
 		var current: bool = car_id == save.selected_car()
 		var tint := Color("#304958") if selected else Color("#1f303d")
 		var card := _dashboard_tile(roster, item["name"], _inspect.bind(car_id), tint, 102)
-		var thumbnail := _tile_art(card, GARAGE_THUMBNAILS[car_id])
+		var art: Texture2D = GARAGE_THUMBNAILS.get(car_id)
+		if car_id == "solace_gt" and ResourceLoader.exists("res://assets/ui/dashboard/solace_gt.png", "Texture2D"):
+			art = load("res://assets/ui/dashboard/solace_gt.png") as Texture2D
+		var thumbnail := _tile_art(card, art)
 		thumbnail.anchor_left = 0.47
 		thumbnail.offset_top = 8
 		thumbnail.offset_right = -12

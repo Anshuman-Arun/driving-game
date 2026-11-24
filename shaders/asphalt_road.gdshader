@@ -93,8 +93,8 @@ void fragment() {
 	float across = clamp(UV.x / max(road_uv_width, 0.001), 0.0, 1.0);
 
 	// Multi-scale detail & macro UV coordinates to break up repeating texture tiles over kilometers
-	vec2 uv_det = vec2(UV.x * detail_tile_u, UV.y * detail_tile_v);
-	vec2 uv_mac = vec2(UV.x * (detail_tile_u * macro_tile_ratio) + 0.371, UV.y * (detail_tile_v * macro_tile_ratio) + 0.193);
+	vec2 uv_det = UV2 * vec2(detail_tile_u, detail_tile_v);
+	vec2 uv_mac = uv_det * macro_tile_ratio + vec2(0.371, 0.193);
 
 	// World-space procedural variations
 	float macro_var = macro_two_octaves(world_pos.xz);
@@ -212,7 +212,7 @@ void fragment() {
 	ALBEDO = col;
 	ROUGHNESS = rough;
 	METALLIC = 0.0;
-	SPECULAR = mix(0.42, 0.56, wheel_wear * 0.65 + any_paint * 0.35);
+	SPECULAR = mix(0.30, 0.39, wheel_wear * 0.65 + any_paint * 0.35);
 	AO = mix(1.0, base_ao, 0.58);
 	NORMAL_MAP = tex_normal;
 	NORMAL_MAP_DEPTH = mix(normal_depth, normal_depth * 0.55, any_paint * 0.4 + verge_blend * 0.5) * dist_normal_atten;

@@ -43,8 +43,8 @@ float value_noise(vec2 p) {
 void fragment() {
 	float across = clamp(UV.x / max(road_uv_width, 0.001), 0.0, 1.0);
 
-	vec2 uv_det = vec2(UV.x * detail_tile_u, UV.y * detail_tile_v);
-	vec2 uv_mac = vec2(UV.x * (detail_tile_u * 0.41) + 0.23, UV.y * (detail_tile_v * 0.41) + 0.57);
+	vec2 uv_det = UV2 * vec2(detail_tile_u, detail_tile_v);
+	vec2 uv_mac = uv_det * 0.41 + vec2(0.23, 0.57);
 
 	float macro_var = value_noise(world_pos.xz * 0.055);
 	float fine_var = value_noise(world_pos.xz * 0.26);

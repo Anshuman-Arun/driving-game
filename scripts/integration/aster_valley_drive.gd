@@ -9,6 +9,7 @@ const Vegetation = preload("valley_vegetation.gd")
 const SceneryRuntime = preload("res://modules/scenery/src/scenery_runtime.gd")
 const CuratedCar = preload("curated_car_visual.gd")
 const ValleyEnvironment = preload("aster_valley_environment.gd")
+const PremiumMesh = preload("premium_mesh.gd")
 const ALDER_START := Vector3(-575.0, 0.0, 545.0)
 const JUNCTION_CLEARANCE_M := 26.0
 const SPAWN_HEIGHT_M := 0.58
@@ -31,6 +32,8 @@ var vegetation: Vegetation
 var graphics_preset := "medium":
 	set(value):
 		graphics_preset = value
+		if is_node_ready():
+			ValleyEnvironment.apply_live_quality(self, value)
 		if is_instance_valid(vegetation):
 			vegetation.set_graphics(value)
 var _pending_vehicle_id := ""
@@ -62,11 +65,6 @@ func _ready() -> void:
 		push_error("Aster Valley could not load: " + world.error_message)
 		get_tree().quit(1)
 		return
-
-	if ResourceLoader.exists("res://modules/world_runtime/src/guardrail_spline_generator.gd"):
-		var guardrail_gen = load("res://modules/world_runtime/src/guardrail_spline_generator.gd")
-		if guardrail_gen != null and guardrail_gen.has_method("generate_all_corridors"):
-			guardrail_gen.generate_all_corridors(world, self)
 
 	var bounds: Dictionary = world.get_world_metadata()["bounds"]
 	_bounds = Rect2(bounds["min_x"], bounds["min_z"],
@@ -106,10 +104,6 @@ func set_scenery_enabled(enabled: bool) -> bool:
 			remove_child(scenery)
 			scenery.queue_free()
 			scenery = null
-		var prem := get_node_or_null("PremiumFoliageRuntime")
-		if prem != null:
-			remove_child(prem)
-			prem.queue_free()
 		return true
 	if scenery != null:
 		return true
@@ -123,21 +117,16 @@ func set_scenery_enabled(enabled: bool) -> bool:
 	add_child(vegetation)
 	vegetation.build(world, graphics_preset)
 	layer.mesh_overrides = Buildings.new().assets()
+	_add_adopted_scenery(layer.mesh_overrides)
 	var oak_mesh := vegetation.broadleaf_mesh()
 	if oak_mesh != null:
 		layer.mesh_overrides["assets/curated/models/environment/broadleaf_tree.glb"] = oak_mesh
 	var pine_mesh := vegetation.conifer_mesh()
 	if pine_mesh != null:
-		layer.mesh_overrides["assets/curated/models/environment/pine_tree_lod0.glb"] = pine_mesh
+		var fir := PremiumMesh.fit("fir", Vector3(3.5, 5.2, 3.5))
+		layer.mesh_overrides["assets/curated/models/environment/pine_tree_lod0.glb"] = fir if fir != null else pine_mesh
 		layer.mesh_overrides["assets/curated/models/environment/pine_tree_lod1.glb"] = vegetation.conifer_mesh(true)
 	add_child(layer)
-	if ResourceLoader.exists("res://scripts/integration/premium_foliage_runtime.gd"):
-		var FoliageClass = load("res://scripts/integration/premium_foliage_runtime.gd")
-		if FoliageClass != null:
-			var prem_foliage = FoliageClass.new()
-			prem_foliage.name = "PremiumFoliageRuntime"
-			add_child(prem_foliage)
-			prem_foliage.build(world, graphics_preset)
 	if not layer.build_scenery(world):
 		scenery_enabled = false
 		remove_child(layer)
@@ -148,6 +137,28 @@ func set_scenery_enabled(enabled: bool) -> bool:
 		return false
 	scenery = layer
 	return true
+
+func _add_adopted_scenery(overrides: Dictionary) -> void:
+	var houses: Array = overrides["content/scenery/models/town_house.gltf"]
+	for candidate in ["village_house_1", "village_shop_1"]:
+		var mesh := PremiumMesh.fit(candidate, Vector3(11.5, 8.4, 9.0))
+		if mesh != null:
+			houses.append(mesh)
+	var replacements := {
+		"content/scenery/models/barn.gltf": ["hay_barn_1", Vector3(15, 9, 11)],
+		"content/scenery/models/garage.gltf": ["wooden_garage_1", Vector3(14, 7, 10)],
+		"assets/curated/models/environment/boulder.glb": ["moss_rocks", Vector3(3.3, 2.8, 3.3), true],
+		"assets/curated/models/environment/rock_cluster.glb": ["rock_face", Vector3(5.8, 3.8, 4.6)],
+	}
+	for path: String in replacements:
+		var choice: Array = replacements[path]
+		var mesh := PremiumMesh.fit(choice[0], choice[1], choice.size() > 2)
+		if mesh == null:
+			continue
+		if overrides.has(path):
+			overrides[path].append(mesh)
+		else:
+			overrides[path] = mesh
 
 func _process(_delta: float) -> void:
 	if adapter == null:

@@ -68,10 +68,10 @@ void fragment() {
 
 	float cam_dist = length(VERTEX);
 	float dist_n = mix(1.0, 0.22, smoothstep(16.0, 90.0, cam_dist));
-	ALBEDO = col;
-	ROUGHNESS = clamp(rough, 0.38, 0.96);
+	ALBEDO = col * 0.88;
+	ROUGHNESS = clamp(rough, 0.66, 0.96);
 	METALLIC = 0.0;
-	SPECULAR = 0.44;
+	SPECULAR = 0.26;
 	AO = mix(1.0, base_ao, 0.55);
 	NORMAL_MAP = tex_n;
 	NORMAL_MAP_DEPTH = normal_depth * dist_n;

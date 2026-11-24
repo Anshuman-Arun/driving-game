@@ -11,30 +11,19 @@ const MAT_ASPHALT_FALLBACK := "res://assets/forza_env/materials/road_asphalt_for
 const MAT_JUNCTION_ASPHALT_PATH := "res://assets/forza_env/materials/road_junction_asphalt_forza.tres"
 const MAT_GRAVEL_PATH := "res://assets/forza_env/materials/road_gravel_forza.tres"
 const MAT_SHOULDER_PATH := "res://assets/forza_env/materials/road_shoulder_forza.tres"
+const Lighting = preload("environment_config.gd")
 
 static func apply_environment(root: Node3D) -> void:
-	if ResourceLoader.exists("res://scripts/integration/environment_config.gd"):
-		var env_config = load("res://scripts/integration/environment_config.gd")
-		if env_config != null and env_config.has_method("apply_to_root"):
-			env_config.apply_to_root(root, "high")
-			return
-	if not root.get("shell_managed"):
-		apply_quality(root.get_viewport(), "medium")
-	var world_env := root.get_node_or_null("WorldEnvironment") as WorldEnvironment
-	if world_env != null:
-		world_env.environment = build_environment()
-	var sun := root.get_node_or_null("Sun") as DirectionalLight3D
-	if sun != null:
-		configure_sun(sun)
+	Lighting.apply_to_root(root, str(root.get("graphics_preset")))
 
 static func apply_quality(viewport: Viewport, preset: String) -> void:
-	var low := preset == "low"
-	viewport.scaling_3d_scale = 0.85 if low else 1.0
-	viewport.msaa_3d = Viewport.MSAA_2X if preset == "high" else Viewport.MSAA_DISABLED
-	var forward_plus := RenderingServer.get_current_rendering_method() == "forward_plus"
-	viewport.use_taa = forward_plus and not low
-	viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED if viewport.use_taa else Viewport.SCREEN_SPACE_AA_FXAA
-	viewport.use_debanding = false
+	Lighting.apply_viewport_renderer_config(viewport, preset)
+
+static func apply_live_quality(root: Node3D, preset: String) -> void:
+	var world_env := root.get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if world_env != null:
+		Lighting.configure_environment(world_env.environment, preset)
+	Lighting.configure_sun(root.get_node_or_null("Sun") as DirectionalLight3D, preset)
 
 static func build_environment() -> Environment:
 	var env := Environment.new()

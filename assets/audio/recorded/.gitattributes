@@ -1,0 +1,2 @@
+# Small verified PCM assets are complete Git blobs, not LFS pointers.
+*.wav -filter -diff -merge -text

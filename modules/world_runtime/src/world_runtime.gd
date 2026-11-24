@@ -26,6 +26,7 @@ var data = null
 var report: Dictionary = {}
 var error_message: String = ""
 var generated_root: Node3D = null
+var road_clearance: RefCounted
 
 func _ready() -> void:
 	if build_on_ready:
@@ -38,7 +39,7 @@ func discover_world_directory() -> String:
 	if not world_data_directory.is_empty():
 		return world_data_directory
 	# Root-game integration, once World PR #3 has been merged.
-	var game_root := ProjectSettings.globalize_path("res://data/world")
+	var game_root := "res://data/world"
 	if FileAccess.file_exists(game_root.path_join("road_graph_v1.json")):
 		return game_root
 	# Standalone project: authoritative world data in a sibling repository root.
@@ -58,6 +59,7 @@ func _local_dir() -> String:
 func build_world(directory_override: String = "") -> bool:
 	error_message = ""
 	report = {}
+	road_clearance = null
 	if generated_root != null and is_instance_valid(generated_root):
 		remove_child(generated_root)
 		generated_root.free()
@@ -102,6 +104,8 @@ func build_world(directory_override: String = "") -> bool:
 	var builder = load(_local_dir().path_join("mesh_builder.gd")).new()
 	report = builder.build(root, data, full, preview_center_xz,
 		preview_radius_m, terrain_chunk_cells, generate_colliders, overrides)
+	road_clearance = builder.clearance
+	report["clearance_triangles"] = road_clearance.triangle_count
 	report["source_directory"] = directory
 	report["graph_lane_count"] = data.lanes.size()
 	report["graph_road_count"] = data.roads.size()
