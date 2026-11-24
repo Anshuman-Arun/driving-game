@@ -46,8 +46,8 @@ const HALF_PI := PI * 0.5
 @export_range(40.0, 150.0, 1.0) var throttle_smoothing_ms: float = 80.0
 
 # Pitch scaling limits
-@export var min_pitch_clamp: float = 0.75
-@export var max_pitch_clamp: float = 1.35
+@export var min_pitch_clamp: float = 0.65
+@export var max_pitch_clamp: float = 1.55
 @export var sub_idle_min_pitch: float = 0.45
 
 # Rev limiter settings
@@ -359,55 +359,36 @@ func _apply_audio_blend() -> void:
 
 
 func _compute_layer_anchors(layer: String, rpm: float) -> Dictionary:
-	var anchors: Array = _manifest.get_anchors_for_layer(layer)
-	if anchors.is_empty():
-		return {"gains": {}, "pitches": {}}
+	return compute_anchor_pair(_manifest.find_bracketing_anchors(layer, rpm), rpm,
+		min_pitch_clamp, max_pitch_clamp, sub_idle_min_pitch)
 
-	var gains: Dictionary = {}
-	var pitches: Dictionary = {}
 
-	# Initialize all anchors in layer to 0 gain
-	for a in anchors:
-		var f: String = str(a["file"])
-		gains[f] = 0.0
-		pitches[f] = 1.0
-
-	var bracket: Dictionary = _manifest.find_bracketing_anchors(layer, rpm)
+# Crossfade only where both recordings can be pitched to the same nominal RPM.
+# Broad linear blends outside this overlap produce two different firing frequencies.
+static func compute_anchor_pair(bracket: Dictionary, rpm: float, min_pitch: float = 0.65,
+		max_pitch: float = 1.55, idle_pitch: float = 0.45) -> Dictionary:
+	var gains := {}
+	var pitches := {}
 	if bracket.is_empty():
 		return {"gains": gains, "pitches": pitches}
-
-	var low_anchor: Dictionary = bracket["low"]
-	var high_anchor: Dictionary = bracket["high"]
-	var is_single: bool = bool(bracket.get("is_single", false))
-	var t: float = float(bracket.get("t", 0.0))
-
-	var low_file: String = str(low_anchor["file"])
-	var high_file: String = str(high_anchor["file"])
-	var low_rpm: float = float(low_anchor["rpm"])
-	var high_rpm: float = float(high_anchor["rpm"])
-
-	var is_sub_idle := rpm < low_rpm
-
-	if is_single or low_file == high_file:
-		var target_file := high_file if t >= 1.0 else low_file
-		var target_rpm := high_rpm if t >= 1.0 else low_rpm
-		gains[target_file] = 1.0
-		pitches[target_file] = _calc_pitch(rpm, target_rpm, is_sub_idle)
+	var low: Dictionary = bracket["low"]
+	var high: Dictionary = bracket["high"]
+	var low_file := str(low["file"])
+	var high_file := str(high["file"])
+	var low_rpm := maxf(1.0, float(low["rpm"]))
+	var high_rpm := maxf(1.0, float(high["rpm"]))
+	if bool(bracket.get("is_single", false)) or low_file == high_file:
+		gains[low_file] = 1.0
+		pitches[low_file] = clampf(rpm / low_rpm, idle_pitch if rpm < low_rpm else min_pitch, max_pitch)
 	else:
-		# Constant-power cos/sin crossfade between adjacent anchors
-		gains[low_file] = cos(t * HALF_PI)
-		gains[high_file] = sin(t * HALF_PI)
-		pitches[low_file] = _calc_pitch(rpm, low_rpm, is_sub_idle)
-		pitches[high_file] = _calc_pitch(rpm, high_rpm, false)
-
+		var start := maxf(low_rpm, high_rpm * min_pitch)
+		var finish := minf(high_rpm, low_rpm * max_pitch)
+		var blend := smoothstep(start, finish, rpm) if finish > start else float(bracket.get("t", 0.0))
+		gains[low_file] = cos(blend * HALF_PI)
+		gains[high_file] = sin(blend * HALF_PI)
+		pitches[low_file] = clampf(rpm / low_rpm, min_pitch, max_pitch)
+		pitches[high_file] = clampf(rpm / high_rpm, min_pitch, max_pitch)
 	return {"gains": gains, "pitches": pitches}
-
-
-func _calc_pitch(current_rpm: float, anchor_rpm: float, is_sub_idle: bool) -> float:
-	var ratio := current_rpm / maxf(1.0, anchor_rpm)
-	if is_sub_idle:
-		return clampf(ratio, sub_idle_min_pitch, max_pitch_clamp)
-	return clampf(ratio, min_pitch_clamp, max_pitch_clamp)
 
 
 func _rebuild_loop_players() -> void:
@@ -548,60 +529,12 @@ static func compute_blend_state(rpm: float, throttle: float, manifest_data: Dict
 	var on_layer_gain := load_gains.x
 	var off_layer_gain := load_gains.y
 
-	var on_anchors := manifest.on_anchors
-	var off_anchors := manifest.off_anchors
-
-	var on_gains: Dictionary = {}
-	var on_pitches: Dictionary = {}
-	var off_gains: Dictionary = {}
-	var off_pitches: Dictionary = {}
-
-	# On anchors
-	var on_bracket := manifest.find_bracketing_anchors("on", rpm)
-	if not on_bracket.is_empty():
-		var low_a: Dictionary = on_bracket["low"]
-		var high_a: Dictionary = on_bracket["high"]
-		var is_s: bool = bool(on_bracket.get("is_single", false))
-		var t: float = float(on_bracket.get("t", 0.0))
-		var low_f: String = str(low_a["file"])
-		var high_f: String = str(high_a["file"])
-		var low_r: float = float(low_a["rpm"])
-		var high_r: float = float(high_a["rpm"])
-
-		if is_s or low_f == high_f:
-			var tf := high_f if t >= 1.0 else low_f
-			var tr := high_r if t >= 1.0 else low_r
-			on_gains[tf] = 1.0
-			on_pitches[tf] = clampf(rpm / tr, 0.45, 1.35)
-		else:
-			on_gains[low_f] = cos(t * HALF_PI)
-			on_gains[high_f] = sin(t * HALF_PI)
-			on_pitches[low_f] = clampf(rpm / low_r, 0.45, 1.35)
-			on_pitches[high_f] = clampf(rpm / high_r, 0.75, 1.35)
-
-	# Off anchors
-	if manifest.has_off_layer:
-		var off_bracket := manifest.find_bracketing_anchors("off", rpm)
-		if not off_bracket.is_empty():
-			var low_a: Dictionary = off_bracket["low"]
-			var high_a: Dictionary = off_bracket["high"]
-			var is_s: bool = bool(off_bracket.get("is_single", false))
-			var t: float = float(off_bracket.get("t", 0.0))
-			var low_f: String = str(low_a["file"])
-			var high_f: String = str(high_a["file"])
-			var low_r: float = float(low_a["rpm"])
-			var high_r: float = float(high_a["rpm"])
-
-			if is_s or low_f == high_f:
-				var tf := high_f if t >= 1.0 else low_f
-				var tr := high_r if t >= 1.0 else low_r
-				off_gains[tf] = 1.0
-				off_pitches[tf] = clampf(rpm / tr, 0.45, 1.35)
-			else:
-				off_gains[low_f] = cos(t * HALF_PI)
-				off_gains[high_f] = sin(t * HALF_PI)
-				off_pitches[low_f] = clampf(rpm / low_r, 0.45, 1.35)
-				off_pitches[high_f] = clampf(rpm / high_r, 0.75, 1.35)
+	var on_state := compute_anchor_pair(manifest.find_bracketing_anchors("on", rpm), rpm)
+	var off_state := compute_anchor_pair(manifest.find_bracketing_anchors("off", rpm), rpm) if manifest.has_off_layer else {"gains": {}, "pitches": {}}
+	var on_gains: Dictionary = on_state["gains"]
+	var on_pitches: Dictionary = on_state["pitches"]
+	var off_gains: Dictionary = off_state["gains"]
+	var off_pitches: Dictionary = off_state["pitches"]
 
 	# Calculate power sums to verify constant-power blending
 	var on_power_sum := 0.0
