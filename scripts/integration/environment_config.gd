@@ -78,13 +78,13 @@ static func apply_viewport_renderer_config(viewport: Viewport, quality: String =
 	match q:
 		QUALITY_ULTRA:
 			viewport.scaling_3d_scale = 1.0
-			viewport.msaa_3d = Viewport.MSAA_4X
+			viewport.msaa_3d = Viewport.MSAA_DISABLED
 			viewport.use_taa = forward_plus
 			viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED if viewport.use_taa else Viewport.SCREEN_SPACE_AA_FXAA
 			viewport.use_debanding = true
 		QUALITY_HIGH:
 			viewport.scaling_3d_scale = 1.0
-			viewport.msaa_3d = Viewport.MSAA_2X
+			viewport.msaa_3d = Viewport.MSAA_DISABLED
 			viewport.use_taa = forward_plus
 			viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED if viewport.use_taa else Viewport.SCREEN_SPACE_AA_FXAA
 			viewport.use_debanding = true
@@ -270,24 +270,21 @@ static func configure_environment(env: Environment, quality: String = QUALITY_UL
 			env.glow_hdr_threshold = 1.1
 			env.glow_hdr_scale = 1.8
 
-			# SDFGI (toggleable per quality)
-			env.sdfgi_enabled = true
-			env.sdfgi_cascades = 6
+			# SDFGI disabled by default for smooth 60+ FPS real-time driving
+			env.sdfgi_enabled = false
+			env.sdfgi_cascades = 4
 			env.sdfgi_min_cell_size = 0.2
 			env.sdfgi_y_scale = Environment.SDFGI_Y_SCALE_50_PERCENT
-			env.sdfgi_use_occlusion = true
+			env.sdfgi_use_occlusion = false
 
 		QUALITY_HIGH:
 			env.ssao_enabled = true
-			env.ssao_radius = 1.4
-			env.ssao_intensity = 1.2
+			env.ssao_radius = 1.3
+			env.ssao_intensity = 1.1
 
-			env.ssil_enabled = true
-			env.ssil_radius = 4.0
-			env.ssil_intensity = 0.35
+			env.ssil_enabled = false
 
-			env.ssr_enabled = true
-			env.ssr_max_steps = 32
+			env.ssr_enabled = false
 
 			env.glow_enabled = true
 			env.glow_normalized = true

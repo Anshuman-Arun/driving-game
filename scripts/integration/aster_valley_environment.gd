@@ -16,7 +16,7 @@ static func apply_environment(root: Node3D) -> void:
 	if ResourceLoader.exists("res://scripts/integration/environment_config.gd"):
 		var env_config = load("res://scripts/integration/environment_config.gd")
 		if env_config != null and env_config.has_method("apply_to_root"):
-			env_config.apply_to_root(root, "ultra")
+			env_config.apply_to_root(root, "high")
 			return
 	if not root.get("shell_managed"):
 		apply_quality(root.get_viewport(), "medium")

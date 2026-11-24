@@ -84,8 +84,8 @@ func _run_capture() -> void:
 		if env_script != null and env_script.has_method("apply_to_scene"):
 			var world_env := _valley.get_node_or_null("WorldEnvironment") as WorldEnvironment
 			var sun := _valley.get_node_or_null("Sun") as DirectionalLight3D
-			env_script.apply_to_scene(world_env, sun, "ultra")
-			print("Applied Ultra Environment Config from Worker 1")
+			env_script.apply_to_scene(world_env, sun, "high")
+			print("Applied High Performance Environment Config from Worker 1")
 
 	# Apply Car Material Spec if available from Worker 2
 	if ResourceLoader.exists(CAR_SPEC_SCRIPT):

@@ -113,7 +113,7 @@ func set_scenery_enabled(enabled: bool) -> bool:
 		return true
 	var layer := SceneryRuntime.new()
 	layer.name = "Scenery"
-	layer.generate_selective_colliders = false
+	layer.generate_selective_colliders = true
 	vegetation = Vegetation.new()
 	vegetation.name = "ValleyVegetation"
 	add_child(vegetation)

@@ -29,19 +29,20 @@ const GRASS_MEDIUM_PATH := "res://assets/premium_world/payload/models/grass_medi
 const BAKED_DATA_PATH := "res://data/world/premium_foliage.bin"
 
 const STRIDE := 7
-const CELL_SIZE := 160.0
+const CELL_SIZE := 380.0
 
 var _world: Node
 var _placements := PackedFloat32Array()
 var _mesh_registry: Dictionary = {} # kind (int) -> Array[Mesh]
 var _batches: Array[MultiMeshInstance3D] = []
 var _layer_batches: Dictionary = {1: [], 2: [], 3: []} # layer_idx -> Array[MultiMeshInstance3D]
-var _quality_preset := "ultra"
+var _collider_bodies: Array[StaticBody3D] = []
+var _quality_preset := "high"
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 
-func build(world: Node = null, preset: String = "ultra") -> void:
+func build(world: Node = null, preset: String = "high") -> void:
 	_world = world
 	_quality_preset = preset
 
@@ -56,11 +57,15 @@ func build(world: Node = null, preset: String = "ultra") -> void:
 
 	# 3. Partition into spatial cells and construct GPU MultiMeshInstances
 	_build_multimeshes()
+
+	# 4. Generate solid physical colliders for roadside trees and boulders
+	_build_colliders()
+
 	set_graphics(preset)
 
 	var counts := get_layer_counts()
-	print("[PremiumFoliageRuntime] Built Aster Valley foliage: %d total instances (Layer 1 Conifers: %d, Layer 2 Understory: %d, Layer 3 Verge Grass: %d) across %d batches" % [
-		get_total_instance_count(), counts.get(1, 0), counts.get(2, 0), counts.get(3, 0), _batches.size()
+	print("[PremiumFoliageRuntime] Built Aster Valley foliage: %d total instances (Layer 1 Conifers: %d, Layer 2 Understory: %d, Layer 3 Verge Grass: %d) across %d batches, with %d colliders" % [
+		get_total_instance_count(), counts.get(1, 0), counts.get(2, 0), counts.get(3, 0), _batches.size(), _collider_bodies.size()
 	])
 
 func set_graphics(preset: String) -> void:
@@ -239,6 +244,59 @@ func _create_batch(offsets: Array, mesh: Mesh, layer: int) -> MultiMeshInstance3
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 	return mmi
+
+func _build_colliders() -> void:
+	for body in _collider_bodies:
+		if is_instance_valid(body):
+			body.queue_free()
+	_collider_bodies.clear()
+
+	var collider_root := Node3D.new()
+	collider_root.name = "FoliageColliders"
+	add_child(collider_root)
+
+	var added := 0
+	# Stride: px, py, pz, yaw, scale, kind, seed
+	for offset in range(0, _placements.size(), STRIDE):
+		var kind: int = int(_placements[offset + 5])
+		# Only Layer 1 (conifers 0, 1) and Layer 2 boulders/stumps (3, 4) get physical colliders
+		if kind not in [0, 1, 3, 4]:
+			continue
+
+		var px: float = _placements[offset]
+		var py: float = _placements[offset + 1]
+		var pz: float = _placements[offset + 2]
+		var s: float = _placements[offset + 4]
+
+		var body := StaticBody3D.new()
+		body.name = "FoliageCol_%d" % added
+		body.collision_layer = 1
+		body.collision_mask = 2 # Vehicle layer
+		body.position = Vector3(px, py, pz)
+
+		var col_shape := CollisionShape3D.new()
+		if kind in [0, 1]: # Conifer trunk
+			var cyl := CylinderShape3D.new()
+			cyl.radius = 0.40 * s
+			cyl.height = 7.0 * s
+			col_shape.shape = cyl
+			col_shape.position.y = 3.5 * s
+		elif kind == 3: # Mossy Rock / Boulder
+			var sph := SphereShape3D.new()
+			sph.radius = 1.35 * s
+			col_shape.shape = sph
+			col_shape.position.y = 0.9 * s
+		elif kind == 4: # Tree stump
+			var cyl := CylinderShape3D.new()
+			cyl.radius = 0.60 * s
+			cyl.height = 1.2 * s
+			col_shape.shape = cyl
+			col_shape.position.y = 0.6 * s
+
+		body.add_child(col_shape)
+		collider_root.add_child(body)
+		_collider_bodies.append(body)
+		added += 1
 
 func _load_gltf_meshes(res_path: String, name_filters: Array = []) -> Array[Mesh]:
 	var out: Array[Mesh] = []

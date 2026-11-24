@@ -22,24 +22,23 @@ const COLOR_TAILLIGHT_EMISSION := Color(3.5, 0.1, 0.1)
 static func create_car_paint(
 	body_color: Color = COLOR_DEEP_RED,
 	grazing_color: Color = COLOR_GRAZING_WARM,
-	flake_intensity: float = 0.45,
-	metallic: float = 0.75,
-	roughness: float = 0.22,
+	flake_intensity: float = 0.18,
+	metallic: float = 0.80,
+	roughness: float = 0.18,
 	clearcoat: float = 1.0,
-	clearcoat_roughness: float = 0.05
+	clearcoat_roughness: float = 0.04
 ) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
 	mat.shader = CAR_PAINT_SHADER
 	mat.set_shader_parameter("base_color", body_color)
 	mat.set_shader_parameter("grazing_color", grazing_color)
-	mat.set_shader_parameter("fresnel_power", 2.8)
+	mat.set_shader_parameter("fresnel_power", 2.6)
 	mat.set_shader_parameter("flake_intensity", flake_intensity)
-	mat.set_shader_parameter("flake_scale", 240.0)
-	mat.set_shader_parameter("flake_jitter", 0.65)
-	mat.set_shader_parameter("flake_color", Color(1.0, 0.92, 0.85, 1.0))
+	mat.set_shader_parameter("flake_scale", 320.0)
+	mat.set_shader_parameter("flake_color", Color(0.85, 0.18, 0.10, 1.0))
 	mat.set_shader_parameter("metallic", metallic)
 	mat.set_shader_parameter("roughness", roughness)
-	mat.set_shader_parameter("specular", 0.65)
+	mat.set_shader_parameter("specular", 0.70)
 	mat.set_shader_parameter("clearcoat", clearcoat)
 	mat.set_shader_parameter("clearcoat_roughness", clearcoat_roughness)
 	return mat

@@ -250,7 +250,10 @@ func _surface_height(x: float, z: float) -> float:
 	return NAN
 
 func _collidable_asset(asset: String) -> bool:
-	return asset in ["house", "barn", "garage", "windmill", "arch", "overlook", "pier", "quarry", "guardrail", "barrier"]
+	return asset in [
+		"house", "barn", "garage", "windmill", "arch", "overlook", "pier", "quarry",
+		"guardrail", "barrier", "pine_tree", "broadleaf_tree", "tree", "rock", "boulder", "rock_face", "rock_moss", "tree_stump"
+	]
 
 func _add_collider(root: Node3D, item: Dictionary, asset: String) -> void:
 	var dimensions := Vector3(6.0, 3.0, 6.0)
@@ -258,6 +261,12 @@ func _add_collider(root: Node3D, item: Dictionary, asset: String) -> void:
 		dimensions = Vector3(4.0, 0.9, 0.5)
 	elif asset == "barrier":
 		dimensions = Vector3(3.0, 1.0, 0.8)
+	elif asset in ["pine_tree", "broadleaf_tree", "tree"]:
+		dimensions = Vector3(1.1, 8.0, 1.1)
+	elif asset in ["rock", "boulder", "rock_face", "rock_moss"]:
+		dimensions = Vector3(3.0, 2.5, 3.0)
+	elif asset == "tree_stump":
+		dimensions = Vector3(1.4, 1.5, 1.4)
 	elif asset == "house":
 		dimensions = Vector3(12.0, 7.0, 9.0)
 	elif asset == "barn":
