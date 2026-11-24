@@ -2,6 +2,10 @@
 
 Last updated: 2026-11-23
 
+## Premium garage and architecture source pack (`feat/premium-garage-world-assets`)
+
+Added independent CC0 car, traffic, architecture and infrastructure candidate catalog, isolated acquisition and validation workflow, and import guidance. No extracted Forza models or runtime changes. Actual publication and Godot visual/rigging QA remain pending; inspect `assets/premium_garage_world/payload/LICENSES_AND_HASHES.json` after successful CI.
+
 ## Water crossings, roadside detail and instruments (`feat/local-showroom-dashboard`)
 
 Eastwater Viaduct, Alder Creek Bridge and Needle Pass Trestle carry existing routes over new water at lake, valley and mountain elevations. Five corridors have wider pavement with tapered approaches. The bridge decks, rails and shoulder surfaces participate in driving collision. The root game loads a separate roadworks heightfield while the standalone runtime can still load the canonical world. The scenery layer accounts for 12 placements displaced by the new banks.
