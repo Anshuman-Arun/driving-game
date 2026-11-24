@@ -1,5 +1,11 @@
 # Project status — single current-state log
 
+## Hero supercar audio priority (`feat/hero-supercar-audio`, 2026-11-24)
+
+User prioritizes Aventador SVJ and McLaren Senna from scenic PR #36. Created separate audio branch from exact model integration; each now selects a dedicated voicing and actual factory RPM limits. Adopted verified prior runtime fixes while retaining scenic active-loop decoder optimization. Initial profiles deliberately reuse existing Vela and Kestrel recorded proxy banks; no authentic V12/Senna bank has been cleared and installed yet. Per-car intake response, throttle/RPM smoothing, shift interruption and event gains are separately tunable. Dedicated two-car capture and factory tests added. Prior PR #37 revision 5c93d16 passed 10/10 strict audio suites in run 45508597597; artifact upload failed due to storage quota, not a runtime failure. New scenic-derived revision is unverified, and listening/performance approval remains open. See [hero audio handoff](HERO_SUPERCAR_AUDIO.md).
+
+
+
 Last updated: 2026-11-24
 
 ## Scenic driving and exact supercars (`feat/aster-scenic-supercars`)
