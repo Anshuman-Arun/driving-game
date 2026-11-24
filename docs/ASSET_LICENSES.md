@@ -119,3 +119,8 @@ Updated: 2026-11-23. Machine-readable catalog and hash ledger: `assets/audio/rec
 | `tires_roll_gravel` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/tires/roll_gravel.wav` |
 | `tires_screech` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/tires/screech.wav` |
 
+
+
+## Hero supercar audition recordings (private-build)
+
+The two new hero engine manifests at `assets/audio/recorded/payload/engines/aventador_svj/manifest.json` and `assets/audio/recorded/payload/engines/mclaren_senna/manifest.json` include all original creator credits, source URLs, declared CC BY 3.0 licenses, upstream processing details, and per-file Git blob identity. Commons independent review remains pending. The Senna uses related McLaren V8 recordings, not a measured Senna bank. See [HERO_SUPERCAR_AUDIO.md](HERO_SUPERCAR_AUDIO.md) for limitations and audition plan.

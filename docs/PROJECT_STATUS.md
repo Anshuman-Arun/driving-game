@@ -1,5 +1,22 @@
 # Project status — single current-state log
 
+## Private-build recorded banks installed (2026-11-24)
+
+The owner requested the two preferred hero cars receive the overwhelming majority of sound-tuning work and authorized private-build audition. Added 26 real field-recorded loops obtained from the public supercar-engine-sound repository (upstream sample banks `svj` and `765lt`). Each 48 kHz mono PCM16 file was checked for valid format, exact Git blob identity, nonzero signal and zero clipped samples before the commit. Original PCM is unchanged; runtime seam conditioning applies. Source provenance, authors, declared CC BY 3.0 license, original URLs, upstream edit descriptions and per-loop waveform metrics are in each dedicated manifest. Independent Commons license review is pending; this is an audition build, not a public-distribution clearance.
+
+| Bank | Acceleration | Coast | Source character |
+|---|---|---|---|
+| Aventador SVJ | 8 anchors, 950–8000 RPM | 6 anchors, 2000–8000 RPM | Aventador/SV/SVJ family V12 |
+| Senna | 7 anchors, 1000–7000 RPM | 5 anchors, 3000–7000 RPM | McLaren 765LT/600LT/720S family V8, not actual Senna |
+ 
+The RPM and load labels are estimates from upstream, not verified dyno telemetry. These are multiple field-recording sessions; several coast loops are short (shortest about 0.15 s), and high-RPM timbral consistency must be auditioned. No new turbo whistle, mechanical or gearshift recordings yet. The prior proxy banks remain emergency fallback only; both factory and capture tests now require the dedicated bank. Hero idle gain changed from 0.40 to 0.58/0.60 (approximately +3.2/+3.5 dB before the rest of the mix), with existing independent shift/intake response retained. No vehicle physics changes.
+
+The previous hero branch revision 4c14c99 passed 10/10 strict runtime suites (run 45509600859), both isolated exhaust captures and zero clipped samples. Proxy-bank stable idle RMS was -29.91 and -31.26 dBFS, respectively. The upload step could not store the WAVs due to GitHub Actions artifact quota. The new recorded-bank revision is awaiting fresh CI. There is no listening or in-world performance sign-off yet.
+
+A scoped .gitattributes exception stores only the two small hero WAV directories as normal Git binary blobs because the connector cannot upload Git LFS objects. All other LFS rules are untouched. Offline verification now checks each hero file's Git blob identity as well as PCM format and clipping, and the runtime verifier checks the new manifests. Export preset already includes engine manifests.
+
+
+
 ## Hero supercar audio priority (`feat/hero-supercar-audio`, 2026-11-24)
 
 User prioritizes Aventador SVJ and McLaren Senna from scenic PR #36. Created separate audio branch from exact model integration; each now selects a dedicated voicing and actual factory RPM limits. Adopted verified prior runtime fixes while retaining scenic active-loop decoder optimization. Initial profiles deliberately reuse existing Vela and Kestrel recorded proxy banks; no authentic V12/Senna bank has been cleared and installed yet. Per-car intake response, throttle/RPM smoothing, shift interruption and event gains are separately tunable. Dedicated two-car capture and factory tests added. Prior PR #37 revision 5c93d16 passed 10/10 strict audio suites in run 45508597597; artifact upload failed due to storage quota, not a runtime failure. New scenic-derived revision is unverified, and listening/performance approval remains open. See [hero audio handoff](HERO_SUPERCAR_AUDIO.md).
