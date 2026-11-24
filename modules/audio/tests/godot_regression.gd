@@ -38,6 +38,7 @@ func _expect(ok: bool, message: String) -> void:
 func _initialize() -> void:
 	var script_resource = load("res://modules/audio/audio_controller.gd") if ResourceLoader.exists("res://modules/audio/audio_controller.gd") else load("res://audio_controller.gd")
 	var audio = script_resource.new()
+	audio.use_recorded_runtime = false
 	root.add_child.call_deferred(audio)
 	call_deferred("_test", audio)
 
