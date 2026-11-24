@@ -26,6 +26,8 @@ class TestVehicle:
 	var current_gear := 1
 
 
+const AudioTestCleanup := preload("res://tests/integration/audio_qa/audio_test_cleanup.gd")
+
 var failures := 0
 
 
@@ -189,7 +191,7 @@ func _test(audio) -> void:
 	car.free()
 	audio._physics_process(0.016)
 	_expect(not audio._tracking_vehicle and audio._telemetry["speed_mps"] == 0.0, "destroyed bound car recovers without stale playback")
-	audio.free()
+	await AudioTestCleanup.dispose(self, audio)
 
 	if failures > 0:
 		print("Aster audio Godot regression FAILED: ", failures, " checks")
