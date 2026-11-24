@@ -68,6 +68,8 @@ var _manifest: RefCounted = null
 var _manifest_cache: Dictionary = {}
 var _exhaust_players: Dictionary = {} # filename -> AudioStreamPlayer
 var _intake_players: Dictionary = {} # filename -> AudioStreamPlayer
+var _reflection_players: Dictionary = {} # wet-only mirrors of active exhaust loops
+var _prepared_loops: Dictionary = {}
 var _shift_player: AudioStreamPlayer = null
 var _overrun_player: AudioStreamPlayer = null
 var _overrun_burst_players: Array[AudioStreamPlayer] = []
@@ -332,6 +334,7 @@ func _apply_audio_blend() -> void:
 		var anchor_pitch: float = float(anchor_data.get("pitches", {}).get(fname, 1.0))
 
 		var final_gain := anchor_gain * layer_weight * file_gain * overall_gain
+		_update_reflection_voice(fname, player, final_gain, anchor_pitch)
 		if final_gain > 0.0001:
 			player.pitch_scale = anchor_pitch
 			player.volume_db = linear_to_db(final_gain)
@@ -391,7 +394,26 @@ static func compute_anchor_pair(bracket: Dictionary, rpm: float, min_pitch: floa
 	return {"gains": gains, "pitches": pitches}
 
 
+func _update_reflection_voice(fname: String, direct: AudioStreamPlayer, gain: float, pitch: float) -> void:
+	if not _reflection_players.has(fname):
+		return
+	var mirror: AudioStreamPlayer = _reflection_players[fname]
+	mirror.pitch_scale = pitch
+	mirror.volume_db = linear_to_db(maxf(0.0001, gain))
+	if gain > 0.001 and direct.playing and not mirror.playing:
+		mirror.play(direct.get_playback_position())
+	elif gain <= 0.001 and mirror.playing:
+		mirror.stop()
+
+
 func _rebuild_loop_players() -> void:
+	for mirror in _reflection_players.values():
+		if is_instance_valid(mirror):
+			mirror.stop()
+			remove_child(mirror)
+			mirror.queue_free()
+	_reflection_players.clear()
+	_prepared_loops.clear()
 	# Stop and cleanup existing loop players
 	for p in _exhaust_players.values():
 		if is_instance_valid(p):
@@ -419,9 +441,9 @@ func _rebuild_loop_players() -> void:
 	for loop_entry in _manifest.loops:
 		var fname: String = str(loop_entry["file"])
 		var full_path: String = str(loop_entry["full_path"])
-		var wav := EngineWavLoaderScript.load_wav(full_path)
+		var wav := EngineWavLoaderScript.load_engine_loop(full_path)
 		if wav != null:
-			EngineWavLoaderScript.configure_loop(wav, true)
+			_prepared_loops[fname] = wav
 			var player := AudioStreamPlayer.new()
 			player.name = "Exhaust_" + fname.get_basename()
 			player.bus = safe_exhaust_bus
@@ -431,16 +453,22 @@ func _rebuild_loop_players() -> void:
 			if player.is_inside_tree():
 				player.play()
 			_exhaust_players[fname] = player
+			if AudioServer.get_bus_index(&"Exhaust_Reflection") >= 0:
+				var mirror := AudioStreamPlayer.new()
+				mirror.name = "Reflection_" + fname.get_basename()
+				mirror.bus = &"Exhaust_Reflection"
+				mirror.stream = wav
+				mirror.volume_db = -80.0
+				add_child(mirror)
+				_reflection_players[fname] = mirror
 		else:
 			push_warning("RecordedEngineController: Could not load exhaust loop: " + full_path)
 
 	# Create Intake players for ON loops in manifest
 	for anchor in _manifest.on_anchors:
 		var fname: String = str(anchor["file"])
-		var full_path: String = str(anchor["full_path"])
-		var wav := EngineWavLoaderScript.load_wav(full_path)
+		var wav: AudioStreamWAV = _prepared_loops.get(fname)
 		if wav != null:
-			EngineWavLoaderScript.configure_loop(wav, true)
 			var player := AudioStreamPlayer.new()
 			player.name = "Intake_" + fname.get_basename()
 			player.bus = safe_intake_bus
@@ -451,7 +479,7 @@ func _rebuild_loop_players() -> void:
 				player.play()
 			_intake_players[fname] = player
 		else:
-			push_warning("RecordedEngineController: Could not load intake loop: " + full_path)
+			push_warning("RecordedEngineController: Could not load intake loop: " + fname)
 
 
 func _init_auxiliary_players() -> void:
