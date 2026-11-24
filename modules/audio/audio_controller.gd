@@ -70,12 +70,10 @@ var _previous_springs: Dictionary = {}
 
 
 func _ready() -> void:
-	# Always populate legacy players to maintain regression test interface compatibility
-	_setup_legacy_players()
-
 	if use_recorded_runtime:
 		_setup_recorded_runtime()
 	else:
+		_setup_legacy_players()
 		set_profile(car_profile)
 
 
@@ -90,18 +88,12 @@ func _setup_recorded_runtime() -> void:
 		recorded_engine.set("car_profile", car_profile)
 		recorded_engine.process_mode = Node.PROCESS_MODE_INHERIT
 		add_child(recorded_engine)
-		if recorded_engine.has_method("setup"):
-			recorded_engine.call("setup", car_profile)
-		if recorded_engine.has_method("snap_to_idle"):
-			recorded_engine.call("snap_to_idle")
 
 	if recorded_tires == null:
 		recorded_tires = RecordedTireScript.new()
 		recorded_tires.name = "RecordedTires"
 		recorded_tires.process_mode = Node.PROCESS_MODE_INHERIT
 		add_child(recorded_tires)
-		if is_instance_valid(_bound_vehicle) and recorded_tires.has_method("bind_vehicle"):
-			recorded_tires.call("bind_vehicle", _bound_vehicle)
 
 	if recorded_chassis == null:
 		recorded_chassis = ChassisControllerScript.new()
@@ -207,8 +199,6 @@ func bind_gevp_vehicle(vehicle: Node3D) -> void:
 	_reset_transition_state()
 
 	if use_recorded_runtime:
-		if is_instance_valid(recorded_tires) and recorded_tires.has_method("bind_vehicle"):
-			recorded_tires.call("bind_vehicle", _bound_vehicle)
 		if is_instance_valid(recorded_chassis) and recorded_chassis.has_method("bind_vehicle"):
 			recorded_chassis.call("bind_vehicle", _bound_vehicle)
 		if is_instance_valid(camera_mix) and camera_mix.has_method("bind_vehicle"):
@@ -273,7 +263,7 @@ func update_telemetry(telemetry: Dictionary) -> void:
 		if is_instance_valid(recorded_engine) and recorded_engine.has_method("update_telemetry"):
 			recorded_engine.call("update_telemetry", telemetry)
 		if is_instance_valid(recorded_tires) and recorded_tires.has_method("update_telemetry"):
-			recorded_tires.call("update_telemetry", telemetry)
+			recorded_tires.call("queue_telemetry", telemetry)
 		if is_instance_valid(recorded_chassis) and recorded_chassis.has_method("update_telemetry"):
 			recorded_chassis.call("update_telemetry", telemetry)
 
@@ -330,6 +320,13 @@ func _physics_process(_delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	if use_recorded_runtime:
+		# Apply the existing per-car gain control to the actual recorded mix.
+		if is_instance_valid(recorded_engine):
+			recorded_engine.set("master_gain", master_gain)
+		if is_instance_valid(recorded_tires):
+			recorded_tires.set("master_tire_gain", master_gain)
+		return
 	var step := maxf(delta, 0.0)
 	_clock += step
 	_shift_timer = maxf(0.0, _shift_timer - step)
