@@ -1,6 +1,6 @@
 # Project status — single current-state log
 
-Last updated: 2026-11-23
+Last updated: 2026-11-24
 
 ## Water crossings, roadside detail and instruments (`feat/local-showroom-dashboard`)
 
@@ -62,3 +62,7 @@ Known blockers:
 Next task:
 
 Do not mark a phase complete on the basis of code generation alone.
+
+## Network-wide road envelope (feat/map-road-width-overhaul; pending runtime QA)
+
+The root game uses explicit target pavement widths on all sixteen existing corridors: 10–11.2 m asphalt, 8.4–9 m gravel, with 2.0/1.6 m shoulders. Smooth tapers retain existing junction seams and three bridge decks. Junction hull buffers expand by 1 m. The canonical graph and existing roadworks heightfield remain unchanged; the authored corridor grading is reused. The runtime generates a conservative road/shoulder clearance raster to filter existing vegetation and relocate nearby roadside furniture where terrain permits. The vegetation bake uses the same profile for future verge placement. The standalone runtime without roadworks retains the original geometry. Godot import, collision regression, render and driving verification are still required; no new performance measurements are claimed.

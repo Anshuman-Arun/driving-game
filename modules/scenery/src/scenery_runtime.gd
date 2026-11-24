@@ -175,6 +175,23 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 			if absf(surveyed_y - authored_y) > 0.33:
 				displaced_by_roadworks += 1
 				continue
+			# Keep existing roadside furniture where possible; move it out of the
+			# enlarged shoulder rather than leave it inside the driving envelope.
+			if _world != null and _world.has_method("get_roadside_clearance"):
+				var footprint := float(assets[asset_id].get("r", 1.0)) * float(item.get("scale", 1.0))
+				if float(_world.call("get_roadside_clearance", x, z)) < footprint:
+					if asset_id in ["guardrail", "barrier", "bollard", "warning", "lamp", "fence"]:
+						var relocated := _relocate_roadside(Vector2(x, z), footprint, surveyed_y)
+						if relocated.is_finite():
+							x = relocated.x
+							z = relocated.y
+							surveyed_y = _surface_height(x, z)
+						else:
+							displaced_by_roadworks += 1
+							continue
+					else:
+						displaced_by_roadworks += 1
+						continue
 			if not _quality_keeps(item):
 				skipped_by_quality += 1
 				continue
@@ -234,6 +251,24 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 	_update_culling(true)
 	scenery_built.emit(report)
 	return true
+
+func _relocate_roadside(origin: Vector2, footprint: float, original_height: float) -> Vector2:
+	# Bounded deterministic search; don't move a rail onto a cliff or down into water.
+	for distance in [2.0, 4.0, 6.0, 8.0, 10.0]:
+		var best := Vector2.INF
+		var best_clearance := -INF
+		for i in range(16):
+			var p := origin + Vector2.RIGHT.rotated(TAU * i / 16.0) * float(distance)
+			if absf(p.x) > 995.0 or absf(p.y) > 995.0:
+				continue
+			var clearance := float(_world.call("get_roadside_clearance", p.x, p.y))
+			var height := _surface_height(p.x, p.y)
+			if clearance >= footprint and absf(height - original_height) < 0.75 and clearance > best_clearance:
+				best = p
+				best_clearance = clearance
+		if best.is_finite():
+			return best
+	return Vector2.INF
 
 func _quality_keeps(item: Dictionary) -> bool:
 	if quality >= 2 or item.get("tag") == "landmark" or item.get("tag") == "streetwall" or str(item.get("asset", "")) in ["guardrail", "barrier", "warning", "lamp"]:

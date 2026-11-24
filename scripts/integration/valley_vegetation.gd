@@ -41,9 +41,14 @@ func build(world: Node, preset: String) -> void:
 		return
 	_placements = file.get_buffer(file.get_length()).to_float32_array()
 	var cells: Dictionary = {}
+	var cleared := 0
 	for offset in range(0, _placements.size(), STRIDE):
 		var kind := int(_placements[offset + 5])
 		var near_ground := kind == 2 or kind == 3
+		var footprint := (1.8 if near_ground else 3.0) * _placements[offset + 4]
+		if world.has_method("get_roadside_clearance") and float(world.call("get_roadside_clearance", _placements[offset], _placements[offset + 2])) < footprint:
+			cleared += 1
+			continue
 		var spacing := GROUND_CELL if near_ground else CANOPY_CELL
 		var cell := Vector2i(floori(_placements[offset] / spacing), floori(_placements[offset + 2] / spacing))
 		var key := Vector3i(cell.x, cell.y, kind)
@@ -66,7 +71,7 @@ func build(world: Node, preset: String) -> void:
 	_rng.seed = 20261121
 	set_graphics(preset)
 	_build_leaves(material)
-	print("Valley vegetation: %d placements, %d canopy batches, %d ground groups" % [_placements.size() / STRIDE, _canopy.size(), _ground.size()])
+	print("Valley vegetation: %d retained placements, %d cleared for roads, %d canopy batches, %d ground groups" % [_placements.size() / STRIDE - cleared, cleared, _canopy.size(), _ground.size()])
 
 func conifer_mesh(distant := false) -> Mesh:
 	if _meshes.is_empty():
