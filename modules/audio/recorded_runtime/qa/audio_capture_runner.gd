@@ -262,7 +262,7 @@ func execute_suite(tree: SceneTree, output_json_path: String = "res://tests/inte
 	full_report["summary"]["clipping_detected"] = (total_clipped_samples > 0 or overall_max_peak_dbfs > 0.0)
 
 	var assets_ok: bool = bool(asset_results.get("all_passed", false))
-	full_report["overall_success"] = (assets_ok and all_profiles_ok and not full_report["summary"]["clipping_detected"])
+	full_report["overall_success"] = (assets_ok and bool(telemetry_summary["all_passed"]) and all_profiles_ok and not full_report["summary"]["clipping_detected"])
 
 	var elapsed_s := (Time.get_ticks_msec() - start_msec) / 1000.0
 	full_report["elapsed_seconds"] = elapsed_s
@@ -302,15 +302,21 @@ func _run_profile_simulation(
 	var bench = TelemetryBenchScript.new(profile, 60.0)
 
 	# Configure car profile on controllers
-	engine_node.set("car_profile", profile)
-	if engine_node.has_method("snap_to_idle"):
-		engine_node.call("snap_to_idle")
+	engine_node.call("set_profile", profile)
+	engine_node.call("snap_to_idle")
+	var active_manifest: RefCounted = engine_node.get("_manifest")
+	if active_manifest == null or str(active_manifest.get("profile_name")) != profile:
+		return {"profile": profile, "passed": false, "error": "Requested recorded bank was not loaded"}
+	# Let the audio thread settle after replacing streams.
+	await tree.create_timer(0.15).timeout
 
 	if tire_node.has_method("set_profile"):
 		tire_node.call("set_profile", profile)
 
 	# Drain buffer prior to run
 	capture.clear_buffer()
+	var discarded_before := capture.get_discarded_frames()
+	var next_tick_usec := Time.get_ticks_usec()
 
 	var total_frames_captured: int = 0
 	var max_peak_linear: float = 0.0
@@ -346,17 +352,22 @@ func _run_profile_simulation(
 		if engine_node.has_method("update_telemetry"):
 			engine_node.call("update_telemetry", t)
 
-		if tire_node.has_method("update_telemetry"):
-			tire_node.call("update_telemetry", t, bench.delta)
+		if tire_node.has_method("queue_telemetry"):
+			tire_node.call("queue_telemetry", t)
 
 		if chassis_node.has_method("update_telemetry"):
 			chassis_node.call("update_telemetry", t)
 
-		if camera_node.has_method("set_camera_mode"):
-			camera_node.call("set_camera_mode", str(t.get("camera_mode", "chase")))
+		camera_node.call("set_cockpit_view", bool(t.get("is_cockpit", false)))
+		var wall := float(t.get("wall_distance", INF))
+		chassis_node.call("simulate_acoustics", wall if wall < 20.0 else INF, INF, INF)
 
-		# Step physics / process
+		# Advance at approximately 60 Hz wall time, not unbounded headless FPS.
+		# AudioEffectCapture receives real-time audio from the mixer thread.
+		next_tick_usec += roundi(bench.delta * 1000000.0)
 		await tree.process_frame
+		while Time.get_ticks_usec() < next_tick_usec:
+			await tree.process_frame
 
 		# Drain captured audio buffer
 		var avail := capture.get_frames_available()
@@ -409,7 +420,8 @@ func _run_profile_simulation(
 	var rms_dbfs := _linear_to_db(rms_linear)
 	var min_headroom_db := -peak_dbfs
 
-	# Finalize per-scenario metrics
+	# Finalize per-scenario metrics. Reject silent/empty scenario captures.
+	var all_scenarios_ok := true
 	for sc_name in scenario_metrics:
 		var sc: Dictionary = scenario_metrics[sc_name]
 		var sc_samples: int = maxi(int(sc["total_samples"]), 1)
@@ -419,7 +431,8 @@ func _run_profile_simulation(
 		sc["rms_linear"] = sc_rms
 		sc["rms_dbfs"] = _linear_to_db(sc_rms)
 		sc["headroom_db"] = -float(sc["peak_dbfs"])
-		sc["passed"] = (float(sc["peak_dbfs"]) <= 0.0 and int(sc["clipped_samples"]) == 0 and int(sc["hard_flats"]) == 0)
+		sc["passed"] = (int(sc["total_samples"]) > 0 and sc_peak > 0.001 and float(sc["peak_dbfs"]) <= 0.0 and int(sc["clipped_samples"]) == 0 and int(sc["hard_flats"]) == 0)
+		all_scenarios_ok = all_scenarios_ok and bool(sc["passed"])
 
 	# Criteria for passing profile:
 	# 1. Non-zero audio produced (signal presence)
@@ -429,7 +442,9 @@ func _run_profile_simulation(
 	var is_signal_present := (max_peak_linear > 0.005)
 	var has_headroom := (peak_dbfs <= 0.0)
 	var no_clipping := (clipped_samples == 0 and hard_flats == 0)
-	var profile_passed := (is_signal_present and has_headroom and no_clipping)
+	var discarded := capture.get_discarded_frames() - discarded_before
+	var sufficient_frames := total_frames_captured >= int(bench.get_total_duration() * AudioServer.get_mix_rate() * 0.85)
+	var profile_passed := (is_signal_present and has_headroom and no_clipping and all_scenarios_ok and sufficient_frames and discarded == 0)
 
 	return {
 		"profile": profile,
@@ -437,6 +452,9 @@ func _run_profile_simulation(
 		"is_signal_present": is_signal_present,
 		"has_headroom": has_headroom,
 		"total_frames_captured": total_frames_captured,
+		"discarded_frames": discarded,
+		"sufficient_frames": sufficient_frames,
+		"all_scenarios_ok": all_scenarios_ok,
 		"duration_simulated_s": bench.get_total_duration(),
 		"peak_linear": max_peak_linear,
 		"peak_dbfs": peak_dbfs,
