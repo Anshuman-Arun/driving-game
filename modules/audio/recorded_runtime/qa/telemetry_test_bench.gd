@@ -16,6 +16,20 @@ extends RefCounted
 
 # --- Car Profile Constants ---
 const CAR_PROFILES := {
+	"aventador_svj": {
+		"name": "Aventador SVJ", "engine_type": "v12", "idle_rpm": 900.0,
+		"max_rpm": 8700.0, "top_speed_mps": 95.0,
+		"gears": [-1, 0, 1, 2, 3, 4, 5, 6, 7],
+		"gear_ratios": [3.2, 0.0, 3.75, 2.38, 1.72, 1.34, 1.11, 0.96, 0.84],
+		"final_drive": 3.52, "mass_kg": 1670.0
+	},
+	"mclaren_senna": {
+		"name": "McLaren Senna", "engine_type": "twin_turbo_v8", "idle_rpm": 980.0,
+		"max_rpm": 8000.0, "top_speed_mps": 90.0,
+		"gears": [-1, 0, 1, 2, 3, 4, 5, 6, 7],
+		"gear_ratios": [3.2, 0.0, 3.75, 2.38, 1.72, 1.34, 1.11, 0.96, 0.84],
+		"final_drive": 3.31, "mass_kg": 1380.0
+	},
 	"vela_gt": {
 		"name": "Vela GT",
 		"engine_type": "flat_six",
@@ -128,6 +142,7 @@ func step() -> Dictionary:
 	var handbrake_input := false
 	var impact_velocity := 0.0
 	var spring_delta := 0.0
+	var vertical_speed := 0.0
 
 	# -------------------------------------------------------------
 	# 1. IDLE STATIONARY (0.0s -> 1.0s)
@@ -283,6 +298,7 @@ func step() -> Dictionary:
 			_current_rpm = lerpf(max_rpm * 0.70, idle_rpm + 1500.0, (rel_t - 0.4) / 1.4)
 			_suspension_compression = 0.05
 			spring_delta = -0.30
+			vertical_speed = lerpf(5.0, -8.5, (rel_t - 0.4) / 1.4)
 		elif rel_t < 2.1:
 			# Heavy touchdown impact!
 			_is_on_ground = true
@@ -413,6 +429,7 @@ func step() -> Dictionary:
 		"brake": brake_input,
 		"gear": _current_gear,
 		"speed_mps": _current_speed_mps,
+		"vertical_speed_mps": vertical_speed,
 		"forward_speed_mps": forward_speed,
 		"lateral_slip": _lateral_slip,
 		"slip_amount": _lateral_slip,

@@ -125,9 +125,7 @@ func _ready() -> void:
 
 func setup(profile_name: String = "") -> void:
 	_init_auxiliary_players()
-	if profile_name != "":
-		car_profile = profile_name
-	set_profile(car_profile)
+	set_profile(profile_name if profile_name != "" else car_profile)
 	snap_to_idle()
 
 

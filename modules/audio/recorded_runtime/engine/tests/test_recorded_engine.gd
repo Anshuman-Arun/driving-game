@@ -16,13 +16,19 @@ func _initialize() -> void:
 	var success := true
 	success = test_manifest_loading() and success
 	success = test_wav_loader_and_loop_config() and success
+	success = test_pcm_loop_conditioning() and success
+	success = test_riff_validation() and success
 	success = test_constant_power_blending() and success
 	success = test_load_layer_blending() and success
+	success = test_low_rpm_coast_fallback() and success
+	success = test_pitch_matched_crossfade() and success
 	success = test_controller_lifecycle_and_smoothing() and success
 	success = test_rev_limiter_stutter() and success
 	success = test_gear_shift_envelope() and success
+	success = test_live_shift_and_reverse_pedal() and success
 	success = test_overrun_backfire() and success
 	success = test_profile_switching() and success
+	success = test_hero_voicings() and success
 
 	print("==================================================")
 	if success:
@@ -128,6 +134,64 @@ func test_wav_loader_and_loop_config() -> bool:
 	return true
 
 
+func test_pcm_loop_conditioning() -> bool:
+	var path := "res://assets/audio/recorded/payload/engines/kestrel_xr/on_1000.wav"
+	var source := EngineWavLoader.load_wav(path)
+	var conditioned := EngineWavLoader.load_engine_loop(path)
+	if source == null or conditioned == null:
+		push_error("Missing source/conditioned engine stream")
+		return false
+	if source == conditioned or not is_equal_approx(source.get_length(), conditioned.get_length()):
+		push_error("Conditioning must not mutate source stream or duration")
+		return false
+	# Verify a synthetic discontinuity independently of Godot WAV import settings.
+	var pcm := PackedByteArray()
+	pcm.resize(480 * 2)
+	for i in range(480):
+		pcm.encode_s16(i * 2, 4000 if i < 240 else -2000)
+	var repaired := EngineWavLoader.condition_pcm16_seam(pcm, 48000)
+	if repaired.size() != pcm.size() or repaired.decode_s16(0) != repaired.decode_s16(958):
+		push_error("PCM seam was not joined")
+		return false
+	if pcm.decode_s16(0) != 4000 or pcm.decode_s16(958) != -2000 or repaired.decode_s16(200 * 2) != 4000:
+		push_error("Conditioning changed source or interior samples")
+		return false
+	# The committed candidate bank is PCM16 mono at 48 kHz.
+	if conditioned.format == AudioStreamWAV.FORMAT_16_BITS and not conditioned.stereo:
+		var data := conditioned.data
+		if absi(data.decode_s16(0) - data.decode_s16(data.size() - 2)) >= 128:
+			push_error("Conditioned real engine seam remains discontinuous")
+			return false
+	return true
+
+
+func test_riff_validation() -> bool:
+	# Valid mono PCM16, with an odd-length JUNK chunk and its pad byte.
+	var bytes := PackedByteArray()
+	bytes.append_array("RIFF".to_ascii_buffer())
+	bytes.append_array(PackedByteArray([50, 0, 0, 0]))
+	bytes.append_array("WAVEJUNK".to_ascii_buffer())
+	bytes.append_array(PackedByteArray([1, 0, 0, 0, 7, 0]))
+	bytes.append_array("fmt ".to_ascii_buffer())
+	bytes.append_array(PackedByteArray([16, 0, 0, 0, 1, 0, 1, 0, 128, 187, 0, 0, 0, 119, 1, 0, 2, 0, 16, 0]))
+	bytes.append_array("data".to_ascii_buffer())
+	bytes.append_array(PackedByteArray([4, 0, 0, 0, 0, 0, 0, 0]))
+	var stream := EngineWavLoader.parse_pcm_riff(bytes)
+	if stream == null or stream.mix_rate != 48000 or stream.data.size() != 4:
+		push_error("PCM parser must handle word-padded chunks")
+		return false
+	var truncated := bytes.slice(0, bytes.size() - 1)
+	if EngineWavLoader.parse_pcm_riff(truncated) != null:
+		push_error("PCM parser accepted a truncated file")
+		return false
+	# fmt format tag starts at byte 30 after JUNK.
+	bytes[30] = 3
+	if EngineWavLoader.parse_pcm_riff(bytes) != null:
+		push_error("PCM parser accepted float data as PCM")
+		return false
+	return true
+
+
 func test_constant_power_blending() -> bool:
 	print("\n[TEST 3] Testing constant-power cos/sin anchor blend math...")
 	for prof in PROFILES:
@@ -162,7 +226,7 @@ func test_constant_power_blending() -> bool:
 			# Verify pitch scaling clamp ranges
 			for p in (state["on_pitches"] as Dictionary).values():
 				var pitch := float(p)
-				if pitch < 0.40 or pitch > 1.40:
+				if pitch < 0.40 or pitch > 1.56:
 					push_error("[%s] RPM %.1f pitch scale out of range: %f" % [prof, rpm, pitch])
 					return false
 
@@ -200,6 +264,50 @@ func test_load_layer_blending() -> bool:
 	assert(float(orion_full["on_layer_gain"]) == 1.0, "Orion single layer full throttle must be 1.0")
 
 	print("  -> Load layer ON/OFF crossfading PASS")
+	return true
+
+
+func test_low_rpm_coast_fallback() -> bool:
+	var manifest := EngineProfileManifest.load_for_profile("kestrel_xr")
+	if manifest == null:
+		return false
+	var data := {"profile": manifest.profile_name, "loops": manifest.loops}
+	var idle := RecordedEngineController.compute_blend_state(800.0, 0.0, data)
+	var coast := RecordedEngineController.compute_blend_state(3000.0, 0.0, data)
+	var middle := RecordedEngineController.compute_blend_state(2600.0, 0.0, data)
+	if not (is_equal_approx(float(idle["on_layer_gain"]), 0.4) and is_zero_approx(float(idle["off_layer_gain"]))):
+		push_error("Kestrel idle must use the actual low RPM ON recording")
+		return false
+	if not (is_zero_approx(float(coast["on_layer_gain"])) and is_equal_approx(float(coast["off_layer_gain"]), 1.0)):
+		push_error("Coast bank must take over at its first recorded RPM")
+		return false
+	if not (float(middle["on_layer_gain"]) > 0.0 and float(middle["off_layer_gain"]) > 0.0):
+		push_error("Coast fallback must crossfade smoothly")
+		return false
+	return true
+
+
+func test_pitch_matched_crossfade() -> bool:
+	for prof in PROFILES:
+		var manifest := EngineProfileManifest.load_for_profile(prof)
+		if manifest == null:
+			return false
+		for layer in ["on", "off"]:
+			if layer == "off" and not manifest.has_off_layer:
+				continue
+			var anchors: Array = manifest.get_anchors_for_layer(layer)
+			for index in range(anchors.size() - 1):
+				var a: Dictionary = anchors[index]
+				var b: Dictionary = anchors[index + 1]
+				for step in range(101):
+					var rpm := lerpf(float(a["rpm"]), float(b["rpm"]), step / 100.0)
+					var pair := RecordedEngineController.compute_anchor_pair(manifest.find_bracketing_anchors(layer, rpm), rpm)
+					for anchor in [a, b]:
+						var key := str(anchor["file"])
+						if float(pair["gains"].get(key, 0.0)) > 0.001:
+							if absf(float(pair["pitches"][key]) * float(anchor["rpm"]) - rpm) > 0.1:
+								push_error("Active anchor is not pitch matched: %s %s %.1f" % [prof, key, rpm])
+								return false
 	return true
 
 
@@ -304,6 +412,30 @@ func test_gear_shift_envelope() -> bool:
 	return true
 
 
+func test_live_shift_and_reverse_pedal() -> bool:
+	var controller := RecordedEngineController.new()
+	controller.setup("kestrel_xr")
+	root.add_child(controller)
+	controller.update_telemetry({"rpm": 4000.0, "throttle": 0.8, "gear": 1})
+	controller.update_telemetry({"rpm": 4000.0, "throttle": 0.8, "gear": 1, "shift_active": true, "requested_gear": 2})
+	controller._process(0.05)
+	var cut_started := controller._live_shift and controller._shift_envelope < 0.30
+	for i in range(6):
+		controller._process(0.05)
+	var cut_held := controller._shift_envelope < 0.30
+	controller.update_telemetry({"rpm": 3200.0, "throttle": 0.8, "gear": 2, "shift_active": false, "requested_gear": 2})
+	var no_duplicate := controller._shift_timer == 0.0 and not controller._live_shift
+	controller._process(0.4)
+	var recovered := controller._shift_envelope > 0.99
+	controller.update_telemetry({"rpm": 2200.0, "throttle": 0.0, "engine_throttle": 0.7, "gear": -1})
+	var motor_pedal := is_equal_approx(controller._target_throttle, 0.7)
+	controller.free()
+	if not (cut_started and cut_held and no_duplicate and recovered and motor_pedal):
+		push_error("Live shift envelope or reverse motor pedal regression")
+		return false
+	return true
+
+
 func test_overrun_backfire() -> bool:
 	print("\n[TEST 8] Testing overrun backfire on rapid lift-off above 65% RPM...")
 	var controller := RecordedEngineController.new()
@@ -363,4 +495,27 @@ func test_profile_switching() -> bool:
 
 	controller.free()
 	print("  -> Dynamic profile switching PASS")
+	return true
+
+
+func test_hero_voicings() -> bool:
+	var engine := RecordedEngineController.new()
+	engine.setup("aventador_svj")
+	assert(engine.car_profile == "aventador_svj" and engine._active_bank in ["aventador_svj", "vela_gt"])
+	assert(engine._idle_rpm == 900.0 and engine._redline_rpm == 8700.0)
+	assert(engine.torque_cut_duration_ms == 125.0)
+	engine.update_telemetry({"rpm": 4500.0, "throttle": 1.0, "gear": 3})
+	engine._process(0.06)
+	var lambo_intake := engine._intake_load
+	engine.setup("mclaren_senna")
+	assert(engine.car_profile == "mclaren_senna" and engine._active_bank in ["mclaren_senna", "kestrel_xr"])
+	assert(engine._idle_rpm == 980.0 and engine._redline_rpm == 8000.0)
+	assert(engine.torque_cut_duration_ms == 85.0 and engine.torque_cut_depth > 0.4)
+	engine.update_telemetry({"rpm": 4500.0, "throttle": 1.0, "gear": 3})
+	engine._process(0.06)
+	assert(engine._intake_load < lambo_intake, "Senna induction should build later than Aventador")
+	engine.snap_to_idle()
+	assert(engine._intake_load == 0.0 and engine._active_overrun_burst.is_empty())
+	engine.free()
+	print("  Hero voicing response and profile switching PASS")
 	return true

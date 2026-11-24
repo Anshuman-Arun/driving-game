@@ -1,0 +1,73 @@
+name: Hero supercar audio validation
+on:
+  push:
+    branches: [feat/hero-supercar-audio]
+  pull_request:
+    branches: [feat/aster-scenic-supercars]
+permissions:
+  contents: read
+concurrency:
+  group: hero-audio-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          lfs: true
+          persist-credentials: false
+      - name: Install checksum-pinned Godot 4.7.2
+        shell: bash
+        run: |
+          #!/usr/bin/env bash
+          # Official Godot 4.7.2 stable standard Linux x86_64 editor; integrity-pinned.
+          set -Eeuo pipefail
+          install_dir="$RUNNER_TEMP/godot/bin"
+          version="4.7.2-stable"
+          archive="Godot_v${version}_linux.x86_64.zip"
+          digest="cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4"
+          url="https://github.com/godotengine/godot-builds/releases/download/${version}/${archive}"
+          mkdir -p "$install_dir"
+          zip_path="${RUNNER_TEMP:-/tmp}/$archive"
+          curl --fail --location --show-error --silent --retry 3 --retry-delay 3 --connect-timeout 20 --max-time 300 "$url" -o "$zip_path"
+          printf '%s  %s\n' "$digest" "$zip_path" | sha256sum --check --status || {
+            echo "::error::Godot download SHA-256 mismatch (official godotengine/godot-builds release)" >&2
+            exit 1
+          }
+          unzip -oq "$zip_path" -d "$install_dir"
+          engine="$install_dir/Godot_v${version}_linux.x86_64"
+          test -f "$engine" || { echo "::error::Godot executable missing from verified archive" >&2; exit 1; }
+          chmod +x "$engine"
+          ln -sfn "$engine" "$install_dir/godot"
+          actual="$("$install_dir/godot" --headless --version)"
+          printf 'Godot engine: %s\n' "$actual"
+          [[ "$actual" == 4.7.2.stable* ]] || {
+            echo "::error::Unexpected Godot version: $actual" >&2
+            exit 1
+          }
+          if [[ -n "${GITHUB_PATH:-}" ]]; then printf '%s\n' "$install_dir" >> "$GITHUB_PATH"; fi
+      - name: Run audio integrity, import, runtime and capture gates
+        shell: bash
+        run: |
+          export AUDIO_QA_LOG_DIR="$RUNNER_TEMP/audio-qa"
+          export ASTER_AUDIO_CAPTURE_DIR="$RUNNER_TEMP/audio-qa/audition"
+          bash tests/integration/audio_qa/run_all.sh
+      - name: Upload capture WAVs and QA logs (optional; storage quota may block)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: hero-audio-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/audio-qa/
+            tests/integration/audio_qa/results.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Record test revision
+        if: always()
+        shell: bash
+        run: |
+          echo "Audio QA tested commit: $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Check the job logs for actual runtime and capture results." >> "$GITHUB_STEP_SUMMARY"

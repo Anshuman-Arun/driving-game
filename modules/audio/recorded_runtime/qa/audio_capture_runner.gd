@@ -20,7 +20,9 @@ const EngineScript := preload("res://modules/audio/recorded_runtime/engine/recor
 const TireScript := preload("res://modules/audio/recorded_runtime/tires/recorded_tire_controller.gd")
 const ChassisScript := preload("res://modules/audio/recorded_runtime/chassis/chassis_audio_controller.gd")
 
-const PROFILES := ["vela_gt", "kestrel_xr", "orion_rs"]
+const AudioTestCleanup := preload("res://tests/integration/audio_qa/audio_test_cleanup.gd")
+
+const PROFILES := ["aventador_svj", "mclaren_senna"]
 const CAPTURE_BUS_NAME := &"Master"
 const HARD_FLAT_RUN_LENGTH := 4  # Consecutively identical samples to flag hard flat
 const HARD_FLAT_MIN_AMPLITUDE := 0.90  # Only flag flatlining near max amplitude
@@ -171,6 +173,15 @@ func execute_suite(tree: SceneTree, output_json_path: String = "res://tests/inte
 		push_error(err_msg)
 		return full_report
 
+	# Capture the engine bus separately so ambience cannot mask a silent engine.
+	var exhaust_idx := AudioServer.get_bus_index(&"Engine_Exhaust")
+	if exhaust_idx < 0:
+		full_report["errors"].append("Engine_Exhaust bus missing")
+		return full_report
+	var exhaust_capture := AudioEffectCapture.new()
+	exhaust_capture.buffer_length = 5.0
+	AudioServer.add_bus_effect(exhaust_idx, exhaust_capture)
+
 	# Attach AudioEffectCapture to Master bus
 	var capture := AudioEffectCapture.new()
 	capture.buffer_length = 5.0
@@ -220,6 +231,7 @@ func execute_suite(tree: SceneTree, output_json_path: String = "res://tests/inte
 			tree,
 			profile,
 			capture,
+			exhaust_capture,
 			engine_controller,
 			tire_controller,
 			chassis_controller,
@@ -252,7 +264,19 @@ func execute_suite(tree: SceneTree, output_json_path: String = "res://tests/inte
 			])
 
 	# Cleanup test nodes
-	test_root.queue_free()
+	await AudioTestCleanup.dispose(tree, test_root)
+
+	# Detach capture effect after all voices have been released.
+	for i in range(AudioServer.get_bus_effect_count(master_idx)):
+		if AudioServer.get_bus_effect(master_idx, i) == capture:
+			AudioServer.remove_bus_effect(master_idx, i)
+			break
+
+	for i in range(AudioServer.get_bus_effect_count(exhaust_idx)):
+		if AudioServer.get_bus_effect(exhaust_idx, i) == exhaust_capture:
+			AudioServer.remove_bus_effect(exhaust_idx, i)
+			break
+	await AudioTestCleanup.drain(tree)
 
 	# Summarize overall results
 	full_report["summary"]["overall_peak_dbfs"] = overall_max_peak_dbfs
@@ -262,7 +286,7 @@ func execute_suite(tree: SceneTree, output_json_path: String = "res://tests/inte
 	full_report["summary"]["clipping_detected"] = (total_clipped_samples > 0 or overall_max_peak_dbfs > 0.0)
 
 	var assets_ok: bool = bool(asset_results.get("all_passed", false))
-	full_report["overall_success"] = (assets_ok and all_profiles_ok and not full_report["summary"]["clipping_detected"])
+	full_report["overall_success"] = (assets_ok and bool(telemetry_summary["all_passed"]) and all_profiles_ok and not full_report["summary"]["clipping_detected"])
 
 	var elapsed_s := (Time.get_ticks_msec() - start_msec) / 1000.0
 	full_report["elapsed_seconds"] = elapsed_s
@@ -294,6 +318,7 @@ func _run_profile_simulation(
 	tree: SceneTree,
 	profile: String,
 	capture: AudioEffectCapture,
+	exhaust_capture: AudioEffectCapture,
 	engine_node: Node,
 	tire_node: Node,
 	chassis_node: Node,
@@ -302,15 +327,49 @@ func _run_profile_simulation(
 	var bench = TelemetryBenchScript.new(profile, 60.0)
 
 	# Configure car profile on controllers
-	engine_node.set("car_profile", profile)
-	if engine_node.has_method("snap_to_idle"):
-		engine_node.call("snap_to_idle")
+	engine_node.call("set_profile", profile)
+	engine_node.call("snap_to_idle")
+	var active_manifest: RefCounted = engine_node.get("_manifest")
+	var actual_bank := str(engine_node.get("_active_bank"))
+	var allowed_proxy := "vela_gt" if profile == "aventador_svj" else "kestrel_xr"
+	if active_manifest == null or str(engine_node.get("car_profile")) != profile or str(active_manifest.get("profile_name")) != actual_bank or actual_bank not in [profile, allowed_proxy]:
+		return {"profile": profile, "passed": false, "error": "Requested hero voicing/bank was not loaded"}
+	print("  Hero profile: %s; recording bank: %s; proxy=%s" % [profile, actual_bank, str(actual_bank != profile)])
+	# Restore neutral mix before the next profile; do not measure residual
+	# cockpit filtering, wall reflections, or transient tails as idle.
+	camera_node.call("set_cockpit_view", false, true)
+	chassis_node.call("simulate_acoustics", INF, INF, INF)
+	var idle_telemetry := {"speed_mps": 0.0, "on_ground": true, "surface": "asphalt", "slip_amount": 0.0}
+	tire_node.call("queue_telemetry", idle_telemetry)
+	chassis_node.call("update_telemetry", idle_telemetry)
+	await tree.create_timer(0.5).timeout
 
 	if tire_node.has_method("set_profile"):
 		tire_node.call("set_profile", profile)
 
 	# Drain buffer prior to run
 	capture.clear_buffer()
+	exhaust_capture.clear_buffer()
+	var exhaust_discarded_before := exhaust_capture.get_discarded_frames()
+	var exhaust_frames := 0
+	var exhaust_peak := 0.0
+	var exhaust_idle_peak := 0.0
+	var exhaust_idle_energy := 0.0
+	var exhaust_idle_frames := 0
+	var audition_file: FileAccess = null
+	var audition_path := ""
+	var audition_dir := OS.get_environment("ASTER_AUDIO_CAPTURE_DIR")
+	if not audition_dir.is_empty():
+		var dir := ProjectSettings.globalize_path(audition_dir)
+		DirAccess.make_dir_recursive_absolute(dir)
+		audition_path = dir.path_join(profile + ".wav")
+		audition_file = FileAccess.open(audition_path, FileAccess.WRITE)
+		if audition_file == null:
+			push_error("Could not create audition WAV: " + audition_path)
+			return {"profile": profile, "passed": false, "error": "Cannot write audition WAV"}
+		_write_wav_header(audition_file, 0)
+	var discarded_before := capture.get_discarded_frames()
+	var next_tick_usec := Time.get_ticks_usec()
 
 	var total_frames_captured: int = 0
 	var max_peak_linear: float = 0.0
@@ -346,23 +405,49 @@ func _run_profile_simulation(
 		if engine_node.has_method("update_telemetry"):
 			engine_node.call("update_telemetry", t)
 
-		if tire_node.has_method("update_telemetry"):
-			tire_node.call("update_telemetry", t, bench.delta)
+		if tire_node.has_method("queue_telemetry"):
+			tire_node.call("queue_telemetry", t)
 
 		if chassis_node.has_method("update_telemetry"):
 			chassis_node.call("update_telemetry", t)
 
-		if camera_node.has_method("set_camera_mode"):
-			camera_node.call("set_camera_mode", str(t.get("camera_mode", "chase")))
+		camera_node.call("set_cockpit_view", bool(t.get("is_cockpit", false)))
+		var wall := float(t.get("wall_distance", INF))
+		chassis_node.call("simulate_acoustics", wall if wall < 20.0 else INF, INF, INF)
 
-		# Step physics / process
+		# Advance at approximately 60 Hz wall time, not unbounded headless FPS.
+		# AudioEffectCapture receives real-time audio from the mixer thread.
+		next_tick_usec += roundi(bench.delta * 1000000.0)
 		await tree.process_frame
+		while Time.get_ticks_usec() < next_tick_usec:
+			await tree.process_frame
+
+		# Drain engine stem and require actual engine output at idle.
+		var exhaust_avail := exhaust_capture.get_frames_available()
+		if exhaust_avail > 0:
+			var exhaust_buffer := exhaust_capture.get_buffer(exhaust_avail)
+			exhaust_frames += exhaust_buffer.size()
+			for sample in exhaust_buffer:
+				var stem_peak := maxf(absf(sample.x), absf(sample.y))
+				exhaust_peak = maxf(exhaust_peak, stem_peak)
+				if current_scenario == "idle_stationary" and bench.current_time >= 0.5:
+					exhaust_idle_peak = maxf(exhaust_idle_peak, stem_peak)
+					exhaust_idle_energy += (sample.x * sample.x + sample.y * sample.y) * 0.5
+					exhaust_idle_frames += 1
 
 		# Drain captured audio buffer
 		var avail := capture.get_frames_available()
 		if avail > 0:
 			var buffer: PackedVector2Array = capture.get_buffer(avail)
 			total_frames_captured += buffer.size()
+			if audition_file != null:
+				var pcm := PackedByteArray()
+				pcm.resize(buffer.size() * 4)
+				for sample_index in range(buffer.size()):
+					var sample: Vector2 = buffer[sample_index]
+					pcm.encode_s16(sample_index * 4, roundi(clampf(sample.x, -1.0, 1.0) * 32767.0))
+					pcm.encode_s16(sample_index * 4 + 2, roundi(clampf(sample.y, -1.0, 1.0) * 32767.0))
+				audition_file.store_buffer(pcm)
 			var scen_dict: Dictionary = scenario_metrics[current_scenario]
 
 			for v in buffer:
@@ -403,13 +488,20 @@ func _run_profile_simulation(
 					consecutive_flat_count = 0
 				last_sample_val = frame_peak
 
+	if audition_file != null:
+		audition_file.seek(0)
+		_write_wav_header(audition_file, total_frames_captured)
+		audition_file.close()
+		print("Audition WAV: " + audition_path)
+
 	# Finalize overall metrics for profile
 	var peak_dbfs := _linear_to_db(max_peak_linear)
 	var rms_linear := sqrt(sum_squares / float(maxi(total_frames_captured, 1)))
 	var rms_dbfs := _linear_to_db(rms_linear)
 	var min_headroom_db := -peak_dbfs
 
-	# Finalize per-scenario metrics
+	# Finalize per-scenario metrics. Reject silent/empty scenario captures.
+	var all_scenarios_ok := true
 	for sc_name in scenario_metrics:
 		var sc: Dictionary = scenario_metrics[sc_name]
 		var sc_samples: int = maxi(int(sc["total_samples"]), 1)
@@ -419,7 +511,8 @@ func _run_profile_simulation(
 		sc["rms_linear"] = sc_rms
 		sc["rms_dbfs"] = _linear_to_db(sc_rms)
 		sc["headroom_db"] = -float(sc["peak_dbfs"])
-		sc["passed"] = (float(sc["peak_dbfs"]) <= 0.0 and int(sc["clipped_samples"]) == 0 and int(sc["hard_flats"]) == 0)
+		sc["passed"] = (int(sc["total_samples"]) > 0 and sc_peak > 0.001 and float(sc["peak_dbfs"]) <= 0.0 and int(sc["clipped_samples"]) == 0 and int(sc["hard_flats"]) == 0)
+		all_scenarios_ok = all_scenarios_ok and bool(sc["passed"])
 
 	# Criteria for passing profile:
 	# 1. Non-zero audio produced (signal presence)
@@ -429,14 +522,32 @@ func _run_profile_simulation(
 	var is_signal_present := (max_peak_linear > 0.005)
 	var has_headroom := (peak_dbfs <= 0.0)
 	var no_clipping := (clipped_samples == 0 and hard_flats == 0)
-	var profile_passed := (is_signal_present and has_headroom and no_clipping)
+	var discarded := capture.get_discarded_frames() - discarded_before
+	var sufficient_frames := total_frames_captured >= int(bench.get_total_duration() * AudioServer.get_mix_rate() * 0.85)
+	var idle_rms_dbfs := _linear_to_db(sqrt(exhaust_idle_energy / float(maxi(1, exhaust_idle_frames))))
+	print("  Stable idle exhaust RMS: %.2f dBFS (%d frames)" % [idle_rms_dbfs, exhaust_idle_frames])
+	var exhaust_ok := exhaust_frames >= int(bench.get_total_duration() * AudioServer.get_mix_rate() * 0.85) and exhaust_peak > 0.005 and exhaust_idle_peak > 0.001 and exhaust_idle_frames > 0 and exhaust_capture.get_discarded_frames() == exhaust_discarded_before
+	var profile_passed := (is_signal_present and has_headroom and no_clipping and all_scenarios_ok and sufficient_frames and discarded == 0 and exhaust_ok)
+	print("  Exhaust stem: %d frames, peak %.2f dBFS, idle peak %.2f dBFS, passed=%s" % [exhaust_frames, _linear_to_db(exhaust_peak), _linear_to_db(exhaust_idle_peak), str(exhaust_ok)])
 
 	return {
 		"profile": profile,
+		"recording_bank": actual_bank,
+		"uses_proxy": actual_bank != profile,
 		"passed": profile_passed,
 		"is_signal_present": is_signal_present,
 		"has_headroom": has_headroom,
 		"total_frames_captured": total_frames_captured,
+		"exhaust_frames": exhaust_frames,
+		"exhaust_peak_dbfs": _linear_to_db(exhaust_peak),
+		"exhaust_idle_peak_dbfs": _linear_to_db(exhaust_idle_peak),
+		"exhaust_idle_rms_dbfs": idle_rms_dbfs,
+		"exhaust_idle_frames": exhaust_idle_frames,
+		"exhaust_signal_ok": exhaust_ok,
+		"audition_wav": audition_path,
+		"discarded_frames": discarded,
+		"sufficient_frames": sufficient_frames,
+		"all_scenarios_ok": all_scenarios_ok,
 		"duration_simulated_s": bench.get_total_duration(),
 		"peak_linear": max_peak_linear,
 		"peak_dbfs": peak_dbfs,
@@ -447,6 +558,23 @@ func _run_profile_simulation(
 		"hard_flats": hard_flats,
 		"scenarios": scenario_metrics
 	}
+
+
+static func _write_wav_header(file: FileAccess, frames: int) -> void:
+	var rate := roundi(AudioServer.get_mix_rate())
+	var bytes := frames * 4
+	file.store_buffer("RIFF".to_ascii_buffer())
+	file.store_32(36 + bytes)
+	file.store_buffer("WAVEfmt ".to_ascii_buffer())
+	file.store_32(16)
+	file.store_16(1)
+	file.store_16(2)
+	file.store_32(rate)
+	file.store_32(rate * 4)
+	file.store_16(4)
+	file.store_16(16)
+	file.store_buffer("data".to_ascii_buffer())
+	file.store_32(bytes)
 
 
 static func _linear_to_db(linear: float) -> float:

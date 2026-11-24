@@ -6,8 +6,11 @@ extends SceneTree
 ## 4. Pause mode is Node.PROCESS_MODE_PAUSABLE so vehicle audio pauses cleanly.
 ## 5. Camera mix controller binds and transitions cleanly.
 
+const AudioTestCleanup := preload("res://tests/integration/audio_qa/audio_test_cleanup.gd")
+
 func _initialize() -> void:
-	_run.call_deferred()
+	call_deferred("_run")
+
 
 func _run() -> void:
 	print("\n==================================================")
@@ -43,7 +46,7 @@ func _run() -> void:
 
 	# 2. Test PlayerCarFactory spawning for all 3 car profiles
 	print("\n[Check 2] PlayerCarFactory Vehicle Audio Spawning & Idle State...")
-	var profiles: Array[String] = ["vela_gt", "kestrel_xr", "orion_rs"]
+	var profiles: Array[String] = ["aventador_svj", "mclaren_senna", "vela_gt", "kestrel_xr", "orion_rs"]
 
 	for pid in profiles:
 		var car: Vehicle = PlayerCarFactory.create(pid)
@@ -58,8 +61,7 @@ func _run() -> void:
 		if audio == null:
 			push_error("FAIL: Car %s missing VehicleAudio child node!" % pid)
 			failed = true
-			root.remove_child(car)
-			car.queue_free()
+			await AudioTestCleanup.dispose(self, car)
 			continue
 
 		print("  [PASS] %s has VehicleAudio child node." % pid)
@@ -70,6 +72,7 @@ func _run() -> void:
 		assert(audio.recorded_engine != null, "RecordedEngineController must be active")
 		assert(audio.recorded_tires != null, "RecordedTireController must be active")
 		assert(audio.recorded_chassis != null, "ChassisAudioController must be active")
+		assert(audio._players.is_empty(), "Recorded mode must not allocate legacy loop voices")
 		assert(audio.camera_mix != null, "AsterCameraMixController must be active")
 
 		# Check engine idle state immediately upon spawn
@@ -78,14 +81,23 @@ func _run() -> void:
 			pid, engine_ctrl._idle_rpm, engine_ctrl._redline_rpm
 		])
 		assert(engine_ctrl._smoothed_rpm >= engine_ctrl._idle_rpm - 1.0, "Engine must be at idle RPM upon spawn")
-		var audible_exhaust := 0
-		for player: AudioStreamPlayer in engine_ctrl._exhaust_players.values():
-			audible_exhaust += int(player.playing)
-		assert(audible_exhaust >= 1 and audible_exhaust <= 2, "Idle starts only its audible exhaust anchors")
+		var active_exhaust := 0
+		for voice: AudioStreamPlayer in engine_ctrl._exhaust_players.values():
+			active_exhaust += int(voice.playing)
+		assert(active_exhaust >= 1 and active_exhaust <= 2, "Idle must use only its active exhaust loops")
+		if pid in ["aventador_svj", "mclaren_senna"]:
+			assert(engine_ctrl.car_profile == pid and engine_ctrl._active_bank != "", "Hero profile selected")
+			assert(is_equal_approx(engine_ctrl._idle_rpm, car.idle_rpm), "Hero idle uses actual factory RPM")
+			assert(is_equal_approx(engine_ctrl._redline_rpm, car.max_rpm), "Hero redline uses actual factory RPM")
+			var expected_proxy := "vela_gt" if pid == "aventador_svj" else "kestrel_xr"
+			assert(engine_ctrl._active_bank in [pid, expected_proxy], "No accidental fallback to unrelated engine")
+			print("  [PASS] hero %s bank %s" % [pid, engine_ctrl._active_bank])
+		assert(engine_ctrl._reflection_players.size() == engine_ctrl._exhaust_players.size(), "Every recorded exhaust anchor has a wet reflection route")
+		for mirror in engine_ctrl._reflection_players.values():
+			assert(mirror.bus == &"Exhaust_Reflection", "Reflection voice must route to dedicated wet bus")
 
 		# Clean up car
-		root.remove_child(car)
-		car.queue_free()
+		await AudioTestCleanup.dispose(self, car)
 
 	# 3. Test Camera Mix Controller binding
 	print("\n[Check 3] Camera Mix Controller Binding & Perspectives...")
@@ -102,17 +114,28 @@ func _run() -> void:
 	assert(mix_ctrl != null, "Camera mix must be available")
 	assert(mix_ctrl.camera_node == cam, "Camera node must be bound")
 
+	# The effects slider must control both vehicle effects and the world bed.
+	if AudioServer.get_bus_send(AudioServer.get_bus_index("Ambience")) != &"SFX":
+		push_error("Ambience bypasses SFX settings")
+		failed = true
+
+	# Recorded mode owns all transients; the legacy event pool must stay idle.
+	var legacy_event_index: int = test_audio._event_index
+	test_audio.update_telemetry({"rpm": 6500.0, "throttle": 0.9, "gear": 1})
+	test_audio.update_telemetry({"rpm": 6400.0, "throttle": 0.0, "gear": 2})
 	# Test event triggers
 	test_audio.trigger_collision(0.75)
 	test_audio.trigger_suspension(0.60)
 	test_audio.trigger_gear_shift(1, 2)
 	test_audio.trigger_overrun_backfire()
-	print("  [PASS] All event triggers executed successfully.")
+	if test_audio._event_index != legacy_event_index:
+		push_error("Recorded events must not also trigger legacy one-shots")
+		failed = true
+	print("  Event routing checked.")
 
 	root.remove_child(cam)
-	cam.queue_free()
-	root.remove_child(test_car)
-	test_car.queue_free()
+	cam.free()
+	await AudioTestCleanup.dispose(self, test_car)
 
 	print("\n==================================================")
 	if failed:
