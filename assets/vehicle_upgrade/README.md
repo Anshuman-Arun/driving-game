@@ -1,9 +1,7 @@
 # Vela GT — HD vehicle art handoff (2026-11-21)
 
-**Status: PARTIAL / art not accepted.** The hero GLB is **not yet present**.
-Do not claim this PR replaces the current placeholder. The read-only Core
-factory is on PR #20, which has not been merged to `main`.
-This branch is deliberately limited to the three owned directories.
+**Status: ENGINEERING PIPELINE VERIFIED / SPECTRAL GT RS ART REJECTED.**
+The 3-tier LOD GLBs (`vela_gt_hero.glb`, `vela_gt_mid.glb`, `vela_gt_distant.glb`) have been built from the verified CC0 Spectral GT RS source, imported in Godot 4.7.2, benchmarked at 1920×1080, and tested on live GEVP physics. **Visual inspection rejected the Spectral GT RS source model** because the upstream GLB is a procedural primitive assembly with severe geometry/material defects (red ellipsoid headrests poking through the roof, 360° torus fender hoops clipping the asphalt, detached flat hood/doors/roof, opaque black glass blocking the cockpit, white untextured carbon-fiber blocks). See `tools/vehicle_upgrade/TEST_REPORT.md` and `tools/vehicle_upgrade/qa_screenshots/` for full 1920×1080 evidence and recommended licensed replacement sources. **Do not merge this PR as accepted hero art.**
 
 ## Source evaluation
 

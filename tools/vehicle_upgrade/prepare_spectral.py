@@ -32,6 +32,26 @@ SOURCE_WHEEL_HEIGHT_M = 0.53
 SOURCE_FRONT_X = 1.37
 SOURCE_REAR_X = -1.48
 SOURCE_HALF_TRACK = 1.015  # Real source tire center, not fender lip
+# Align scaled source axles (+1.3027, -1.4073) to GEVP axles (+1.36, -1.35 in Blender +Y).
+CHASSIS_BODY_LONGITUDINAL_OFFSET_M = 1.36 - (SOURCE_FRONT_X * WHEELBASE_SCALE)
+# GEVP resting wheel centers in Blender coordinates (+X right, +Y forward, +Z up)
+# matching Godot FL(-0.88, -0.08, -1.36), FR(+0.88, -0.08, -1.36), RL(-0.88, -0.08, +1.35), RR(+0.88, -0.08, +1.35).
+GEVP_WHEEL_REST_BLENDER = {
+    "FL": (-0.88, 1.36, -0.08),
+    "FR": (0.88, 1.36, -0.08),
+    "RL": (-0.88, -1.35, -0.08),
+    "RR": (0.88, -1.35, -0.08),
+}
+SPINNING_WHEEL_SUFFIXES = (
+    "_Tire",
+    "_Sidewall_Bead",
+    "_Brake_Disc",
+    "_Brake_Hat",
+    "_Rim_Base",
+    "_Spoke_",
+    "_Hub",
+    "_Tire_Block_",
+)
 
 # Source front is Blender +X. Z+90 maps front to Blender +Y, which glTF
 # exports as Godot -Z. Sign of source side names is not assumed.
@@ -87,10 +107,18 @@ def wheel_assignment(original_name):
     Blender Y is source model's side axis. +90 around Blender Z turns
     source negative Y into positive world X. As a result SOURCE 'Left'
     maps to Godot RIGHT. Assign target by actual geometry, not labels.
+    Only spinning wheel parts and stationary brake calipers are assigned
+    to wheel/brake pivots; chassis suspension arms, dampers, springs and
+    brake lines remain on Body so they never spin with the tires.
     """
     for axle in ("Front", "Rear"):
         for side in ("Left", "Right"):
-            if original_name.startswith(axle + "_" + side + "_"):
+            prefix = axle + "_" + side + "_"
+            if original_name.startswith(prefix):
+                is_caliper = "Brake_Caliper" in original_name
+                is_spinning = any(tok in original_name for tok in SPINNING_WHEEL_SUFFIXES)
+                if not is_caliper and not is_spinning:
+                    return ""
                 godot_side = "R" if side == "Left" else "L"
                 return ("F" if axle == "Front" else "R") + godot_side
     return ""
@@ -135,14 +163,20 @@ def normalize_import():
     for key in PART_ORDER:
         if groups[key] < 6:
             raise ValueError("Wheel " + key + " is not complete: " + str(groups[key]) + " parts")
-    # Body is scaled for the actual factory's 2.71 m wheelbase, independently
-    # of the 0.35 m GEVP tires. Pivot coordinates remain (0,0,0).
-    body.matrix_world = Matrix.Translation((0, 0, CHASSIS_BODY_VERTICAL_OFFSET_M)) @ Matrix.Diagonal(
-        (WHEELBASE_SCALE, WHEELBASE_SCALE, WHEELBASE_SCALE, 1.0))
+    # Body is scaled for the actual factory's 2.71 m wheelbase and shifted
+    # longitudinally so front/rear fender arches align to GEVP's -1.36/+1.35 m axles.
+    body.matrix_world = Matrix.Translation(
+        (0.0, CHASSIS_BODY_LONGITUDINAL_OFFSET_M, CHASSIS_BODY_VERTICAL_OFFSET_M)
+    ) @ Matrix.Diagonal((WHEELBASE_SCALE, WHEELBASE_SCALE, WHEELBASE_SCALE, 1.0))
     for key in PART_ORDER:
         # Axial correction keeps the visible tires near factory tread width.
+        # Place pivots at GEVP resting positions so standalone showcase & garage
+        # views are properly assembled; VehicleVisualAdapter reparents them to
+        # GEVP wheel_node/Wheel at local Vector3.ZERO during driving.
+        wheels[key].location = GEVP_WHEEL_REST_BLENDER[key]
         wheels[key].scale = (WHEEL_RADIUS_SCALE * 1.4,
                              WHEEL_RADIUS_SCALE, WHEEL_RADIUS_SCALE)
+        brakes[key].location = GEVP_WHEEL_REST_BLENDER[key]
         brakes[key].scale = (WHEEL_RADIUS_SCALE,) * 3
     # The imported GLB's animated empties are not included; wheel dynamics
     # come *only* from GEVP. Blender source remains available upstream.
@@ -172,7 +206,7 @@ def carve_wheel_arches():
             radius=0.405 * scale,
             depth=3.4,
             end_fill_type="NGON",
-            location=(0.0, axle * scale,
+            location=(0.0, axle * scale + CHASSIS_BODY_LONGITUDINAL_OFFSET_M,
                       SOURCE_WHEEL_HEIGHT_M * scale + CHASSIS_BODY_VERTICAL_OFFSET_M),
             rotation=(0.0, math.pi / 2.0, 0.0))
         cutter = bpy.context.object
@@ -200,13 +234,19 @@ def join_material_peers():
             if sig:
                 peers.setdefault(sig, []).append(child)
         for objects in peers.values():
-            if len(objects) <= 1:
-                continue
+            if len(objects) > 1:
+                bpy.ops.object.select_all(action="DESELECT")
+                for obj in objects:
+                    obj.select_set(True)
+                bpy.context.view_layer.objects.active = objects[0]
+                bpy.ops.object.join()
+            # Apply local rotation/scale into mesh vertices so AABBs stay tight
+            # and axis-aligned in Godot while keeping parent transforms intact.
+            active = objects[0]
             bpy.ops.object.select_all(action="DESELECT")
-            for obj in objects:
-                obj.select_set(True)
-            bpy.context.view_layer.objects.active = objects[0]
-            bpy.ops.object.join()
+            active.select_set(True)
+            bpy.context.view_layer.objects.active = active
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 
 
 def adjust_budget(target):

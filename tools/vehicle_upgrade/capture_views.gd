@@ -43,7 +43,7 @@ func _capture() -> void:
 		quit(2)
 		return
 	var root_window := get_root()
-	root_window.size = Vector2i(1600, 900)
+	root_window.size = Vector2i(1920, 1080)
 	_stage = Node3D.new()
 	root_window.add_child(_stage)
 	var environment := WorldEnvironment.new()
@@ -94,8 +94,8 @@ func _capture() -> void:
 		_stage.add_child(car)
 		if model_name == "hd":
 			for wheel_key: String in WHEEL_POS.keys():
-				var pivot: Node3D = car.get_node_or_null("Wheel_" + wheel_key + "_Pivot") as Node3D
-				var brake: Node3D = car.get_node_or_null("Brake_" + wheel_key) as Node3D
+				var pivot: Node3D = car.find_child("Wheel_" + wheel_key + "_Pivot", true, false) as Node3D
+				var brake: Node3D = car.find_child("Brake_" + wheel_key, true, false) as Node3D
 				if pivot == null or brake == null:
 					push_error("Prepared wheel or brake hierarchy missing for " + wheel_key)
 					quit(2)

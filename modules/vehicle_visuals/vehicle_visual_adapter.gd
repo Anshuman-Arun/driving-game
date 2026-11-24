@@ -15,9 +15,9 @@ const DEFAULT_HERO := "res://assets/vehicle_upgrade/vela_gt_hero.glb"
 const DEFAULT_MID := "res://assets/vehicle_upgrade/vela_gt_mid.glb"
 const DEFAULT_DISTANT := "res://assets/vehicle_upgrade/vela_gt_distant.glb"
 
-@export_file("*.glb,*.tscn") var hero_path: String = DEFAULT_HERO
-@export_file("*.glb,*.tscn") var mid_path: String = DEFAULT_MID
-@export_file("*.glb,*.tscn") var distant_path: String = DEFAULT_DISTANT
+@export_file("*.glb", "*.tscn") var hero_path: String = DEFAULT_HERO
+@export_file("*.glb", "*.tscn") var mid_path: String = DEFAULT_MID
+@export_file("*.glb", "*.tscn") var distant_path: String = DEFAULT_DISTANT
 @export var mid_distance_m := 27.0
 @export var far_distance_m := 85.0
 @export var auto_lod := true
@@ -35,8 +35,8 @@ var _preview_mode := false
 var _last_error := ""
 var _mounts: Dictionary = {}
 
-static func attach_to(vehicle: Node3D) -> VehicleVisualAdapter:
-	var adapter := VehicleVisualAdapter.new()
+static func attach_to(vehicle: Node3D) -> Node3D:
+	var adapter := new()
 	adapter.name = "VehicleVisualAdapter"
 	vehicle.add_child(adapter)
 	adapter.connect_chassis(vehicle)
@@ -137,6 +137,16 @@ func request_lod(requested_lod: int) -> bool:
 	clear_visuals()
 	add_child(model)
 	_active_scene = model
+	# Hide original placeholder chassis MeshInstance3D children (e.g. PlayerCarFactory boxes)
+	# without touching physics nodes (CollisionShape3D, GEVP Wheel) or this adapter.
+	for old_body_child: Node in _chassis.get_children():
+		if old_body_child == self:
+			continue
+		if old_body_child is MeshInstance3D:
+			var mi := old_body_child as Node3D
+			if not _original_visibility.has(mi):
+				_original_visibility[mi] = mi.visible
+			mi.visible = false
 	for key: String in WHEEL_KEYS:
 		var wheel_data: Dictionary = _wheel_components[key]
 		var wheel: Node3D = wheel_data["wheel"]
