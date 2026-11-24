@@ -22,6 +22,12 @@ run_gate() {
   fi
 }
 run_gate asset_integrity python3 tests/integration/audio_qa/verify_assets.py
+run_gate bank_preparation_self_test python3 modules/audio/tools/prepare_recorded_bank.py self-test
+if command -v ffmpeg >/dev/null 2>&1; then
+  run_gate recording_candidate_analysis python3 modules/audio/tools/prepare_recorded_bank.py inspect assets/audio/recorded/candidates/car_engine_512558.mp3
+else
+  echo 'Candidate inspection skipped: ffmpeg not installed (runtime tests unaffected)'
+fi
 run_gate import "$GODOT_BIN" --headless --path . --editor --import
 failures=0
 for suite in \
