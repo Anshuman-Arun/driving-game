@@ -27,3 +27,7 @@ Default output is a sibling folder named aster-valley-asset-source, outside Godo
 - Where realistic houses, guardrails, poles, drainage and road signs are not available under clear free redistribution terms, make modular original models from CC0 materials. Do not buy assets or bypass access controls.
 
 See [implementation mission](../../prompts/ANTIGRAVITY_ENVIRONMENT_ART_PASS.md) for work allocation, checklist and QA. The library is staged separately so existing driving logic and scene are unchanged.
+
+## Initial GitHub acquisition evidence
+
+[Run 45509977508](https://github.com/Anshuman-Arun/driving-game/actions/runs/45509977508) passed Python compilation and downloaded seven full 4K source candidates, but the artifact service refused publication because storage quota was exhausted. Its raw files are not accessible. The revised workflow stages only four small 4K foliage candidates under `asset_library/environment_sources/`, with a 60 MiB aggregate cap and 25 MiB per-file cap, excluding LFS-tracked extensions. `.gdignore` prevents Godot importing the staging library. Do not merge raw candidates into main indiscriminately; use them for local Blender evaluation and publish approved derivatives. A clean local clone can retrieve staged sources directly if that workflow succeeds. The full 4K library remains local acquisition only.

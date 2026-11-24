@@ -1,4 +1,4 @@
-name: Environment source asset acquisition (bounded trial)
+name: Environment source asset acquisition (bounded Git staging)
 on:
   push:
     branches: [feat/environment-asset-library]
@@ -6,47 +6,63 @@ on:
       - '.github/workflows/environment-assets.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: environment-source-acquisition
   cancel-in-progress: false
 jobs:
   acquire:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: false
-          persist-credentials: false
           sparse-checkout: |
             tools/environment_assets
             docs/environment_assets
-      - name: Compile downloader
-        run: python3 -m py_compile tools/environment_assets/acquire.py
-      - name: Resolve and acquire source models
+            asset_library
+      - name: Compile downloader and acquire small 4K foliage masters
         run: |
-          python3 tools/environment_assets/acquire.py --scope core --resolution 4k --budget-mib 300 --max-assets 9 --output "$RUNNER_TEMP/environment-source"
-      - name: Summarize verified assets
-        if: always()
+          python3 -m py_compile tools/environment_assets/acquire.py
+          python3 tools/environment_assets/acquire.py --scope core --resolution 4k --budget-mib 60 --only grass_medium_01 grass_medium_02 fern_02 celandine_01 --output "$RUNNER_TEMP/environment-source"
+      - name: Stage original foliage files and provenance (not runtime assets)
         run: |
           python3 - <<'PY'
-          import json, os
+          import json, os, shutil
           from pathlib import Path
-          p=Path(os.environ["RUNNER_TEMP"])/"environment-source"/"ACQUISITION_REPORT.json"
-          if p.exists():
-              data=json.loads(p.read_text())
-              with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
-                  f.write("### Actual acquisition results\n\n")
-                  for item in data["results"]:
-                      f.write("- "+item["id"]+": "+item["status"]+"\n")
+          src=Path(os.environ["RUNNER_TEMP"])/"environment-source"
+          report=json.loads((src/"ACQUISITION_REPORT.json").read_text())
+          dest=Path("asset_library/environment_sources")
+          if dest.exists():
+              raise SystemExit("Source staging exists; refusing overwrite")
+          dest.mkdir(parents=True)
+          (Path("asset_library")/".gdignore").touch()
+          (dest/"README.md").write_text("# CC0 source candidates\\n\\nOriginal source files, not approved game assets. Powered by Poly Haven. See PROVENANCE.json for each asset and docs/environment_assets/README.md.\\n".replace("\\n","\n"), encoding="utf-8")
+          total=0
+          for item in report["results"]:
+              if item["status"] not in ("downloaded","cached"):
+                  continue
+              folder=src/item["kind"]/item["id"]/item["resolution"]
+              files=[x for x in folder.rglob("*") if x.is_file()]
+              size=sum(x.stat().st_size for x in files)
+              if any(x.stat().st_size>25*1024**2 or x.suffix.lower() in (".glb",".blend",".fbx",".exr",".hdr",".psd",".wav") for x in files) or total+size>60*1024**2:
+                  print("Not staged (Git size/LFS guard):",item["id"])
+                  continue
+              shutil.copytree(folder,dest/item["id"])
+              total+=size
+              print("Staged",item["id"],size)
+          if total==0:
+              raise SystemExit("No eligible assets to stage")
+          shutil.copy2(src/"ACQUISITION_REPORT.json",dest/"ACQUISITION_REPORT.json")
+          print("Total staged source bytes:",total)
           PY
-      - name: Upload source trial and provenance
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: environment-source-4k-core-trial
-          path: ${{ runner.temp }}/environment-source/
-          if-no-files-found: warn
-          retention-days: 3
-          compression-level: 0
+      - name: Commit bounded source subset on isolated branch only
+        run: |
+          test "$GITHUB_REF" = refs/heads/feat/environment-asset-library
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --sparse asset_library
+          git diff --cached --stat
+          git commit -m "Stage verified CC0 4K foliage source candidates"
+          git push origin HEAD:refs/heads/feat/environment-asset-library
