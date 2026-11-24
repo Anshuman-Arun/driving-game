@@ -1,5 +1,15 @@
 # Project status — single current-state log
 
+## Recorded audio fidelity pass 4 (`fix/recorded-audio-mix`, 2026-11-24)
+
+Collision loudness now estimates velocity change across a contact step instead of treating road speed as impact speed. This is an approximation of impulse per unit mass, not measured contact force. Suspension and impact cooldowns advance on one clock, not both render and physics ticks. Landings retain pre-contact downward velocity, prioritize touchdown over spring events, and clear stale spring histories when wheels leave contact. The QA jump telemetry includes descending velocity. Added regression checks for these cases.
+
+Actual GitHub Actions run 45440889812 (job 138611409832, prior revision 033a48d): checkout, checksum-pinned Godot 4.7.2 installation, offline asset check (35/35), project import, engine tests, mix (61/61), chassis and chassis/mix suites executed. Tire assertions passed but leaked resources at exit; synthetic smoke and regression also leaked resources; regression logged detached-node global transform errors. Root integration failed because it inspected newly attached audio nodes before SceneTree readiness and hung until the run was cancelled by the newer revision. Capture had not executed. These are actual log observations, not a passing CI result.
+
+Fixed the observed failures by deferring root integration/tire/capture initialization, freeing test-owned nodes synchronously, detaching capture effect after tests, and handling detached Node3D basis in telemetry. Revalidation on the new revision is required; no claim of successful runtime or acoustic audition yet. Original assets and vehicle physics are unchanged. PR #37 stays draft, main untouched.
+
+
+
 ## Recorded audio fidelity pass 3 (`fix/recorded-audio-mix`, 2026-11-24)
 
 Engine loops now use private PCM16 copies with a bounded two-millisecond raised-cosine endpoint correction on each side of a discontinuity. The existing files, frame counts, asset hashes and attribution remain unchanged; compressed fallback streams cannot be conditioned. Exhaust reflection voices share the conditioned sample and start at the direct voice's playback position only while the anchor is active; the wet delay stays enabled in open space to prevent dry leakage. Chassis raycasts exclude the actual vehicle RID; unbound test rigs retain simulated wall distances. Engine torque-cut follows GEVP's shift-active edge and recovers after the actual transmission shift; motor-pedal telemetry is correct in reverse without breaking the legacy pedal contract.
