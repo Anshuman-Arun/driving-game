@@ -95,12 +95,24 @@ func _initialize() -> void:
 	assert(mix_ctrl != null, "Camera mix must be available")
 	assert(mix_ctrl.camera_node == cam, "Camera node must be bound")
 
+	# The effects slider must control both vehicle effects and the world bed.
+	if AudioServer.get_bus_send(AudioServer.get_bus_index("Ambience")) != &"SFX":
+		push_error("Ambience bypasses SFX settings")
+		failed = true
+
+	# Recorded mode owns all transients; the legacy event pool must stay idle.
+	var legacy_event_index: int = test_audio._event_index
+	test_audio.update_telemetry({"rpm": 6500.0, "throttle": 0.9, "gear": 1})
+	test_audio.update_telemetry({"rpm": 6400.0, "throttle": 0.0, "gear": 2})
 	# Test event triggers
 	test_audio.trigger_collision(0.75)
 	test_audio.trigger_suspension(0.60)
 	test_audio.trigger_gear_shift(1, 2)
 	test_audio.trigger_overrun_backfire()
-	print("  [PASS] All event triggers executed successfully.")
+	if test_audio._event_index != legacy_event_index:
+		push_error("Recorded events must not also trigger legacy one-shots")
+		failed = true
+	print("  Event routing checked.")
 
 	root.remove_child(cam)
 	cam.queue_free()
