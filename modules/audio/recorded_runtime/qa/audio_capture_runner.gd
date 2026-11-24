@@ -252,7 +252,13 @@ func execute_suite(tree: SceneTree, output_json_path: String = "res://tests/inte
 			])
 
 	# Cleanup test nodes
-	test_root.queue_free()
+	test_root.free()
+
+	# Detach capture effect after all voices have been released.
+	for i in range(AudioServer.get_bus_effect_count(master_idx)):
+		if AudioServer.get_bus_effect(master_idx, i) == capture:
+			AudioServer.remove_bus_effect(master_idx, i)
+			break
 
 	# Summarize overall results
 	full_report["summary"]["overall_peak_dbfs"] = overall_max_peak_dbfs
