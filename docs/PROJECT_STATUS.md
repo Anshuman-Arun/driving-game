@@ -2,6 +2,10 @@
 
 Last updated: 2026-11-23
 
+## Premium graphics asset acquisition (`feat/gfx-premium-assets`)
+
+Added a curated CC0 source catalog, a hash-checked, staged Poly Haven glTF/PBR downloader and a graphics-swarm asset handoff under `assets/premium_world/`. Existing assets, rendering, scenes and gameplay remain unchanged. Direct download and Godot runtime validation are not available in the ChatGPT container; payload acquisition, mesh optimization, visual integration and performance QA remain pending until confirmed. See `assets/premium_world/README.md`.
+
 ## Water crossings, roadside detail and instruments (`feat/local-showroom-dashboard`)
 
 Eastwater Viaduct, Alder Creek Bridge and Needle Pass Trestle carry existing routes over new water at lake, valley and mountain elevations. Five corridors have wider pavement with tapered approaches. The bridge decks, rails and shoulder surfaces participate in driving collision. The root game loads a separate roadworks heightfield while the standalone runtime can still load the canonical world. The scenery layer accounts for 12 placements displaced by the new banks.
