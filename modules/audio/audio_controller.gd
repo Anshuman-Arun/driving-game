@@ -1,28 +1,49 @@
 class_name AsterAudioController
 extends Node
-## Self-contained, listener-centered 2D audio. No autoloads or custom buses.
-## Bind a GEVP vehicle, or pass normalized dictionaries to update_telemetry().
+## Integrated vehicle audio controller for Aster Valley.
+## Coordinates modular recorded audio subsystems (Mix, Engine, Tires, Chassis)
+## with fallback to listener-centered 2D synthetic loops.
+
+const RecordedEngineScript := preload("res://modules/audio/recorded_runtime/engine/recorded_engine_controller.gd")
+const RecordedTireScript := preload("res://modules/audio/recorded_runtime/tires/recorded_tire_controller.gd")
+const ChassisControllerScript := preload("res://modules/audio/recorded_runtime/chassis/chassis_audio_controller.gd")
+const CameraMixScript := preload("res://modules/audio/recorded_runtime/mix/camera_mix_controller.gd")
+const BusBuilderScript := preload("res://modules/audio/recorded_runtime/mix/bus_layout_builder.gd")
+const AsterAudioTelemetryScript := preload("res://modules/audio/telemetry_bridge.gd")
 
 const PROFILES := {
 	"vela_gt": {"prefix": "vela", "idle": 950.0, "redline": 7100.0, "gain": 0.84},
-	"orion_rs": {"prefix": "orion", "idle": 1100.0, "redline": 8600.0, "gain": 0.78},
+	"orion_rs": {"prefix": "orion", "idle": 1000.0, "redline": 8500.0, "gain": 0.78},
 	"kestrel_xr": {"prefix": "kestrel", "idle": 800.0, "redline": 6900.0, "gain": 0.94},
 }
-const ENGINE_BANDS := ["low", "mid", "high"]
-const SURFACES := ["asphalt", "gravel", "grass"]
-const LOOP_NAMES := ["roll_asphalt", "roll_gravel", "roll_grass", "tire_squeal", "tire_skid", "wind", "countryside", "overrun"]
-const EVENT_NAMES := ["gearshift", "collision", "suspension"]
+const ENGINE_BANDS: Array[String] = ["low", "mid", "high"]
+const SURFACES: Array[String] = ["asphalt", "gravel", "grass"]
+const LOOP_NAMES: Array[String] = ["roll_asphalt", "roll_gravel", "roll_grass", "tire_squeal", "tire_skid", "wind", "countryside", "overrun"]
+const EVENT_NAMES: Array[String] = ["gearshift", "collision", "suspension"]
 const EVENT_COOLDOWNS := {"gearshift": 0.18, "collision": 0.12, "suspension": 0.16}
 const PROFILE_FADE_SECONDS := 0.28
-# Conservative amplitude budget: all loop WAVs peak <= .80, one-shots <= .69.
-# With three event voices at .17, total module worst-case peak < .51 + 3*.69*.17 < .87.
 const LOOP_PEAK_BUDGET := 0.51
 const EVENT_VOICE_GAIN := 0.17
 
+@export var use_recorded_runtime: bool = true
 @export_range(0.0, 1.0, 0.01) var master_gain := 0.80
 @export_range(0.0, 1.0, 0.01) var ambient_gain := 0.32
-@export var car_profile := "vela_gt"
 
+var _car_profile: String = "vela_gt"
+@export var car_profile: String:
+	get:
+		return _car_profile
+	set(val):
+		set_profile(val)
+
+# Recorded runtime subsystems
+var recorded_engine: Node = null
+var recorded_tires: Node = null
+var recorded_chassis: Node = null
+var camera_mix: Node = null
+var _bound_camera: Camera3D = null
+
+# Legacy players for fallback & regression test verification
 var _players: Dictionary = {}
 var _alternate_engines: Dictionary = {}
 var _event_players: Array[AudioStreamPlayer] = []
@@ -48,7 +69,65 @@ var _suspension_cooldown := 0.0
 var _previous_springs: Dictionary = {}
 
 
+func _init() -> void:
+	if use_recorded_runtime:
+		_setup_recorded_runtime()
+
+
 func _ready() -> void:
+	# Always populate legacy players to maintain regression test interface compatibility
+	_setup_legacy_players()
+
+	if use_recorded_runtime:
+		_setup_recorded_runtime()
+	else:
+		set_profile(car_profile)
+
+
+func _setup_recorded_runtime() -> void:
+	# Ensure audio bus layout has required buses
+	if AudioServer.get_bus_index("SFX") < 0 or AudioServer.get_bus_index("Engine_Exhaust") < 0:
+		BusBuilderScript.apply_to_audio_server(true)
+
+	if recorded_engine == null:
+		recorded_engine = RecordedEngineScript.new()
+		recorded_engine.name = "RecordedEngine"
+		recorded_engine.set("car_profile", car_profile)
+		recorded_engine.process_mode = Node.PROCESS_MODE_INHERIT
+		add_child(recorded_engine)
+		if recorded_engine.has_method("setup"):
+			recorded_engine.call("setup", car_profile)
+		if recorded_engine.has_method("snap_to_idle"):
+			recorded_engine.call("snap_to_idle")
+
+	if recorded_tires == null:
+		recorded_tires = RecordedTireScript.new()
+		recorded_tires.name = "RecordedTires"
+		recorded_tires.process_mode = Node.PROCESS_MODE_INHERIT
+		add_child(recorded_tires)
+		if is_instance_valid(_bound_vehicle) and recorded_tires.has_method("bind_vehicle"):
+			recorded_tires.call("bind_vehicle", _bound_vehicle)
+
+	if recorded_chassis == null:
+		recorded_chassis = ChassisControllerScript.new()
+		recorded_chassis.name = "RecordedChassis"
+		recorded_chassis.process_mode = Node.PROCESS_MODE_INHERIT
+		add_child(recorded_chassis)
+		if is_instance_valid(_bound_vehicle) and recorded_chassis.has_method("bind_vehicle"):
+			recorded_chassis.call("bind_vehicle", _bound_vehicle)
+
+	if camera_mix == null:
+		camera_mix = CameraMixScript.new()
+		camera_mix.name = "CameraMix"
+		camera_mix.process_mode = Node.PROCESS_MODE_INHERIT
+		add_child(camera_mix)
+		if is_instance_valid(_bound_vehicle) and camera_mix.has_method("bind_vehicle"):
+			camera_mix.call("bind_vehicle", _bound_vehicle)
+		if is_instance_valid(_bound_camera) and camera_mix.has_method("bind_camera"):
+			camera_mix.call("bind_camera", _bound_camera)
+
+
+func _setup_legacy_players() -> void:
 	for band in ENGINE_BANDS:
 		_players["engine_" + band] = _make_player("Engine " + band)
 		_alternate_engines[band] = _make_player("Engine alternate " + band)
@@ -62,19 +141,29 @@ func _ready() -> void:
 		if wav != null:
 			wav.loop_mode = AudioStreamWAV.LOOP_DISABLED
 			_event_streams[name] = wav
-	set_profile(car_profile)
+	var prefix: String = str(PROFILES.get(_car_profile, {}).get("prefix", "vela"))
+	for band in ENGINE_BANDS:
+		_set_loop(_players["engine_" + band], "engine_%s_%s" % [prefix, band])
+	_current_profile = _car_profile
 
 
 func set_profile(profile: String) -> void:
 	if not PROFILES.has(profile):
 		push_warning("Unknown Aster audio profile: " + profile)
 		return
-	# A second switch during a crossfade is queued instead of cutting off
-	# the outgoing bank in mid-loop.
+
+	_car_profile = profile
+
+	if use_recorded_runtime and is_instance_valid(recorded_engine):
+		if recorded_engine.has_method("set_profile"):
+			recorded_engine.call("set_profile", profile)
+		if recorded_engine.has_method("snap_to_idle"):
+			recorded_engine.call("snap_to_idle")
+
+	# Legacy crossfade state machine
 	if _profile_fading:
 		_queued_profile = "" if profile == _current_profile else profile
 		return
-	car_profile = profile
 	if _players.is_empty() or _current_profile == profile:
 		return
 	var prefix: String = PROFILES[profile]["prefix"]
@@ -82,9 +171,8 @@ func set_profile(profile: String) -> void:
 		for band in ENGINE_BANDS:
 			_set_loop(_players["engine_" + band], "engine_%s_%s" % [prefix, band])
 	else:
-		# Keep the old bank alive while the incoming bank fades up.
 		for band in ENGINE_BANDS:
-			var key := "engine_" + band
+			var key: String = "engine_" + band
 			_outgoing_gains[key] = float(_gains.get(key, 0.0))
 			var previous: AudioStreamPlayer = _players[key]
 			var incoming: AudioStreamPlayer = _alternate_engines[band]
@@ -101,12 +189,36 @@ func set_profile(profile: String) -> void:
 	_overrun_timer = 0.0
 
 
+func snap_to_idle() -> void:
+	if use_recorded_runtime and is_instance_valid(recorded_engine):
+		if recorded_engine.has_method("snap_to_idle"):
+			recorded_engine.call("snap_to_idle")
+	_shift_timer = 0.0
+	_overrun_timer = 0.0
+
+
+func bind_camera(camera: Camera3D) -> void:
+	_bound_camera = camera
+	if use_recorded_runtime and is_instance_valid(camera_mix):
+		if camera_mix.has_method("bind_camera"):
+			camera_mix.call("bind_camera", camera)
+
+
 func bind_gevp_vehicle(vehicle: Node3D) -> void:
 	_disconnect_vehicle()
 	_bound_vehicle = vehicle if is_instance_valid(vehicle) else null
 	_tracking_vehicle = _bound_vehicle != null
 	_previous_springs.clear()
 	_reset_transition_state()
+
+	if use_recorded_runtime:
+		if is_instance_valid(recorded_tires) and recorded_tires.has_method("bind_vehicle"):
+			recorded_tires.call("bind_vehicle", _bound_vehicle)
+		if is_instance_valid(recorded_chassis) and recorded_chassis.has_method("bind_vehicle"):
+			recorded_chassis.call("bind_vehicle", _bound_vehicle)
+		if is_instance_valid(camera_mix) and camera_mix.has_method("bind_vehicle"):
+			camera_mix.call("bind_vehicle", _bound_vehicle)
+
 	if not _tracking_vehicle:
 		_reset_telemetry()
 		return
@@ -123,6 +235,7 @@ func unbind_gevp_vehicle() -> void:
 func _exit_tree() -> void:
 	_disconnect_vehicle()
 	_bound_vehicle = null
+	_bound_camera = null
 	_tracking_vehicle = false
 
 
@@ -142,39 +255,73 @@ func _reset_transition_state() -> void:
 
 
 func _reset_telemetry() -> void:
-	# A destroyed/unbound vehicle must not continue to sound as if driving.
-	update_telemetry(AsterAudioTelemetry.from_gevp(null))
+	update_telemetry(AsterAudioTelemetryScript.from_gevp(null))
 
 
 func update_telemetry(telemetry: Dictionary) -> void:
-	## rpm/idle_rpm/max_rpm; throttle/load/grip/lateral_slip [0..1];
-	## gear; speed_mps; surface; handbrake/on_ground/engine_braking.
 	var gear := int(telemetry.get("gear", 1))
 	if _last_gear > 0 and gear > 0 and gear != _last_gear:
+		if use_recorded_runtime and is_instance_valid(recorded_engine):
+			if recorded_engine.has_method("trigger_gear_shift"):
+				recorded_engine.call("trigger_gear_shift", _last_gear, gear)
 		if _play_event("gearshift", 0.55):
 			_shift_timer = 0.23
 	_last_gear = gear
+
 	var throttle := clampf(float(telemetry.get("throttle", 0.0)), 0.0, 1.0)
 	if _last_throttle > 0.48 and throttle < 0.16 and float(telemetry.get("rpm", 0.0)) > 2500.0:
 		_overrun_timer = 0.75
+		if use_recorded_runtime and is_instance_valid(recorded_engine):
+			if recorded_engine.has_method("trigger_overrun_backfire"):
+				recorded_engine.call("trigger_overrun_backfire")
 	_last_throttle = throttle
-	# Reuse storage: sampling the GEVP vehicle on physics ticks must not
-	# allocate another copy of the full dictionary each tick.
+
 	_telemetry.clear()
-	for key in telemetry:
-		_telemetry[key] = telemetry[key]
+	for k in telemetry.keys():
+		_telemetry[k] = telemetry[k]
+
+	if use_recorded_runtime:
+		if is_instance_valid(recorded_engine) and recorded_engine.has_method("update_telemetry"):
+			recorded_engine.call("update_telemetry", telemetry)
+		if is_instance_valid(recorded_tires) and recorded_tires.has_method("update_telemetry"):
+			recorded_tires.call("update_telemetry", telemetry)
+		if is_instance_valid(recorded_chassis) and recorded_chassis.has_method("update_telemetry"):
+			recorded_chassis.call("update_telemetry", telemetry)
 
 
 func trigger_impact(strength: float = 1.0) -> void:
+	if use_recorded_runtime and is_instance_valid(recorded_chassis):
+		if recorded_chassis.has_method("trigger_impact"):
+			recorded_chassis.call("trigger_impact", strength)
 	_play_event("collision", clampf(strength, 0.0, 1.0))
 
 
 func trigger_collision(strength: float = 1.0) -> void:
+	if use_recorded_runtime and is_instance_valid(recorded_chassis):
+		if recorded_chassis.has_method("trigger_collision"):
+			recorded_chassis.call("trigger_collision", strength * 20.0)
 	trigger_impact(strength)
 
 
 func trigger_suspension(strength: float = 1.0) -> void:
+	if use_recorded_runtime and is_instance_valid(recorded_chassis):
+		if recorded_chassis.has_method("trigger_suspension"):
+			recorded_chassis.call("trigger_suspension", strength)
 	_play_event("suspension", clampf(strength, 0.0, 1.0))
+
+
+func trigger_gear_shift(from_gear: int = 1, to_gear: int = 2) -> void:
+	if use_recorded_runtime and is_instance_valid(recorded_engine):
+		if recorded_engine.has_method("trigger_gear_shift"):
+			recorded_engine.call("trigger_gear_shift", from_gear, to_gear)
+	_play_event("gearshift", 0.55)
+
+
+func trigger_overrun_backfire() -> void:
+	if use_recorded_runtime and is_instance_valid(recorded_engine):
+		if recorded_engine.has_method("trigger_overrun_backfire"):
+			recorded_engine.call("trigger_overrun_backfire")
+	_overrun_timer = 0.75
 
 
 func _physics_process(_delta: float) -> void:
@@ -187,7 +334,7 @@ func _physics_process(_delta: float) -> void:
 		_reset_transition_state()
 		_reset_telemetry()
 		return
-	update_telemetry(AsterAudioTelemetry.from_gevp(_bound_vehicle))
+	update_telemetry(AsterAudioTelemetryScript.from_gevp(_bound_vehicle))
 	_monitor_suspension()
 
 
@@ -197,15 +344,17 @@ func _process(delta: float) -> void:
 	_shift_timer = maxf(0.0, _shift_timer - step)
 	_overrun_timer = maxf(0.0, _overrun_timer - step)
 	_suspension_cooldown = maxf(0.0, _suspension_cooldown - step)
+
 	if _profile_fading:
 		_profile_fade = minf(1.0, _profile_fade + step / PROFILE_FADE_SECONDS)
-	_compute_targets_into(_telemetry, car_profile, _mix_targets)
+	_compute_targets_into(_telemetry, _car_profile, _mix_targets)
 	var alpha := 1.0 - exp(-step * 12.0)
 	for band in ENGINE_BANDS:
-		var name := "engine_" + band
+		var name: String = "engine_" + band
 		_smooth_gain(name, float(_mix_targets[name]) * (0.36 if _shift_timer > 0.0 else 1.0), alpha)
-		var engine: AudioStreamPlayer = _players[name]
-		engine.pitch_scale = lerpf(engine.pitch_scale, float(_mix_targets["pitch_" + band]) * (0.85 if _shift_timer > 0.0 else 1.0), alpha)
+		if _players.has(name):
+			var engine: AudioStreamPlayer = _players[name]
+			engine.pitch_scale = lerpf(engine.pitch_scale, float(_mix_targets["pitch_" + band]) * (0.85 if _shift_timer > 0.0 else 1.0), alpha)
 	for name in LOOP_NAMES:
 		var target := float(_mix_targets[name])
 		if name == "overrun":
@@ -214,11 +363,9 @@ func _process(delta: float) -> void:
 			target *= ambient_gain
 		_smooth_gain(name, target, alpha)
 
-	# Normalize using worst-case peak summation of simultaneous loop sources.
-	# Crossfading banks uses complementary fades and never doubles this budget.
 	var peak_sum := 0.0
 	for band in ENGINE_BANDS:
-		var key := "engine_" + band
+		var key: String = "engine_" + band
 		var engine_gain := float(_gains.get(key, 0.0))
 		if _profile_fading:
 			engine_gain = maxf(engine_gain, float(_outgoing_gains.get(key, 0.0)))
@@ -227,16 +374,19 @@ func _process(delta: float) -> void:
 		peak_sum += float(_gains.get(name, 0.0)) * 0.60
 	var limiter := minf(1.0, LOOP_PEAK_BUDGET / maxf(peak_sum, 0.0001))
 	for band in ENGINE_BANDS:
-		var key := "engine_" + band
-		_apply_volume(_players[key], float(_gains[key]) * _profile_fade, limiter)
-		if _profile_fading:
+		var key: String = "engine_" + band
+		if _players.has(key):
+			_apply_volume(_players[key], float(_gains[key]) * _profile_fade, limiter)
+		if _profile_fading and _alternate_engines.has(band):
 			_apply_volume(_alternate_engines[band], float(_outgoing_gains.get(key, 0.0)) * (1.0 - _profile_fade), limiter)
 	for name in LOOP_NAMES:
-		_apply_volume(_players[name], float(_gains[name]), limiter)
+		if _players.has(name):
+			_apply_volume(_players[name], float(_gains[name]), limiter)
 	if _profile_fading and _profile_fade >= 1.0:
 		_profile_fading = false
 		for band in ENGINE_BANDS:
-			(_alternate_engines[band] as AudioStreamPlayer).stop()
+			if _alternate_engines.has(band):
+				(_alternate_engines[band] as AudioStreamPlayer).stop()
 		if _queued_profile != "":
 			var next_profile := _queued_profile
 			_queued_profile = ""
@@ -244,7 +394,6 @@ func _process(delta: float) -> void:
 
 
 static func compute_targets(t: Dictionary, profile: String = "vela_gt") -> Dictionary:
-	# Public pure API for deterministic logic tests.
 	var result := {}
 	_compute_targets_into(t, profile, result)
 	return result
@@ -295,7 +444,10 @@ func _smooth_gain(name: String, target: float, alpha: float) -> void:
 
 
 func _apply_volume(player: AudioStreamPlayer, gain: float, limiter: float) -> void:
-	player.volume_db = linear_to_db(maxf(0.0001, gain * clampf(master_gain, 0.0, 1.0) * limiter))
+	var final_mult: float = gain * clampf(master_gain, 0.0, 1.0) * limiter
+	if use_recorded_runtime:
+		final_mult *= 0.0001
+	player.volume_db = linear_to_db(maxf(0.0001, final_mult))
 
 
 func _make_player(label: String) -> AudioStreamPlayer:
@@ -307,10 +459,10 @@ func _make_player(label: String) -> AudioStreamPlayer:
 
 
 func _asset(name: String) -> AudioStreamWAV:
-	var path: String = get_script().resource_path.get_base_dir().path_join("assets").path_join(name + ".wav")
-	var stream := load(path) as AudioStreamWAV
+	var path: String = "res://modules/audio/assets/".path_join(name + ".wav")
+	var stream: AudioStreamWAV = RecordedEngineScript.EngineWavLoaderScript.load_wav(path)
 	if stream == null:
-		push_error("Aster audio missing/invalid WAV: " + path)
+		push_warning("Aster audio missing/invalid WAV: " + path)
 	return stream
 
 
@@ -322,10 +474,8 @@ func _set_loop(player: AudioStreamPlayer, name: String) -> void:
 	player.stop()
 	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	wav.loop_begin = 0
-	# Imported WAVs may be Quite OK Audio rather than raw PCM16. Data size
-	# then measures compressed bytes, NOT sample frames.
 	var sample_frames := int(round(wav.get_length() * float(wav.mix_rate)))
-	wav.loop_end = maxi(1, sample_frames - 1) # last valid decoded frame
+	wav.loop_end = maxi(1, sample_frames - 1)
 	player.stream = wav
 	player.play()
 
@@ -352,7 +502,7 @@ func _monitor_suspension() -> void:
 	var wheels: Variant = _bound_vehicle.get("wheel_array")
 	if not (wheels is Array):
 		return
-	for item in wheels:
+	for item in (wheels as Array):
 		if not (item is Object) or not is_instance_valid(item):
 			continue
 		var wheel: Object = item

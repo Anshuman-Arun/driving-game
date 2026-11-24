@@ -7,6 +7,10 @@ config/name="Aster Valley — Free Roam"
 run/main_scene="res://scenes/bootstrap/game.tscn"
 config/features=PackedStringArray("4.7", "GLTF", "Forward Plus")
 
+[audio]
+
+buses/default_bus_layout="res://modules/audio/recorded_runtime/mix/aster_bus_layout_sfx.tres"
+
 [aster_valley]
 
 visuals/scenery_enabled=true

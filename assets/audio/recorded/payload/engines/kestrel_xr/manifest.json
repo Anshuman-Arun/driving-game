@@ -1,0 +1,130 @@
+{
+  "profile": "kestrel_xr",
+  "source": "https://github.com/justinagaudelli-eng/supercar-engine-sound/tree/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt",
+  "license": "CC-BY-3.0",
+  "license_url": "https://creativecommons.org/licenses/by/3.0/",
+  "status": "audition_candidate",
+  "notes": "Real exhaust excerpts; upstream RPM and load labels are estimates from field recordings, not controlled dyno recordings. Verify original Commons license-review status and listening quality before production release.",
+  "credits": [
+    {
+      "title": "McLaren 765LT - engine and exhaust sound (YouTube 5oSRv66QFW0)",
+      "author": "Hungarian Supercar Spotters",
+      "license": "CC BY 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:McLaren_765LT_-_engine_and_exhaust_sound_(YouTube_5oSRv66QFW0).opus",
+      "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+    },
+    {
+      "title": "McLaren 600LT with Fi Exhaust system - engine and exhaust sound (YouTube RXj9PUkF0gk)",
+      "author": "FiExhaust",
+      "license": "CC BY 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:McLaren_600LT_with_Fi_Exhaust_system_-_engine_and_exhaust_sound_(YouTube_RXj9PUkF0gk).opus",
+      "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+    },
+    {
+      "title": "McLaren 720S with Novitec exhaust - engine and exhaust sound (YouTube XfgP-gX7KNg)",
+      "author": "Supercars67",
+      "license": "CC BY 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:McLaren_720S_with_Novitec_exhaust_-_engine_and_exhaust_sound_(YouTube_XfgP-gX7KNg).opus",
+      "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+    }
+  ],
+  "loops": [
+    {
+      "file": "on_1000.wav",
+      "rpm": 1000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.05,
+      "seam_delta": 1706
+    },
+    {
+      "file": "on_2000.wav",
+      "rpm": 2000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 0.2175,
+      "seam_delta": 527
+    },
+    {
+      "file": "on_3000.wav",
+      "rpm": 3000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.055,
+      "seam_delta": 98
+    },
+    {
+      "file": "on_4000.wav",
+      "rpm": 4000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.05375,
+      "seam_delta": 243
+    },
+    {
+      "file": "on_5000.wav",
+      "rpm": 5000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.371,
+      "seam_delta": 99
+    },
+    {
+      "file": "on_6000.wav",
+      "rpm": 6000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.055,
+      "seam_delta": 44
+    },
+    {
+      "file": "on_7000.wav",
+      "rpm": 7000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 0.975,
+      "seam_delta": 96
+    },
+    {
+      "file": "off_3000.wav",
+      "rpm": 3000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.965,
+      "seam_delta": 399
+    },
+    {
+      "file": "off_4000.wav",
+      "rpm": 4000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.38625,
+      "seam_delta": 2
+    },
+    {
+      "file": "off_5000.wav",
+      "rpm": 5000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.993,
+      "seam_delta": 160
+    },
+    {
+      "file": "off_6000.wav",
+      "rpm": 6000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.1825,
+      "seam_delta": 435
+    },
+    {
+      "file": "off_7000.wav",
+      "rpm": 7000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.975,
+      "seam_delta": 76
+    }
+  ],
+  "missing": []
+}

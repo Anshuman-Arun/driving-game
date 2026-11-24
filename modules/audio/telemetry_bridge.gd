@@ -56,9 +56,11 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 		"speed_mps": speed,
 		"forward_speed_mps": -velocity.dot(vehicle.global_basis.z),
 		"lateral_slip": combined_slip if grounded else 0.0,
+		"slip_amount": combined_slip if grounded else 0.0,
 		"grip": clampf(1.0 - combined_slip * 0.8, 0.0, 1.0),
 		"on_ground": grounded,
 		"surface": surface,
+		"surface_counts": surface_counts,
 		"handbrake": float(_read(vehicle, properties, "handbrake_input", 0.0)) > 0.3,
 		"engine_braking": throttle < 0.08 and speed > 3.0,
 	}

@@ -80,3 +80,17 @@ The textures below use the [Poly Haven CC0 license](https://polyhaven.com/licens
 | Broadleaf canopy | [Tree Small 02](https://polyhaven.com/a/tree_small_02) | Rico Cilliers | `broadleaf_spray.png`, assembled from leaf diffuse and alpha |
 | Building walls | [White Plaster 02](https://polyhaven.com/a/white_plaster_02) | Rob Tuytel | `plaster.jpg`, `plaster_normal.jpg` |
 | Grass tufts | [Grass Medium 01](https://polyhaven.com/a/grass_medium_01) | Rico Cilliers, Rob Tuytel | `grass_cutout.png`, cropped and packed from diffuse and alpha |
+
+## Recorded Vehicle and Environment Audio Assets
+
+Updated: 2026-11-23. Machine-readable catalog and hash ledger: `assets/audio/recorded/payload/LICENSES_AND_HASHES.json` and `assets/audio/recorded/catalog.json`.
+
+| Subsystem / Profile | Source URL | Author / Provenance | License | Local Path |
+|---|---|---|---|---|
+| `engine_vela_gt` | [supercar-engine-sound / gt3rs](https://github.com/justinagaudelli-eng/supercar-engine-sound) | Supercars67, NEW CARS 2015, Automotion Media | CC BY 3.0 | `assets/audio/recorded/payload/engines/vela_gt/*.wav` (14 loops) |
+| `engine_kestrel_xr` | [supercar-engine-sound / 765lt](https://github.com/justinagaudelli-eng/supercar-engine-sound) | Hungarian Supercar Spotters, FiExhaust, Supercars67 | CC BY 3.0 | `assets/audio/recorded/payload/engines/kestrel_xr/*.wav` (12 loops) |
+| `engine_orion_rs` | [supercar-engine-sound / four-cyl](https://github.com/justinagaudelli-eng/supercar-engine-sound) | Upstream field recordings | CC BY 3.0 | `assets/audio/recorded/payload/engines/orion_rs/*.wav` (6 loops) |
+| `ambience_wind` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/ambience/mountain_wind_bed.wav` |
+| `tires_roll_gravel` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/tires/roll_gravel.wav` |
+| `tires_screech` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/tires/screech.wav` |
+

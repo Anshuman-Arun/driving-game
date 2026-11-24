@@ -57,7 +57,10 @@ func _ready() -> void:
 	var design: Variant = JSON.parse_string(works) if not works.is_empty() else null
 	if design is Dictionary:
 		world.roadworks = design
-		world.crossing_water_material = preload("res://assets/forza_env/materials/lake_water_forza.tres")
+		if ResourceLoader.exists("res://assets/forza_env/materials/lake_water_forza.tres"):
+			var water_mat = load("res://assets/forza_env/materials/lake_water_forza.tres")
+			if water_mat != null:
+				world.crossing_water_material = water_mat
 	if not world.build_world():
 		push_error("Aster Valley could not load: " + world.error_message)
 		get_tree().quit(1)
@@ -81,6 +84,10 @@ func _ready() -> void:
 	camera.name = "ChaseCamera"
 	camera.process_mode = Node.PROCESS_MODE_PAUSABLE
 	camera.keep_aspect = Camera3D.KEEP_HEIGHT
+	var listener := AudioListener3D.new()
+	listener.name = "AudioListener3D"
+	camera.add_child(listener)
+	listener.make_current()
 	add_child(camera)
 	_spawn_vehicle(active_vehicle_id, start)
 	load_ms = Time.get_ticks_msec() - started
@@ -238,12 +245,18 @@ func _spawn_vehicle(car_id: String, pose: Transform3D) -> void:
 	vehicle_spawned.emit(vehicle_body, active_vehicle_id)
 	camera.setup(vehicle_body)
 	camera.far = 1800.0
+	var audio := vehicle_body.get_node_or_null("VehicleAudio")
+	if audio != null and audio.has_method("bind_camera"):
+		audio.call("bind_camera", camera)
 
 func respawn() -> void:
 	var pose: Variant = find_road_pose(vehicle_body.global_position, -vehicle_body.global_basis.z)
 	if pose != null:
 		adapter.reset_to(pose)
 		camera.snap_to_vehicle()
+		var audio := vehicle_body.get_node_or_null("VehicleAudio")
+		if audio != null and audio.has_method("snap_to_idle"):
+			audio.call("snap_to_idle")
 
 func _collect_lane_spans(lanes: Array) -> void:
 	for lane: Dictionary in lanes:
