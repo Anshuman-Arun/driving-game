@@ -58,6 +58,9 @@ var _acoustics: Node
 var _bound_vehicle: Node3D
 var _tracking_vehicle: bool = false
 var _telemetry: Dictionary = {}
+var _last_velocity := Vector3.ZERO
+var _pending_contact := false
+var _has_velocity_sample := false
 
 
 func _init() -> void:
@@ -114,6 +117,8 @@ func bind_vehicle(vehicle: Node3D) -> void:
 	_disconnect_vehicle()
 	_bound_vehicle = vehicle if is_instance_valid(vehicle) else null
 	_tracking_vehicle = _bound_vehicle != null
+	_pending_contact = false
+	_has_velocity_sample = false
 	if _suspension and _suspension.has_method("reset_state"):
 		_suspension.call("reset_state")
 
@@ -160,6 +165,19 @@ func _process(_delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	var target_node: Node3D = _bound_vehicle if is_instance_valid(_bound_vehicle) else (self if is_inside_tree() else null)
 
+	# A contact signal alone does not measure the severity of a collision.
+	# Estimate impulse per unit mass from the change in velocity across the
+	# physics step, rather than using the car's road speed for every scrape.
+	if is_instance_valid(_bound_vehicle) and _bound_vehicle is RigidBody3D:
+		var velocity := (_bound_vehicle as RigidBody3D).linear_velocity
+		if _pending_contact and _has_velocity_sample:
+			var severity := estimate_impact_speed(_last_velocity, velocity)
+			if severity > 1.5:
+				trigger_impact(severity, 1.0)
+		_last_velocity = velocity
+		_has_velocity_sample = true
+	_pending_contact = false
+
 	# 1. Suspension processing
 	if _suspension and suspension_enabled and _suspension.has_method("process_physics"):
 		_suspension.call("process_physics", delta, target_node, _telemetry)
@@ -170,15 +188,12 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_body_entered(_body: Node) -> void:
-	if not impact_enabled or not _suspension:
-		return
-	var speed: float = float(_telemetry.get("speed_mps", 0.0))
-	if is_instance_valid(_bound_vehicle) and "linear_velocity" in _bound_vehicle:
-		var vel: Variant = _bound_vehicle.get("linear_velocity")
-		if vel is Vector3:
-			speed = maxf(speed, (vel as Vector3).length())
-	if speed > 1.5:
-		trigger_impact(speed, 1.0)
+	if impact_enabled and _suspension != null:
+		_pending_contact = true
+
+
+static func estimate_impact_speed(before: Vector3, after: Vector3) -> float:
+	return (before - after).length()
 
 
 ## Triggers collision impact audio with velocity-scaled volume.
