@@ -13,7 +13,7 @@ const MIN_PEAK_LINEAR := 0.05  # -26 dBFS minimum activity
 const MAX_ALLOWED_PEAK_DBFS := 0.0  # Must not clip in source asset
 const MAX_SEAM_DELTA_TOLERANCE := 4000  # PCM 16 max jump at loop seam
 
-const ENGINE_PROFILES := ["vela_gt", "kestrel_xr", "orion_rs"]
+const ENGINE_PROFILES := ["vela_gt", "kestrel_xr", "orion_rs", "aventador_svj", "mclaren_senna"]
 
 ## Verifies all recorded payload assets and fallback assets.
 ## Returns a comprehensive Dictionary with summary and per-file metrics.
@@ -34,6 +34,9 @@ static func verify_all(payload_root: String = "res://assets/audio/recorded/paylo
 	for profile in ENGINE_PROFILES:
 		var profile_result := verify_engine_profile(profile, payload_root)
 		results["manifest_checks"][profile] = profile_result
+		if not profile_result.get("manifest_found", false) or int(profile_result.get("total_loops", 0)) == 0:
+			results["all_passed"] = false
+			results["errors"].append("Missing or empty engine manifest: " + profile)
 		for file_key in profile_result.get("files", {}):
 			results["files"][file_key] = profile_result["files"][file_key]
 

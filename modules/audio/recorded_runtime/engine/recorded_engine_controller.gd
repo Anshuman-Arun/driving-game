@@ -14,20 +14,20 @@ const PROFILE_CONFIGS := {
 	# Dedicated hero-car voicings. Banks are explicitly provisional until a
 	# source-cleared V12 / twin-turbo V8 recording set is available.
 	"aventador_svj": {
-		"label": "Aventador SVJ (provisional recorded proxy)",
+		"label": "Aventador SVJ (recorded V12 family audition)",
 		"fallback_bank": "vela_gt", "idle_rpm": 900.0, "redline_rpm": 8700.0,
 		"gain": 0.98, "intake_ratio": 0.48, "rpm_ms": 35.0,
 		"throttle_ms": 60.0, "shift_ms": 125.0, "shift_depth": 0.22,
 		"shift_gain": 0.32, "overrun_gain": 0.37, "intake_lag_ms": 60.0,
-		"load_curve": 0.85
+		"load_curve": 0.85, "idle_gain": 0.58
 	},
 	"mclaren_senna": {
-		"label": "McLaren Senna (provisional recorded V8 proxy)",
+		"label": "McLaren Senna (recorded McLaren V8 family audition)",
 		"fallback_bank": "kestrel_xr", "idle_rpm": 980.0, "redline_rpm": 8000.0,
 		"gain": 0.94, "intake_ratio": 0.62, "rpm_ms": 42.0,
 		"throttle_ms": 75.0, "shift_ms": 85.0, "shift_depth": 0.42,
 		"shift_gain": 0.20, "overrun_gain": 0.23, "intake_lag_ms": 165.0,
-		"load_curve": 1.12
+		"load_curve": 1.12, "idle_gain": 0.60
 	},
 	"vela_gt": {
 		"label": "Vela GT (Flat-Six)",
@@ -356,7 +356,7 @@ func _apply_audio_blend() -> void:
 
 	# Shared with the diagnostic helper so the tested curve is the live curve.
 	var shaped_load := pow(_smoothed_throttle, float(cfg.get("load_curve", 1.0)))
-	var load_gains := compute_load_gains(_smoothed_rpm, shaped_load, _manifest.off_anchors)
+	var load_gains := compute_load_gains(_smoothed_rpm, shaped_load, _manifest.off_anchors, float(cfg.get("idle_gain", 0.40)))
 	var on_layer_gain := load_gains.x
 	var off_layer_gain := load_gains.y
 
@@ -593,9 +593,9 @@ func _resolve_bus(bus_name: StringName) -> StringName:
 # Avoid forcing a coasting recording to extreme pitch at idle. Below the first
 # usable OFF anchor, use the low ON recording at restrained volume. Blend back
 # into the actual coast bank before reaching its lowest recorded RPM.
-static func compute_load_gains(rpm: float, throttle: float, off_anchors: Array) -> Vector2:
+static func compute_load_gains(rpm: float, throttle: float, off_anchors: Array, idle_gain: float = 0.40) -> Vector2:
 	var load := clampf(throttle, 0.0, 1.0)
-	var fallback := lerpf(0.40, 1.0, load)
+	var fallback := lerpf(clampf(idle_gain, 0.0, 1.0), 1.0, load)
 	if off_anchors.is_empty():
 		return Vector2(fallback, 0.0)
 	var first_off := maxf(1.0, float(off_anchors[0]["rpm"]))

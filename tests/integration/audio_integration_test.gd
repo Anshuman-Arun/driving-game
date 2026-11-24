@@ -89,8 +89,10 @@ func _run() -> void:
 			assert(engine_ctrl.car_profile == pid and engine_ctrl._active_bank != "", "Hero profile selected")
 			assert(is_equal_approx(engine_ctrl._idle_rpm, car.idle_rpm), "Hero idle uses actual factory RPM")
 			assert(is_equal_approx(engine_ctrl._redline_rpm, car.max_rpm), "Hero redline uses actual factory RPM")
-			var expected_proxy := "vela_gt" if pid == "aventador_svj" else "kestrel_xr"
-			assert(engine_ctrl._active_bank in [pid, expected_proxy], "No accidental fallback to unrelated engine")
+			assert(engine_ctrl._active_bank == pid, "Dedicated hero bank is mandatory")
+			assert(engine_ctrl._manifest.bank_status == "private_build_audition", "Hero source status must remain explicit")
+			var expected_loops := 14 if pid == "aventador_svj" else 12
+			assert(engine_ctrl._exhaust_players.size() == expected_loops, "All hero exhaust anchors loaded")
 			print("  [PASS] hero %s bank %s" % [pid, engine_ctrl._active_bank])
 		assert(engine_ctrl._reflection_players.size() == engine_ctrl._exhaust_players.size(), "Every recorded exhaust anchor has a wet reflection route")
 		for mirror in engine_ctrl._reflection_players.values():

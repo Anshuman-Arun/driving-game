@@ -5,6 +5,8 @@ extends RefCounted
 
 var profile_name: String = ""
 var source_url: String = ""
+var source_character: String = ""
+var bank_status: String = ""
 var license: String = ""
 var loops: Array[Dictionary] = []
 var on_anchors: Array[Dictionary] = []
@@ -58,6 +60,8 @@ static func load_for_profile(profile: String, custom_base_dir: String = "") -> R
 func parse_dictionary(data: Dictionary) -> bool:
 	profile_name = str(data.get("profile", ""))
 	source_url = str(data.get("source", ""))
+	source_character = str(data.get("source_character", ""))
+	bank_status = str(data.get("status", ""))
 	license = str(data.get("license", ""))
 	loops.clear()
 	on_anchors.clear()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Offline asset integrity and PCM loop endpoint verifier for Aster Valley recorded audio."""
+import hashlib
 import json
 import math
 import pathlib
@@ -13,7 +14,7 @@ TIRES_DIR = PAYLOAD_DIR / "tires"
 AMBIENCE_DIR = PAYLOAD_DIR / "ambience"
 
 TARGET_RATE = 48000
-PROFILES = ["vela_gt", "kestrel_xr", "orion_rs"]
+PROFILES = ["vela_gt", "kestrel_xr", "orion_rs", "aventador_svj", "mclaren_senna"]
 
 
 def linear_to_db(lin: float) -> float:
@@ -115,6 +116,12 @@ def main():
                 continue
             try:
                 info = inspect_wav(wav_path, is_loop=True)
+                if p in ("aventador_svj", "mclaren_senna"):
+                    raw = wav_path.read_bytes()
+                    blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+                    assert blob == entry["source_git_blob"], "Hero source PCM differs from verified upstream blob"
+                    assert info["channels"] == 1 and info["clipped_samples"] == 0, "Hero asset not clean mono"
+                    assert manifest["status"] == "private_build_audition", "Missing audition provenance"
                 assert info["sample_rate"] == TARGET_RATE, f"Sample rate != {TARGET_RATE}"
                 assert info["bits_per_sample"] == 16, "Not 16-bit PCM"
                 assert info["peak_dbfs"] > -30.0, "Audio signal too low (near silent)"

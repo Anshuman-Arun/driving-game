@@ -331,10 +331,9 @@ func _run_profile_simulation(
 	engine_node.call("snap_to_idle")
 	var active_manifest: RefCounted = engine_node.get("_manifest")
 	var actual_bank := str(engine_node.get("_active_bank"))
-	var allowed_proxy := "vela_gt" if profile == "aventador_svj" else "kestrel_xr"
-	if active_manifest == null or str(engine_node.get("car_profile")) != profile or str(active_manifest.get("profile_name")) != actual_bank or actual_bank not in [profile, allowed_proxy]:
+	if active_manifest == null or str(engine_node.get("car_profile")) != profile or str(active_manifest.get("profile_name")) != actual_bank or actual_bank != profile:
 		return {"profile": profile, "passed": false, "error": "Requested hero voicing/bank was not loaded"}
-	print("  Hero profile: %s; recording bank: %s; proxy=%s" % [profile, actual_bank, str(actual_bank != profile)])
+	print("  Hero profile: %s; recording bank: %s; source: %s" % [profile, actual_bank, str(active_manifest.get("source_character"))])
 	# Restore neutral mix before the next profile; do not measure residual
 	# cockpit filtering, wall reflections, or transient tails as idle.
 	camera_node.call("set_cockpit_view", false, true)
@@ -533,7 +532,9 @@ func _run_profile_simulation(
 	return {
 		"profile": profile,
 		"recording_bank": actual_bank,
-		"uses_proxy": actual_bank != profile,
+		"uses_fallback_bank": actual_bank != profile,
+		"source_character": str(active_manifest.get("source_character")),
+		"bank_status": str(active_manifest.get("bank_status")),
 		"passed": profile_passed,
 		"is_signal_present": is_signal_present,
 		"has_headroom": has_headroom,
