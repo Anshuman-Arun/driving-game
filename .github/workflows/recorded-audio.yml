@@ -1,0 +1,40 @@
+name: Acquire recorded audio candidates
+on:
+  push:
+    branches: [feat/premium-recorded-audio]
+    paths:
+      - 'tools/recorded_audio/**'
+      - 'assets/audio/recorded/catalog.json'
+      - '.github/workflows/recorded-audio.yml'
+permissions:
+  contents: write
+concurrency:
+  group: recorded-audio-acquisition
+  cancel-in-progress: false
+jobs:
+  acquire:
+    if: github.ref == 'refs/heads/feat/premium-recorded-audio'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          lfs: false
+          sparse-checkout: |
+            assets/audio/recorded
+            tools/recorded_audio
+            .gitattributes
+      - name: Verify tools and acquire
+        run: |
+          ffmpeg -version | head -n 1
+          python3 -m py_compile tools/recorded_audio/acquire.py
+          python3 tools/recorded_audio/acquire.py
+          python3 tools/recorded_audio/acquire.py --verify
+      - name: Publish verified WAVs and credits only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- assets/audio/recorded/payload
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "assets(audio): publish verified recorded PCM candidate banks"
+          git push origin HEAD:refs/heads/feat/premium-recorded-audio

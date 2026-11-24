@@ -2,6 +2,10 @@
 
 Last updated: 2026-11-23
 
+## Recorded audio asset preparation (`feat/premium-recorded-audio`)
+
+Added a pinned recorded engine/foley catalog and automated PCM acquisition and verification, plus self-contained `prompts/AUDIO_SWARM_RECORDED.md`. Existing synthetic audio and game code remain unchanged. Source availability, PCM publication, original CC BY license review, runtime integration and subjective audio QA must be verified separately. See `assets/audio/recorded/README.md`.
+
 ## Water crossings, roadside detail and instruments (`feat/local-showroom-dashboard`)
 
 Eastwater Viaduct, Alder Creek Bridge and Needle Pass Trestle carry existing routes over new water at lake, valley and mountain elevations. Five corridors have wider pavement with tapered approaches. The bridge decks, rails and shoulder surfaces participate in driving collision. The root game loads a separate roadworks heightfield while the standalone runtime can still load the canonical world. The scenery layer accounts for 12 placements displaced by the new banks.
