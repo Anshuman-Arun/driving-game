@@ -1,0 +1,767 @@
+{
+  "version": 1,
+  "banks": [
+    {
+      "profile": "vela_gt",
+      "loops": 14,
+      "missing": [],
+      "status": "audition_candidate"
+    },
+    {
+      "profile": "kestrel_xr",
+      "loops": 12,
+      "missing": [],
+      "status": "audition_candidate"
+    },
+    {
+      "profile": "orion_rs",
+      "loops": 6,
+      "missing": [],
+      "status": "temporary_recorded_fallback"
+    }
+  ],
+  "files": [
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 67200,
+      "duration_s": 1.4,
+      "peak_dbfs": -9.85,
+      "rms_dbfs": -21.65,
+      "seam_delta": 331,
+      "clipped_samples": 0,
+      "sha256": "92b07448ac00bd4575424a5f538d1ac58842fb66ada74ea6eb5203869a425aea",
+      "path": "engines/vela_gt/on_2000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_2000.wav",
+        "original_sha256": "92b07448ac00bd4575424a5f538d1ac58842fb66ada74ea6eb5203869a425aea",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 14720,
+      "duration_s": 0.30667,
+      "peak_dbfs": -10.35,
+      "rms_dbfs": -21.11,
+      "seam_delta": 625,
+      "clipped_samples": 0,
+      "sha256": "4277a9844978c957c8adaf632d93d30e7b2d4faac55ee765ffc380454452b0c2",
+      "path": "engines/vela_gt/on_3000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_3000.wav",
+        "original_sha256": "4277a9844978c957c8adaf632d93d30e7b2d4faac55ee765ffc380454452b0c2",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 12480,
+      "duration_s": 0.26,
+      "peak_dbfs": -9.94,
+      "rms_dbfs": -20.6,
+      "seam_delta": 1018,
+      "clipped_samples": 0,
+      "sha256": "f6e1aa63d1e707f7add141c65005dd33f19e8096ba81142b80db8dc823700ebd",
+      "path": "engines/vela_gt/on_4000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_4000.wav",
+        "original_sha256": "f6e1aa63d1e707f7add141c65005dd33f19e8096ba81142b80db8dc823700ebd",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 46848,
+      "duration_s": 0.976,
+      "peak_dbfs": -13.27,
+      "rms_dbfs": -20.12,
+      "seam_delta": 379,
+      "clipped_samples": 0,
+      "sha256": "78486d50dd56993a5b9886d1891044e8279593a1619add802634ce44c3261fa3",
+      "path": "engines/vela_gt/on_5000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_5000.wav",
+        "original_sha256": "78486d50dd56993a5b9886d1891044e8279593a1619add802634ce44c3261fa3",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 50560,
+      "duration_s": 1.05333,
+      "peak_dbfs": -12.26,
+      "rms_dbfs": -19.66,
+      "seam_delta": 451,
+      "clipped_samples": 0,
+      "sha256": "bcaa387fa2008e96302c8ad2c69158bcc13b39ee28cea9edbb2cdc9027e84192",
+      "path": "engines/vela_gt/on_6000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_6000.wav",
+        "original_sha256": "bcaa387fa2008e96302c8ad2c69158bcc13b39ee28cea9edbb2cdc9027e84192",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 50606,
+      "duration_s": 1.05429,
+      "peak_dbfs": -9.71,
+      "rms_dbfs": -19.23,
+      "seam_delta": 148,
+      "clipped_samples": 0,
+      "sha256": "30f1cc3c8401a4ff7d80f284841635d17b1dd33329d5ea17b7452b425d208b5a",
+      "path": "engines/vela_gt/on_7000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_7000.wav",
+        "original_sha256": "30f1cc3c8401a4ff7d80f284841635d17b1dd33329d5ea17b7452b425d208b5a",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 67560,
+      "duration_s": 1.4075,
+      "peak_dbfs": -8.25,
+      "rms_dbfs": -18.81,
+      "seam_delta": 493,
+      "clipped_samples": 0,
+      "sha256": "5f8fa687e3a9018d4a309d726aad86f148ead4b9cbb923fd2c6a479d1640e3f1",
+      "path": "engines/vela_gt/on_8000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_8000.wav",
+        "original_sha256": "5f8fa687e3a9018d4a309d726aad86f148ead4b9cbb923fd2c6a479d1640e3f1",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 37440,
+      "duration_s": 0.78,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -24.75,
+      "seam_delta": 541,
+      "clipped_samples": 0,
+      "sha256": "a805e3b86a02183560a9e6f4042cf7ca100004c28287a74412f685127f56e598",
+      "path": "engines/vela_gt/off_2000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_2000.wav",
+        "original_sha256": "a805e3b86a02183560a9e6f4042cf7ca100004c28287a74412f685127f56e598",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 18240,
+      "duration_s": 0.38,
+      "peak_dbfs": -11.31,
+      "rms_dbfs": -24.21,
+      "seam_delta": 498,
+      "clipped_samples": 0,
+      "sha256": "762ccbc4ef212980efb99a134ea57ed8ba70d3c3d35f7be3a5cc6e78f2da3d36",
+      "path": "engines/vela_gt/off_3000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_3000.wav",
+        "original_sha256": "762ccbc4ef212980efb99a134ea57ed8ba70d3c3d35f7be3a5cc6e78f2da3d36",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 8640,
+      "duration_s": 0.18,
+      "peak_dbfs": -14.56,
+      "rms_dbfs": -23.7,
+      "seam_delta": 323,
+      "clipped_samples": 0,
+      "sha256": "84d90d0230d794afddca3bda0d266d8c26fb66d958d134ab6c7ba47d017414ca",
+      "path": "engines/vela_gt/off_4000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_4000.wav",
+        "original_sha256": "84d90d0230d794afddca3bda0d266d8c26fb66d958d134ab6c7ba47d017414ca",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 10752,
+      "duration_s": 0.224,
+      "peak_dbfs": -12.74,
+      "rms_dbfs": -23.22,
+      "seam_delta": 342,
+      "clipped_samples": 0,
+      "sha256": "5776b983f30a83d758722e61d668f2dc217c824de0dd8675bc936484449f2a81",
+      "path": "engines/vela_gt/off_5000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_5000.wav",
+        "original_sha256": "5776b983f30a83d758722e61d668f2dc217c824de0dd8675bc936484449f2a81",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 55360,
+      "duration_s": 1.15333,
+      "peak_dbfs": -7.79,
+      "rms_dbfs": -22.76,
+      "seam_delta": 160,
+      "clipped_samples": 0,
+      "sha256": "687fdc7815bf8d42da79751896d7abbfa748d2bc373ee95365a67faa7bfd8a3d",
+      "path": "engines/vela_gt/off_6000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_6000.wav",
+        "original_sha256": "687fdc7815bf8d42da79751896d7abbfa748d2bc373ee95365a67faa7bfd8a3d",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 55954,
+      "duration_s": 1.16571,
+      "peak_dbfs": -7.7,
+      "rms_dbfs": -22.32,
+      "seam_delta": 33,
+      "clipped_samples": 0,
+      "sha256": "f7af6284ade83f11b01bec2e20b0d6df900520076014aca98d7aa23a2bcbbb61",
+      "path": "engines/vela_gt/off_7000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_7000.wav",
+        "original_sha256": "f7af6284ade83f11b01bec2e20b0d6df900520076014aca98d7aa23a2bcbbb61",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 46920,
+      "duration_s": 0.9775,
+      "peak_dbfs": -9.15,
+      "rms_dbfs": -21.91,
+      "seam_delta": 244,
+      "clipped_samples": 0,
+      "sha256": "5e95e42f3d8eb86d940f6d8ea662101cf01d75d26efc658080d5ebb7a2edf002",
+      "path": "engines/vela_gt/off_8000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_8000.wav",
+        "original_sha256": "5e95e42f3d8eb86d940f6d8ea662101cf01d75d26efc658080d5ebb7a2edf002",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 50400,
+      "duration_s": 1.05,
+      "peak_dbfs": -14.62,
+      "rms_dbfs": -22.2,
+      "seam_delta": 1706,
+      "clipped_samples": 0,
+      "sha256": "1d9058a7cd67583a7cb0416ea54715cd7e96e160d7157bd76b24f8197489409c",
+      "path": "engines/kestrel_xr/on_1000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_1000.wav",
+        "original_sha256": "1d9058a7cd67583a7cb0416ea54715cd7e96e160d7157bd76b24f8197489409c",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 10440,
+      "duration_s": 0.2175,
+      "peak_dbfs": -11.34,
+      "rms_dbfs": -21.59,
+      "seam_delta": 527,
+      "clipped_samples": 0,
+      "sha256": "320c7597fb328b94d3856914193fb1cf6301cb351d5fadd945fac9c1d782cb4c",
+      "path": "engines/kestrel_xr/on_2000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_2000.wav",
+        "original_sha256": "320c7597fb328b94d3856914193fb1cf6301cb351d5fadd945fac9c1d782cb4c",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 50640,
+      "duration_s": 1.055,
+      "peak_dbfs": -16.14,
+      "rms_dbfs": -21.02,
+      "seam_delta": 98,
+      "clipped_samples": 0,
+      "sha256": "ca3608f4ba7b31aa215e29eb06762e9d9ea9a42bf63724c1e1da38ec1a6533c2",
+      "path": "engines/kestrel_xr/on_3000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_3000.wav",
+        "original_sha256": "ca3608f4ba7b31aa215e29eb06762e9d9ea9a42bf63724c1e1da38ec1a6533c2",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 50580,
+      "duration_s": 1.05375,
+      "peak_dbfs": -11.83,
+      "rms_dbfs": -20.48,
+      "seam_delta": 243,
+      "clipped_samples": 0,
+      "sha256": "9bcbe5ac45bae6442f8ba756a26bee3a8e75b12af01a008543634888b98d0014",
+      "path": "engines/kestrel_xr/on_4000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_4000.wav",
+        "original_sha256": "9bcbe5ac45bae6442f8ba756a26bee3a8e75b12af01a008543634888b98d0014",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 65808,
+      "duration_s": 1.371,
+      "peak_dbfs": -10.18,
+      "rms_dbfs": -19.98,
+      "seam_delta": 99,
+      "clipped_samples": 0,
+      "sha256": "e39f155c0dcdf80a04002c727dc16c96d76278ba2adeb08b1894eeba366fb3a7",
+      "path": "engines/kestrel_xr/on_5000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_5000.wav",
+        "original_sha256": "e39f155c0dcdf80a04002c727dc16c96d76278ba2adeb08b1894eeba366fb3a7",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 50640,
+      "duration_s": 1.055,
+      "peak_dbfs": -8.04,
+      "rms_dbfs": -19.5,
+      "seam_delta": 44,
+      "clipped_samples": 0,
+      "sha256": "56513d12eba53f43695993a627c9e685d80d8278db83772f8a718bc5a0b05bfa",
+      "path": "engines/kestrel_xr/on_6000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_6000.wav",
+        "original_sha256": "56513d12eba53f43695993a627c9e685d80d8278db83772f8a718bc5a0b05bfa",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 46800,
+      "duration_s": 0.975,
+      "peak_dbfs": -10.3,
+      "rms_dbfs": -19.05,
+      "seam_delta": 96,
+      "clipped_samples": 0,
+      "sha256": "b81c681c7ef77a1e6f4760528890326b9f454a1ba3fdc7e1a79273e38f7f50e0",
+      "path": "engines/kestrel_xr/on_7000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_7000.wav",
+        "original_sha256": "b81c681c7ef77a1e6f4760528890326b9f454a1ba3fdc7e1a79273e38f7f50e0",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 46320,
+      "duration_s": 0.965,
+      "peak_dbfs": -19.69,
+      "rms_dbfs": -24.12,
+      "seam_delta": 399,
+      "clipped_samples": 0,
+      "sha256": "a7817be7f7987704acea88307617e6393d6d837c83c66438159e382caf364d5c",
+      "path": "engines/kestrel_xr/off_3000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/off_3000.wav",
+        "original_sha256": "a7817be7f7987704acea88307617e6393d6d837c83c66438159e382caf364d5c",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 18540,
+      "duration_s": 0.38625,
+      "peak_dbfs": -16.54,
+      "rms_dbfs": -23.58,
+      "seam_delta": 2,
+      "clipped_samples": 0,
+      "sha256": "a6e1d2d0b5a62b4e2ffdd7a279b741c4bb652f43217c2cc3ae83232fc604d6c0",
+      "path": "engines/kestrel_xr/off_4000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/off_4000.wav",
+        "original_sha256": "a6e1d2d0b5a62b4e2ffdd7a279b741c4bb652f43217c2cc3ae83232fc604d6c0",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 47664,
+      "duration_s": 0.993,
+      "peak_dbfs": -11.99,
+      "rms_dbfs": -23.08,
+      "seam_delta": 160,
+      "clipped_samples": 0,
+      "sha256": "0a2bf1559a2b69ca8d1179be39f41bb74aaf2e9818c6d4d24793a404743fc489",
+      "path": "engines/kestrel_xr/off_5000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/off_5000.wav",
+        "original_sha256": "0a2bf1559a2b69ca8d1179be39f41bb74aaf2e9818c6d4d24793a404743fc489",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 8760,
+      "duration_s": 0.1825,
+      "peak_dbfs": -13.83,
+      "rms_dbfs": -22.6,
+      "seam_delta": 435,
+      "clipped_samples": 0,
+      "sha256": "e57333df3e6fc8327930f5d80cd23d395841167df82f080ff047336b825ee43a",
+      "path": "engines/kestrel_xr/off_6000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/off_6000.wav",
+        "original_sha256": "e57333df3e6fc8327930f5d80cd23d395841167df82f080ff047336b825ee43a",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 46800,
+      "duration_s": 0.975,
+      "peak_dbfs": -11.78,
+      "rms_dbfs": -22.15,
+      "seam_delta": 76,
+      "clipped_samples": 0,
+      "sha256": "16bee858ec269ab7be94ef93a2bb44ec919a87c14ed3674f331c3974e646c67e",
+      "path": "engines/kestrel_xr/off_7000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/off_7000.wav",
+        "original_sha256": "16bee858ec269ab7be94ef93a2bb44ec919a87c14ed3674f331c3974e646c67e",
+        "license": "CC-BY-3.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 41476,
+      "duration_s": 0.86408,
+      "peak_dbfs": -2.88,
+      "rms_dbfs": -8.02,
+      "seam_delta": 317,
+      "clipped_samples": 0,
+      "sha256": "f162c53cd04a812c3a30320c798308f848a3823c77ce0df321805b3092ddf916",
+      "path": "engines/orion_rs/on_1000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_0.wav",
+        "original_sha256": "69d74b106509037ce547429e4c3f9ae906b0fffe88d0bb8b3b5a8b0cfc239048",
+        "license": "CC0-1.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 32000,
+      "duration_s": 0.66667,
+      "peak_dbfs": -2.98,
+      "rms_dbfs": -8.11,
+      "seam_delta": 290,
+      "clipped_samples": 0,
+      "sha256": "c85700815a683d28ff15fa8f66f65bc5df8eb0e6a78b01e6fb8688f9029881ef",
+      "path": "engines/orion_rs/on_1800.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_1_0.wav",
+        "original_sha256": "0bc6bf7e1ad33d347ed805b4f2b55d1f79e38f892006f98acbe85a3177ff77a2",
+        "license": "CC0-1.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 32763,
+      "duration_s": 0.68256,
+      "peak_dbfs": -2.98,
+      "rms_dbfs": -8.05,
+      "seam_delta": 224,
+      "clipped_samples": 0,
+      "sha256": "5d0d631e7d391d8e750a7a9fe5f7cea666b8882ad48eb4b5ff51efdb5d56bb2f",
+      "path": "engines/orion_rs/on_3000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_2_0.wav",
+        "original_sha256": "e26bef6f1804670aba02b6b9a8c5485cf05a6a1e902a5a50c098230ace49967f",
+        "license": "CC0-1.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 29570,
+      "duration_s": 0.61604,
+      "peak_dbfs": -3.07,
+      "rms_dbfs": -8.07,
+      "seam_delta": 117,
+      "clipped_samples": 0,
+      "sha256": "c545130ce4c6235f683e2ac68d9f2c71a7f11aa0e0b0356e05ac52b2347c65df",
+      "path": "engines/orion_rs/on_4400.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_3_0.wav",
+        "original_sha256": "015aee5cd2dec394b28ff0994360c780cfbe29c3cddfb16dba8df81b4a68eea2",
+        "license": "CC0-1.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 30281,
+      "duration_s": 0.63085,
+      "peak_dbfs": -2.98,
+      "rms_dbfs": -8.1,
+      "seam_delta": 178,
+      "clipped_samples": 0,
+      "sha256": "a253cb17fc6f42fa2a3b4e63f30a87663cdd9a9ee424e21705fc6304cb1379de",
+      "path": "engines/orion_rs/on_6000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_4_0.wav",
+        "original_sha256": "fadf4420104d9273e6cc0a1c4583d863937af382382866251fc2b8dc005f9369",
+        "license": "CC0-1.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 30220,
+      "duration_s": 0.62958,
+      "peak_dbfs": -2.98,
+      "rms_dbfs": -8.08,
+      "seam_delta": 560,
+      "clipped_samples": 0,
+      "sha256": "be53ce394398a4f4c6486e8ebcbe6159ec90680019f155d39daa2fed4241de47",
+      "path": "engines/orion_rs/on_8000.wav",
+      "loop": true,
+      "source": {
+        "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_5_0.wav",
+        "original_sha256": "e0c65476764931770e46308dec744a196d8ecf996f8c7675f125805d28609b34",
+        "license": "CC0-1.0",
+        "changes": "Mono PCM16 at 48kHz; common bank attenuation if needed."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 282000,
+      "duration_s": 5.875,
+      "peak_dbfs": -3.1,
+      "rms_dbfs": -16.1,
+      "seam_delta": 353,
+      "clipped_samples": 0,
+      "sha256": "59f4ab604c105e9b1fab963505d8d284a21832b6307905d8d6ac8709d17a4150",
+      "path": "tires/roll_gravel.wav",
+      "loop": true,
+      "source": {
+        "file": "tires/roll_gravel.wav",
+        "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/tires_gravel.mp3",
+        "git_blob": "f2497f3aa08f7780229717d62ac93752767c1cd2",
+        "size": 305317,
+        "author": "OBXJohn",
+        "source": "https://freesound.org/people/OBXJohn/sounds/251661/",
+        "license": "CC0-1.0",
+        "loop": true,
+        "seconds": 6,
+        "notes": "Trailer tire gravel recording; possible background voices; audition before use. MP3 source, not lossless.",
+        "original_sha256": "cb93b99fcb6332312e13b8fd901da5d86c6b08e6ccbcd8d4d43fdde228196d85",
+        "changes": "Mono PCM16 48kHz, peak attenuation if needed; centered crop and 125ms overlap when seconds > 0."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 954000,
+      "duration_s": 19.875,
+      "peak_dbfs": -4.6,
+      "rms_dbfs": -20.35,
+      "seam_delta": 535,
+      "clipped_samples": 0,
+      "sha256": "d4f9400550c3b3ad5a16380a6cb17da56ecb71802e964f44e649b6eaec42253b",
+      "path": "ambience/mountain_wind_bed.wav",
+      "loop": true,
+      "source": {
+        "file": "ambience/mountain_wind_bed.wav",
+        "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/wind_desert.mp3",
+        "git_blob": "b4faa2fbec8c668a28d623bd6a594ac061d60a7a",
+        "size": 2731680,
+        "author": "F\u00e9lix Blume",
+        "source": "https://freesound.org/people/felix.blume/sounds/147777/",
+        "license": "CC0-1.0",
+        "loop": true,
+        "seconds": 20,
+        "notes": "Wind around fence, not vehicle airflow. MP3 source; use as ambience only.",
+        "original_sha256": "8d6a2413810a89a18001ae9bc5e8f1977138e218d86df3e52e3d1cfc8d0f1de3",
+        "changes": "Mono PCM16 48kHz, peak attenuation if needed; centered crop and 125ms overlap when seconds > 0."
+      }
+    },
+    {
+      "sample_rate": 48000,
+      "channels": 1,
+      "bit_depth": 16,
+      "frames": 144000,
+      "duration_s": 3.0,
+      "peak_dbfs": -2.01,
+      "rms_dbfs": -13.64,
+      "seam_delta": 3462,
+      "clipped_samples": 0,
+      "sha256": "96290bbd69ff106f14a2d50f3dd0eca04bcb6aecb2f2353a35804df3aaf64635",
+      "path": "tires/screech.wav",
+      "loop": true,
+      "source": {
+        "file": "tires/screech.wav",
+        "url": "https://lpc.opengameart.org/sites/default/files/tires_squal_loop.wav",
+        "author": "Tom Haigh (audible-edge); loop edit by Iwan Gabovitch (qubodup)",
+        "source": "https://lpc.opengameart.org/content/car-tire-squeal-skid-loop",
+        "license": "CC-BY-3.0",
+        "loop": true,
+        "seconds": 0,
+        "notes": "Real tire squeal; 96kHz/24-bit upstream loop, resampled to 48kHz PCM.",
+        "original_sha256": "2b341cfa20987388fcca9fd91d8be5056cb6c6c54abc2a97846c2be5e5a4f604",
+        "changes": "Mono PCM16 48kHz, peak attenuation if needed; centered crop and 125ms overlap when seconds > 0."
+      }
+    }
+  ],
+  "failures": [
+    {
+      "pack": "impacts",
+      "reason": "File is not a zip file"
+    }
+  ],
+  "missing_sources": [
+    {
+      "role": "orion four-cylinder true RPM/load bank and gearshift",
+      "source": "https://freesound.org/people/TheLittleCrow/sounds/669618/",
+      "author": "TheLittleCrow",
+      "license": "CC0-1.0",
+      "notes": "48kHz 24-bit original; login required for original; source not downloaded. Additional shift recording https://freesound.org/people/TheLittleCrow/sounds/669623/."
+    },
+    {
+      "role": "asphalt roll, scrub, in-car wind, grass roll, separate intake, transmission whine, backfire, regional ambience",
+      "notes": "No verified independent source yet. Keep explicit missing slots, source only redistribution-safe recordings, no synthesized stand-ins."
+    }
+  ],
+  "quality": "Technical checks only; no human listening, RPM truth or controlled load certification."
+}
