@@ -3,6 +3,26 @@
 builds/
 exports/
 *.log
+
+# Godot generated UID files and import metadata
+*.uid
+*.import
+
+# Extracted glTF embedded textures from Godot import
+assets/curated/models/environment/*_[0-9].*
+assets/curated/models/environment/*_[0-9][0-9].*
+content/scenery/models/*_[0-9].*
+content/scenery/models/*_[0-9][0-9].*
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Tooling intermediate / download directories
+tools/forza_assets/prop_textures/
+tools/forza_assets/raw_models/
+assets/forza_cars/
+
 # Local/editor config and secrets
 .env
 .env.*
