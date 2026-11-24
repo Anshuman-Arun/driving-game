@@ -69,11 +69,6 @@ var _suspension_cooldown := 0.0
 var _previous_springs: Dictionary = {}
 
 
-func _init() -> void:
-	if use_recorded_runtime:
-		_setup_recorded_runtime()
-
-
 func _ready() -> void:
 	# Always populate legacy players to maintain regression test interface compatibility
 	_setup_legacy_players()
@@ -222,7 +217,7 @@ func bind_gevp_vehicle(vehicle: Node3D) -> void:
 	if not _tracking_vehicle:
 		_reset_telemetry()
 		return
-	if _bound_vehicle is RigidBody3D:
+	if not use_recorded_runtime and _bound_vehicle is RigidBody3D:
 		var body := _bound_vehicle as RigidBody3D
 		if not body.body_entered.is_connected(_on_body_entered):
 			body.body_entered.connect(_on_body_entered)
@@ -260,20 +255,14 @@ func _reset_telemetry() -> void:
 
 func update_telemetry(telemetry: Dictionary) -> void:
 	var gear := int(telemetry.get("gear", 1))
-	if _last_gear > 0 and gear > 0 and gear != _last_gear:
-		if use_recorded_runtime and is_instance_valid(recorded_engine):
-			if recorded_engine.has_method("trigger_gear_shift"):
-				recorded_engine.call("trigger_gear_shift", _last_gear, gear)
+	if not use_recorded_runtime and _last_gear > 0 and gear > 0 and gear != _last_gear:
 		if _play_event("gearshift", 0.55):
 			_shift_timer = 0.23
 	_last_gear = gear
 
 	var throttle := clampf(float(telemetry.get("throttle", 0.0)), 0.0, 1.0)
-	if _last_throttle > 0.48 and throttle < 0.16 and float(telemetry.get("rpm", 0.0)) > 2500.0:
+	if not use_recorded_runtime and _last_throttle > 0.48 and throttle < 0.16 and float(telemetry.get("rpm", 0.0)) > 2500.0:
 		_overrun_timer = 0.75
-		if use_recorded_runtime and is_instance_valid(recorded_engine):
-			if recorded_engine.has_method("trigger_overrun_backfire"):
-				recorded_engine.call("trigger_overrun_backfire")
 	_last_throttle = throttle
 
 	_telemetry.clear()
@@ -292,14 +281,12 @@ func update_telemetry(telemetry: Dictionary) -> void:
 func trigger_impact(strength: float = 1.0) -> void:
 	if use_recorded_runtime and is_instance_valid(recorded_chassis):
 		if recorded_chassis.has_method("trigger_impact"):
-			recorded_chassis.call("trigger_impact", strength)
+			recorded_chassis.call("trigger_impact", 20.0 * clampf(strength, 0.0, 1.0), strength)
+		return
 	_play_event("collision", clampf(strength, 0.0, 1.0))
 
 
 func trigger_collision(strength: float = 1.0) -> void:
-	if use_recorded_runtime and is_instance_valid(recorded_chassis):
-		if recorded_chassis.has_method("trigger_collision"):
-			recorded_chassis.call("trigger_collision", strength * 20.0)
 	trigger_impact(strength)
 
 
@@ -307,6 +294,7 @@ func trigger_suspension(strength: float = 1.0) -> void:
 	if use_recorded_runtime and is_instance_valid(recorded_chassis):
 		if recorded_chassis.has_method("trigger_suspension"):
 			recorded_chassis.call("trigger_suspension", strength)
+		return
 	_play_event("suspension", clampf(strength, 0.0, 1.0))
 
 
@@ -314,6 +302,7 @@ func trigger_gear_shift(from_gear: int = 1, to_gear: int = 2) -> void:
 	if use_recorded_runtime and is_instance_valid(recorded_engine):
 		if recorded_engine.has_method("trigger_gear_shift"):
 			recorded_engine.call("trigger_gear_shift", from_gear, to_gear)
+		return
 	_play_event("gearshift", 0.55)
 
 
@@ -335,7 +324,9 @@ func _physics_process(_delta: float) -> void:
 		_reset_telemetry()
 		return
 	update_telemetry(AsterAudioTelemetryScript.from_gevp(_bound_vehicle))
-	_monitor_suspension()
+	# Recorded chassis owns its own contact and spring events.
+	if not use_recorded_runtime:
+		_monitor_suspension()
 
 
 func _process(delta: float) -> void:
@@ -453,6 +444,7 @@ func _apply_volume(player: AudioStreamPlayer, gain: float, limiter: float) -> vo
 func _make_player(label: String) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
 	player.name = label.replace(" ", "_")
+	player.bus = &"SFX" if AudioServer.get_bus_index(&"SFX") >= 0 else &"Master"
 	player.volume_db = -80.0
 	add_child(player)
 	return player
