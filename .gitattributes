@@ -10,3 +10,8 @@
 # Acquisition ledgers hash these upstream text files byte-for-byte.
 /assets/premium_world/payload/**/*.gltf -text
 /assets/premium_garage_world/payload/**/*.gltf -text
+
+# Small, preprocessed hero audition WAVs (26 files, under 4 MB total).
+# Git data API cannot upload LFS objects; store these specific files as normal binary blobs.
+/assets/audio/recorded/payload/engines/aventador_svj/*.wav -filter -diff -merge -text
+/assets/audio/recorded/payload/engines/mclaren_senna/*.wav -filter -diff -merge -text

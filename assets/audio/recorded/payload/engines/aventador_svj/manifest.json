@@ -1,0 +1,203 @@
+{
+  "profile": "aventador_svj",
+  "source": "https://github.com/justinagaudelli-eng/supercar-engine-sound/tree/main/public/samples/svj",
+  "source_character": "Aventador family V12",
+  "license": "CC-BY-3.0",
+  "license_url": "https://creativecommons.org/licenses/by/3.0/",
+  "license_review": "Upstream declares CC BY 3.0; Commons independent source review pending. User authorized private-build audition, not public distribution clearance.",
+  "status": "private_build_audition",
+  "notes": "Upstream estimated RPM and load layer labels, not controlled dyno capture. PCM unchanged, runtime seam conditioning. Multiple recording sessions; no independent microphone or measured load certification.",
+  "credits": [
+    {
+      "title": "Lamborghini Aventador - engine and exhaust sound (YouTube oMKxhIcSmZs)",
+      "author": "Super Cars for you",
+      "license": "CC BY 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Lamborghini_Aventador_-_engine_and_exhaust_sound_(YouTube_oMKxhIcSmZs).opus",
+      "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+    },
+    {
+      "title": "Lamborghini Aventador SV - engine and exhaust sound (YouTube qll6WBfaXvM)",
+      "author": "Erwin Lindsen",
+      "license": "CC BY 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Lamborghini_Aventador_SV_-_engine_and_exhaust_sound_(YouTube_qll6WBfaXvM).opus",
+      "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+    },
+    {
+      "title": "Lamborghini Aventador SVJ - engine and exhaust sound (YouTube zqv9zLtHsUM)",
+      "author": "ePic eXhaust",
+      "license": "CC BY 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Lamborghini_Aventador_SVJ_-_engine_and_exhaust_sound_(YouTube_zqv9zLtHsUM).opus",
+      "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+    }
+  ],
+  "loops": [
+    {
+      "file": "on_950.wav",
+      "rpm": 950,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 0.9579,
+      "source_git_blob": "31d2cf31b72f66848f037465dade300ad63aeac5",
+      "source_rms_dbfs": -22.24,
+      "source_peak_dbfs": -9.61,
+      "seam_delta": 327,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_2000.wav",
+      "rpm": 2000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.18,
+      "source_git_blob": "710a2adb953199f8c7c5003321587ce6ce56fc93",
+      "source_rms_dbfs": -21.62,
+      "source_peak_dbfs": -11.79,
+      "seam_delta": 267,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_3000.wav",
+      "rpm": 3000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.10333,
+      "source_git_blob": "99242909fc7efcb7322e43d0624cd898055a7d0e",
+      "source_rms_dbfs": -21.06,
+      "source_peak_dbfs": -10.27,
+      "seam_delta": 276,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_4000.wav",
+      "rpm": 4000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.225,
+      "source_git_blob": "c88f5d560fc15ba65abed474ea3545ee955bf22d",
+      "source_rms_dbfs": -20.53,
+      "source_peak_dbfs": -9.35,
+      "seam_delta": 559,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_5000.wav",
+      "rpm": 5000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.408,
+      "source_git_blob": "1df185aa4a8269dceb8ea5cbfdd9acd326e76b8a",
+      "source_rms_dbfs": -20.04,
+      "source_peak_dbfs": -11.18,
+      "seam_delta": 397,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_6000.wav",
+      "rpm": 6000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.20833,
+      "source_git_blob": "a8a33536803585f9b8827301b8941a519b5d1f24",
+      "source_rms_dbfs": -19.57,
+      "source_peak_dbfs": -8.93,
+      "seam_delta": 245,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_7000.wav",
+      "rpm": 7000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 0.96285,
+      "source_git_blob": "1edf0b6f47d6066ca6bc56f453efd24818db8f36",
+      "source_rms_dbfs": -19.12,
+      "source_peak_dbfs": -9.83,
+      "seam_delta": 271,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_8000.wav",
+      "rpm": 8000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 0.9975,
+      "source_git_blob": "f09c79670a3280f40d1e6d0eb69985a0ccac08db",
+      "source_rms_dbfs": -18.7,
+      "source_peak_dbfs": -10.95,
+      "seam_delta": 97,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_2000.wav",
+      "rpm": 2000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 1.16,
+      "source_git_blob": "d44eff876995b0c70402755d078da9b7afaba693",
+      "source_rms_dbfs": -24.71,
+      "source_peak_dbfs": -14.31,
+      "seam_delta": 581,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_3000.wav",
+      "rpm": 3000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.89667,
+      "source_git_blob": "1150ea7fd681b4561f205ac67a62853cd1ddf191",
+      "source_rms_dbfs": -24.16,
+      "source_peak_dbfs": -13.32,
+      "seam_delta": 135,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_4000.wav",
+      "rpm": 4000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.2675,
+      "source_git_blob": "7c4d89ee8b60d096903d58311941dc13b6a56b36",
+      "source_rms_dbfs": -23.63,
+      "source_peak_dbfs": -13.67,
+      "seam_delta": 186,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_5000.wav",
+      "rpm": 5000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.182,
+      "source_git_blob": "1b1ca70dadce7fb7ef6ef8fa2a237efbe05d0a82",
+      "source_rms_dbfs": -23.14,
+      "source_peak_dbfs": -13.91,
+      "seam_delta": 119,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_6000.wav",
+      "rpm": 6000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.15167,
+      "source_git_blob": "548248580f01b44f63ca83cee05987d49ca42f2f",
+      "source_rms_dbfs": -22.67,
+      "source_peak_dbfs": -13.48,
+      "seam_delta": 191,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_8000.wav",
+      "rpm": 8000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.18375,
+      "source_git_blob": "6cea8d62ff3a03f2fc3b96a335189085aa083c53",
+      "source_rms_dbfs": -21.8,
+      "source_peak_dbfs": -14.61,
+      "seam_delta": 333,
+      "clipped_samples": 0
+    }
+  ]
+}
