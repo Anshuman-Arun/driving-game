@@ -7,6 +7,10 @@ extends SceneTree
 ## 5. Camera mix controller binds and transitions cleanly.
 
 func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
 	print("\n==================================================")
 	print("  Running Aster Valley Audio Root Integration Test")
 	print("==================================================\n")
@@ -56,7 +60,7 @@ func _initialize() -> void:
 			push_error("FAIL: Car %s missing VehicleAudio child node!" % pid)
 			failed = true
 			root.remove_child(car)
-			car.queue_free()
+			car.free()
 			continue
 
 		print("  [PASS] %s has VehicleAudio child node." % pid)
@@ -82,7 +86,7 @@ func _initialize() -> void:
 
 		# Clean up car
 		root.remove_child(car)
-		car.queue_free()
+		car.free()
 
 	# 3. Test Camera Mix Controller binding
 	print("\n[Check 3] Camera Mix Controller Binding & Perspectives...")
@@ -119,9 +123,9 @@ func _initialize() -> void:
 	print("  Event routing checked.")
 
 	root.remove_child(cam)
-	cam.queue_free()
+	cam.free()
 	root.remove_child(test_car)
-	test_car.queue_free()
+	test_car.free()
 
 	print("\n==================================================")
 	if failed:
