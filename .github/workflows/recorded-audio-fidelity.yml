@@ -52,7 +52,18 @@ jobs:
         shell: bash
         run: |
           export AUDIO_QA_LOG_DIR="$RUNNER_TEMP/audio-qa"
+          export ASTER_AUDIO_CAPTURE_DIR="$RUNNER_TEMP/audio-qa/audition"
           bash tests/integration/audio_qa/run_all.sh
+      - name: Upload capture WAVs and QA logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: audio-fidelity-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/audio-qa/
+            tests/integration/audio_qa/results.json
+          if-no-files-found: warn
+          retention-days: 14
       - name: Record test revision
         if: always()
         shell: bash
