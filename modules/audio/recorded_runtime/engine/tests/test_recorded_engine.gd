@@ -18,6 +18,7 @@ func _initialize() -> void:
 	success = test_wav_loader_and_loop_config() and success
 	success = test_constant_power_blending() and success
 	success = test_load_layer_blending() and success
+	success = test_low_rpm_coast_fallback() and success
 	success = test_controller_lifecycle_and_smoothing() and success
 	success = test_rev_limiter_stutter() and success
 	success = test_gear_shift_envelope() and success
@@ -200,6 +201,26 @@ func test_load_layer_blending() -> bool:
 	assert(float(orion_full["on_layer_gain"]) == 1.0, "Orion single layer full throttle must be 1.0")
 
 	print("  -> Load layer ON/OFF crossfading PASS")
+	return true
+
+
+func test_low_rpm_coast_fallback() -> bool:
+	var manifest := EngineProfileManifest.load_for_profile("kestrel_xr")
+	if manifest == null:
+		return false
+	var data := {"profile": manifest.profile_name, "loops": manifest.loops}
+	var idle := RecordedEngineController.compute_blend_state(800.0, 0.0, data)
+	var coast := RecordedEngineController.compute_blend_state(3000.0, 0.0, data)
+	var middle := RecordedEngineController.compute_blend_state(2600.0, 0.0, data)
+	if not (is_equal_approx(float(idle["on_layer_gain"]), 0.4) and is_zero_approx(float(idle["off_layer_gain"]))):
+		push_error("Kestrel idle must use the actual low RPM ON recording")
+		return false
+	if not (is_zero_approx(float(coast["on_layer_gain"])) and is_equal_approx(float(coast["off_layer_gain"]), 1.0)):
+		push_error("Coast bank must take over at its first recorded RPM")
+		return false
+	if not (float(middle["on_layer_gain"]) > 0.0 and float(middle["off_layer_gain"]) > 0.0):
+		push_error("Coast fallback must crossfade smoothly")
+		return false
 	return true
 
 
