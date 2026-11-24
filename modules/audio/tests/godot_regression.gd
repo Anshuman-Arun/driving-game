@@ -189,7 +189,7 @@ func _test(audio) -> void:
 	car.free()
 	audio._physics_process(0.016)
 	_expect(not audio._tracking_vehicle and audio._telemetry["speed_mps"] == 0.0, "destroyed bound car recovers without stale playback")
-	audio.queue_free()
+	audio.free()
 
 	if failures > 0:
 		print("Aster audio Godot regression FAILED: ", failures, " checks")
