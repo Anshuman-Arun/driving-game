@@ -17,6 +17,7 @@ func _initialize() -> void:
 	success = test_manifest_loading() and success
 	success = test_wav_loader_and_loop_config() and success
 	success = test_pcm_loop_conditioning() and success
+	success = test_riff_validation() and success
 	success = test_constant_power_blending() and success
 	success = test_load_layer_blending() and success
 	success = test_low_rpm_coast_fallback() and success
@@ -160,6 +161,33 @@ func test_pcm_loop_conditioning() -> bool:
 		if absi(data.decode_s16(0) - data.decode_s16(data.size() - 2)) >= 128:
 			push_error("Conditioned real engine seam remains discontinuous")
 			return false
+	return true
+
+
+func test_riff_validation() -> bool:
+	# Valid mono PCM16, with an odd-length JUNK chunk and its pad byte.
+	var bytes := PackedByteArray()
+	bytes.append_array("RIFF".to_ascii_buffer())
+	bytes.append_array(PackedByteArray([50, 0, 0, 0]))
+	bytes.append_array("WAVEJUNK".to_ascii_buffer())
+	bytes.append_array(PackedByteArray([1, 0, 0, 0, 7, 0]))
+	bytes.append_array("fmt ".to_ascii_buffer())
+	bytes.append_array(PackedByteArray([16, 0, 0, 0, 1, 0, 1, 0, 128, 187, 0, 0, 0, 119, 1, 0, 2, 0, 16, 0]))
+	bytes.append_array("data".to_ascii_buffer())
+	bytes.append_array(PackedByteArray([4, 0, 0, 0, 0, 0, 0, 0]))
+	var stream := EngineWavLoader.parse_pcm_riff(bytes)
+	if stream == null or stream.mix_rate != 48000 or stream.data.size() != 4:
+		push_error("PCM parser must handle word-padded chunks")
+		return false
+	var truncated := bytes.slice(0, bytes.size() - 1)
+	if EngineWavLoader.parse_pcm_riff(truncated) != null:
+		push_error("PCM parser accepted a truncated file")
+		return false
+	# fmt format tag starts at byte 30 after JUNK.
+	bytes[30] = 3
+	if EngineWavLoader.parse_pcm_riff(bytes) != null:
+		push_error("PCM parser accepted float data as PCM")
+		return false
 	return true
 
 
