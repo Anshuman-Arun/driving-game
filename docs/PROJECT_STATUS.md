@@ -2,9 +2,9 @@
 
 Last updated: 2026-11-24
 
-## Quota-controlled Hydrogen 4 swarm revision
+## Quality-first Hydrogen 4 swarm revision
 
-Revised the environment mission for paid Google AI Pro: the 18 specialties are an eventual backlog, with a maximum of three implementation workers per separately approved phase plus coordinator and sequential verifier. Default Medium reasoning, selective High and no Extra without approval. Added quota/timebox checkpoints, a 2 GiB first-pilot download cap and native/scaled 3440×1440 benchmarks. Estimated storage and FPS are planning assumptions, not new measurements. No game changes or new benchmark results.
+Owner requested a slightly larger swarm with High reasoning for demanding work. The master mission now caps each approved phase at five implementation specialists, High coordinator, and independent verifier (High visual critique, Medium mechanical test runs); High is assigned to quality-critical tree, grass, runtime and rendering workers, Medium/Low to acquisition and mechanical work. Soft quota checkpoints and one-phase approval remain, with a 45–75 minute planning window and two to three purposeful iterations; do not sacrifice quality to meet a timebox. Preserved 2 GiB first-pilot acquisition cap and native/scaled 3440×1440 benchmarks. No game changes, model settings changed in Antigravity, or new benchmark measurements.
 
 ## Swarm environment mission and source archive handoff
 
