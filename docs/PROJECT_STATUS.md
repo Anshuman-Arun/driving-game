@@ -2,6 +2,10 @@
 
 Last updated: 2026-11-24
 
+## Quota-controlled Hydrogen 4 swarm revision
+
+Revised the environment mission for paid Google AI Pro: the 18 specialties are an eventual backlog, with a maximum of three implementation workers per separately approved phase plus coordinator and sequential verifier. Default Medium reasoning, selective High and no Extra without approval. Added quota/timebox checkpoints, a 2 GiB first-pilot download cap and native/scaled 3440×1440 benchmarks. Estimated storage and FPS are planning assumptions, not new measurements. No game changes or new benchmark results.
+
 ## Swarm environment mission and source archive handoff
 
 Repository visibility confirmed public. Expanded the environment mission into 18 specialized agents, explicit ownership, dependency waves, independent visual critique and measured acceptance gates. Added private Drive archive / public GitHub production storage guidance. After repository visibility changed to public, the 186-byte artifact probe (run 45511995091) succeeded. Retried acquisition run 45509977508 (attempt 2, job 138861997550) also succeeded: seven original 4K assets downloaded and published as artifact `environment-source-4k-core-trial` (277,777,929 bytes; artifact ID 14975532052, expiry 2026-11-27 23:41:36 UTC). Includes grass_medium_01/02, tree_small_02, fern_02, celandine_01, boulder_01 and rock_07; 7/9 planned candidates completed within the 300 MiB cap. This verifies artifact publication at this size, not unlimited capacity or LFS quota. The artifact is temporary; use the acquisition report and download locally, archive to private Drive, verify checksums, and do not commit the whole raw pack to Git. No visual approval or in-game integration is claimed. No new visual improvements, Godot test runs or Drive file backups are claimed by this documentation update.

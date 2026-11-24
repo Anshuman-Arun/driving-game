@@ -41,3 +41,7 @@ Use [STORAGE.md](STORAGE.md) for the private Drive master archive and public Git
 ## Public artifact re-test
 
 After repository visibility changed to public, the 186-byte artifact probe (run 45511995091) succeeded. Retried acquisition run 45509977508 (attempt 2, job 138861997550) also succeeded: seven original 4K assets downloaded and published as artifact `environment-source-4k-core-trial` (277,777,929 bytes; artifact ID 14975532052, expiry 2026-11-27 23:41:36 UTC). Includes grass_medium_01/02, tree_small_02, fern_02, celandine_01, boulder_01 and rock_07; 7/9 planned candidates completed within the 300 MiB cap. This verifies artifact publication at this size, not unlimited capacity or LFS quota. The artifact is temporary; use the acquisition report and download locally, archive to private Drive, verify checksums, and do not commit the whole raw pack to Git. No visual approval or in-game integration is claimed.
+
+## Quota-controlled swarm execution
+
+The latest master prompt begins with an overriding execution policy: one approved phase at a time, three grouped implementation workers maximum, default Hydrogen Medium, selective High, no Extra without user approval. Start with Phase A, a 2 GiB acquisition cap and 300–500 m showcase. Do not execute the expanded 16 GiB download example in one session unless separately approved. Benchmark actual native 3440×1440 and 75% render scale; stop and checkpoint at quota/timebox/gate. See master mission for precise guardrails.
