@@ -518,6 +518,10 @@ func test_hero_voicings() -> bool:
 	assert(engine._intake_load < lambo_intake, "Senna induction should build later than Aventador")
 	engine.snap_to_idle()
 	assert(engine._intake_load == 0.0 and engine._active_overrun_burst.is_empty())
+	engine.trigger_overrun_backfire()
+	assert(engine._active_overrun_burst.is_empty(), "Hero banks must not schedule generic synthetic crackles")
+	assert(float(RecordedEngineController.PROFILE_CONFIGS["aventador_svj"]["intake_ratio"]) == 0.0)
+	assert(float(RecordedEngineController.PROFILE_CONFIGS["mclaren_senna"]["intake_ratio"]) == 0.0)
 	engine.free()
 	print("  Hero voicing response and profile switching PASS")
 	return true

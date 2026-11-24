@@ -16,17 +16,17 @@ const PROFILE_CONFIGS := {
 	"aventador_svj": {
 		"label": "Aventador SVJ (recorded V12 family audition)",
 		"fallback_bank": "vela_gt", "idle_rpm": 900.0, "redline_rpm": 8700.0,
-		"gain": 0.98, "intake_ratio": 0.48, "rpm_ms": 35.0,
+		"gain": 0.98, "intake_ratio": 0.0, "rpm_ms": 35.0,
 		"throttle_ms": 60.0, "shift_ms": 125.0, "shift_depth": 0.22,
-		"shift_gain": 0.32, "overrun_gain": 0.37, "intake_lag_ms": 60.0,
+		"shift_gain": 0.0, "overrun_gain": 0.0, "synthetic_events": false, "intake_lag_ms": 60.0,
 		"load_curve": 0.85, "idle_gain": 0.58
 	},
 	"mclaren_senna": {
 		"label": "McLaren Senna (recorded McLaren V8 family audition)",
 		"fallback_bank": "kestrel_xr", "idle_rpm": 980.0, "redline_rpm": 8000.0,
-		"gain": 0.94, "intake_ratio": 0.62, "rpm_ms": 42.0,
+		"gain": 0.94, "intake_ratio": 0.0, "rpm_ms": 42.0,
 		"throttle_ms": 75.0, "shift_ms": 85.0, "shift_depth": 0.42,
-		"shift_gain": 0.20, "overrun_gain": 0.23, "intake_lag_ms": 165.0,
+		"shift_gain": 0.0, "overrun_gain": 0.0, "synthetic_events": false, "intake_lag_ms": 165.0,
 		"load_curve": 1.12, "idle_gain": 0.60
 	},
 	"vela_gt": {
@@ -231,6 +231,10 @@ func trigger_gear_shift(_from_gear: int = 1, _to_gear: int = 2) -> void:
 
 
 func trigger_overrun_backfire() -> void:
+	# Hero exhaust banks already contain recorded coast character. Generic
+	# synthesized pops obscure that detail; restore only real dedicated events.
+	if not bool(PROFILE_CONFIGS[car_profile].get("synthetic_events", true)):
+		return
 	if _overrun_player != null and _overrun_player.stream != null:
 		var pitch := randf_range(0.92, 1.15)
 		var event_gain := float(PROFILE_CONFIGS[car_profile].get("overrun_gain", 0.40))
@@ -357,6 +361,8 @@ func _apply_audio_blend() -> void:
 	# Shared with the diagnostic helper so the tested curve is the live curve.
 	var shaped_load := pow(_smoothed_throttle, float(cfg.get("load_curve", 1.0)))
 	var load_gains := compute_load_gains(_smoothed_rpm, shaped_load, _manifest.off_anchors, float(cfg.get("idle_gain", 0.40)))
+	# ON/OFF waveforms from different field sessions do not share phase.
+	# Do not duplicate the same sample as "intake" until independent material exists.
 	var on_layer_gain := load_gains.x
 	var off_layer_gain := load_gains.y
 
@@ -577,6 +583,8 @@ func _init_auxiliary_players() -> void:
 
 
 func _play_shift_clunk() -> void:
+	if not bool(PROFILE_CONFIGS[car_profile].get("synthetic_events", true)):
+		return
 	if _shift_player != null and _shift_player.stream != null:
 		_shift_player.pitch_scale = randf_range(0.95, 1.05)
 		_shift_player.volume_db = linear_to_db(maxf(0.0001, float(PROFILE_CONFIGS[car_profile].get("shift_gain", 0.30)) * master_gain))
