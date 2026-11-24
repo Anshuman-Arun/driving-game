@@ -37,3 +37,7 @@ See [implementation mission](../../prompts/ANTIGRAVITY_ENVIRONMENT_ART_PASS.md) 
 ## Public repository and swarm handoff
 
 Use [STORAGE.md](STORAGE.md) for the private Drive master archive and public GitHub production-asset policy. The master mission is now organized for 18 swarm specialties with explicit ownership, dependency waves and acceptance gates. The private Drive folder URL is intentionally excluded from the public repo.
+
+## Public artifact re-test
+
+After repository visibility changed to public, the 186-byte artifact probe (run 45511995091) succeeded. Retried acquisition run 45509977508 (attempt 2, job 138861997550) also succeeded: seven original 4K assets downloaded and published as artifact `environment-source-4k-core-trial` (277,777,929 bytes; artifact ID 14975532052, expiry 2026-11-27 23:41:36 UTC). Includes grass_medium_01/02, tree_small_02, fern_02, celandine_01, boulder_01 and rock_07; 7/9 planned candidates completed within the 300 MiB cap. This verifies artifact publication at this size, not unlimited capacity or LFS quota. The artifact is temporary; use the acquisition report and download locally, archive to private Drive, verify checksums, and do not commit the whole raw pack to Git. No visual approval or in-game integration is claimed.
