@@ -1,6 +1,8 @@
 extends SceneTree
 ## Run: godot --headless --path modules/audio --script res://tests/godot_smoke.gd
 
+const AudioTestCleanup := preload("res://tests/integration/audio_qa/audio_test_cleanup.gd")
+
 func _initialize() -> void:
 	var controller_script = load("res://modules/audio/audio_controller.gd") if ResourceLoader.exists("res://modules/audio/audio_controller.gd") else load("res://audio_controller.gd")
 	var idling: Dictionary = controller_script.compute_targets({"rpm": 950.0, "speed_mps": 0.0})
@@ -26,6 +28,6 @@ func _check_audio(audio) -> void:
 	audio.update_telemetry({"rpm": 4600.0, "throttle": 0.9, "gear": 2, "speed_mps": 20.0})
 	audio.update_telemetry({"rpm": 3200.0, "throttle": 0.1, "gear": 3, "speed_mps": 23.0})
 	assert(audio._shift_timer > 0.0)
-	audio.free()
+	await AudioTestCleanup.dispose(self, audio)
 	print("Aster audio Godot telemetry/mixer smoke PASS")
 	quit(0)
