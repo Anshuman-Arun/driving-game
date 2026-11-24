@@ -332,8 +332,14 @@ func _run_profile_simulation(
 	var active_manifest: RefCounted = engine_node.get("_manifest")
 	if active_manifest == null or str(active_manifest.get("profile_name")) != profile:
 		return {"profile": profile, "passed": false, "error": "Requested recorded bank was not loaded"}
-	# Let the audio thread settle after replacing streams.
-	await tree.create_timer(0.15).timeout
+	# Restore neutral mix before the next profile; do not measure residual
+	# cockpit filtering, wall reflections, or transient tails as idle.
+	camera_node.call("set_cockpit_view", false, true)
+	chassis_node.call("simulate_acoustics", INF, INF, INF)
+	var idle_telemetry := {"speed_mps": 0.0, "on_ground": true, "surface": "asphalt", "slip_amount": 0.0}
+	tire_node.call("queue_telemetry", idle_telemetry)
+	chassis_node.call("update_telemetry", idle_telemetry)
+	await tree.create_timer(0.5).timeout
 
 	if tire_node.has_method("set_profile"):
 		tire_node.call("set_profile", profile)
@@ -345,6 +351,8 @@ func _run_profile_simulation(
 	var exhaust_frames := 0
 	var exhaust_peak := 0.0
 	var exhaust_idle_peak := 0.0
+	var exhaust_idle_energy := 0.0
+	var exhaust_idle_frames := 0
 	var audition_file: FileAccess = null
 	var audition_path := ""
 	var audition_dir := OS.get_environment("ASTER_AUDIO_CAPTURE_DIR")
@@ -419,8 +427,10 @@ func _run_profile_simulation(
 			for sample in exhaust_buffer:
 				var stem_peak := maxf(absf(sample.x), absf(sample.y))
 				exhaust_peak = maxf(exhaust_peak, stem_peak)
-				if current_scenario == "idle_stationary":
+				if current_scenario == "idle_stationary" and bench.current_time >= 0.5:
 					exhaust_idle_peak = maxf(exhaust_idle_peak, stem_peak)
+					exhaust_idle_energy += (sample.x * sample.x + sample.y * sample.y) * 0.5
+					exhaust_idle_frames += 1
 
 		# Drain captured audio buffer
 		var avail := capture.get_frames_available()
@@ -511,7 +521,9 @@ func _run_profile_simulation(
 	var no_clipping := (clipped_samples == 0 and hard_flats == 0)
 	var discarded := capture.get_discarded_frames() - discarded_before
 	var sufficient_frames := total_frames_captured >= int(bench.get_total_duration() * AudioServer.get_mix_rate() * 0.85)
-	var exhaust_ok := exhaust_frames >= int(bench.get_total_duration() * AudioServer.get_mix_rate() * 0.85) and exhaust_peak > 0.005 and exhaust_idle_peak > 0.001 and exhaust_capture.get_discarded_frames() == exhaust_discarded_before
+	var idle_rms_dbfs := _linear_to_db(sqrt(exhaust_idle_energy / float(maxi(1, exhaust_idle_frames))))
+	print("  Stable idle exhaust RMS: %.2f dBFS (%d frames)" % [idle_rms_dbfs, exhaust_idle_frames])
+	var exhaust_ok := exhaust_frames >= int(bench.get_total_duration() * AudioServer.get_mix_rate() * 0.85) and exhaust_peak > 0.005 and exhaust_idle_peak > 0.001 and exhaust_idle_frames > 0 and exhaust_capture.get_discarded_frames() == exhaust_discarded_before
 	var profile_passed := (is_signal_present and has_headroom and no_clipping and all_scenarios_ok and sufficient_frames and discarded == 0 and exhaust_ok)
 	print("  Exhaust stem: %d frames, peak %.2f dBFS, idle peak %.2f dBFS, passed=%s" % [exhaust_frames, _linear_to_db(exhaust_peak), _linear_to_db(exhaust_idle_peak), str(exhaust_ok)])
 
@@ -524,6 +536,8 @@ func _run_profile_simulation(
 		"exhaust_frames": exhaust_frames,
 		"exhaust_peak_dbfs": _linear_to_db(exhaust_peak),
 		"exhaust_idle_peak_dbfs": _linear_to_db(exhaust_idle_peak),
+		"exhaust_idle_rms_dbfs": idle_rms_dbfs,
+		"exhaust_idle_frames": exhaust_idle_frames,
 		"exhaust_signal_ok": exhaust_ok,
 		"audition_wav": audition_path,
 		"discarded_frames": discarded,
