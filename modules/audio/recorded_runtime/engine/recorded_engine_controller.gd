@@ -165,6 +165,14 @@ func snap_to_idle() -> void:
 	_limiter_envelope = 1.0
 	_overrun_cooldown_timer = 0.0
 	_active_overrun_burst.clear()
+	# Reset all active one-shots, not just pending bursts. A previous car's
+	# exhaust crackle or gear clunk must never bleed into the next car's idle.
+	for voice in [_shift_player, _overrun_player]:
+		if is_instance_valid(voice):
+			voice.stop()
+	for voice in _overrun_burst_players:
+		voice.stop()
+	_apply_audio_blend()
 
 
 func update_telemetry(t: Dictionary) -> void:
@@ -207,7 +215,7 @@ func trigger_gear_shift(_from_gear: int = 1, _to_gear: int = 2) -> void:
 func trigger_overrun_backfire() -> void:
 	if _overrun_player != null and _overrun_player.stream != null:
 		var pitch := randf_range(0.92, 1.15)
-		var vol := randf_range(0.70, 1.0) * master_gain
+		var vol := randf_range(0.30, 0.50) * master_gain
 		_overrun_player.pitch_scale = pitch
 		_overrun_player.volume_db = linear_to_db(maxf(0.0001, vol))
 		if _overrun_player.is_inside_tree():
@@ -222,7 +230,7 @@ func trigger_overrun_backfire() -> void:
 		_active_overrun_burst.append({
 			"delay": cumulative_delay,
 			"pitch": randf_range(0.85, 1.30),
-			"gain": randf_range(0.40, 0.85)
+			"gain": randf_range(0.15, 0.35)
 		})
 
 
@@ -345,12 +353,15 @@ func _apply_audio_blend() -> void:
 		var layer_weight: float = on_layer_gain if layer == "on" else off_layer_gain
 
 		var anchor_gain: float = float(anchor_data.get("gains", {}).get(fname, 0.0))
-		var anchor_pitch: float = float(anchor_data.get("pitches", {}).get(fname, 1.0))
+		var nominal_pitch := clampf(_smoothed_rpm / maxf(1.0, float(loop_entry["rpm"])), sub_idle_min_pitch, max_pitch_clamp)
+		var anchor_pitch: float = float(anchor_data.get("pitches", {}).get(fname, nominal_pitch))
+		# Inaudible loops still track the engine clock. This keeps the
+		# filtered intake copy and its exhaust counterpart in step.
+		player.pitch_scale = anchor_pitch
 
 		var final_gain := anchor_gain * layer_weight * file_gain * overall_gain
 		_update_reflection_voice(fname, player, final_gain, anchor_pitch)
 		if final_gain > 0.0001:
-			player.pitch_scale = anchor_pitch
 			player.volume_db = linear_to_db(final_gain)
 		else:
 			player.volume_db = -80.0
@@ -365,12 +376,15 @@ func _apply_audio_blend() -> void:
 		var file_gain: float = float(anchor.get("gain", 1.0))
 
 		var anchor_gain: float = float(on_data.get("gains", {}).get(fname, 0.0))
-		var anchor_pitch: float = float(on_data.get("pitches", {}).get(fname, 1.0))
+		var nominal_pitch := clampf(_smoothed_rpm / maxf(1.0, float(anchor["rpm"])), sub_idle_min_pitch, max_pitch_clamp)
+		var anchor_pitch: float = float(on_data.get("pitches", {}).get(fname, nominal_pitch))
+		player.pitch_scale = anchor_pitch
 
-		var intake_gain := anchor_gain * intake_throttle_boost * file_gain * overall_gain
+		# The current intake is derived from the same ON recording, not an
+		# independent microphone. Keep it subordinate to the exhaust layer.
+		var intake_gain := anchor_gain * intake_throttle_boost * on_layer_gain * file_gain * overall_gain
 		if intake_gain > 0.0001:
 			player.volume_db = linear_to_db(intake_gain)
-			player.pitch_scale = anchor_pitch
 		else:
 			player.volume_db = -80.0
 
@@ -536,7 +550,7 @@ func _init_auxiliary_players() -> void:
 func _play_shift_clunk() -> void:
 	if _shift_player != null and _shift_player.stream != null:
 		_shift_player.pitch_scale = randf_range(0.95, 1.05)
-		_shift_player.volume_db = linear_to_db(maxf(0.0001, 0.70 * master_gain))
+		_shift_player.volume_db = linear_to_db(maxf(0.0001, 0.30 * master_gain))
 		if _shift_player.is_inside_tree():
 			_shift_player.play()
 
