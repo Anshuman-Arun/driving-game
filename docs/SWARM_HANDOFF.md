@@ -87,8 +87,22 @@
 
 ---
 
-## 4. Deterministic Verification Command
+## 4. Execution & Playable Commands
 
+### Playable Live Free Roam Command
+To boot directly into Aster Valley Free Roam with full Forward+ graphics, player car, and chase camera:
+
+```powershell
+& "C:\Users\anshu\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64.exe" --path "driving-game" "res://scenes/free_roam/aster_valley.tscn"
+```
+
+To launch the full game shell (dashboard / garage selection / free roam):
+
+```powershell
+& "C:\Users\anshu\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64.exe" --path "driving-game"
+```
+
+### Deterministic Verification Command
 To re-run the 3-bookmark 1080p Forward+ capture suite:
 
 ```powershell
