@@ -20,6 +20,8 @@ const EngineScript := preload("res://modules/audio/recorded_runtime/engine/recor
 const TireScript := preload("res://modules/audio/recorded_runtime/tires/recorded_tire_controller.gd")
 const ChassisScript := preload("res://modules/audio/recorded_runtime/chassis/chassis_audio_controller.gd")
 
+const AudioTestCleanup := preload("res://tests/integration/audio_qa/audio_test_cleanup.gd")
+
 const PROFILES := ["vela_gt", "kestrel_xr", "orion_rs"]
 const CAPTURE_BUS_NAME := &"Master"
 const HARD_FLAT_RUN_LENGTH := 4  # Consecutively identical samples to flag hard flat
@@ -252,13 +254,15 @@ func execute_suite(tree: SceneTree, output_json_path: String = "res://tests/inte
 			])
 
 	# Cleanup test nodes
-	test_root.free()
+	await AudioTestCleanup.dispose(tree, test_root)
 
 	# Detach capture effect after all voices have been released.
 	for i in range(AudioServer.get_bus_effect_count(master_idx)):
 		if AudioServer.get_bus_effect(master_idx, i) == capture:
 			AudioServer.remove_bus_effect(master_idx, i)
 			break
+
+	await AudioTestCleanup.drain(tree)
 
 	# Summarize overall results
 	full_report["summary"]["overall_peak_dbfs"] = overall_max_peak_dbfs
