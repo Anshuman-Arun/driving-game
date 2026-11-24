@@ -25,7 +25,7 @@ var camera: Camera3D
 var load_ms := 0
 var active_vehicle_id := PlayerCarFactory.DEFAULT_CAR
 var shell_managed := false
-var scenery_enabled := false
+@export var scenery_enabled := true
 var scenery: SceneryRuntime
 var vegetation: Vegetation
 var graphics_preset := "medium":
@@ -106,10 +106,14 @@ func set_scenery_enabled(enabled: bool) -> bool:
 			remove_child(scenery)
 			scenery.queue_free()
 			scenery = null
+		var prem := get_node_or_null("PremiumFoliageRuntime")
+		if prem != null:
+			remove_child(prem)
+			prem.queue_free()
 		return true
 	if scenery != null:
 		return true
-	if not is_node_ready():
+	if not is_inside_tree() or world == null:
 		return true
 	var layer := SceneryRuntime.new()
 	layer.name = "Scenery"

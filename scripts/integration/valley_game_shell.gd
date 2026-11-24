@@ -587,10 +587,20 @@ func enter_free_roam() -> void:
 	if drive == null:
 		drive = FreeRoam.instantiate()
 		drive.shell_managed = true
-		drive.graphics_preset = str(save.data["settings"]["graphics_quality"])
-		drive.steering_sensitivity = float(save.data["settings"]["controller_sensitivity"])
+		var g_preset := "high"
+		var sens := 0.6
+		var sel_car := PlayerCarFactory.DEFAULT_CAR
+		if save != null and save.data != null and save.data.has("settings"):
+			g_preset = str(save.data["settings"].get("graphics_quality", "high"))
+			sens = float(save.data["settings"].get("controller_sensitivity", 0.6))
+			if save.has_method("selected_car"):
+				sel_car = save.selected_car()
+		drive.graphics_preset = g_preset
+		drive.steering_sensitivity = sens
 		drive.scenery_enabled = bool(ProjectSettings.get_setting("aster_valley/visuals/scenery_enabled", true))
-		drive.queue_vehicle_selection(save.selected_car())
+		drive.queue_vehicle_selection(sel_car)
+		if game == null:
+			game = LiveSession.new()
 		game.drive = drive
 		free_roam_created.emit(drive)
 		get_parent().add_child(drive)

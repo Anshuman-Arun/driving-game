@@ -6,6 +6,7 @@
 
 [node name="AsterValleyFreeRoam" type="Node3D"]
 script = ExtResource("1_drive")
+scenery_enabled = true
 
 [node name="WorldRuntime" type="Node3D" parent="."]
 script = ExtResource("2_world")
