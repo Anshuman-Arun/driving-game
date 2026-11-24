@@ -326,6 +326,8 @@ func _process(delta: float) -> void:
 			recorded_engine.set("master_gain", master_gain)
 		if is_instance_valid(recorded_tires):
 			recorded_tires.set("master_tire_gain", master_gain)
+		if is_instance_valid(recorded_chassis):
+			recorded_chassis.call("set_mix_gains", master_gain, master_gain * ambient_gain)
 		return
 	var step := maxf(delta, 0.0)
 	_clock += step
