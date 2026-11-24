@@ -24,6 +24,7 @@ func _initialize() -> void:
 	success = test_controller_lifecycle_and_smoothing() and success
 	success = test_rev_limiter_stutter() and success
 	success = test_gear_shift_envelope() and success
+	success = test_live_shift_and_reverse_pedal() and success
 	success = test_overrun_backfire() and success
 	success = test_profile_switching() and success
 
@@ -379,6 +380,30 @@ func test_gear_shift_envelope() -> bool:
 
 	controller.free()
 	print("  -> Gear shift clunk and torque cut envelope PASS")
+	return true
+
+
+func test_live_shift_and_reverse_pedal() -> bool:
+	var controller := RecordedEngineController.new()
+	controller.setup("kestrel_xr")
+	root.add_child(controller)
+	controller.update_telemetry({"rpm": 4000.0, "throttle": 0.8, "gear": 1})
+	controller.update_telemetry({"rpm": 4000.0, "throttle": 0.8, "gear": 1, "shift_active": true, "requested_gear": 2})
+	controller._process(0.05)
+	var cut_started := controller._live_shift and controller._shift_envelope < 0.30
+	for i in range(6):
+		controller._process(0.05)
+	var cut_held := controller._shift_envelope < 0.30
+	controller.update_telemetry({"rpm": 3200.0, "throttle": 0.8, "gear": 2, "shift_active": false, "requested_gear": 2})
+	var no_duplicate := controller._shift_timer == 0.0 and not controller._live_shift
+	controller._process(0.4)
+	var recovered := controller._shift_envelope > 0.99
+	controller.update_telemetry({"rpm": 2200.0, "throttle": 0.0, "engine_throttle": 0.7, "gear": -1})
+	var motor_pedal := is_equal_approx(controller._target_throttle, 0.7)
+	controller.free()
+	if not (cut_started and cut_held and no_duplicate and recovered and motor_pedal):
+		push_error("Live shift envelope or reverse motor pedal regression")
+		return false
 	return true
 
 
