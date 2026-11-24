@@ -49,6 +49,9 @@ func run() -> void:
 	for i in 170:
 		await physics_frame
 	Input.action_release("drive_throttle")
-	var ok: bool = drive.vehicle_body.has_node("CuratedCar") and drive.adapter.get_speed_mps() > 3.0
-	print("PACK_FREE_ROAM ok=", ok, " speed=", drive.adapter.get_speed_mps())
+	var mixer: Node = drive.vehicle_body.get_node("VehicleAudio")
+	var voices: Dictionary = mixer.recorded_engine._exhaust_players
+	var audio_active := voices.values().any(func(player: AudioStreamPlayer) -> bool: return player.playing)
+	var ok: bool = drive.vehicle_body.has_node("CuratedCar") and drive.adapter.get_speed_mps() > 3.0 and audio_active
+	print("PACK_FREE_ROAM ok=", ok, " speed=", drive.adapter.get_speed_mps(), " recorded_audio_active=", audio_active)
 	quit(0 if ok else 1)

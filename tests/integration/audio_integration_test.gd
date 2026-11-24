@@ -78,6 +78,10 @@ func _run() -> void:
 			pid, engine_ctrl._idle_rpm, engine_ctrl._redline_rpm
 		])
 		assert(engine_ctrl._smoothed_rpm >= engine_ctrl._idle_rpm - 1.0, "Engine must be at idle RPM upon spawn")
+		var audible_exhaust := 0
+		for player: AudioStreamPlayer in engine_ctrl._exhaust_players.values():
+			audible_exhaust += int(player.playing)
+		assert(audible_exhaust >= 1 and audible_exhaust <= 2, "Idle starts only its audible exhaust anchors")
 
 		# Clean up car
 		root.remove_child(car)

@@ -477,7 +477,8 @@ func _set_loop(player: AudioStreamPlayer, name: String) -> void:
 	var sample_frames := int(round(wav.get_length() * float(wav.mix_rate)))
 	wav.loop_end = maxi(1, sample_frames - 1)
 	player.stream = wav
-	player.play()
+	if not use_recorded_runtime:
+		player.play()
 
 
 func _play_event(name: String, strength: float) -> bool:

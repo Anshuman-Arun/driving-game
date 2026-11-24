@@ -97,7 +97,7 @@ func _ready() -> void:
 	if _manifest == null:
 		setup(car_profile)
 	else:
-		_start_loop_players()
+		_apply_audio_blend()
 
 
 func setup(profile_name: String = "") -> void:
@@ -106,19 +106,6 @@ func setup(profile_name: String = "") -> void:
 		car_profile = profile_name
 	set_profile(car_profile)
 	snap_to_idle()
-
-
-func _start_loop_players() -> void:
-	for p in _exhaust_players.values():
-		if is_instance_valid(p) and p is AudioStreamPlayer:
-			var player := p as AudioStreamPlayer
-			if player.is_inside_tree() and player.stream != null and not player.playing:
-				player.play()
-	for p in _intake_players.values():
-		if is_instance_valid(p) and p is AudioStreamPlayer:
-			var player := p as AudioStreamPlayer
-			if player.is_inside_tree() and player.stream != null and not player.playing:
-				player.play()
 
 
 func set_profile(profile_name: String) -> void:
@@ -130,6 +117,8 @@ func set_profile(profile_name: String) -> void:
 	var cfg: Dictionary = PROFILE_CONFIGS[profile_name]
 	_idle_rpm = float(cfg["idle_rpm"])
 	_redline_rpm = float(cfg["redline_rpm"])
+	if _manifest != null and _manifest.profile_name == profile_name:
+		return
 
 	var manifest: RefCounted = null
 	if _manifest_cache.has(profile_name):
@@ -160,6 +149,7 @@ func snap_to_idle() -> void:
 	_limiter_envelope = 1.0
 	_overrun_cooldown_timer = 0.0
 	_active_overrun_burst.clear()
+	_apply_audio_blend()
 
 
 func update_telemetry(t: Dictionary) -> void:
@@ -338,11 +328,7 @@ func _apply_audio_blend() -> void:
 		var anchor_pitch: float = float(anchor_data.get("pitches", {}).get(fname, 1.0))
 
 		var final_gain := anchor_gain * layer_weight * file_gain * overall_gain
-		if final_gain > 0.0001:
-			player.volume_db = linear_to_db(final_gain)
-			player.pitch_scale = anchor_pitch
-		else:
-			player.volume_db = -80.0
+		_set_anchor_voice(player, final_gain, anchor_pitch)
 
 	# 2. Update Intake Players (induction roar on ON loops, scaled by throttle)
 	var intake_throttle_boost := pow(_smoothed_throttle, 1.2) * intake_ratio
@@ -357,11 +343,22 @@ func _apply_audio_blend() -> void:
 		var anchor_pitch: float = float(on_data.get("pitches", {}).get(fname, 1.0))
 
 		var intake_gain := anchor_gain * intake_throttle_boost * file_gain * overall_gain
-		if intake_gain > 0.0001:
-			player.volume_db = linear_to_db(intake_gain)
-			player.pitch_scale = anchor_pitch
-		else:
+		_set_anchor_voice(player, intake_gain, anchor_pitch)
+
+
+func _set_anchor_voice(player: AudioStreamPlayer, gain: float, pitch: float) -> void:
+	# Stop its decoder below -80 dB. The existing adjacent-anchor crossfade
+	# brings each loop in at an inaudible level before it carries the engine note.
+	if gain <= 0.0001:
+		if player.volume_db > -80.0:
 			player.volume_db = -80.0
+		if player.playing:
+			player.stop()
+		return
+	player.volume_db = linear_to_db(gain)
+	player.pitch_scale = pitch
+	if player.is_inside_tree() and not player.playing:
+		player.play()
 
 
 func _compute_layer_anchors(layer: String, rpm: float) -> Dictionary:
@@ -371,12 +368,6 @@ func _compute_layer_anchors(layer: String, rpm: float) -> Dictionary:
 
 	var gains: Dictionary = {}
 	var pitches: Dictionary = {}
-
-	# Initialize all anchors in layer to 0 gain
-	for a in anchors:
-		var f: String = str(a["file"])
-		gains[f] = 0.0
-		pitches[f] = 1.0
 
 	var bracket: Dictionary = _manifest.find_bracketing_anchors(layer, rpm)
 	if bracket.is_empty():
@@ -453,8 +444,6 @@ func _rebuild_loop_players() -> void:
 			player.stream = wav
 			player.volume_db = -80.0
 			add_child(player)
-			if player.is_inside_tree():
-				player.play()
 			_exhaust_players[fname] = player
 		else:
 			push_warning("RecordedEngineController: Could not load exhaust loop: " + full_path)
@@ -472,8 +461,6 @@ func _rebuild_loop_players() -> void:
 			player.stream = wav
 			player.volume_db = -80.0
 			add_child(player)
-			if player.is_inside_tree():
-				player.play()
 			_intake_players[fname] = player
 		else:
 			push_warning("RecordedEngineController: Could not load intake loop: " + full_path)

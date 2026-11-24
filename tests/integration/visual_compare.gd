@@ -65,9 +65,11 @@ func run() -> void:
 		quit(1)
 		return
 	var args := OS.get_cmdline_user_args()
-	if args.size() > 1:
+	var medium_only := "--medium-only" in args
+	if args.size() > 1 and not medium_only:
 		audit_legacy(drive, args[1])
-	for quality in ["medium", "low", "high"]:
+	var presets := ["medium"] if medium_only else ["medium", "low", "high"]
+	for quality in presets:
 		var applied: bool = shell._save_option("graphics_quality", quality)
 		print("QUALITY ", quality, " applied=", applied, " viewport_scale=", view.scaling_3d_scale)
 		if not applied:
