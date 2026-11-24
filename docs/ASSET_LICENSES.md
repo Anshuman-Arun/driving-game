@@ -80,3 +80,7 @@ The textures below use the [Poly Haven CC0 license](https://polyhaven.com/licens
 | Broadleaf canopy | [Tree Small 02](https://polyhaven.com/a/tree_small_02) | Rico Cilliers | `broadleaf_spray.png`, assembled from leaf diffuse and alpha |
 | Building walls | [White Plaster 02](https://polyhaven.com/a/white_plaster_02) | Rob Tuytel | `plaster.jpg`, `plaster_normal.jpg` |
 | Grass tufts | [Grass Medium 01](https://polyhaven.com/a/grass_medium_01) | Rico Cilliers, Rob Tuytel | `grass_cutout.png`, cropped and packed from diffuse and alpha |
+
+## Environment source library (2026-11-24)
+
+Four source candidates, not runtime assets, staged under `asset_library/environment_sources/`: [Grass Medium 01](https://polyhaven.com/a/grass_medium_01), [Grass Medium 02](https://polyhaven.com/a/grass_medium_02), [Fern 02](https://polyhaven.com/a/fern_02), [Celandine 01](https://polyhaven.com/a/celandine_01). All from Poly Haven under CC0-1.0; original 4K glTF dependencies preserved. The per-asset PROVENANCE.json records authors, source URLs, file hashes and retrieval time. Visual approval, optimization, attribution ledger for derivatives and Godot import remain pending.
