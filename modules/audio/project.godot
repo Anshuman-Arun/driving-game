@@ -1,0 +1,16 @@
+; Self-contained audio demo project. To open: godot --path modules/audio
+config_version=5
+
+[application]
+config/name="Aster Valley · Audio Dynamometer"
+run/main_scene="res://demo/demo_main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[display]
+window/size/viewport_width=820
+window/size/viewport_height=920
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
