@@ -1,0 +1,21 @@
+name: Public repository artifact quota probe
+on:
+  push:
+    branches: [feat/environment-asset-library]
+    paths:
+      - '.github/workflows/environment-storage-probe.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Create tiny test file
+        run: printf 'Aster Valley artifact storage probe\n' > "$RUNNER_TEMP/storage-probe.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: environment-storage-probe
+          path: ${{ runner.temp }}/storage-probe.txt
+          retention-days: 1
+          if-no-files-found: error

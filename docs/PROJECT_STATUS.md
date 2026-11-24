@@ -2,6 +2,10 @@
 
 Last updated: 2026-11-24
 
+## Swarm environment mission and source archive handoff
+
+Repository visibility confirmed public. Expanded the environment mission into 18 specialized agents, explicit ownership, dependency waves, independent visual critique and measured acceptance gates. Added private Drive archive / public GitHub production storage guidance. A tiny one-day GitHub Actions artifact probe is configured to check upload after visibility change, not to measure total storage. No new asset downloads, visual improvements, Godot test runs or Drive file backups are claimed by this documentation update.
+
 ## Environment realism asset acquisition handoff (`feat/environment-asset-library`)
 
 Added a broad CC0 Poly Haven candidate catalog, an offline-game-safe source acquisition script with file-size limits, integrity checks and per-asset provenance, and a detailed Antigravity implementation checklist. Raw masters are staged outside the Godot project; production assets require individual visual and licensing approval before import. Direct execution could not resolve the asset host. GitHub Actions run 45509977508 compiled the downloader and successfully downloaded seven 4k source glTF assets (grass_medium_01/02, tree_small_02, fern_02, celandine_01, boulder_01, rock_07), but artifact publication failed because the account's artifact quota was full; the first run's binaries are not accessible. Run 45510119939 succeeded: four complete original 4K glTF source assets (grass_medium_01, grass_medium_02, fern_02, celandine_01), 53,173,790 staged bytes including provenance, were committed and pushed as 36b8095. The remote acquisition report confirms all four downloaded. They are not visually approved or integrated; the full library still needs local acquisition. The source staging folder is excluded from Godot import via .gdignore. No runtime integration or visual approval claimed. Next: inspect staged provenance and run the expanded acquisition locally; complete the environment showcase and QA mission.
