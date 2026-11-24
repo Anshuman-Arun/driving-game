@@ -128,6 +128,7 @@ func step() -> Dictionary:
 	var handbrake_input := false
 	var impact_velocity := 0.0
 	var spring_delta := 0.0
+	var vertical_speed := 0.0
 
 	# -------------------------------------------------------------
 	# 1. IDLE STATIONARY (0.0s -> 1.0s)
@@ -283,6 +284,7 @@ func step() -> Dictionary:
 			_current_rpm = lerpf(max_rpm * 0.70, idle_rpm + 1500.0, (rel_t - 0.4) / 1.4)
 			_suspension_compression = 0.05
 			spring_delta = -0.30
+			vertical_speed = lerpf(5.0, -8.5, (rel_t - 0.4) / 1.4)
 		elif rel_t < 2.1:
 			# Heavy touchdown impact!
 			_is_on_ground = true
@@ -413,6 +415,7 @@ func step() -> Dictionary:
 		"brake": brake_input,
 		"gear": _current_gear,
 		"speed_mps": _current_speed_mps,
+		"vertical_speed_mps": vertical_speed,
 		"forward_speed_mps": forward_speed,
 		"lateral_slip": _lateral_slip,
 		"slip_amount": _lateral_slip,
