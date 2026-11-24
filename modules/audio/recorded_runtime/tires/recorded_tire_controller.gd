@@ -4,6 +4,7 @@ extends Node
 ## Owns surface roll loops (asphalt, gravel, grass), tire scrub, and screech.
 
 const AsterTireTelemetryScript := preload("tire_telemetry.gd")
+const EngineWavLoaderScript := preload("../engine/engine_wav_loader.gd")
 
 # --- Thresholds and Tuning Constants ---
 const SCRUB_MIN_SLIP := 0.15
@@ -281,7 +282,9 @@ func _build_player(player_name: String, candidate_paths: Array) -> AudioStreamPl
 
 	var stream: AudioStreamWAV = null
 	for path in candidate_paths:
-		stream = _load_wav_stream(str(path))
+		if not FileAccess.file_exists(str(path)) and not ResourceLoader.exists(str(path)):
+			continue
+		stream = EngineWavLoaderScript.load_engine_loop(str(path))
 		if stream != null:
 			break
 
@@ -300,7 +303,7 @@ static func _setup_seamless_loop(wav: AudioStreamWAV) -> void:
 	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	wav.loop_begin = 0
 	var sample_frames := int(round(wav.get_length() * float(wav.mix_rate)))
-	wav.loop_end = maxi(1, sample_frames - 1)
+	wav.loop_end = maxi(1, sample_frames)
 
 
 ## Robust WAV loader supporting both imported resources and direct filesystem PCM16 WAV buffers.
