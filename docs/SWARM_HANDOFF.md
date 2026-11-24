@@ -93,20 +93,20 @@
 To boot directly into Aster Valley Free Roam with full Forward+ graphics, player car, and chase camera:
 
 ```powershell
-& "C:\Users\anshu\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64.exe" --path "driving-game" "res://scenes/free_roam/aster_valley.tscn"
+& "C:\Users\anshu\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64.exe" --path "C:\Users\anshu\Documents\Coding\Driving-Game\driving-game" "res://scenes/free_roam/aster_valley.tscn"
 ```
 
 To launch the full game shell (dashboard / garage selection / free roam):
 
 ```powershell
-& "C:\Users\anshu\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64.exe" --path "driving-game"
+& "C:\Users\anshu\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64.exe" --path "C:\Users\anshu\Documents\Coding\Driving-Game\driving-game"
 ```
 
 ### Deterministic Verification Command
 To re-run the 3-bookmark 1080p Forward+ capture suite:
 
 ```powershell
-& "C:\Users\anshu\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --rendering-driver vulkan --path driving-game --script res://tools/capture_shots.gd
+& "C:\Users\anshu\AppData\Local\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe" --rendering-driver vulkan --path "C:\Users\anshu\Documents\Coding\Driving-Game\driving-game" --script res://tools/capture_shots.gd
 ```
 
 Outputs:
