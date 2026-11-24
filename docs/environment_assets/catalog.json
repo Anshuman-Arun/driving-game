@@ -1,0 +1,278 @@
+{
+  "schema": 1,
+  "provider": "Poly Haven",
+  "license": "CC0-1.0",
+  "license_url": "https://polyhaven.com/license",
+  "api_terms": "https://github.com/Poly-Haven/Public-API/blob/master/ToS.md",
+  "priority": [
+    {
+      "kind": "models",
+      "ids": [
+        "grass_medium_01",
+        "grass_medium_02",
+        "pine_tree_01",
+        "fir_tree_01",
+        "tree_small_02",
+        "fern_02",
+        "celandine_01",
+        "boulder_01",
+        "rock_07"
+      ],
+      "purpose": "Grass, tree silhouettes, undergrowth and rock"
+    },
+    {
+      "kind": "textures",
+      "ids": [
+        "clean_asphalt",
+        "leafy_grass",
+        "grass_ground",
+        "leaves_forest_ground",
+        "forest_ground_06",
+        "mossy_rock",
+        "farm_soil",
+        "sandy_gravel_02",
+        "white_plaster_02",
+        "pine_bark",
+        "roof_slates_03",
+        "wood_planks"
+      ],
+      "purpose": "Road, terrain, bark and architecture"
+    },
+    {
+      "kind": "hdris",
+      "ids": [
+        "kloofendal_48d_partly_cloudy_puresky",
+        "qwantani_noon_puresky",
+        "studio_small_09"
+      ],
+      "purpose": "Lighting and reflections"
+    }
+  ],
+  "discovery": [
+    {
+      "kind": "models",
+      "limit": 24,
+      "category": "nature",
+      "terms": [
+        "grass",
+        "fern",
+        "shrub",
+        "bush",
+        "hedge",
+        "weed",
+        "wildflower",
+        "ground cover",
+        "flower",
+        "sapling"
+      ],
+      "exclude": [
+        "tropical",
+        "desert",
+        "cactus",
+        "palm",
+        "indoor",
+        "potted",
+        "agave",
+        "succulent",
+        "karoo"
+      ]
+    },
+    {
+      "kind": "models",
+      "limit": 18,
+      "category": "nature",
+      "terms": [
+        "tree",
+        "pine",
+        "fir",
+        "spruce",
+        "oak",
+        "birch",
+        "beech",
+        "maple",
+        "deadwood",
+        "log",
+        "branch",
+        "root"
+      ],
+      "exclude": [
+        "tropical",
+        "desert",
+        "palm",
+        "karoo",
+        "island",
+        "cactus",
+        "jacaranda"
+      ]
+    },
+    {
+      "kind": "models",
+      "limit": 16,
+      "category": "nature",
+      "terms": [
+        "rock",
+        "boulder",
+        "cliff",
+        "moss",
+        "pebble",
+        "stone",
+        "gravel"
+      ],
+      "exclude": [
+        "desert",
+        "karoo",
+        "coral"
+      ]
+    },
+    {
+      "kind": "models",
+      "limit": 24,
+      "terms": [
+        "fence",
+        "gate",
+        "bench",
+        "bollard",
+        "street lamp",
+        "street light",
+        "signpost",
+        "guardrail",
+        "barrier",
+        "crate",
+        "barrel",
+        "mailbox",
+        "wood pile",
+        "planter",
+        "utility pole",
+        "drain",
+        "manhole",
+        "pallet",
+        "hay bale"
+      ],
+      "exclude": [
+        "toy",
+        "indoor",
+        "logo",
+        "branded"
+      ]
+    },
+    {
+      "kind": "models",
+      "limit": 16,
+      "terms": [
+        "house",
+        "barn",
+        "shed",
+        "cabin",
+        "roof",
+        "door",
+        "window",
+        "gutter",
+        "wall",
+        "stairs",
+        "chimney",
+        "wooden bridge"
+      ],
+      "exclude": [
+        "doll",
+        "toy",
+        "interior",
+        "wardrobe",
+        "logo",
+        "branded"
+      ]
+    },
+    {
+      "kind": "textures",
+      "limit": 30,
+      "terms": [
+        "asphalt",
+        "tarmac",
+        "gravel",
+        "road surface",
+        "pavement",
+        "cobblestone",
+        "sidewalk",
+        "concrete",
+        "road marking",
+        "dirt road"
+      ],
+      "exclude": [
+        "indoor",
+        "carpet"
+      ]
+    },
+    {
+      "kind": "textures",
+      "limit": 36,
+      "terms": [
+        "grass",
+        "meadow",
+        "forest floor",
+        "forest ground",
+        "leaf litter",
+        "soil",
+        "mud",
+        "moss",
+        "bark",
+        "rock face",
+        "cliff",
+        "pebble",
+        "sand",
+        "reeds",
+        "ground cover"
+      ],
+      "exclude": [
+        "carpet",
+        "indoor",
+        "desert"
+      ]
+    },
+    {
+      "kind": "textures",
+      "limit": 30,
+      "terms": [
+        "plaster",
+        "stucco",
+        "brick",
+        "stone wall",
+        "roof tile",
+        "roof slate",
+        "wood plank",
+        "timber",
+        "corrugated",
+        "painted metal",
+        "rust",
+        "concrete",
+        "glass",
+        "rubber",
+        "carbon fiber"
+      ],
+      "exclude": [
+        "logo",
+        "fabric"
+      ]
+    },
+    {
+      "kind": "hdris",
+      "limit": 10,
+      "terms": [
+        "pure sky",
+        "puresky",
+        "noon",
+        "partly cloudy",
+        "overcast",
+        "afternoon",
+        "forest",
+        "rural",
+        "country",
+        "studio"
+      ],
+      "exclude": [
+        "night",
+        "interior",
+        "warehouse"
+      ]
+    }
+  ],
+  "note": "Priority IDs are candidates until the live API confirms them. Discovery is deliberately broad; every item is a candidate, not art-approved. Limits are per group before deduplication. No commercial-game rips, trademarked cars or ambiguous assets."
+}

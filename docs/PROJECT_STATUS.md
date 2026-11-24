@@ -1,6 +1,10 @@
 # Project status — single current-state log
 
-Last updated: 2026-11-23
+Last updated: 2026-11-24
+
+## Environment realism asset acquisition handoff (`feat/environment-asset-library`)
+
+Added a broad CC0 Poly Haven candidate catalog, an offline-game-safe source acquisition script with file-size limits, integrity checks and per-asset provenance, and a detailed Antigravity implementation checklist. Raw masters are staged outside the Godot project; production assets require individual visual and licensing approval before import. Current remote execution cannot resolve the asset CDN; no downloaded model binaries, Godot imports, performance results or visual improvements are claimed here. Next: run the acquisition plan on a network-enabled host and complete the environment showcase and QA mission.
 
 ## Water crossings, roadside detail and instruments (`feat/local-showroom-dashboard`)
 
