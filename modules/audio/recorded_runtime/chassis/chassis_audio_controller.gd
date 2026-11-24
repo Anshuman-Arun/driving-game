@@ -149,6 +149,16 @@ func _disconnect_vehicle() -> void:
 			body.body_entered.disconnect(_on_body_entered)
 
 
+func set_mix_gains(vehicle_gain: float, environment_gain: float) -> void:
+	var vehicle_level := clampf(vehicle_gain, 0.0, 1.0)
+	if is_instance_valid(_wind):
+		_wind.set("vehicle_mix_gain", vehicle_level)
+		_wind.set("environment_mix_gain", clampf(environment_gain, 0.0, 1.0))
+	if is_instance_valid(_suspension):
+		_suspension.set("suspension_gain", suspension_gain * vehicle_level if suspension_enabled else 0.0)
+		_suspension.set("impact_gain", impact_gain * vehicle_level if impact_enabled else 0.0)
+
+
 func update_telemetry(telemetry: Dictionary) -> void:
 	_telemetry.clear()
 	for k in telemetry:
