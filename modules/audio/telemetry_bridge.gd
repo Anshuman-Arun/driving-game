@@ -12,7 +12,8 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 	var raw_velocity: Variant = _read(vehicle, properties, "linear_velocity", Vector3.ZERO)
 	var velocity: Vector3 = raw_velocity if raw_velocity is Vector3 else Vector3.ZERO
 	var speed := velocity.length()
-	var lateral := absf(velocity.dot(vehicle.global_basis.x))
+	var basis := vehicle.global_basis if vehicle.is_inside_tree() else vehicle.basis
+	var lateral := absf(velocity.dot(basis.x))
 	var gear := int(_read(vehicle, properties, "current_gear", 1))
 	var throttle_input := clampf(float(_read(vehicle, properties, "throttle_input", 0.0)), 0.0, 1.0)
 	var brake_input := clampf(float(_read(vehicle, properties, "brake_input", 0.0)), 0.0, 1.0)
@@ -60,7 +61,7 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 		"gear": gear,
 		"speed_mps": speed,
 		"vertical_speed_mps": velocity.y,
-		"forward_speed_mps": -velocity.dot(vehicle.global_basis.z),
+		"forward_speed_mps": -velocity.dot(basis.z),
 		"lateral_slip": combined_slip if grounded else 0.0,
 		"slip_amount": combined_slip if grounded else 0.0,
 		"grip": clampf(1.0 - combined_slip * 0.8, 0.0, 1.0),
