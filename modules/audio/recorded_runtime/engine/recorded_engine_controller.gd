@@ -82,6 +82,7 @@ var _last_raw_throttle: float = 0.0
 
 var _current_gear: int = 1
 var _last_gear: int = -999
+var _live_shift: bool = false
 var _idle_rpm: float = 950.0
 var _redline_rpm: float = 8500.0
 
@@ -156,6 +157,7 @@ func snap_to_idle() -> void:
 	_smoothed_throttle = 0.0
 	_last_raw_throttle = 0.0
 	_last_gear = -999
+	_live_shift = false
 	_shift_timer = 0.0
 	_shift_envelope = 1.0
 	_is_on_limiter = false
@@ -167,7 +169,7 @@ func snap_to_idle() -> void:
 
 func update_telemetry(t: Dictionary) -> void:
 	var raw_rpm := float(t.get("rpm", _idle_rpm))
-	var raw_throttle := clampf(float(t.get("throttle", 0.0)), 0.0, 1.0)
+	var raw_throttle := clampf(float(t.get("engine_throttle", t.get("throttle", 0.0))), 0.0, 1.0)
 	var gear := int(t.get("gear", _current_gear))
 
 	if t.has("idle_rpm"):
@@ -180,9 +182,16 @@ func update_telemetry(t: Dictionary) -> void:
 	_target_rpm = maxf(100.0, raw_rpm)
 	_target_throttle = raw_throttle
 
-	# Check for gear shift
-	if _last_gear > 0 and gear > 0 and gear != _last_gear:
+	# GEVP cuts torque before current_gear changes. Start the audio cut at
+	# that actual shift edge, and do not play another clunk on completion.
+	var requested := int(t.get("requested_gear", gear))
+	var live_shift := bool(t.get("shift_active", false)) and gear > 0 and requested > 0
+	if live_shift and not _live_shift:
+		trigger_gear_shift(gear, requested)
+	elif not live_shift and not _live_shift and _last_gear > 0 and gear > 0 and gear != _last_gear:
+		# Fallback for external telemetry producers without shift state.
 		trigger_gear_shift(_last_gear, gear)
+	_live_shift = live_shift
 	_last_gear = gear
 	_current_gear = gear
 
@@ -241,16 +250,21 @@ func _process(delta: float) -> void:
 	_smoothed_throttle = lerpf(_smoothed_throttle, _target_throttle, throttle_alpha)
 
 	# 2. Update gear shift torque-cut envelope
-	if _shift_timer > 0.0:
+	if _live_shift:
+		_shift_timer = 0.0
+		_shift_envelope = lerpf(_shift_envelope, torque_cut_depth, 1.0 - exp(-dt / 0.015))
+	elif _shift_timer > 0.0:
 		_shift_timer = maxf(0.0, _shift_timer - dt)
 		var dur := maxf(0.001, torque_cut_duration_ms * 0.001)
 		var progress := 1.0 - (_shift_timer / dur)
 		_shift_envelope = lerpf(torque_cut_depth, 1.0, smoothstep(0.10, 1.0, progress))
 	else:
-		_shift_envelope = 1.0
+		_shift_envelope = lerpf(_shift_envelope, 1.0, 1.0 - exp(-dt / 0.050))
+		if _shift_envelope > 0.999:
+			_shift_envelope = 1.0
 
 	# 3. Update rev limiter stutter envelope
-	if _smoothed_rpm >= _redline_rpm * 0.985 and _smoothed_throttle > 0.55:
+	if _smoothed_rpm >= _redline_rpm * 0.985 and _smoothed_throttle > 0.55 and not _live_shift:
 		_is_on_limiter = true
 		_limiter_phase = fmod(_limiter_phase + dt * limiter_frequency, 1.0)
 		var in_cut: bool = _limiter_phase < limiter_cut_ratio
