@@ -1,0 +1,95 @@
+{
+  "kind": "models",
+  "id": "grass_medium_01",
+  "purpose": "Grass, tree silhouettes, undergrowth and rock",
+  "priority": "core",
+  "name": "Grass Medium 01",
+  "authors": {
+    "Rob Tuytel": "Photography",
+    "Rico Cilliers": "Modeling"
+  },
+  "source_url": "https://polyhaven.com/a/grass_medium_01",
+  "license": "CC0-1.0",
+  "license_url": "https://polyhaven.com/license",
+  "metadata": {
+    "category": "Nature/Ground Cover & Moss/Grass Tufts",
+    "categories": [
+      "grass",
+      "nature",
+      "ground cover",
+      "collection: pine_forest"
+    ],
+    "tags": [
+      "plant",
+      "grass",
+      "nature",
+      "green",
+      "shrub",
+      "outdoor",
+      "field",
+      "meadow",
+      "natural",
+      "foliage",
+      "small",
+      "botany"
+    ],
+    "polycount": 1606633,
+    "dimensions": [
+      7266.327619552612,
+      1259.2098712921143,
+      1177.0583391189575
+    ],
+    "max_resolution": [
+      8192,
+      8192
+    ],
+    "files_hash": "c37a6bea414dac24f578f288810652add69d09fc",
+    "lods": true
+  },
+  "resolution": "4k",
+  "files": [
+    {
+      "path": "grass_medium_01_4k.gltf",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/grass_medium_01/grass_medium_01_4k.gltf",
+      "bytes": 27110,
+      "md5": "cbf337dded5cddf8479d191e43eda4c5",
+      "upstream_hash": null,
+      "sha256": "dae3df5024a4d9e91b2d33fceab035d637b06660b5c0109c89cbfea707ee375f"
+    },
+    {
+      "path": "textures/grass_medium_01_nor_gl_4k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/grass_medium_01/grass_medium_01_nor_gl_4k.jpg",
+      "bytes": 13029348,
+      "md5": "6450e32120c06177c401fc75c6a8e860",
+      "upstream_hash": null,
+      "sha256": "fc89808178d9119d61916c1815caa94a7f0f7690c881be665e11282fd7c86007"
+    },
+    {
+      "path": "textures/grass_medium_01_diff_4k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/grass_medium_01/grass_medium_01_diff_4k.jpg",
+      "bytes": 3505106,
+      "md5": "0beab1cd73aabb4199870bcb73cbb623",
+      "upstream_hash": null,
+      "sha256": "c15c8876a5e2bbee3b2af2d0ad9a0b1db1fb215870e525b56b41a2c82370ab8b"
+    },
+    {
+      "path": "textures/grass_medium_01_arm_4k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/grass_medium_01/grass_medium_01_arm_4k.jpg",
+      "bytes": 7482258,
+      "md5": "1010605cd930feec294b9f031d2cbf2f",
+      "upstream_hash": null,
+      "sha256": "dbd3159795534ad228a85850951ae5ca45dc70f29c4b47244e2c18d9dfe81ad0"
+    },
+    {
+      "path": "grass_medium_01.bin",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/grass_medium_01/grass_medium_01.bin",
+      "bytes": 1006632,
+      "md5": "e0527a0561c2dae5b7b5c1b478d8c6bf",
+      "upstream_hash": null,
+      "sha256": "f4587cabdb96a2e96d8be644923dc954a248edfaaa717a0ff224cacb898bee1f"
+    }
+  ],
+  "bytes": 25050454,
+  "retrieved_utc": "2026-11-24T23:27:35.513589+00:00",
+  "status": "source integrity checked; visual approval pending"
+}

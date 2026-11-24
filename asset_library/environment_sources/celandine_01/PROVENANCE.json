@@ -1,0 +1,98 @@
+{
+  "kind": "models",
+  "id": "celandine_01",
+  "purpose": "Grass, tree silhouettes, undergrowth and rock",
+  "priority": "core",
+  "name": "Celandine 01",
+  "authors": {
+    "Rob Tuytel": "Photography",
+    "Rico Cilliers": "modeling"
+  },
+  "source_url": "https://polyhaven.com/a/celandine_01",
+  "license": "CC0-1.0",
+  "license_url": "https://polyhaven.com/license",
+  "metadata": {
+    "category": "Nature/Plants/Wildflowers",
+    "categories": [
+      "nature",
+      "plants",
+      "ground cover",
+      "flowers"
+    ],
+    "tags": [
+      "field",
+      "nature",
+      "green",
+      "shrub",
+      "plant",
+      "outdoor",
+      "leaf",
+      "botany",
+      "leaves",
+      "meadow",
+      "floral",
+      "flower",
+      "small",
+      "natural",
+      "celandine"
+    ],
+    "polycount": 1746764,
+    "dimensions": [
+      3492.500424385071,
+      933.4844052791595,
+      934.6956610679626
+    ],
+    "max_resolution": [
+      8192,
+      8192
+    ],
+    "files_hash": "9aed486a831bf5dcb77621dd86039512cae57d30",
+    "lods": true
+  },
+  "resolution": "4k",
+  "files": [
+    {
+      "path": "celandine_01_4k.gltf",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/celandine_01/celandine_01_4k.gltf",
+      "bytes": 8770,
+      "md5": "6dd1ade42a8159709e83639d1df2b862",
+      "upstream_hash": null,
+      "sha256": "074ea39c6e92551d7918d64e4b821f02fc59137af5b8025ed424f73b0e8afd37"
+    },
+    {
+      "path": "textures/celandine_01_nor_gl_4k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/celandine_01/celandine_01_nor_gl_4k.jpg",
+      "bytes": 4185522,
+      "md5": "4244ba010f2ceb000741b4491f4ba39b",
+      "upstream_hash": null,
+      "sha256": "b2d494bc91ddd8e13574f05fe8fd563fba1a05f727d7e9c9917ec45d34856336"
+    },
+    {
+      "path": "textures/celandine_01_diff_4k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/celandine_01/celandine_01_diff_4k.jpg",
+      "bytes": 4032321,
+      "md5": "89e4edd178829f71001a1dadb2258fa0",
+      "upstream_hash": null,
+      "sha256": "68d63aecbaa3b7eb1d2a50c8ba78e3b323cbbb66d85e3a0b7f9ce27d3612dff0"
+    },
+    {
+      "path": "textures/celandine_01_arm_4k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/celandine_01/celandine_01_arm_4k.jpg",
+      "bytes": 4070527,
+      "md5": "ab9a084c784c18acbeaa78155b8b08ba",
+      "upstream_hash": null,
+      "sha256": "97f60b36f2e533f2d38dcb06c0a43ca2d42081a1cc769bdc3b7b099680e6c1f5"
+    },
+    {
+      "path": "celandine_01.bin",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/celandine_01/celandine_01.bin",
+      "bytes": 325768,
+      "md5": "ee7bd43b52b65b9e2aaa0ae8cf6e8042",
+      "upstream_hash": null,
+      "sha256": "7d2c6d2cc44da3a0c08e0fea725af42becdcbb06635d968f42892a1a3dfae7d6"
+    }
+  ],
+  "bytes": 12622908,
+  "retrieved_utc": "2026-11-24T23:27:37.769754+00:00",
+  "status": "source integrity checked; visual approval pending"
+}

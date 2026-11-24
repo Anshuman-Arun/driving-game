@@ -1,0 +1,372 @@
+{
+  "scope": "core",
+  "resolution": "4k",
+  "budget_mib": 60,
+  "declared_bytes": 53161872,
+  "results": [
+    {
+      "kind": "models",
+      "id": "grass_medium_01",
+      "purpose": "Grass, tree silhouettes, undergrowth and rock",
+      "priority": "core",
+      "name": "Grass Medium 01",
+      "authors": {
+        "Rob Tuytel": "Photography",
+        "Rico Cilliers": "Modeling"
+      },
+      "source_url": "https://polyhaven.com/a/grass_medium_01",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "metadata": {
+        "category": "Nature/Ground Cover & Moss/Grass Tufts",
+        "categories": [
+          "grass",
+          "nature",
+          "ground cover",
+          "collection: pine_forest"
+        ],
+        "tags": [
+          "plant",
+          "grass",
+          "nature",
+          "green",
+          "shrub",
+          "outdoor",
+          "field",
+          "meadow",
+          "natural",
+          "foliage",
+          "small",
+          "botany"
+        ],
+        "polycount": 1606633,
+        "dimensions": [
+          7266.327619552612,
+          1259.2098712921143,
+          1177.0583391189575
+        ],
+        "max_resolution": [
+          8192,
+          8192
+        ],
+        "files_hash": "c37a6bea414dac24f578f288810652add69d09fc",
+        "lods": true
+      },
+      "resolution": "4k",
+      "files": [
+        {
+          "path": "grass_medium_01_4k.gltf",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/grass_medium_01/grass_medium_01_4k.gltf",
+          "bytes": 27110,
+          "md5": "cbf337dded5cddf8479d191e43eda4c5",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/grass_medium_01_nor_gl_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/grass_medium_01/grass_medium_01_nor_gl_4k.jpg",
+          "bytes": 13029348,
+          "md5": "6450e32120c06177c401fc75c6a8e860",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/grass_medium_01_diff_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/grass_medium_01/grass_medium_01_diff_4k.jpg",
+          "bytes": 3505106,
+          "md5": "0beab1cd73aabb4199870bcb73cbb623",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/grass_medium_01_arm_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/grass_medium_01/grass_medium_01_arm_4k.jpg",
+          "bytes": 7482258,
+          "md5": "1010605cd930feec294b9f031d2cbf2f",
+          "upstream_hash": null
+        },
+        {
+          "path": "grass_medium_01.bin",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/grass_medium_01/grass_medium_01.bin",
+          "bytes": 1006632,
+          "md5": "e0527a0561c2dae5b7b5c1b478d8c6bf",
+          "upstream_hash": null
+        }
+      ],
+      "bytes": 25050454,
+      "status": "downloaded"
+    },
+    {
+      "kind": "models",
+      "id": "grass_medium_02",
+      "purpose": "Grass, tree silhouettes, undergrowth and rock",
+      "priority": "core",
+      "name": "Grass Medium 02",
+      "authors": {
+        "Rico Cilliers": "All"
+      },
+      "source_url": "https://polyhaven.com/a/grass_medium_02",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "metadata": {
+        "category": "Nature/Ground Cover & Moss/Grass Tufts",
+        "categories": [
+          "nature",
+          "ground cover",
+          "grass",
+          "plants",
+          "collection: verdant_trail"
+        ],
+        "tags": [
+          "grass",
+          "field",
+          "meadow",
+          "shrub",
+          "small",
+          "green",
+          "nature",
+          "plant",
+          "foliage",
+          "natural",
+          "geometry nodes",
+          "ground cover",
+          "vegetation",
+          "undergrowth",
+          "ground",
+          "lawn",
+          "environment",
+          "pasture"
+        ],
+        "polycount": 1043926,
+        "dimensions": [
+          3579.970385879278,
+          1406.527042388916,
+          1448.2848644256592
+        ],
+        "max_resolution": [
+          4096,
+          4096
+        ],
+        "files_hash": "d05007ce4693d18c58c6a58b3db37d0804888066"
+      },
+      "resolution": "4k",
+      "files": [
+        {
+          "path": "grass_medium_02_4k.gltf",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/grass_medium_02/grass_medium_02_4k.gltf",
+          "bytes": 8864,
+          "md5": "f172ef7e7a898b42c87cef1b6025e209",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/grass_medium_02_nor_gl_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/grass_medium_02/grass_medium_02_nor_gl_4k.jpg",
+          "bytes": 1086202,
+          "md5": "ba185c444eb8b556d30046e0581e5037",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/grass_medium_02_diff_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/grass_medium_02/grass_medium_02_diff_4k.jpg",
+          "bytes": 1323661,
+          "md5": "8aa6513fe1445291fe5a629028319605",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/grass_medium_02_arm_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/grass_medium_02/grass_medium_02_arm_4k.jpg",
+          "bytes": 1961175,
+          "md5": "bb17e3f5452cba4d5bcdd14a9df0c0ca",
+          "upstream_hash": null
+        },
+        {
+          "path": "grass_medium_02.bin",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/grass_medium_02/grass_medium_02.bin",
+          "bytes": 272048,
+          "md5": "145041ae03fe02783a0adbd1cdcb4988",
+          "upstream_hash": null
+        }
+      ],
+      "bytes": 4651950,
+      "status": "downloaded"
+    },
+    {
+      "kind": "models",
+      "id": "fern_02",
+      "purpose": "Grass, tree silhouettes, undergrowth and rock",
+      "priority": "core",
+      "name": "Fern 02",
+      "authors": {
+        "Rob Tuytel": "scanning",
+        "Rico Cilliers": "modeling"
+      },
+      "source_url": "https://polyhaven.com/a/fern_02",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "metadata": {
+        "category": "Nature/Plants/Ferns",
+        "categories": [
+          "plants",
+          "nature",
+          "collection: smugglers_cove",
+          "collection: pine_forest"
+        ],
+        "tags": [
+          "plant",
+          "fern",
+          "foliage",
+          "jungle",
+          "shrub",
+          "bush",
+          "leaf",
+          "leaves",
+          "green",
+          "nature",
+          "forest",
+          "outdoor"
+        ],
+        "polycount": 6232,
+        "dimensions": [
+          1972.5302457809448,
+          1724.0281701087952,
+          427.6947118341923
+        ],
+        "max_resolution": [
+          8192,
+          8192
+        ],
+        "files_hash": "36e2a53d7f23f422640ad368c1f27745de2fef82"
+      },
+      "resolution": "4k",
+      "files": [
+        {
+          "path": "fern_02_4k.gltf",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/fern_02/fern_02_4k.gltf",
+          "bytes": 6899,
+          "md5": "10425c45145273a2899b8cc585592d2e",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/fern_02_diff_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/fern_02/fern_02_diff_4k.jpg",
+          "bytes": 3025392,
+          "md5": "07642c942fe65ae5b03b212398ba7004",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/fern_02_nor_gl_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/fern_02/fern_02_nor_gl_4k.jpg",
+          "bytes": 5058951,
+          "md5": "1a35f2135cd71a64a255406b11f988a2",
+          "upstream_hash": null
+        },
+        {
+          "path": "fern_02.bin",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/fern_02/fern_02.bin",
+          "bytes": 176176,
+          "md5": "c061e9255f7d36ae9ce0e92ef3e100b2",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/fern_02_arm_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/fern_02/fern_02_arm_4k.jpg",
+          "bytes": 2569142,
+          "md5": "37426a24b433a05fe3958acc34232ede",
+          "upstream_hash": null
+        }
+      ],
+      "bytes": 10836560,
+      "status": "downloaded"
+    },
+    {
+      "kind": "models",
+      "id": "celandine_01",
+      "purpose": "Grass, tree silhouettes, undergrowth and rock",
+      "priority": "core",
+      "name": "Celandine 01",
+      "authors": {
+        "Rob Tuytel": "Photography",
+        "Rico Cilliers": "modeling"
+      },
+      "source_url": "https://polyhaven.com/a/celandine_01",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "metadata": {
+        "category": "Nature/Plants/Wildflowers",
+        "categories": [
+          "nature",
+          "plants",
+          "ground cover",
+          "flowers"
+        ],
+        "tags": [
+          "field",
+          "nature",
+          "green",
+          "shrub",
+          "plant",
+          "outdoor",
+          "leaf",
+          "botany",
+          "leaves",
+          "meadow",
+          "floral",
+          "flower",
+          "small",
+          "natural",
+          "celandine"
+        ],
+        "polycount": 1746764,
+        "dimensions": [
+          3492.500424385071,
+          933.4844052791595,
+          934.6956610679626
+        ],
+        "max_resolution": [
+          8192,
+          8192
+        ],
+        "files_hash": "9aed486a831bf5dcb77621dd86039512cae57d30",
+        "lods": true
+      },
+      "resolution": "4k",
+      "files": [
+        {
+          "path": "celandine_01_4k.gltf",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/celandine_01/celandine_01_4k.gltf",
+          "bytes": 8770,
+          "md5": "6dd1ade42a8159709e83639d1df2b862",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/celandine_01_nor_gl_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/celandine_01/celandine_01_nor_gl_4k.jpg",
+          "bytes": 4185522,
+          "md5": "4244ba010f2ceb000741b4491f4ba39b",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/celandine_01_diff_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/celandine_01/celandine_01_diff_4k.jpg",
+          "bytes": 4032321,
+          "md5": "89e4edd178829f71001a1dadb2258fa0",
+          "upstream_hash": null
+        },
+        {
+          "path": "textures/celandine_01_arm_4k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/celandine_01/celandine_01_arm_4k.jpg",
+          "bytes": 4070527,
+          "md5": "ab9a084c784c18acbeaa78155b8b08ba",
+          "upstream_hash": null
+        },
+        {
+          "path": "celandine_01.bin",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/celandine_01/celandine_01.bin",
+          "bytes": 325768,
+          "md5": "ee7bd43b52b65b9e2aaa0ae8cf6e8042",
+          "upstream_hash": null
+        }
+      ],
+      "bytes": 12622908,
+      "status": "downloaded"
+    }
+  ],
+  "missing_priority_ids": []
+}
