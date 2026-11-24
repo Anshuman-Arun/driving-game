@@ -16,6 +16,7 @@ func _initialize() -> void:
 	var success := true
 	success = test_manifest_loading() and success
 	success = test_wav_loader_and_loop_config() and success
+	success = test_pcm_loop_conditioning() and success
 	success = test_constant_power_blending() and success
 	success = test_load_layer_blending() and success
 	success = test_low_rpm_coast_fallback() and success
@@ -127,6 +128,37 @@ func test_wav_loader_and_loop_config() -> bool:
 			total_checked += 1
 
 	print("  -> Verified %d WAV files (all 48kHz mono, loop configured) PASS" % total_checked)
+	return true
+
+
+func test_pcm_loop_conditioning() -> bool:
+	var path := "res://assets/audio/recorded/payload/engines/kestrel_xr/on_1000.wav"
+	var source := EngineWavLoader.load_wav(path)
+	var conditioned := EngineWavLoader.load_engine_loop(path)
+	if source == null or conditioned == null:
+		push_error("Missing source/conditioned engine stream")
+		return false
+	if source == conditioned or not is_equal_approx(source.get_length(), conditioned.get_length()):
+		push_error("Conditioning must not mutate source stream or duration")
+		return false
+	# Verify a synthetic discontinuity independently of Godot WAV import settings.
+	var pcm := PackedByteArray()
+	pcm.resize(480 * 2)
+	for i in range(480):
+		pcm.encode_s16(i * 2, 4000 if i < 240 else -2000)
+	var repaired := EngineWavLoader.condition_pcm16_seam(pcm, 48000)
+	if repaired.size() != pcm.size() or repaired.decode_s16(0) != repaired.decode_s16(958):
+		push_error("PCM seam was not joined")
+		return false
+	if pcm.decode_s16(0) != 4000 or pcm.decode_s16(958) != -2000 or repaired.decode_s16(200 * 2) != 4000:
+		push_error("Conditioning changed source or interior samples")
+		return false
+	# The committed candidate bank is PCM16 mono at 48 kHz.
+	if conditioned.format == AudioStreamWAV.FORMAT_16_BITS and not conditioned.stereo:
+		var data := conditioned.data
+		if absi(data.decode_s16(0) - data.decode_s16(data.size() - 2)) >= 128:
+			push_error("Conditioned real engine seam remains discontinuous")
+			return false
 	return true
 
 
