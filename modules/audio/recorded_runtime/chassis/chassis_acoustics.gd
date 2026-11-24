@@ -105,8 +105,8 @@ func process_physics_acoustics(vehicle: Node3D) -> void:
 	var target_up: Vector3 = origin + basis.y * raycast_distance
 
 	var exclude: Array[RID] = []
-	if "get_rid" in vehicle:
-		exclude.append(vehicle.get_rid())
+	if vehicle is CollisionObject3D:
+		exclude.append((vehicle as CollisionObject3D).get_rid())
 
 	_dist_left = _cast_ray(space_state, origin, target_left, exclude)
 	_dist_right = _cast_ray(space_state, origin, target_right, exclude)
@@ -159,15 +159,11 @@ func _process(delta: float) -> void:
 	if is_instance_valid(_delay_effect):
 		_delay_effect.tap1_delay_ms = clampf(_current_delay_ms, delay_min_ms, delay_max_ms)
 
-		if _is_open_terrain or _current_wet_gain <= 0.001:
-			_delay_effect.tap1_level_db = -80.0
-			# Bypass effect in open terrain to save processing
-			if _effect_bus_idx >= 0 and _effect_idx >= 0:
-				AudioServer.set_bus_effect_enabled(_effect_bus_idx, _effect_idx, false)
-		else:
-			_delay_effect.tap1_level_db = linear_to_db(clampf(_current_wet_gain, 0.0001, 1.0))
-			if _effect_bus_idx >= 0 and _effect_idx >= 0:
-				AudioServer.set_bus_effect_enabled(_effect_bus_idx, _effect_idx, true)
+		# Keep the wet-only delay enabled even in open terrain. Bypassing
+		# it would leak the unprocessed reflection input as duplicate dry audio.
+		_delay_effect.tap1_level_db = linear_to_db(clampf(_current_wet_gain, 0.0001, 1.0))
+		if _effect_bus_idx >= 0 and _effect_idx >= 0:
+			AudioServer.set_bus_effect_enabled(_effect_bus_idx, _effect_idx, true)
 
 
 ## Pure static method: compute acoustic reflection parameters from distances
