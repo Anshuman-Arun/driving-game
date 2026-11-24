@@ -1,5 +1,17 @@
 # Project status — single current-state log
 
+## Recorded audio fidelity pass 3 (`fix/recorded-audio-mix`, 2026-11-24)
+
+Engine loops now use private PCM16 copies with a bounded two-millisecond raised-cosine endpoint correction on each side of a discontinuity. The existing files, frame counts, asset hashes and attribution remain unchanged; compressed fallback streams cannot be conditioned. Exhaust reflection voices share the conditioned sample and start at the direct voice's playback position only while the anchor is active; the wet delay stays enabled in open space to prevent dry leakage. Chassis raycasts exclude the actual vehicle RID; unbound test rigs retain simulated wall distances. Engine torque-cut follows GEVP's shift-active edge and recovers after the actual transmission shift; motor-pedal telemetry is correct in reverse without breaking the legacy pedal contract.
+
+Independent PCM checks using actual GitHub WAV bytes for the three largest seam jumps in each of the three banks (nine files): endpoint jumps of 290–1706 signed PCM16 counts became zero; no new clipping; unchanged sample counts; maximum absolute RMS difference 0.0098 dB. This checks the algorithm on real recordings, not the Godot runtime, or perceived loop quality.
+
+Corrected QA runner: loads the actual requested profile instead of relabeling it; paces the 31-second telemetry bench in real time, exercises camera and reflection state, rejects empty or silent scenarios, insufficient frames and discarded capture frames, and requires telemetry coverage. Added seam, reflection routing and actual shift regressions. Added `tests/integration/audio_qa/run_all.sh` and a dedicated read-only GitHub Actions workflow using the previously repository-pinned Godot installer. The new workflow was committed; no run was returned by the connector at the time of writing. No local Godot executable or private checkout available. Runtime import, all new Godot assertions, audible reflections and subjective mix quality remain unverified. Existing historic capture results are not proof for this revision.
+
+Next: resolve any failures from the new CI workflow; capture the three cars and audition the bank transitions. Obtain verified, genuinely different idle/load/coast/induction recordings rather than treating current field-recording banks as final-quality assets. Spatial traffic and detailed environmental beds are still outstanding.
+
+
+
 ## Recorded audio fidelity pass 2 (`fix/recorded-audio-mix`, 2026-11-24)
 
 Calibrated Orion's manifest by -13 dB: the existing asset ledger estimates its source RMS near -8 dBFS versus -19 to -25 dBFS for the other banks; trimmed Orion RMS is -21.11 to -21.02 dBFS. PCM and attribution are unchanged. Adjacent RPM loops now crossfade only in the interval where both can match nominal firing frequency (default pitch ratio 0.65–1.55), using a shared runtime/diagnostic constant-power function. A 420 Hz high-pass on the derived intake layer reduces duplication of exhaust fundamentals; it is not a genuine induction recording. Synthetic voices are no longer allocated or processed in recorded mode. Tire envelopes advance once per actual physics tick, retain wheel surface proportions, and reduce paved squeal on gravel/grass. Aerodynamic and camera low-pass controls no longer share a filter instance.
