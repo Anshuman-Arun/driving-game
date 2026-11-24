@@ -79,7 +79,7 @@ var _smoothed_throttle: float = 0.0
 var _last_raw_throttle: float = 0.0
 
 var _current_gear: int = 1
-var _last_gear: int = 1
+var _last_gear: int = -999
 var _idle_rpm: float = 950.0
 var _redline_rpm: float = 8500.0
 
@@ -153,6 +153,7 @@ func snap_to_idle() -> void:
 	_target_throttle = 0.0
 	_smoothed_throttle = 0.0
 	_last_raw_throttle = 0.0
+	_last_gear = -999
 	_shift_timer = 0.0
 	_shift_envelope = 1.0
 	_is_on_limiter = false
@@ -178,7 +179,7 @@ func update_telemetry(t: Dictionary) -> void:
 	_target_throttle = raw_throttle
 
 	# Check for gear shift
-	if _last_gear != -999 and gear != 0 and _last_gear != 0 and gear != _last_gear:
+	if _last_gear > 0 and gear > 0 and gear != _last_gear:
 		trigger_gear_shift(_last_gear, gear)
 	_last_gear = gear
 	_current_gear = gear
@@ -247,7 +248,7 @@ func _process(delta: float) -> void:
 		_shift_envelope = 1.0
 
 	# 3. Update rev limiter stutter envelope
-	if _smoothed_rpm >= _redline_rpm * 0.985:
+	if _smoothed_rpm >= _redline_rpm * 0.985 and _smoothed_throttle > 0.55:
 		_is_on_limiter = true
 		_limiter_phase = fmod(_limiter_phase + dt * limiter_frequency, 1.0)
 		var in_cut: bool = _limiter_phase < limiter_cut_ratio
@@ -306,17 +307,10 @@ func _apply_audio_blend() -> void:
 
 	var overall_gain := base_profile_gain * master_gain * _shift_envelope * _limiter_envelope
 
-	# Constant-power ON vs OFF load layer blend
-	var on_layer_gain: float
-	var off_layer_gain: float
-
-	if _manifest.has_off_layer:
-		on_layer_gain = sin(_smoothed_throttle * HALF_PI)
-		off_layer_gain = cos(_smoothed_throttle * HALF_PI)
-	else:
-		# Single layer fallback (e.g. Orion RS)
-		on_layer_gain = lerpf(0.40, 1.0, _smoothed_throttle)
-		off_layer_gain = 0.0
+	# Shared with the diagnostic helper so the tested curve is the live curve.
+	var load_gains := compute_load_gains(_smoothed_rpm, _smoothed_throttle, _manifest.off_anchors)
+	var on_layer_gain := load_gains.x
+	var off_layer_gain := load_gains.y
 
 	# Calculate per-layer active anchor gains and pitch scales
 	var on_data := _compute_layer_anchors("on", _smoothed_rpm)
@@ -339,8 +333,8 @@ func _apply_audio_blend() -> void:
 
 		var final_gain := anchor_gain * layer_weight * file_gain * overall_gain
 		if final_gain > 0.0001:
-			player.volume_db = linear_to_db(final_gain)
 			player.pitch_scale = anchor_pitch
+			player.volume_db = linear_to_db(final_gain)
 		else:
 			player.volume_db = -80.0
 
@@ -530,21 +524,29 @@ func _resolve_bus(bus_name: StringName) -> StringName:
 	return &"Master"
 
 
+# Avoid forcing a coasting recording to extreme pitch at idle. Below the first
+# usable OFF anchor, use the low ON recording at restrained volume. Blend back
+# into the actual coast bank before reaching its lowest recorded RPM.
+static func compute_load_gains(rpm: float, throttle: float, off_anchors: Array) -> Vector2:
+	var load := clampf(throttle, 0.0, 1.0)
+	var fallback := lerpf(0.40, 1.0, load)
+	if off_anchors.is_empty():
+		return Vector2(fallback, 0.0)
+	var first_off := maxf(1.0, float(off_anchors[0]["rpm"]))
+	var availability := smoothstep(first_off * 0.75, first_off, rpm)
+	var angle := (1.0 - load) * HALF_PI * availability
+	var level := lerpf(fallback, 1.0, availability)
+	return Vector2(0.0 if angle >= HALF_PI else cos(angle), sin(angle)) * level
+
+
 # Pure calculation helper for deterministic testing and analysis
 static func compute_blend_state(rpm: float, throttle: float, manifest_data: Dictionary) -> Dictionary:
 	var manifest := EngineProfileManifestScript.new()
 	manifest.parse_dictionary(manifest_data)
 
-	var clamped_throttle := clampf(throttle, 0.0, 1.0)
-	var on_layer_gain: float
-	var off_layer_gain: float
-
-	if manifest.has_off_layer:
-		on_layer_gain = sin(clamped_throttle * HALF_PI)
-		off_layer_gain = cos(clamped_throttle * HALF_PI)
-	else:
-		on_layer_gain = lerpf(0.40, 1.0, clamped_throttle)
-		off_layer_gain = 0.0
+	var load_gains := compute_load_gains(rpm, throttle, manifest.off_anchors)
+	var on_layer_gain := load_gains.x
+	var off_layer_gain := load_gains.y
 
 	var on_anchors := manifest.on_anchors
 	var off_anchors := manifest.off_anchors
