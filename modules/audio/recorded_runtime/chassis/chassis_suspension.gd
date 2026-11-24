@@ -36,7 +36,7 @@ var _impact_cooldown_timer: float = 0.0
 var _previous_springs: Dictionary = {} # int -> float
 var _was_airborne: bool = false
 var _airborne_timer: float = 0.0
-var _previous_velocity: Vector3 = Vector3.ZERO
+var _peak_descent_speed: float = 0.0
 
 
 func _init() -> void:
@@ -87,17 +87,8 @@ func _process(delta: float) -> void:
 func process_physics(delta: float, vehicle: Node3D, telemetry: Dictionary) -> void:
 	var dt: float = maxf(delta, 0.001)
 
-	# 1. Update cooldown timers
-	if _suspension_cooldown_timer > 0.0:
-		_suspension_cooldown_timer = maxf(0.0, _suspension_cooldown_timer - dt)
-	if _impact_cooldown_timer > 0.0:
-		_impact_cooldown_timer = maxf(0.0, _impact_cooldown_timer - dt)
-
-	# 2. Check suspension compression via GEVP wheels
-	if is_instance_valid(vehicle):
-		_monitor_wheel_suspension(vehicle, dt)
-
-	# 3. Check airborne state and contact/landing thump
+	# Cooldowns advance in _process only. Prioritize landing over spring noise.
+	# Track descent before contact, when the physics response may erase velocity.
 	var on_ground: bool = bool(telemetry.get("on_ground", true))
 	var velocity: Vector3 = Vector3.ZERO
 	if is_instance_valid(vehicle) and "linear_velocity" in vehicle:
@@ -105,18 +96,23 @@ func process_physics(delta: float, vehicle: Node3D, telemetry: Dictionary) -> vo
 		if raw_vel is Vector3:
 			velocity = raw_vel
 
+	var vertical_speed := float(telemetry.get("vertical_speed_mps", velocity.y))
 	if not on_ground:
+		_previous_springs.clear()
 		_airborne_timer += dt
+		_peak_descent_speed = maxf(_peak_descent_speed, -vertical_speed)
 		if _airborne_timer >= 0.10:
 			_was_airborne = true
 	else:
 		if _was_airborne:
-			var landing_speed: float = maxf(absf(velocity.y), 3.0)
-			trigger_landing(landing_speed)
+			var landing_speed := maxf(_peak_descent_speed, -vertical_speed)
+			if landing_speed > 0.8:
+				trigger_landing(landing_speed)
 			_was_airborne = false
 		_airborne_timer = 0.0
-
-	_previous_velocity = velocity
+		_peak_descent_speed = 0.0
+		if is_instance_valid(vehicle):
+			_monitor_wheel_suspension(vehicle, dt)
 
 
 func _monitor_wheel_suspension(vehicle: Node3D, dt: float) -> void:
@@ -134,6 +130,7 @@ func _monitor_wheel_suspension(vehicle: Node3D, dt: float) -> void:
 			continue
 		var wheel: Object = item
 		if wheel.has_method("is_colliding") and not bool(wheel.call("is_colliding")):
+			_previous_springs.erase(wheel.get_instance_id())
 			continue
 		if not ("spring_current_length" in wheel):
 			continue
@@ -176,7 +173,7 @@ func trigger_suspension(strength: float = 1.0, pitch: float = 1.0) -> bool:
 
 ## Triggers contact / landing thump when car touches down from airborne.
 func trigger_landing(landing_speed: float) -> bool:
-	var strength: float = clampf(landing_speed / 8.0, 0.35, 1.0)
+	var strength: float = clampf(landing_speed / 8.0, 0.12, 1.0)
 	return trigger_suspension(strength, 0.90)
 
 
@@ -211,7 +208,7 @@ func reset_state() -> void:
 	_previous_springs.clear()
 	_was_airborne = false
 	_airborne_timer = 0.0
-	_previous_velocity = Vector3.ZERO
+	_peak_descent_speed = 0.0
 
 
 ## Pure static helper: compute suspension compression rate (spring delta / delta time)
