@@ -165,8 +165,8 @@ func _physics_process(delta: float) -> void:
 		_suspension.call("process_physics", delta, target_node, _telemetry)
 
 	# 2. Acoustic raycast reflection processing
-	if _acoustics and acoustics_enabled and target_node != null and _acoustics.has_method("process_physics_acoustics"):
-		_acoustics.call("process_physics_acoustics", target_node)
+	if _acoustics and acoustics_enabled and is_instance_valid(_bound_vehicle) and _acoustics.has_method("process_physics_acoustics"):
+		_acoustics.call("process_physics_acoustics", _bound_vehicle)
 
 
 func _on_body_entered(_body: Node) -> void:
