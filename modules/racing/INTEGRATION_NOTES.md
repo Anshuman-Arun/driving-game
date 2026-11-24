@@ -33,3 +33,16 @@ godot --path modules/racing
 Once standalone tests pass, import the scripts into the integrated root Godot project and test player/rivals with actual physics, world road data, lane assignments, slope/terrain collision, crashes, reset, gamepad and Windows build. None of those game-wide tests has been executed on this feature branch.
 
 Ownership: shared docs/PROJECT_STATUS.md stays untouched under parallel-execution rules; integrator should update it after merging verified work.
+
+
+## Production content readiness addendum
+
+- Pass the **original** `content/races/events_v1.json` and `data/world/road_graph_v1.json` from the independently reviewed feature branches, not racing fixture JSON. Production tracks depend on directed turn connectors; World #3 and Race Content #10 are still separate unmerged sources.
+- Register `player`, `rival_1`, `rival_2`, `rival_3` **before** `start_event()`. For an event with `start_grid`, an unknown/missing/duplicated racer slot is rejected instead of being silently mapped to route zero.
+- At GRID, call `get_starting_grid()` and place **real rigid vehicles** from each returned `transform` (forward is Godot local -Z), reset their physics linear and angular velocities, and hold them stopped through GRID and COUNTDOWN. `synchronize_racer_spawn(id, position)` reconciles up to 2.5 m of spawn-height/placement difference; it cannot relocate a car onto another part of the course. While GRID/COUNTDOWN, `update_racer_state()` uses that bounded synchronization. Upon RACING, it resumes full anti-teleport, corridor, geometry and checkpoint checks.
+- Each physics frame, update AI commands for rivals, move all physical cars, feed `update_racer_state(id, global_position, linear_velocity)` for every racer, and tick the engine **once**. There must not be a second `tick` on the first RACING frame: crossing the countdown boundary consumes only remaining real time.
+- On `restart_event()`, re-place every physical car from `get_starting_grid()`; reinitialize AI tracking (and `configure_event` when changing courses). On `needs_reset(id)`, use the `reset_racer(id)` physical pose; on lap 1 that is the authored grid slot, on later laps route arclength zero. Reset physics velocities to zero in the host.
+- After FINISHED, `get_results()` exposes the authoritative `event_id`, `elapsed_seconds`, state and sorted `standings()`; results are deliberately unavailable during an active race.
+- Production `ai_speed_guidance` is advisory only; `RacerAI.configure_event()` combines it with the existing lane limits, curvature braking plan, obstacle response and target speed. The host still needs real vehicle-grip tuning and a collision/surface implementation.
+
+No changes are made to the shared interface, world graph, production race content, player-car controller, scene, traffic or any other agent's files. Manual gameplay/viewport, Godot physics calibration and Windows build remain integration responsibilities.

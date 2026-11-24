@@ -3,6 +3,7 @@ extends RefCounted
 ## The host's vehicle adapter should implement set_drive_input(steer, throttle, brake, handbrake).
 const RaceRoute = preload("race_route.gd")
 var route: RefCounted
+var speed_guidance: Array[Dictionary] = []
 var last_error: String = ""
 var last_s: float = -1.0
 var stuck_seconds: float = 0.0
@@ -16,6 +17,7 @@ var lookahead_speed_gain: float = 0.55
 var max_off_route_m: float = 22.0
 
 func configure(graph: Dictionary, lane_route: Array, closed: bool) -> bool:
+	speed_guidance.clear()
 	var new_route = RaceRoute.new()
 	last_error = new_route.configure(graph, lane_route, closed)
 	if not last_error.is_empty():
@@ -25,13 +27,66 @@ func configure(graph: Dictionary, lane_route: Array, closed: bool) -> bool:
 	reset_tracking()
 	return true
 
+func configure_event(graph: Dictionary, definition: Dictionary) -> bool:
+	## Optional production advisory profile layered under curvature and lane caps.
+	if not (definition.get("lane_route") is Array):
+		last_error = "Event is missing a lane_route"
+		return false
+	if not configure(graph, definition["lane_route"], definition.get("kind") == "circuit"):
+		return false
+	var raw: Variant = definition.get("ai_speed_guidance", [])
+	if not (raw is Array):
+		last_error = "ai_speed_guidance must be an array"
+		return false
+	return set_speed_guidance(raw)
+
+func set_speed_guidance(samples: Array) -> bool:
+	## Samples are nondecreasing route arclengths, with km/h converted at load.
+	## A malformed profile is rejected rather than silently treated as valid.
+	speed_guidance.clear()
+	if route == null:
+		last_error = "Configure an AI route before its speed guidance"
+		return false
+	var last_distance := -1.0
+	for sample in samples:
+		if not (sample is Dictionary) or not RaceRoute._number(sample.get("at_m")) or not RaceRoute._number(sample.get("target_kph")):
+			last_error = "Invalid ai_speed_guidance sample"
+			speed_guidance.clear()
+			return false
+		var distance: float = float(sample["at_m"])
+		var target_kph: float = float(sample["target_kph"])
+		if distance <= last_distance or distance < 0.0 or distance > route.length_m + 0.01 or target_kph < 0.0:
+			last_error = "Unordered or out-of-range ai_speed_guidance"
+			speed_guidance.clear()
+			return false
+		if sample.has("speed_limit_kph"):
+			if not RaceRoute._number(sample["speed_limit_kph"]) or target_kph > float(sample["speed_limit_kph"]) + 0.01:
+				last_error = "AI guidance exceeds its declared lane speed limit"
+				speed_guidance.clear()
+				return false
+		speed_guidance.append({"at_m": distance, "speed_mps": target_kph / 3.6})
+		last_distance = distance
+	last_error = ""
+	return true
+
 func reset_tracking() -> void:
 	last_s = -1.0
 	stuck_seconds = 0.0
 
+func _guidance_speed(s: float) -> float:
+	if speed_guidance.is_empty():
+		return INF
+	var position: float = fposmod(s, route.length_m) if route.closed else clampf(s, 0.0, route.length_m)
+	var speed: float = float(speed_guidance[0]["speed_mps"])
+	for sample in speed_guidance:
+		if float(sample["at_m"]) > position:
+			break
+		speed = float(sample["speed_mps"])
+	return speed
+
 func _corner_speed(s: float) -> float:
 	var k: float = route.curvature(s, 8.0)
-	return minf(minf(preferred_speed_mps, sqrt(lateral_accel_mps2 / maxf(k, 0.0001))), route.speed_limit(s))
+	return minf(minf(minf(preferred_speed_mps, sqrt(lateral_accel_mps2 / maxf(k, 0.0001))), route.speed_limit(s)), _guidance_speed(s))
 
 func _speed_plan(s: float, speed: float) -> float:
 	var target := _corner_speed(s)
