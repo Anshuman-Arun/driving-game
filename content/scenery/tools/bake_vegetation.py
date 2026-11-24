@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy.ndimage import distance_transform_edt, gaussian_filter
+from scipy.spatial import cKDTree
 
 
 def main():
@@ -22,7 +23,11 @@ def main():
     scenery = args.project / "content/scenery"
     metadata = json.loads((world / "world_metadata_v1.json").read_text())
     graph = json.loads((world / "road_graph_v1.json").read_text())
-    heights = np.fromfile(world / "terrain_height_r16le.bin", dtype="<u2").reshape(501, 501) / 100
+    canonical = np.fromfile(world / "terrain_height_r16le.bin", dtype="<u2").reshape(501, 501) / 100
+    roadworks_path = args.output / "terrain_roadworks_r16le.bin"
+    if not roadworks_path.exists():
+        roadworks_path = world / roadworks_path.name
+    heights = np.fromfile(roadworks_path, dtype="<u2").reshape(501, 501) / 100 if roadworks_path.exists() else canonical
     rng = np.random.default_rng(metadata["seed"])
     coords = np.linspace(-1000, 1000, 501)
     x, z = np.meshgrid(coords, coords)
@@ -67,6 +72,14 @@ def main():
     wet = np.zeros(heights.shape, dtype=bool)
     for px, pz in lake["cells"]:
         wet[pz:pz + 2, px:px + 2] = True
+    works_path = args.output / "roadworks.json"
+    if not works_path.exists():
+        works_path = world / works_path.name
+    roadworks = json.loads(works_path.read_text()) if works_path.exists() else {}
+    if roadworks:
+        for pool in roadworks["waters"]:
+            for px, pz in pool["cells"]:
+                wet[pz:pz + 2, px:px + 2] = True
     lake_dist = distance_transform_edt(~wet) * 4
     soil, side = np.gradient(heights, 4)
     slope = np.hypot(soil, side)
@@ -87,6 +100,14 @@ def main():
     soil_ok = margin & (heights > 6.0) & (lake_dist >= 4) & (np.asarray(fern_clearance) == 0)
     tall_ok = soil_ok & (np.asarray(protected) == 0) & (clearance >= 7.9) & (np.asarray(canopy) == 0)
 
+    def sample_terrain(px, pz):
+        u, v = (px + 1000) / 4, (pz + 1000) / 4
+        a, b = u.astype(int), v.astype(int)
+        fu, fv = u - a, v - b
+        # Same triangle split as the canonical 4 m heightfield.
+        nw, ne, sw, se = heights[b, a], heights[b, a+1], heights[b+1, a], heights[b+1, a+1]
+        return np.where(fu + fv <= 1, nw + (ne-nw)*fu + (sw-nw)*fv, se + (sw-se)*(1-fu) + (ne-se)*(1-fv))
+
     def scatter(spacing, probability, valid, pick, size):
         q = np.arange(-982, 983, spacing)
         px, pz = (np.broadcast_to(axis, (len(q),len(q))).copy() for axis in (q[None, :], q[:,None]))
@@ -96,29 +117,65 @@ def main():
         iz = np.clip(np.rint((pz + 1000) / 4).astype(int), 0, 500)
         choose = valid[iz, ix] & (rng.random(ix.shape) < probability[iz, ix])
         px, pz, ix, iz = (v[choose] for v in (px, pz, ix, iz))
-        u, v = (px + 1000) / 4, (pz + 1000) / 4
-        a, b = u.astype(int), v.astype(int)
-        fu, fv = u - a, v - b
-        # Same triangle split as the canonical 4 m heightfield.
-        nw, ne, sw, se = heights[b, a], heights[b, a+1], heights[b+1, a], heights[b+1, a+1]
-        py = np.where(fu >= fv, nw + (ne-nw)*fu + (se-ne)*fv, nw + (se-sw)*fu + (sw-nw)*fv)
         species = pick(iz, ix, len(px))
-        return np.column_stack((px, py, pz, rng.uniform(0, 2*np.pi, len(px)),
+        return np.column_stack((px, sample_terrain(px, pz), pz, rng.uniform(0, 2*np.pi, len(px)),
                                 size(species), species, rng.random(len(px))))
 
-    tree_prob = np.clip(0.04 + (0.79 * woods + 0.76 * orchard) * (0.43 + 0.75 * clumps), 0, 0.90)
-    trees = scatter(15.0, tree_prob, tall_ok & (slope < 0.64) & (heights < 185),
+    tree_prob = np.clip(0.045 + (0.93 * woods + 0.76 * orchard) * (0.44 + 0.79 * clumps), 0, 0.90)
+    trees = scatter(14.0, tree_prob, tall_ok & (slope < 0.64) & (heights < 185),
                     lambda a, b, n: (rng.random(n) < orchard[a, b] / (woods[a,b] + orchard[a,b] + 0.22)).astype(int),
                     lambda kind: rng.uniform(0.95, 2.65, len(kind)) * np.where(kind == 0, 1.38, 1.04))
+    understory = scatter(8.8, woods * (0.32 + 0.34 * clumps),
+                         tall_ok & (woods > 0.52) & (slope < 0.67) & (heights < 167) & (clearance < 205),
+                         lambda a, b, n: np.zeros(n), lambda kind: rng.uniform(0.74, 1.82, len(kind)))
+    tree_distance, _ = cKDTree(trees[:, [0, 2]]).query(understory[:, [0, 2]])
+    trees = np.vstack((trees, understory[tree_distance > 6.4]))
     verge = np.exp(-clearance / 77)
-    grass_prob = np.clip(verge * (0.48 + 0.53 * clumps) + flowers * 0.12 + woods * 0.08, 0, 0.92)
-    undergrowth = scatter(3.05, grass_prob, soil_ok & (clearance >= 3.9) & (slope < 0.67),
+    grass_prob = np.clip(verge * (0.87 + 0.19 * clumps) + flowers * 0.13 + woods * 0.10, 0, 0.97)
+    undergrowth = scatter(2.35, grass_prob, soil_ok & (clearance >= 4.3) & (slope < 0.67),
                           lambda a, b, n: 2 + (rng.random(n) < 0.095 * flowers[a, b] + 0.065 * woods[a, b]).astype(int),
-                          lambda kind: rng.uniform(0.68, 1.73, len(kind)))
+                          lambda kind: rng.uniform(0.72, 1.38, len(kind)))
     rocks = scatter(22.0, (np.clip((slope - 0.33) * 1.7, 0, 0.7) + np.exp(-lake_dist / 25) * 0.32) * clumps,
                     tall_ok & (slope < 1.3), lambda a, b, n: np.full(n, 4),
                     lambda kind: rng.uniform(0.48, 1.88, len(kind)))
-    all_placements = np.vstack((trees, undergrowth, rocks)).astype("<f4")
+    lanes = {lane["id"]: lane for lane in graph["lanes"]}
+    road_verges = []
+    for lane_id, lane in lanes.items():
+        opposite = lanes.get(lane_id.removesuffix("_ab") + "_ba")
+        if not lane_id.endswith("_ab") or opposite is None:
+            continue
+        center = (np.asarray(lane["points"]) + np.asarray(opposite["points"])[::-1])[:, [0, 2]] * 0.5
+        distances = np.r_[0, np.cumsum(np.linalg.norm(np.diff(center, axis=0), axis=1))]
+        length = distances[-1]
+        along = np.arange(33, length - 33, 1.55)
+        along += rng.uniform(-0.65, 0.65, len(along))
+        east = np.interp(along, distances, center[:, 0])
+        north = np.interp(along, distances, center[:, 1])
+        move = np.column_stack((np.gradient(east), np.gradient(north))) if len(along) > 1 else None
+        if move is None:
+            continue
+        across = np.column_stack((-move[:, 1], move[:, 0])) / np.linalg.norm(move, axis=1)[:, None]
+        width = np.full(len(along), float(lane["width_m"]))
+        design = roadworks.get("roads", {}).get(lane["road_id"], {})
+        eligible = np.ones(len(along), dtype=bool)
+        if design:
+            radius = design["wide_radius"]
+            factor = np.clip((radius - np.abs(along - design["center"])) / (radius * 0.52), 0, 1)
+            end_factor = np.clip((np.minimum(along, length - along) - 18) / 19, 0, 1)
+            width += (design["width_m"] * 0.5 - width) * factor**2 * (3 - 2 * factor) * end_factor**2 * (3 - 2 * end_factor)
+            if "bridge_start" in design:
+                eligible &= (along < design["bridge_start"] - 5) | (along > design["bridge_end"] + 5)
+        for side in [-1, 1]:
+            offset = (width + rng.uniform(2.65, 4.75, len(along))) * side
+            px, pz = east + across[:, 0] * offset, north + across[:, 1] * offset
+            ix = np.clip(np.rint((px + 1000) / 4).astype(int), 0, 500)
+            iz = np.clip(np.rint((pz + 1000) / 4).astype(int), 0, 500)
+            visible = eligible & soil_ok[iz, ix] & (np.asarray(protected)[iz, ix] == 0) & (slope[iz, ix] < 0.62)
+            px, pz = px[visible], pz[visible]
+            count = len(px)
+            road_verges.append(np.column_stack((px, sample_terrain(px, pz), pz, rng.uniform(0, 2*np.pi, count),
+                                               rng.uniform(0.68, 0.99, count), np.full(count, 2), rng.random(count))))
+    all_placements = np.vstack((trees, undergrowth, rocks, *road_verges)).astype("<f4")
     all_placements.tofile(args.output / "vegetation.bin")
     print(f"Plants by class [pine, broadleaf, grass, flowers/fern, rock] {np.bincount(all_placements[:, 5].astype(int))}")
 

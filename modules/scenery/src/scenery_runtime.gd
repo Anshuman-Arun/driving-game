@@ -26,7 +26,6 @@ var _generated: Node3D = null
 var _cells: Array[Dictionary] = []
 var _mesh_cache: Dictionary = {}
 var _frame_accumulator: float = 0.0
-var _camera: Camera3D = null
 
 func _ready() -> void:
 	if build_on_ready:
@@ -139,6 +138,7 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 	var placements: int = 0
 	var colliders: int = 0
 	var skipped_by_quality: int = 0
+	var displaced_by_roadworks: int = 0
 	var height_mismatches: int = 0
 	var assets: Dictionary = manifest.get("assets", {})
 	for entry in manifest.get("region_packs", []):
@@ -165,8 +165,15 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 			var surveyed_y: float = _surface_height(x, z)
 			if not is_finite(surveyed_y):
 				return _fail("Terrain source returned invalid height")
-			if absf(y - (surveyed_y + float(item.get("terrain_offset_m", 0.0)))) > 0.105:
+			var authored_y := surveyed_y
+			if _world != null and _world.has_method("get_authored_surface_height_at"):
+				authored_y = float(_world.call("get_authored_surface_height_at", x, z))
+			if absf(y - (authored_y + float(item.get("terrain_offset_m", 0.0)))) > 0.105:
 				height_mismatches += 1
+				continue
+			# New water and excavated banks reclaim the old prop placements.
+			if absf(surveyed_y - authored_y) > 0.33:
+				displaced_by_roadworks += 1
 				continue
 			if not _quality_keeps(item):
 				skipped_by_quality += 1
@@ -198,7 +205,7 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 		cell_root.name = "%s_%d_%d" % [asset_id, int(record["cell_x"]), int(record["cell_z"])]
 		root.add_child(cell_root)
 		var items: Array = record["items"]
-		var near_nodes: Array = _make_batches(cell_root, items, scene_parts, "Near")
+		var near_nodes := _make_near_batches(cell_root, items, scene_parts, mesh_overrides.get(str(desc["path"])))
 		var far_nodes: Array = []
 		var has_far: bool = desc.has("lod")
 		if has_far:
@@ -217,6 +224,7 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 		"source_dir": _source_dir, "content_dir": _content_dir,
 		"regions": manifest.get("region_packs", []).size(),
 		"placements": placements, "skipped_quality": skipped_by_quality,
+		"displaced_by_roadworks": displaced_by_roadworks,
 		"height_mismatches": height_mismatches, "selective_colliders": colliders,
 		"chunk_asset_groups": _cells.size(), "mesh_component_batches": batches,
 		"water_triangles": water_triangles, "missing_assets": missing.keys(),
@@ -288,8 +296,11 @@ func _asset_path(relative: String) -> String:
 	return ""
 
 func _get_mesh_parts(relative: String) -> Array:
-	if mesh_overrides.has(relative):
-		return [{"mesh": mesh_overrides[relative], "local": Transform3D.IDENTITY}]
+	var replacement: Variant = mesh_overrides.get(relative)
+	if replacement is Mesh:
+		return [{"mesh": replacement, "local": Transform3D.IDENTITY}]
+	if replacement is Array and not replacement.is_empty():
+		return [{"mesh": replacement[0], "local": Transform3D.IDENTITY}]
 	if _mesh_cache.has(relative):
 		return _mesh_cache[relative]
 	var parts: Array = []
@@ -316,6 +327,21 @@ func _collect_meshes(node: Node, parent_transform: Transform3D, parts: Array) ->
 		parts.append({"mesh": (node as MeshInstance3D).mesh, "local": transform})
 	for child in node.get_children():
 		_collect_meshes(child, transform, parts)
+
+func _make_near_batches(parent: Node3D, items: Array, parts: Array, variants: Variant) -> Array:
+	if not variants is Array or variants.is_empty():
+		return _make_batches(parent, items, parts, "Near")
+	var buckets := {}
+	for item: Dictionary in items:
+		var index := posmod(str(item["id"]).hash(), variants.size())
+		if not buckets.has(index):
+			buckets[index] = []
+		buckets[index].append(item)
+	var batches: Array = []
+	for index: int in buckets:
+		var part := {"mesh": variants[index], "local": Transform3D.IDENTITY}
+		batches.append_array(_make_batches(parent, buckets[index], [part], "Near_%d" % index))
+	return batches
 
 func _make_batches(parent: Node3D, items: Array, parts: Array, label: String) -> Array:
 	var nodes: Array = []
@@ -403,13 +429,14 @@ func _process(delta: float) -> void:
 		_update_culling(false)
 
 func _update_culling(force: bool) -> void:
+	var camera: Camera3D
 	if not camera_path.is_empty():
-		_camera = get_node_or_null(camera_path) as Camera3D
-	if _camera == null and get_viewport() != null:
-		_camera = get_viewport().get_camera_3d()
-	if _camera == null:
+		camera = get_node_or_null(camera_path) as Camera3D
+	if camera == null and get_viewport() != null:
+		camera = get_viewport().get_camera_3d()
+	if camera == null:
 		return
-	var player_pos: Vector3 = _camera.global_position
+	var player_pos := camera.global_position
 	for c in _cells:
 		var center: Vector2 = c["origin"]
 		var d: float = Vector2(player_pos.x - center.x, player_pos.z - center.y).length()

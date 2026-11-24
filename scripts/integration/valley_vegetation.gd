@@ -3,12 +3,10 @@ extends Node3D
 
 const FOLIAGE = preload("res://assets/valley_art/vegetation.gdshader")
 const CARDS = preload("res://assets/valley_art/foliage_cards.gdshader")
-const PINE_ATLAS = preload("res://assets/valley_art/pine_cutout.png")
+const Trees = preload("valley_tree_factory.gd")
 const GRASS_ATLAS = preload("res://assets/valley_art/grass_cutout.png")
 const LEAF_DETAIL = preload("res://assets/valley_art/leaf_litter_albedo.jpg")
 const BARK = preload("res://assets/forza_env/textures/bark/albedo.jpg")
-const PINE = preload("res://assets/curated/models/environment/pine_tree_lod1.glb")
-const BROADLEAF = preload("res://assets/curated/models/environment/broadleaf_tree.glb")
 const BOULDER = preload("res://assets/curated/models/environment/boulder.glb")
 const DATA_PATH := "res://data/world/vegetation.bin"
 const STRIDE := 7
@@ -23,6 +21,7 @@ var _ground: Dictionary = {}
 var _visible_ground: Dictionary = {}
 var _canopy: Dictionary = {}
 var _meshes: Array[Mesh] = []
+var _distant_trees: Array[Mesh] = []
 var _ground_center := Vector2i(99999, 99999)
 var _elapsed := 0.0
 var _leaf_clock := 0.0
@@ -56,18 +55,26 @@ func build(world: Node, preset: String) -> void:
 	material.shader = FOLIAGE
 	material.set_shader_parameter("leaf_pattern", LEAF_DETAIL)
 	_meshes = [
-		_recolor_asset(PINE, 0, _card_material(PINE_ATLAS, 0.10)), _recolor_asset(BROADLEAF, 1, material),
-		_make_grass(_card_material(GRASS_ATLAS, 0.17, true)), _make_flowers(material), _recolor_asset(BOULDER, 4, material),
+		Trees.build(true), Trees.build(false),
+		_make_grass(_card_material(GRASS_ATLAS, 0.17, true)), _make_flowers(material), _rock_mesh(material),
 	]
+	_distant_trees = [Trees.build(true, true), Trees.build(false, true)]
 	for key: Vector3i in cells:
 		_canopy[key] = _make_batch(cells[key], key.z)
+		if key.z < _distant_trees.size():
+			_canopy[key].multimesh.mesh = _distant_trees[key.z]
 	_rng.seed = 20261121
 	set_graphics(preset)
 	_build_leaves(material)
 	print("Valley vegetation: %d placements, %d canopy batches, %d ground groups" % [_placements.size() / STRIDE, _canopy.size(), _ground.size()])
 
-func conifer_mesh() -> Mesh:
-	return _meshes[0] if not _meshes.is_empty() else null
+func conifer_mesh(distant := false) -> Mesh:
+	if _meshes.is_empty():
+		return null
+	return _distant_trees[0] if distant else _meshes[0]
+
+func broadleaf_mesh() -> Mesh:
+	return _meshes[1] if not _meshes.is_empty() else null
 
 func _card_material(atlas: Texture2D, wind: float, meadow := false) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
@@ -105,7 +112,7 @@ func _make_batch(offsets: Array, kind: int) -> MultiMeshInstance3D:
 		mesh.set_instance_transform(index, Transform3D(Basis(Vector3.UP, _placements[at + 3]).scaled(form), base - center))
 		var tint := Color(0.83, 0.86, 0.79).lerp(Color(1.18, 1.07, 0.86), seed)
 		if kind == 1 and seed > 0.41:
-			tint = Color(1.06, 0.79, 0.52).lerp(Color(1.32, 0.63, 0.40), seed)
+			tint = Color(1.25, 0.79, 0.45).lerp(Color(1.62, 0.57, 0.31), seed)
 		mesh.set_instance_color(index, tint)
 	var draw := MultiMeshInstance3D.new()
 	draw.multimesh = mesh
@@ -132,12 +139,20 @@ func _process(delta: float) -> void:
 
 func _sync_cells(position: Vector3) -> void:
 	var center := Vector2i(floori(position.x / GROUND_CELL), floori(position.z / GROUND_CELL))
+	var camera_xz := Vector2(position.x, position.z)
+	var shadow_radius: float = [124.0, 190.0, 242.0][_quality]
+	var detail_radius: float = [150.0, 210.0, 280.0][_quality]
 	for key: Vector3i in _canopy:
 		var middle := Vector2((key.x + 0.5) * CANOPY_CELL, (key.y + 0.5) * CANOPY_CELL)
-		var limit: float = [125.0, 210.0, 270.0][_quality]
+		var distance := middle.distance_squared_to(camera_xz)
 		var batch: MultiMeshInstance3D = _canopy[key]
-		var shadow_mode := (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if
-			middle.distance_squared_to(Vector2(position.x, position.z)) < limit * limit
+		if key.z < _distant_trees.size():
+			var multimesh := batch.multimesh
+			var cutoff := detail_radius + (24.0 if multimesh.mesh == _meshes[key.z] else 0.0)
+			var mesh := _meshes[key.z] if distance < cutoff * cutoff else _distant_trees[key.z]
+			if multimesh.mesh != mesh:
+				multimesh.mesh = mesh
+		var shadow_mode := (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if distance < shadow_radius * shadow_radius
 			else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
 		if batch.cast_shadow != shadow_mode:
 			batch.cast_shadow = shadow_mode
@@ -163,73 +178,56 @@ func _sync_cells(position: Vector3) -> void:
 			(_visible_ground[key] as Node3D).queue_free()
 			_visible_ground.erase(key)
 
-func _recolor_asset(source: PackedScene, kind: int, material: ShaderMaterial) -> ArrayMesh:
-	var asset := source.instantiate()
+func _rock_mesh(material: ShaderMaterial) -> ArrayMesh:
+	var asset := BOULDER.instantiate()
 	var part: MeshInstance3D = asset if asset is MeshInstance3D else asset.find_children("*", "MeshInstance3D", true, false)[0]
 	var mesh := part.mesh
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for layer in (1 if kind == 0 else mesh.get_surface_count()):
+	for layer in mesh.get_surface_count():
 		var geometry := mesh.surface_get_arrays(layer)
 		var positions: PackedVector3Array = geometry[Mesh.ARRAY_VERTEX]
 		var normals: PackedVector3Array = geometry[Mesh.ARRAY_NORMAL]
 		var indices: PackedInt32Array = geometry[Mesh.ARRAY_INDEX]
-		var tint := Color("#345a39")
-		if kind == 4:
-			tint = Color("#706f60")
-		elif layer == 0:
-			tint = Color("#57432c")
-		elif kind == 1:
-			tint = [Color("#766b30"), Color("#9c873d"), Color("#596232")][(layer - 1) % 3]
-		elif layer == 2:
-			tint = Color("#527349")
+		var tint := Color("#706f60")
 		for vertex in indices:
 			var local := positions[vertex]
 			var light := clampf(0.76 + local.y * 0.085 + sin((local.x + local.z) * 5.0) * 0.065, 0.66, 1.15)
-			tool.set_color(Color(tint.r * light, tint.g * light, tint.b * light, 0.0 if kind == 0 else 1.0))
+			tool.set_color(Color(tint.r * light, tint.g * light, tint.b * light))
 			tool.set_normal(normals[vertex])
-			tool.set_uv(Vector2(-1, clampf(local.y / 5.0, 0.0, 1.0) if kind == 1 and layer > 0 else 0.0))
+			tool.set_uv(Vector2(-1, 0))
 			tool.add_vertex(local)
 	asset.free()
-	if kind == 0:
-		_pine_crown(tool)
 	tool.index()
 	tool.set_material(material)
 	return tool.commit()
-
-func _pine_crown(tool: SurfaceTool) -> void:
-	var random := RandomNumberGenerator.new()
-	random.seed = 7943
-	for level in 11:
-		var rise := level / 10.0
-		var stem := Vector3.UP * lerpf(0.97, 3.95, rise)
-		var radius := lerpf(1.67, 0.25, pow(rise, 0.73))
-		var branches := 5 if level < 8 else 4
-		for index in branches:
-			var angle := index * TAU / branches + level * 0.72 + random.randf_range(-0.23, 0.23)
-			var along := Vector3.FORWARD.rotated(Vector3.UP, angle)
-			var span := along * (radius * random.randf_range(0.81, 1.18)) + Vector3.UP * random.randf_range(-0.17, 0.28)
-			var side := along.cross(Vector3.UP) * (radius * 0.49)
-			var shade := Color(0.76, 0.88, 0.74).lerp(Color(0.98, 1.04, 0.82), rise)
-			_card(tool, stem - side * 0.57, stem + side * 0.57,
-				stem + span - side, stem + span + side, shade, true)
-			var fork := stem + span * 0.36
-			var lift := Vector3.UP * maxf(0.14, radius * 0.32)
-			_card(tool, fork + side * 0.39 - lift * 0.44, fork + side * 0.39 + lift * 0.44,
-				stem + span * 0.91 + side * 0.52 - lift, stem + span * 0.91 + side * 0.52 + lift, shade, true)
 
 func _make_grass(material: ShaderMaterial) -> ArrayMesh:
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var random := RandomNumberGenerator.new()
 	random.seed = 48031
-	for index in 8:
+	for index in 7:
 		var axis := Vector3.RIGHT.rotated(Vector3.UP, index * 2.39996)
-		var base := axis.cross(Vector3.UP) * random.randf_range(0.0, 0.86)
-		var width := random.randf_range(0.34, 0.61)
-		var top := Vector3.UP * random.randf_range(0.28, 0.55) + axis.cross(Vector3.UP) * 0.06
+		var base := axis.cross(Vector3.UP) * sqrt(random.randf()) * 1.38
+		var width := random.randf_range(0.24, 0.47)
+		var top := Vector3.UP * random.randf_range(0.12, 0.33) + axis.cross(Vector3.UP) * 0.09
 		_card(tool, base - axis * width, base + axis * width,
-			base - axis * width + top, base + axis * width + top, Color("#b2c69d"))
+			base - axis * width + top, base + axis * width + top, Color("#b3ac80").lerp(Color("#a4ac7f"), index / 6.0))
+	for blade in 9:
+		var along := Vector3.FORWARD.rotated(Vector3.UP, blade * 2.39996)
+		var sideways := along.cross(Vector3.UP)
+		var root := along * random.randf_range(0.2, 1.46)
+		var height := random.randf_range(0.10, 0.28)
+		var base_width := random.randf_range(0.022, 0.047)
+		var tip := root + Vector3.UP * height + along * height * 0.77
+		var tint := Color("#8d9257").lerp(Color("#afaf73"), random.randf())
+		for point: Vector3 in [root - sideways * base_width, root + sideways * base_width, tip]:
+			var flex := 1.0 if point == tip else 0.0
+			tool.set_uv(Vector2(-2.0, flex))
+			tool.set_normal(Vector3.UP)
+			tool.set_color(Color(tint.r, tint.g, tint.b, flex))
+			tool.add_vertex(point)
 	tool.set_material(material)
 	return tool.commit()
 

@@ -4,6 +4,7 @@ extends Node3D
 signal vehicle_spawned(body: Vehicle, car_id: String)
 
 const WorldRuntime = preload("res://modules/world_runtime/src/world_runtime.gd")
+const Buildings = preload("valley_buildings.gd")
 const Vegetation = preload("valley_vegetation.gd")
 const SceneryRuntime = preload("res://modules/scenery/src/scenery_runtime.gd")
 const CuratedCar = preload("curated_car_visual.gd")
@@ -52,6 +53,11 @@ func _ready() -> void:
 	DriveInput.install()
 	ValleyEnvironment.apply_environment(self)
 	ValleyEnvironment.apply_world_materials(world)
+	var works := FileAccess.get_file_as_string("res://data/world/roadworks.json")
+	var design: Variant = JSON.parse_string(works) if not works.is_empty() else null
+	if design is Dictionary:
+		world.roadworks = design
+		world.crossing_water_material = preload("res://assets/forza_env/materials/lake_water_forza.tres")
 	if not world.build_world():
 		push_error("Aster Valley could not load: " + world.error_message)
 		get_tree().quit(1)
@@ -103,10 +109,14 @@ func set_scenery_enabled(enabled: bool) -> bool:
 	vegetation.name = "ValleyVegetation"
 	add_child(vegetation)
 	vegetation.build(world, graphics_preset)
+	layer.mesh_overrides = Buildings.new().assets()
+	var oak_mesh := vegetation.broadleaf_mesh()
+	if oak_mesh != null:
+		layer.mesh_overrides["assets/curated/models/environment/broadleaf_tree.glb"] = oak_mesh
 	var pine_mesh := vegetation.conifer_mesh()
 	if pine_mesh != null:
-		for model in ["pine_tree_lod0.glb", "pine_tree_lod1.glb"]:
-			layer.mesh_overrides["assets/curated/models/environment/" + model] = pine_mesh
+		layer.mesh_overrides["assets/curated/models/environment/pine_tree_lod0.glb"] = pine_mesh
+		layer.mesh_overrides["assets/curated/models/environment/pine_tree_lod1.glb"] = vegetation.conifer_mesh(true)
 	add_child(layer)
 	if not layer.build_scenery(world):
 		scenery_enabled = false

@@ -120,7 +120,7 @@ func _process(delta: float) -> void:
 	var drift := car.get_node_or_null("DriftController")
 	_hud.update_telemetry(drive.adapter.get_speed_mps(), drive.adapter.get_gear_display(),
 		car.motor_rpm / maxf(car.max_rpm, 1.0), car.get_global_transform_interpolated(),
-		drift != null and bool(drift.get("is_drifting")), game.notification if game.notification_s > 0.0 else "")
+		drift != null and bool(drift.get("is_drifting")), game.notification if game.notification_s > 0.0 else "", car.max_rpm)
 
 func _render() -> void:
 	_hud = null

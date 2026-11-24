@@ -218,7 +218,7 @@ func sample_height(x: float, z: float) -> float:
 	return lerpf(lerpf(height_index(ix, iz), height_index(ix + 1, iz), tx),
 		lerpf(height_index(ix, iz + 1), height_index(ix + 1, iz + 1), tx), tz)
 
-func sample_surface_height(x: float, z: float) -> float:
+func sample_surface_height(x: float, z: float, reference := PackedFloat32Array()) -> float:
 	## Exactly matches the terrain mesh's two-triangle split, including at seams.
 	var grid := world_to_grid(x, z)
 	var gx := clampf(grid.x, 0.0, float(grid_width - 1))
@@ -227,10 +227,12 @@ func sample_surface_height(x: float, z: float) -> float:
 	var iz := mini(int(floor(gz)), grid_height - 2)
 	var u := gx - float(ix)
 	var v := gz - float(iz)
-	var a := height_index(ix, iz)
-	var b := height_index(ix + 1, iz)
-	var c := height_index(ix, iz + 1)
-	var d := height_index(ix + 1, iz + 1)
+	var raster: PackedFloat32Array = height_samples if reference.is_empty() else reference
+	var origin := iz * grid_width + ix
+	var a := raster[origin]
+	var b := raster[origin + 1]
+	var c := raster[origin + grid_width]
+	var d := raster[origin + grid_width + 1]
 	if u + v <= 1.0:
 		return a + (b - a) * u + (c - a) * v
 	return d + (c - d) * (1.0 - u) + (b - d) * (1.0 - v)

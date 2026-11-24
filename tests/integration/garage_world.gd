@@ -191,9 +191,15 @@ func _run() -> void:
 
 func _assert_scenery(drive: Drive) -> void:
 	var bodies := drive.find_children("*", "StaticBody3D", true, false)
-	_check(bodies.size() == 310, "scenery adds no collision bodies")
-	_check(drive.scenery != null and drive.scenery.report.get("placements", 0) == 2791
-		and drive.scenery.report.get("selective_colliders", -1) == 0, "five authored scenery packs built")
+	_check(bodies.size() == drive.world.report.get("static_colliders", 0), "scenery adds no collision bodies")
+	if drive.scenery != null:
+		var placements: int = drive.scenery.report.get("placements", 0)
+		var displaced: int = drive.scenery.report.get("displaced_by_roadworks", 0)
+		_check(drive.scenery.report.get("regions", 0) == 5 and placements + displaced == 2791
+			and drive.scenery.report.get("height_mismatches", -1) == 0
+			and drive.scenery.report.get("selective_colliders", -1) == 0, "five authored scenery packs built")
+	else:
+		_check(false, "five authored scenery packs built")
 	if drive.scenery != null:
 		print("SCENERY ", drive.scenery.report)
 	_check(drive.set_scenery_enabled(false) and drive.scenery == null

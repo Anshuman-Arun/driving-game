@@ -13,7 +13,7 @@ void fragment() {
 	float mask = 1.0 - smoothstep(0.50 - pixel, 0.50, radius);
 	float c = cos(heading);
 	float s = sin(heading);
-	vec2 map_uv = map_center + mat2(vec2(c, s), vec2(-s, c)) * local * map_span;
+	vec2 map_uv = map_center + mat2(vec2(c, s), vec2(-s, c)) * (local - vec2(0.0, 0.121)) * map_span;
 	vec4 atlas = texture(roads, map_uv);
 	float altitude = atlas.a;
 	float contour = abs(fract(altitude * 23.0 + 0.5) - 0.5);
@@ -25,7 +25,7 @@ void fragment() {
 	terrain = mix(terrain, vec3(0.105, 0.263, 0.371), atlas.b * 0.92);
 	float edge_fade = 1.0 - 0.34 * smoothstep(0.31, 0.50, radius);
 	vec3 color = terrain * edge_fade;
-	color = mix(color, vec3(0.77, 0.81, 0.75), smoothstep(0.04, 0.52, atlas.r) * edge_fade);
+	color = mix(color, vec3(0.87, 0.86, 0.80), smoothstep(0.04, 0.52, atlas.r) * edge_fade);
 	color = mix(color, vec3(0.48, 0.95, 0.81), smoothstep(0.07, 0.65, atlas.g) * edge_fade);
-	COLOR = vec4(color, mask * 0.97);
+	COLOR = vec4(color, mask * mix(0.54 + lines * 0.16 + atlas.b * 0.30, 0.96, clamp(max(atlas.r, atlas.g) * 1.45, 0.0, 1.0)));
 }

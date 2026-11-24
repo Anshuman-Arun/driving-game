@@ -76,5 +76,7 @@ The textures below use the [Poly Haven CC0 license](https://polyhaven.com/licens
 | Meadow ground | [Leafy Grass](https://polyhaven.com/a/leafy_grass) | Charlotte Baglioni | `meadow_albedo.jpg`, `meadow_normal.jpg` |
 | Woodland ground and canopy detail | [Leaves Forest Ground](https://polyhaven.com/a/leaves_forest_ground) | Dario Barresi, Dimitrios Savva | `leaf_litter_albedo.jpg` |
 | Mossy cliffs | [Mossy Rock](https://polyhaven.com/a/mossy_rock) | Rob Tuytel | `moss_rock_albedo.jpg` |
-| Pine branches | [Pine Tree 01](https://polyhaven.com/a/pine_tree_01) | Rico Cilliers, Rob Tuytel | `pine_cutout.png`, cropped and packed from twig diffuse and alpha |
+| Pine branches | [Pine Tree 01](https://polyhaven.com/a/pine_tree_01) | Rico Cilliers, Rob Tuytel | `pine_cutout.png` and `pine_bough.png`, assembled from twig diffuse and alpha |
+| Broadleaf canopy | [Tree Small 02](https://polyhaven.com/a/tree_small_02) | Rico Cilliers | `broadleaf_spray.png`, assembled from leaf diffuse and alpha |
+| Building walls | [White Plaster 02](https://polyhaven.com/a/white_plaster_02) | Rob Tuytel | `plaster.jpg`, `plaster_normal.jpg` |
 | Grass tufts | [Grass Medium 01](https://polyhaven.com/a/grass_medium_01) | Rico Cilliers, Rob Tuytel | `grass_cutout.png`, cropped and packed from diffuse and alpha |

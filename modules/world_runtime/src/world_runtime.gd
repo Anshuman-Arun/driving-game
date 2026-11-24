@@ -19,6 +19,9 @@ signal world_failed(reason: String)
 @export var gravel_material_override: Material
 @export var shoulder_material_override: Material
 
+var roadworks: Dictionary = {}
+var crossing_water_material: Material
+var _canonical_heights := PackedFloat32Array()
 var data = null
 var report: Dictionary = {}
 var error_message: String = ""
@@ -67,6 +70,14 @@ func build_world(directory_override: String = "") -> bool:
 		error_message = loaded.error_message
 		world_failed.emit(error_message)
 		return false
+	_canonical_heights = PackedFloat32Array()
+	if not roadworks.is_empty():
+		_canonical_heights = loaded.height_samples.duplicate()
+		if not loaded._decode_heightfield(directory.path_join("terrain_roadworks_r16le.bin")):
+			data = null
+			error_message = loaded.error_message
+			world_failed.emit(error_message)
+			return false
 	data = loaded
 	var full := build_full_world
 	for arg in OS.get_cmdline_user_args():
@@ -85,6 +96,9 @@ func build_world(directory_override: String = "") -> bool:
 		overrides["gravel"] = gravel_material_override
 	if shoulder_material_override != null:
 		overrides["shoulder"] = shoulder_material_override
+	if not roadworks.is_empty():
+		overrides["roadworks"] = roadworks
+		overrides["crossing_water"] = crossing_water_material
 	var builder = load(_local_dir().path_join("mesh_builder.gd")).new()
 	report = builder.build(root, data, full, preview_center_xz,
 		preview_radius_m, terrain_chunk_cells, generate_colliders, overrides)
@@ -107,6 +121,9 @@ func get_world_metadata() -> Dictionary:
 
 func get_height_at(x: float, z: float) -> float:
 	return data.sample_height(x, z) if data != null else NAN
+
+func get_authored_surface_height_at(x: float, z: float) -> float:
+	return data.sample_surface_height(x, z, _canonical_heights) if data != null else NAN
 
 func get_surface_height_at(x: float, z: float) -> float:
 	return data.sample_surface_height(x, z) if data != null else NAN

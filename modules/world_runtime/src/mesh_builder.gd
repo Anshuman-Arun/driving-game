@@ -3,6 +3,8 @@ extends RefCounted
 ## Road geometry is reconstructed from paired directed travel lanes exactly once.
 ## Turning lanes contribute only to broad collidable junction pads, not road strips.
 
+const RoadworksArt = preload("roadworks_art.gd")
+
 const SHOULDER_M := 1.35
 const ROAD_LIFT_M := 0.075
 const PAD_LIFT_M := 0.10
@@ -17,6 +19,7 @@ var focus: Vector2 = Vector2.ZERO
 var radius_m: float = 460.0
 var materials: Dictionary = {}
 var stats: Dictionary = {}
+var roadworks: Dictionary = {}
 
 func build(parent: Node3D, world: Variant, all_chunks: bool, focus_xz: Vector2,
 		region_radius: float, terrain_chunk_cells: int, colliders: bool,
@@ -34,6 +37,7 @@ func build(parent: Node3D, world: Variant, all_chunks: bool, focus_xz: Vector2,
 		"turn_paths_covered": 0, "generation_ms": 0,
 		"estimated_vertex_bytes": 0
 	}
+	roadworks = overrides.get("roadworks", {})
 	_material_setup(overrides, parent)
 	var started := Time.get_ticks_msec()
 	var terrain := Node3D.new()
@@ -50,6 +54,8 @@ func build(parent: Node3D, world: Variant, all_chunks: bool, focus_xz: Vector2,
 	pads_root.name = "IntersectionPads"
 	parent.add_child(pads_root)
 	_build_junction_pads(pads_root)
+	if not roadworks.is_empty():
+		RoadworksArt.build_water(roads_root, roadworks.get("waters", []), overrides.get("crossing_water"))
 	stats["generation_ms"] = Time.get_ticks_msec() - started
 	stats["estimated_vertex_bytes"] = (int(stats["terrain_vertices"]) +
 		int(stats["road_vertices"]) + int(stats["junction_vertices"])) * 32
@@ -309,7 +315,7 @@ func corridor_points(road: Dictionary) -> PackedVector3Array:
 		result.append(center)
 	return result
 
-func _section(points: PackedVector3Array, i: int, half_width: float) -> Array[Vector3]:
+func _section(points: PackedVector3Array, i: int, half_width: float, elevated := false) -> Array[Vector3]:
 	var previous: Vector3 = points[maxi(0, i - 1)]
 	var following: Vector3 = points[mini(points.size() - 1, i + 1)]
 	var tangent := Vector2(following.x - previous.x, following.z - previous.z).normalized()
@@ -321,7 +327,9 @@ func _section(points: PackedVector3Array, i: int, half_width: float) -> Array[Ve
 		var z: float = points[i].z + lateral.y * float(off)
 		var ground: float = source.sample_surface_height(x, z)
 		var y: float
-		if absf(float(off)) > half_width + 0.001:
+		if elevated:
+			y = points[i].y + ROAD_LIFT_M
+		elif absf(float(off)) > half_width + 0.001:
 			y = ground - OUTER_BURY_M
 		else:
 			y = maxf(points[i].y, ground) + ROAD_LIFT_M
@@ -351,6 +359,17 @@ func _append_quad(verts: PackedVector3Array, normals: PackedVector3Array,
 				uvs.append(Vector2(u1, v1))
 		normals.append(flat_normal)
 
+func _road_width(base: float, profile: Dictionary, station: float, full_length: float) -> float:
+	if profile.is_empty():
+		return base
+	var radius := float(profile["wide_radius"])
+	var taper := 1.0 - smoothstep(radius * 0.48, radius, absf(station - float(profile["center"])))
+	taper *= smoothstep(18.0, 37.0, minf(station, full_length - station))
+	return lerpf(base, float(profile["width_m"]) * 0.5, taper)
+
+func _bridge_station(profile: Dictionary, station: float) -> bool:
+	return profile.has("bridge_start") and station >= float(profile["bridge_start"]) - 0.008 and station <= float(profile["bridge_end"]) + 0.008
+
 func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 	var center: PackedVector3Array = corridor_points(road)
 	if center.size() < 2:
@@ -365,6 +384,12 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 	var shoulder_norms := PackedVector3Array()
 	var shoulder_uv := PackedVector2Array()
 	var cumulative := 0.0
+	var full_length := 0.0
+	for index in range(1, center.size()):
+		var delta := center[index] - center[index - 1]
+		full_length += Vector2(delta.x, delta.z).length()
+	var profile: Dictionary = roadworks.get("roads", {}).get(str(road["id"]), {})
+	var bridge_sections: Array = []
 	for i in range(center.size() - 1):
 		var p: Vector3 = center[i]
 		var q: Vector3 = center[i + 1]
@@ -372,8 +397,15 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 		if not (_in_view(p.x, p.z, 10.0) or _in_view(q.x, q.z, 10.0)):
 			cumulative += length
 			continue
-		var a: Array[Vector3] = _section(center, i, half_width)
-		var b: Array[Vector3] = _section(center, i + 1, half_width)
+		var end := cumulative + length
+		var elevated_begin := _bridge_station(profile, cumulative)
+		var elevated_end := _bridge_station(profile, end)
+		var a := _section(center, i, _road_width(half_width, profile, cumulative, full_length), elevated_begin)
+		var b := _section(center, i + 1, _road_width(half_width, profile, end, full_length), elevated_end)
+		if elevated_begin and elevated_end:
+			if bridge_sections.is_empty():
+				bridge_sections.append(a)
+			bridge_sections.append(b)
 		_append_quad(shoulder_verts, shoulder_norms, shoulder_uv,
 			a[0], a[1], b[0], b[1], 0.0, SHOULDER_M / 4.0,
 			cumulative / 4.0, (cumulative + length) / 4.0)
@@ -399,6 +431,11 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 			_compute_triangle_tangents(shoulder_verts, shoulder_norms, shoulder_uv)))
 	mesh.surface_set_material(1, materials["shoulder"])
 	_attach_mesh(parent, "Road_" + road["id"], mesh, 2, surface)
+	if not bridge_sections.is_empty():
+		RoadworksArt.build_bridge(parent, str(profile["name"]).replace(" ", ""), bridge_sections, source, make_colliders)
+		stats["bridges"] = int(stats.get("bridges", 0)) + 1
+		if make_colliders:
+			stats["static_colliders"] += 1
 	stats["physical_corridors"] += 1
 	stats["road_vertices"] += pavement_verts.size() + shoulder_verts.size()
 	stats["road_triangles"] += (pavement_verts.size() + shoulder_verts.size()) / 3

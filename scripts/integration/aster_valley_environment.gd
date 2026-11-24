@@ -38,7 +38,7 @@ static func build_environment() -> Environment:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_sky_contribution = 0.85
 	env.ambient_light_color = Color(0.76, 0.84, 0.94)
-	env.ambient_light_energy = 0.67
+	env.ambient_light_energy = 0.60
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 
 	# Filmic AgX tonemapping with calibrated exposure for golden afternoon.
@@ -71,11 +71,11 @@ static func build_environment() -> Environment:
 	env.fog_height = 24.0
 	env.fog_height_density = 0.0014
 
-	# Subtle Forza Horizon color polish.
+	# Keep the afternoon warmth without flattening the forest canopy.
 	env.adjustment_enabled = true
 	env.adjustment_brightness = 1.01
-	env.adjustment_contrast = 1.09
-	env.adjustment_saturation = 1.12
+	env.adjustment_contrast = 1.12
+	env.adjustment_saturation = 1.07
 	return env
 
 static func _build_sky() -> Sky:
@@ -107,8 +107,8 @@ static func _build_sky() -> Sky:
 static func configure_sun(sun: DirectionalLight3D) -> void:
 	# Warm golden-afternoon elevation (~32 deg) casting sculptural valley shadows.
 	sun.rotation = Vector3(-0.60, -1.46, 0.0)
-	sun.light_color = Color(1.0, 0.91, 0.78)
-	sun.light_energy = 2.3
+	sun.light_color = Color(1.0, 0.94, 0.86)
+	sun.light_energy = 2.08
 	sun.light_indirect_energy = 1.0
 	sun.light_specular = 1.0
 	sun.light_angular_distance = 0.0

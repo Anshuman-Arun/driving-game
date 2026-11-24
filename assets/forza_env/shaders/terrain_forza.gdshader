@@ -192,7 +192,7 @@ void fragment() {
 	tri_w /= max(dot(tri_w, vec3(1.0)), 0.0001);
 
 	// Meadow and woodland share the coarse biome blend, but keep separate materials up close.
-	vec3 meadow_tone = mix(vec3(0.64, 0.87, 0.55), vec3(1.17, 0.99, 0.64), smoothstep(0.24, 0.79, fields));
+	vec3 meadow_tone = mix(vec3(0.71, 0.87, 0.63), vec3(0.95, 0.97, 0.79), smoothstep(0.24, 0.79, fields));
 	vec3 base_col = sample_planar_albedo(grass_albedo, xz, grass_scale, dist_blend) * grass_tint * meadow_tone;
 	float base_rgh = sample_planar_mono(grass_roughness, xz, grass_scale, dist_blend);
 	vec3 base_n = sample_planar_world_normal(grass_normal, xz, grass_scale, dist_blend, n, eff_normal_strength * 0.78);
@@ -201,8 +201,8 @@ void fragment() {
 	if (forest_w > 0.06 || autumn * town_hedges > 0.10) {
 		vec3 woodland = sample_planar_albedo(forest_albedo, xz, forest_scale, dist_blend) * forest_tint;
 		vec3 scattered_leaves = texture(leaf_litter, xz * 0.42).rgb * vec3(0.89, 0.83, 0.73);
-		woodland = mix(woodland, scattered_leaves, 0.22 + autumn * 0.65);
-		float blend_forest = max(forest_w * 0.90, autumn * town_hedges * 0.54);
+		woodland = mix(woodland, scattered_leaves, 0.14 + autumn * 0.53);
+		float blend_forest = max(forest_w * 0.77, autumn * town_hedges * 0.25);
 		base_col = mix(base_col, woodland, blend_forest);
 		base_rgh = mix(base_rgh, sample_planar_mono(forest_roughness, xz, forest_scale, dist_blend), blend_forest);
 		base_n = normalize(mix(base_n, sample_planar_world_normal(forest_normal, xz, forest_scale, dist_blend, n, eff_normal_strength * 0.78), blend_forest));
