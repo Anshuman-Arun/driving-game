@@ -1,0 +1,52 @@
+name: Environment source asset acquisition (bounded trial)
+on:
+  push:
+    branches: [feat/environment-asset-library]
+    paths:
+      - '.github/workflows/environment-assets.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: environment-source-acquisition
+  cancel-in-progress: false
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          persist-credentials: false
+          sparse-checkout: |
+            tools/environment_assets
+            docs/environment_assets
+      - name: Compile downloader
+        run: python3 -m py_compile tools/environment_assets/acquire.py
+      - name: Resolve and acquire source models
+        run: |
+          python3 tools/environment_assets/acquire.py --scope core --resolution 4k --budget-mib 300 --max-assets 9 --output "$RUNNER_TEMP/environment-source"
+      - name: Summarize verified assets
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path(os.environ["RUNNER_TEMP"])/"environment-source"/"ACQUISITION_REPORT.json"
+          if p.exists():
+              data=json.loads(p.read_text())
+              with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+                  f.write("### Actual acquisition results\n\n")
+                  for item in data["results"]:
+                      f.write("- "+item["id"]+": "+item["status"]+"\n")
+          PY
+      - name: Upload source trial and provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-source-4k-core-trial
+          path: ${{ runner.temp }}/environment-source/
+          if-no-files-found: warn
+          retention-days: 3
+          compression-level: 0
