@@ -13,6 +13,9 @@ const MIN_GAP_M := 5.5
 const SPAWN_GAP_M := 12.0
 const PLAYER_SPAWN_GAP_M := 24.0
 const STOP_OFFSET_M := 2.5
+const CONTROLLED_STOP_OFFSET_M := 5.0
+const CONFLICT_PROXIMITY_M := 4.0
+const CONFLICT_EXIT_GAP_M := 6.0
 const APPROACH_M := 16.0
 const DESPAWN_RADIUS_M := 230.0
 const SPAWN_RADIUS_M := 175.0
@@ -37,6 +40,13 @@ var viewer_position := Vector3.ZERO
 var junctions: Dictionary = {}
 var inbound_junction: Dictionary = {}
 var reservations: Dictionary = {}
+# Only authored movement connectors use geometric conflict reservations.
+# Legacy merge and fixture controls retain the original one-owner key.
+var movement_junction: Dictionary = {}
+var movement_conflicts: Dictionary = {}
+var movement_pair_release: Dictionary = {}
+var movement_release: Dictionary = {}
+var inbound_stop_offsets: Dictionary = {}
 var reused_agents := 0
 var total_spawned := 0
 var total_despawned := 0
@@ -48,6 +58,11 @@ func load_road_graph(data: Dictionary) -> bool:
 	junctions.clear()
 	inbound_junction.clear()
 	reservations.clear()
+	movement_junction.clear()
+	movement_conflicts.clear()
+	movement_pair_release.clear()
+	movement_release.clear()
+	inbound_stop_offsets.clear()
 	graph_valid = graph.load_road_graph(data)
 	if not graph_valid:
 		return false
@@ -97,7 +112,122 @@ func configure_junctions(definitions: Array) -> bool:
 		junctions[jid] = j
 		for lid in incoming:
 			inbound_junction[lid] = jid
+		# The v1 World graph identifies its turns by road_id == junction id.
+		# Other callers still work through the legacy clearance on the next lane.
+		var movements: Array[String] = []
+		for lid in incoming:
+			for successor in graph.lanes[lid]["next_lane_ids"]:
+				if graph.lanes[successor]["road_id"] == jid and not movements.has(successor):
+					movements.append(successor)
+		movements.sort()
+		if not movements.is_empty():
+			_index_junction_movements(jid, movements)
 	return true
+
+
+func _index_junction_movements(jid: String, movements: Array[String]) -> void:
+	# Build the conflict table once when controls are installed, never per tick.
+	# Use actual 3D connector centerlines (not all roads near a junction).
+	# Bidirectional travel lanes are intentionally not considered conflicts.
+	var latest: Dictionary = {}
+	for movement in movements:
+		movement_junction[movement] = jid
+		movement_conflicts[movement] = {}
+		movement_pair_release[movement] = {}
+		latest[movement] = -1.0
+	for i in range(movements.size()):
+		var first_id: String = movements[i]
+		var first: Dictionary = graph.lanes[first_id]
+		var first_points: Array = first["points"]
+		var first_arc: Array = first["cumulative"]
+		for k in range(i + 1, movements.size()):
+			var second_id: String = movements[k]
+			var second: Dictionary = graph.lanes[second_id]
+			var second_points: Array = second["points"]
+			var second_arc: Array = second["cumulative"]
+			var intersects := false
+			var first_last := -1.0
+			var second_last := -1.0
+			for ai in range(first_points.size() - 1):
+				for bi in range(second_points.size() - 1):
+					var nearest: PackedVector3Array = Geometry3D.get_closest_points_between_segments(
+						first_points[ai], first_points[ai + 1], second_points[bi], second_points[bi + 1])
+					if nearest[0].distance_to(nearest[1]) >= CONFLICT_PROXIMITY_M:
+						continue
+					intersects = true
+					# Take the END of the affected segments, not just the closest
+					# point: safely covers nearly parallel overlapping connectors.
+					first_last = maxf(first_last, float(first_arc[ai + 1]))
+					second_last = maxf(second_last, float(second_arc[bi + 1]))
+					latest[first_id] = maxf(float(latest[first_id]), first_last)
+					latest[second_id] = maxf(float(latest[second_id]), second_last)
+			if intersects:
+				movement_conflicts[first_id][second_id] = true
+				movement_conflicts[second_id][first_id] = true
+				movement_pair_release[first_id][second_id] = first_last + CONFLICT_EXIT_GAP_M
+				movement_pair_release[second_id][first_id] = second_last + CONFLICT_EXIT_GAP_M
+	for movement in movements:
+		# A movement's release distance is measured from its own connector
+		# origin and may extend onto its outgoing travel lane. Never clamp to
+		# a short connector's length: that previously stranded reservations.
+		movement_release[movement] = maxf(3.0, float(latest[movement]) + CONFLICT_EXIT_GAP_M)
+	# Some tight real turns loop behind the usual stop line. Measure a safe
+	# stop position along EACH inbound approach against EVERY authored turn.
+	# A shared 5m stop line would place waiting cars in those turning paths.
+	for incoming_id in junctions[jid]["inbound"]:
+		var lane_id: String = str(incoming_id)
+		var length_m: float = graph.lane_length(lane_id)
+		var last_overlap := 0.0
+		for metre in range(36):
+			if float(metre) >= length_m - 1.0:
+				break
+			var position: Vector3 = graph.get_pose(lane_id, length_m - float(metre))["position"]
+			for movement in movements:
+				if _near_movement(position, movement):
+					last_overlap = float(metre)
+					break
+		inbound_stop_offsets[lane_id] = minf(length_m - 0.5,
+			maxf(CONTROLLED_STOP_OFFSET_M, last_overlap + 2.0))
+
+
+func _near_movement(position: Vector3, movement: String) -> bool:
+	var points: Array = graph.lanes[movement]["points"]
+	for index in range(points.size() - 1):
+		var start: Vector3 = points[index]
+		var edge: Vector3 = points[index + 1] - start
+		var ratio: float = clampf((position - start).dot(edge) / edge.length_squared(), 0.0, 1.0)
+		if position.distance_to(start + edge * ratio) < CONFLICT_PROXIMITY_M:
+			return true
+	return false
+
+
+func _movement_progress(a: Dictionary, movement: String) -> float:
+	# Arc distance along the actual turn, continuing onto its first outgoing
+	# lane. A queued owner with a granted approach reservation has not begun.
+	if a["lane_id"] == movement:
+		return float(a["s"])
+	var successors: Array = graph.lanes[movement]["next_lane_ids"]
+	if successors.size() == 1 and a["lane_id"] == successors[0]:
+		return graph.lane_length(movement) + float(a["s"])
+	return -1.0
+
+
+func _reservation_exit(a: Dictionary, jid: String, j: Dictionary) -> Dictionary:
+	var movement: String = a["next_lane"]
+	var release_lane: String = movement
+	var release_s: float = float(j["clearance_m"])
+	if movement_junction.get(movement, "") == jid:
+		release_s = float(movement_release[movement])
+		var length_m: float = graph.lane_length(movement)
+		if release_s >= length_m:
+			var successors: Array = graph.lanes[movement]["next_lane_ids"]
+			if successors.size() == 1:
+				release_lane = str(successors[0])
+				release_s = clampf(release_s - length_m, 0.0,
+					maxf(0.0, graph.lane_length(release_lane) - 0.01))
+			else:
+				release_s = maxf(0.0, length_m - 0.01)
+	return {"lane": release_lane, "s": release_s}
 
 
 func reset(seed_value: int = 1) -> void:
@@ -149,6 +279,14 @@ func spawn_agent(lane_id: String, s: float, initial_speed_mps: float = 0.0, spee
 		for incoming_lane in junction["inbound"]:
 			if graph.lanes[incoming_lane]["next_lane_ids"].has(lane_id):
 				return -1
+	# Do not spawn part-way through an authored conflict zone without owning
+	# the corresponding reservation. A common clearance on short connectors
+	# used to leave their later crossing segments available for unsafe spawns.
+	if movement_junction.has(lane_id) and s < minf(graph.lane_length(lane_id),
+			float(movement_release[lane_id])) + 0.5:
+		return -1
+	if inbound_stop_offsets.has(lane_id) and graph.lane_length(lane_id) - s < float(inbound_stop_offsets[lane_id]) + 1.0:
+		return -1
 	for id in agents:
 		if pos.distance_to(agents[id]["position"]) < SPAWN_GAP_M:
 			return -1
@@ -170,6 +308,7 @@ func spawn_agent(lane_id: String, s: float, initial_speed_mps: float = 0.0, spee
 		"position": pos, "tangent": pose["tangent"], "state": "FOLLOW_LANE",
 		"wait_s": 0.0, "stop_done": false, "reserved_junction": "",
 		"entered_lane": "", "clearance_m": 0.0,
+		"reservation_zone": "", "reservation_movement": "",
 		"last_acceleration_mps2": 0.0, "dead_end_seconds": 0.0})
 	agents[id] = agent
 	total_spawned += 1
@@ -213,8 +352,17 @@ func despawn_agent(id: int) -> void:
 func spawn_near(position: Vector3, attempts: int = 36) -> int:
 	if not graph_valid or graph.lane_order.is_empty():
 		return -1
+	# Prefer usable travel roads after canonical controls are installed.
+	# Randomly choosing the many protected turn connectors would waste most
+	# attempts and starve otherwise safe local traffic density.
+	var candidates: Array[String] = []
+	for lane_id in graph.lane_order:
+		if not movement_junction.has(lane_id):
+			candidates.append(lane_id)
+	if candidates.is_empty():
+		candidates = graph.lane_order.duplicate()
 	for _i in range(attempts):
-		var lid: String = graph.lane_order[_rng.randi_range(0, graph.lane_order.size() - 1)]
+		var lid: String = candidates[_rng.randi_range(0, candidates.size() - 1)]
 		var length_m: float = graph.lane_length(lid)
 		if length_m < 15.0:
 			continue
@@ -300,29 +448,62 @@ func _calculate_command(a: Dictionary, dt: float) -> Dictionary:
 		desired = minf(desired, sqrt(2.0 * BRAKE_MPS2 * maxf(obstacle_gap - MIN_GAP_M, 0.0)))
 		mode = "BRAKE_FOR_OBSTACLE"
 	var junction_id: String = inbound_junction.get(lid, "")
-	if junction_id != "" and a["next_lane"] != "" and remaining < APPROACH_M and a["reserved_junction"] == "":
+	var stop_offset: float = float(inbound_stop_offsets.get(lid, STOP_OFFSET_M))
+	var approach_distance: float = maxf(APPROACH_M, stop_offset + 42.0) if inbound_stop_offsets.has(lid) else APPROACH_M
+	if junction_id != "" and a["next_lane"] != "" and remaining < approach_distance and a["reserved_junction"] == "":
 		var j: Dictionary = junctions[junction_id]
 		var blocked := _junction_blocked(a, junction_id, j)
 		if blocked:
-			desired = minf(desired, sqrt(2.0 * BRAKE_MPS2 * maxf(remaining - STOP_OFFSET_M, 0.0)))
+			desired = minf(desired, sqrt(2.0 * BRAKE_MPS2 * maxf(remaining - stop_offset, 0.0)))
 			mode = "WAIT_AT_JUNCTION"
-		elif remaining < 3.4:
-			# Reservation is granted in ID order and retained through the crossing.
-			reservations[junction_id] = a["id"]
-			a["reserved_junction"] = junction_id
-			a["entered_lane"] = a["next_lane"]
-			a["clearance_m"] = j["clearance_m"]
+		elif remaining < stop_offset + 0.9:
+			# Movement-owned keys permit nonconflicting turns concurrently.
+			# All mutations occur in sorted agent-ID order at fixed 30 Hz.
+			var movement: String = a["next_lane"]
+			var key: String = "%s@%d" % [junction_id, int(a["id"])] if movement_junction.get(movement, "") == junction_id else junction_id
+			reservations[key] = a["id"]
+			a["reserved_junction"] = key
+			a["reservation_zone"] = junction_id
+			a["reservation_movement"] = movement
+			var exit_point: Dictionary = _reservation_exit(a, junction_id, j)
+			a["entered_lane"] = exit_point["lane"]
+			a["clearance_m"] = exit_point["s"]
 	if a["reserved_junction"] != "":
 		mode = "FOLLOW_LANE"
 	# Force stopping at the stop line without crossing it if another car owns it.
-	if mode == "WAIT_AT_JUNCTION" and remaining <= STOP_OFFSET_M + 0.15:
+	if mode == "WAIT_AT_JUNCTION" and remaining <= stop_offset + 0.15:
 		desired = 0.0
 	return {"desired": maxf(0.0, desired), "mode": mode, "leader": leader,
-		"obstacle_gap": obstacle_gap}
+		"obstacle_gap": obstacle_gap, "stop_offset": stop_offset}
 
 
 func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> bool:
-	if reservations.has(junction_id) and reservations[junction_id] != a["id"]:
+	var movement: String = a["next_lane"]
+	if movement_junction.get(movement, "") == junction_id:
+		# Compare active turning movements; opposite-direction travel lanes
+		# are not automatically treated as occupying the same conflict zone.
+		for key in reservations:
+			var other_id: int = int(reservations[key])
+			if other_id == a["id"] or not agents.has(other_id):
+				continue
+			var other: Dictionary = agents[other_id]
+			if other.get("reservation_zone", "") != junction_id:
+				continue
+			var other_movement: String = str(other.get("reservation_movement", ""))
+			if other_movement == movement:
+				# Rear-end following on the same route is separately enforced by
+				# _find_leader(). Keep only a short exclusive entrance gap, rather
+				# than queuing every following car through the entire long turn.
+				if _movement_progress(other, movement) < 12.0:
+					return true
+				continue
+			if movement_conflicts[movement].has(other_movement):
+				# An owner may still be clearing some OTHER turn. Do not block
+				# this one once the owner has passed their last shared conflict.
+				var progress: float = _movement_progress(other, other_movement)
+				if progress < float(movement_pair_release[other_movement][movement]):
+					return true
+	elif reservations.has(junction_id) and reservations[junction_id] != a["id"]:
 		return true
 	var mode: String = j["mode"]
 	if mode == "signal":
@@ -331,7 +512,8 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 			return true
 	if mode == "stop" and not a["stop_done"]:
 		# Stop signs require full stop and a finite dwell, no instantaneous rolling stop.
-		if graph.lane_length(a["lane_id"]) - a["s"] < 3.4 and a["speed_mps"] < 0.45:
+		var offset: float = float(inbound_stop_offsets.get(a["lane_id"], STOP_OFFSET_M))
+		if graph.lane_length(a["lane_id"]) - a["s"] < offset + 0.9 and a["speed_mps"] < 0.45:
 			a["wait_s"] += FIXED_STEP
 			if a["wait_s"] >= j["stop_s"]:
 				a["stop_done"] = true
@@ -394,7 +576,7 @@ func _integrate(a: Dictionary, command: Dictionary, dt: float) -> void:
 	if command["obstacle_gap"] < INF:
 		distance = minf(distance, maxf(0.0, command["obstacle_gap"] - MIN_GAP_M))
 	if command["mode"] == "WAIT_AT_JUNCTION":
-		distance = minf(distance, maxf(0.0, graph.lane_length(a["lane_id"]) - a["s"] - STOP_OFFSET_M))
+		distance = minf(distance, maxf(0.0, graph.lane_length(a["lane_id"]) - a["s"] - float(command["stop_offset"])))
 	if distance <= 0.0001 and speed > 0.01:
 		next_speed = maxf(0.0, speed - EMERGENCY_BRAKE_MPS2 * dt)
 	a["last_acceleration_mps2"] = (next_speed - speed) / dt
@@ -433,6 +615,8 @@ func _integrate(a: Dictionary, command: Dictionary, dt: float) -> void:
 		if reservations.get(jid, -1) == a["id"]:
 			reservations.erase(jid)
 		a["reserved_junction"] = ""
+		a["reservation_zone"] = ""
+		a["reservation_movement"] = ""
 		a["entered_lane"] = ""
 	var pose: Dictionary = graph.get_pose(a["lane_id"], a["s"])
 	a["position"] = pose["position"]
