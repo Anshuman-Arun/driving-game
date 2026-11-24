@@ -2,6 +2,10 @@
 
 Last updated: 2026-11-23
 
+## Premium world repair and vehicle art (`feat/world-visual-premium-overhaul`)
+
+The root game checks vegetation, authored props and static obstacles against the actual rendered road and shoulder triangles. The secondary scatter layer that placed malformed foliage over pavement has been replaced in the live scene by the validated vegetation layer and converted, UV-matched premium meshes. All 16 corridors and three bridges passed representative live driving checks. Solace GT joins the three existing roster entries and uses the same vehicle physics and versioned save format. The [visual QA report](WORLD_VISUAL_QA.md) records matched 1080p captures, performance, source provenance and regression details.
+
 ## Premium graphics asset acquisition (`feat/gfx-premium-assets`)
 
 Added a curated CC0 source catalog, a hash-checked, staged Poly Haven glTF/PBR downloader and a graphics-swarm asset handoff under `assets/premium_world/`. Existing assets, rendering, scenes and gameplay remain unchanged. Direct download and Godot runtime validation are not available in the ChatGPT container; payload acquisition, mesh optimization, visual integration and performance QA remain pending until confirmed. See `assets/premium_world/README.md`.

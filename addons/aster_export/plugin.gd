@@ -9,7 +9,7 @@ class RuntimeScripts extends EditorExportPlugin:
 		# Godot's resource scanner skips the separate module projects.
 		for folder in ["res://modules/game_shell/scripts", "res://modules/world_runtime/src", "res://modules/scenery/src"]:
 			for filename: String in DirAccess.get_files_at(folder):
-				if filename.get_extension() != "gd":
+				if filename.get_extension() not in ["gd", "gdshader", "gdshaderinc"]:
 					continue
 				var path: String = folder.path_join(filename)
 				add_file(path, FileAccess.get_file_as_bytes(path), false)
