@@ -19,6 +19,7 @@ func _initialize() -> void:
 	success = test_constant_power_blending() and success
 	success = test_load_layer_blending() and success
 	success = test_low_rpm_coast_fallback() and success
+	success = test_pitch_matched_crossfade() and success
 	success = test_controller_lifecycle_and_smoothing() and success
 	success = test_rev_limiter_stutter() and success
 	success = test_gear_shift_envelope() and success
@@ -163,7 +164,7 @@ func test_constant_power_blending() -> bool:
 			# Verify pitch scaling clamp ranges
 			for p in (state["on_pitches"] as Dictionary).values():
 				var pitch := float(p)
-				if pitch < 0.40 or pitch > 1.40:
+				if pitch < 0.40 or pitch > 1.56:
 					push_error("[%s] RPM %.1f pitch scale out of range: %f" % [prof, rpm, pitch])
 					return false
 
@@ -221,6 +222,30 @@ func test_low_rpm_coast_fallback() -> bool:
 	if not (float(middle["on_layer_gain"]) > 0.0 and float(middle["off_layer_gain"]) > 0.0):
 		push_error("Coast fallback must crossfade smoothly")
 		return false
+	return true
+
+
+func test_pitch_matched_crossfade() -> bool:
+	for prof in PROFILES:
+		var manifest := EngineProfileManifest.load_for_profile(prof)
+		if manifest == null:
+			return false
+		for layer in ["on", "off"]:
+			if layer == "off" and not manifest.has_off_layer:
+				continue
+			var anchors: Array = manifest.get_anchors_for_layer(layer)
+			for index in range(anchors.size() - 1):
+				var a: Dictionary = anchors[index]
+				var b: Dictionary = anchors[index + 1]
+				for step in range(101):
+					var rpm := lerpf(float(a["rpm"]), float(b["rpm"]), step / 100.0)
+					var pair := RecordedEngineController.compute_anchor_pair(manifest.find_bracketing_anchors(layer, rpm), rpm)
+					for anchor in [a, b]:
+						var key := str(anchor["file"])
+						if float(pair["gains"].get(key, 0.0)) > 0.001:
+							if absf(float(pair["pitches"][key]) * float(anchor["rpm"]) - rpm) > 0.1:
+								push_error("Active anchor is not pitch matched: %s %s %.1f" % [prof, key, rpm])
+								return false
 	return true
 
 
