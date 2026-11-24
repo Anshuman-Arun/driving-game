@@ -59,6 +59,7 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 		"load": clampf(throttle + brake * 0.07, 0.0, 1.0),
 		"gear": gear,
 		"speed_mps": speed,
+		"vertical_speed_mps": velocity.y,
 		"forward_speed_mps": -velocity.dot(vehicle.global_basis.z),
 		"lateral_slip": combined_slip if grounded else 0.0,
 		"slip_amount": combined_slip if grounded else 0.0,
