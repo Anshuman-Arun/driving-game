@@ -77,7 +77,7 @@ const BUS_SPECS: Array[Dictionary] = [
 	{"name": BUS_EXHAUST_REFLECTION, "default_send": BUS_MASTER, "sfx_send": BUS_SFX, "default_gain": -18.0},
 	{"name": BUS_TIRES, "default_send": BUS_MASTER, "sfx_send": BUS_SFX, "default_gain": -10.0},
 	{"name": BUS_WIND_CHASSIS, "default_send": BUS_MASTER, "sfx_send": BUS_SFX, "default_gain": -14.0},
-	{"name": BUS_AMBIENCE, "default_send": BUS_MASTER, "sfx_send": BUS_MASTER, "default_gain": -20.0},
+	{"name": BUS_AMBIENCE, "default_send": BUS_MASTER, "sfx_send": BUS_SFX, "default_gain": -20.0},
 	{"name": BUS_MUSIC, "default_send": BUS_MASTER, "sfx_send": BUS_MASTER, "default_gain": -18.0},
 	{"name": BUS_UI, "default_send": BUS_MASTER, "sfx_send": BUS_SFX, "default_gain": -12.0},
 ]
