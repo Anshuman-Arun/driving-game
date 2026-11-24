@@ -51,6 +51,11 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 		"idle_rpm": float(_read(vehicle, properties, "idle_rpm", 950.0)),
 		"max_rpm": float(_read(vehicle, properties, "max_rpm", 7100.0)),
 		"throttle": throttle,
+		# Keep the legacy pedal contract, but GEVP's actual motor pedal is
+		# throttle_input in both forward and reverse (adapter swaps it).
+		"engine_throttle": throttle_input,
+		"shift_active": bool(_read(vehicle, properties, "is_shifting", false)),
+		"requested_gear": int(_read(vehicle, properties, "requested_gear", gear)),
 		"load": clampf(throttle + brake * 0.07, 0.0, 1.0),
 		"gear": gear,
 		"speed_mps": speed,
