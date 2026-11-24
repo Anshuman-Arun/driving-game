@@ -106,12 +106,15 @@ func _rectangle_in_view(x0: float, z0: float, x1: float, z1: float) -> bool:
 
 func _new_arrays(vertices: PackedVector3Array, normals: PackedVector3Array,
 		uvs: PackedVector2Array, indices: PackedInt32Array,
-		tangents: PackedFloat32Array = PackedFloat32Array()) -> Array:
+		tangents: PackedFloat32Array = PackedFloat32Array(),
+		uv2: PackedVector2Array = PackedVector2Array()) -> Array:
 	var arr := []
 	arr.resize(Mesh.ARRAY_MAX)
 	arr[Mesh.ARRAY_VERTEX] = vertices
 	arr[Mesh.ARRAY_NORMAL] = normals
 	arr[Mesh.ARRAY_TEX_UV] = uvs
+	if not uv2.is_empty():
+		arr[Mesh.ARRAY_TEX_UV2] = uv2
 	if not tangents.is_empty():
 		arr[Mesh.ARRAY_TANGENT] = tangents
 	if not indices.is_empty():
@@ -345,7 +348,9 @@ func _section(points: PackedVector3Array, i: int, half_width: float, elevated :=
 
 func _append_quad(verts: PackedVector3Array, normals: PackedVector3Array,
 		uvs: PackedVector2Array, a: Vector3, b: Vector3, c: Vector3, d: Vector3,
-		u0: float, u1: float, v0: float, v1: float) -> void:
+		u0: float, u1: float, v0: float, v1: float,
+		metric_widths: PackedVector2Array = PackedVector2Array(),
+		width_a: float = 0.0, width_b: float = 0.0) -> void:
 	# a,b are left/right at first station, c,d at next station.
 	var flat_normal := (b - a).cross(c - a).normalized()
 	if flat_normal.y < 0.0:
@@ -365,6 +370,8 @@ func _append_quad(verts: PackedVector3Array, normals: PackedVector3Array,
 				verts.append(d)
 				uvs.append(Vector2(u1, v1))
 		normals.append(flat_normal)
+		if width_a > 0.0:
+			metric_widths.append(Vector2(width_a if index < 2 else width_b, 0.0))
 
 func _road_width(base: float, profile: Dictionary, station: float, full_length: float) -> float:
 	if profile.is_empty():
@@ -392,6 +399,8 @@ func physical_shoulder(surface: String, profile: Dictionary, station: float, ful
 	return lerpf(SHOULDER_M, target, _network_factor(profile, station, full_length))
 
 func _bridge_station(profile: Dictionary, station: float) -> bool:
+	if profile.has("support_start"):
+		return station >= float(profile["support_start"]) - 0.008 and station <= float(profile["support_end"]) + 0.008
 	return profile.has("bridge_start") and station >= float(profile["bridge_start"]) - 0.008 and station <= float(profile["bridge_end"]) + 0.008
 
 func _build_corridor(parent: Node3D, road: Dictionary) -> void:
@@ -404,6 +413,7 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 	var pavement_verts := PackedVector3Array()
 	var pavement_norms := PackedVector3Array()
 	var pavement_uv := PackedVector2Array()
+	var pavement_widths := PackedVector2Array()
 	var shoulder_verts := PackedVector3Array()
 	var shoulder_norms := PackedVector3Array()
 	var shoulder_uv := PackedVector2Array()
@@ -442,10 +452,10 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 			cumulative / 4.0, (cumulative + length) / 4.0)
 		_append_quad(pavement_verts, pavement_norms, pavement_uv,
 			a[1], a[2], b[1], b[2], 0.0, half_width / 4.0,
-			cumulative / 8.0, (cumulative + length) / 8.0)
+			cumulative / 8.0, (cumulative + length) / 8.0, pavement_widths, width_a * 2.0, width_b * 2.0)
 		_append_quad(pavement_verts, pavement_norms, pavement_uv,
 			a[2], a[3], b[2], b[3], half_width / 4.0, half_width * 2.0 / 4.0,
-			cumulative / 8.0, (cumulative + length) / 8.0)
+			cumulative / 8.0, (cumulative + length) / 8.0, pavement_widths, width_a * 2.0, width_b * 2.0)
 		_append_quad(shoulder_verts, shoulder_norms, shoulder_uv,
 			a[3], a[4], b[3], b[4], 0.0, SHOULDER_M / 4.0,
 			cumulative / 4.0, (cumulative + length) / 4.0)
@@ -455,7 +465,7 @@ func _build_corridor(parent: Node3D, road: Dictionary) -> void:
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
 		_new_arrays(pavement_verts, pavement_norms, pavement_uv, PackedInt32Array(),
-			_compute_triangle_tangents(pavement_verts, pavement_norms, pavement_uv)))
+			_compute_triangle_tangents(pavement_verts, pavement_norms, pavement_uv), pavement_widths))
 	mesh.surface_set_material(0, materials[surface])
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,
 		_new_arrays(shoulder_verts, shoulder_norms, shoulder_uv, PackedInt32Array(),

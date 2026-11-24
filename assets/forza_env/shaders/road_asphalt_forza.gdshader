@@ -3,7 +3,7 @@ render_mode cull_back, diffuse_burley, specular_schlick_ggx;
 
 // Forza-tier weathered alpine asphalt corridor shader.
 // mesh_builder.gd sets pavement UV.x from 0.0 to half_width*2/4.0 (1.70 for 6.8m road)
-// and UV.y = cumulative_arc_length / 8.0.
+// and UV.y = cumulative_arc_length / 8.0. UV2.x carries physical pavement width in meters.
 
 uniform sampler2D asphalt_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D asphalt_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -48,8 +48,10 @@ void fragment() {
 	float across = clamp(UV.x / max(road_uv_width, 0.001), 0.0, 1.0);
 
 	// Primary detail UV + secondary macro UV to break long-straight tiling.
-	vec2 uv_det = vec2(UV.x * detail_tile_u, UV.y * detail_tile_v);
-	vec2 uv_mac = vec2(UV.x * (detail_tile_u * 0.43) + 0.37, UV.y * (detail_tile_v * 0.43) + 0.19);
+	float pavement_width = max(UV2.x, 6.8);
+	float metric_u = across * pavement_width / 4.0;
+	vec2 uv_det = vec2(metric_u * detail_tile_u, UV.y * detail_tile_v);
+	vec2 uv_mac = vec2(metric_u * (detail_tile_u * 0.43) + 0.37, UV.y * (detail_tile_v * 0.43) + 0.19);
 
 	float macro_var = value_noise(world_pos.xz * 0.065);
 	float fine_var = value_noise(world_pos.xz * 0.32);
@@ -86,18 +88,18 @@ void fragment() {
 
 	// --- Crisp Highway Road Markings ---
 	// Anti-aliased width using screen-space derivative so lines stay sharp without shimmer.
-	float aa = max(fwidth(across) * 1.15, 0.0022);
+	float aa = max(fwidth(across) * pavement_width * 1.15, 0.015);
 
 	// Dashed yellow center stripe (UV.y is 8m per unit -> 3.2m dash, 4.8m gap).
-	float center_dist = abs(across - 0.5);
-	float center_band = 1.0 - smoothstep(0.011 - aa, 0.011 + aa, center_dist);
+	float center_dist = abs(across - 0.5) * pavement_width;
+	float center_band = 1.0 - smoothstep(0.075 - aa, 0.075 + aa, center_dist);
 	float dash_cycle = fract(UV.y * 1.0);
 	float dash_mask = smoothstep(0.0, 0.025, dash_cycle) * (1.0 - smoothstep(0.40, 0.425, dash_cycle));
 	float center_paint = center_band * dash_mask;
 
-	// Solid white outer edge lines at across = 0.055 and across = 0.945.
-	float left_edge_line = 1.0 - smoothstep(0.0095 - aa, 0.0095 + aa, abs(across - 0.055));
-	float right_edge_line = 1.0 - smoothstep(0.0095 - aa, 0.0095 + aa, abs(across - 0.945));
+	// Constant 0.13 m paint width and 0.37 m inset, even on widening tapers.
+	float left_edge_line = 1.0 - smoothstep(0.065 - aa, 0.065 + aa, abs(across * pavement_width - 0.37));
+	float right_edge_line = 1.0 - smoothstep(0.065 - aa, 0.065 + aa, abs((1.0 - across) * pavement_width - 0.37));
 	float edge_paint = max(left_edge_line, right_edge_line);
 
 	// Natural paint wear so asphalt aggregate subtly pokes through.

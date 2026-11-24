@@ -93,6 +93,11 @@ for corridor, work in works.items():
         record["bridge_end"] = round(float(distances[indices[-1]]), 3)
         record["water_level"] = work["water_level"]
         print(corridor, record["bridge_start"], record["bridge_end"], len(waters[-1]["cells"]))
+    if corridor == "valley_lake":
+        # Existing road deck spans a deep depression in the roadworks raster.
+        # Use exact centerline stations to support the span without changing water.
+        record["support_start"] = round(float(distances[84]), 3)
+        record["support_end"] = round(float(distances[99]), 3)
     designed[corridor] = record
 
 np.round(height * 100).astype("<u2").tofile(output / "terrain_roadworks_r16le.bin")

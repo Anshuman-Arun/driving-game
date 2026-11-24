@@ -49,6 +49,7 @@ func run() -> void:
 				check(not hit.is_empty() and hit.collider.get_meta("world_surface", "") in ["asphalt", "gravel"], str(road["id"]) + " expanded pavement at " + str(i))
 				check(world.get_roadside_clearance(point.x, point.z) < 0.0, "clearance covers pavement")
 	check(samples > 200, "network-wide edge coverage")
+	check(int(world.report.get("bridges", 0)) == 4, "three existing crossings and one supported scenic span")
 	print("Map width: %d edge rays, %d failures" % [samples, failures])
 	quit(1 if failures else 0)
 
