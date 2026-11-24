@@ -98,15 +98,8 @@ func _setup_lowpass_filter() -> void:
 	if bus_idx < 0:
 		return
 
-	# Check if an AudioEffectLowPassFilter or AudioEffectFilter already exists on wind_bus
-	for i in range(AudioServer.get_bus_effect_count(bus_idx)):
-		var effect := AudioServer.get_bus_effect(bus_idx, i)
-		if effect is AudioEffectLowPassFilter:
-			_wind_lpf = effect as AudioEffectLowPassFilter
-			_owns_lpf = false
-			return
-
-	# Otherwise, create and attach our own lowpass filter to wind_bus
+	# Separate speed shaping from the camera's existing cabin lowpass.
+	# Cascaded filters retain both effects instead of fighting every frame.
 	_wind_lpf = AudioEffectLowPassFilter.new()
 	_wind_lpf.cutoff_hz = lpf_min_hz
 	_wind_lpf.resonance = 0.5
