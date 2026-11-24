@@ -24,9 +24,16 @@ jobs:
             assets/audio/recorded
             tools/recorded_audio
             .gitattributes
+      - name: Install FFmpeg if missing
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -q
+            sudo apt-get install -y --no-install-recommends ffmpeg
+          fi
+          ffmpeg -version > /tmp/ffmpeg-version.txt
+          head -n 1 /tmp/ffmpeg-version.txt
       - name: Verify tools and acquire
         run: |
-          ffmpeg -version | head -n 1
           python3 -m py_compile tools/recorded_audio/acquire.py
           python3 tools/recorded_audio/acquire.py
           python3 tools/recorded_audio/acquire.py --verify
