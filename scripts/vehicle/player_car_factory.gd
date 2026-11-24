@@ -5,12 +5,13 @@ extends RefCounted
 const VehicleScript = preload("res://addons/gevp/scripts/vehicle.gd")
 const WheelScript = preload("res://addons/gevp/scripts/wheel.gd")
 const DriftControllerScript = preload("res://scripts/vehicle/drift_controller.gd")
+const AudioControllerScript = preload("res://modules/audio/audio_controller.gd")
 
 const DEFAULT_CAR := "vela_gt"
 const PRESETS := {
-	"vela_gt": {"name": "VelaGT", "mass": 1390.0, "torque": 480.0, "final_drive": 3.6, "front_split": 0.0, "paint": Color(0.075, 0.21, 0.41)},
-	"orion_rs": {"name": "OrionRS", "mass": 1190.0, "torque": 380.0, "final_drive": 3.9, "front_split": 0.0, "paint": Color(0.08, 0.45, 0.34)},
-	"kestrel_xr": {"name": "KestrelXR", "mass": 1540.0, "torque": 575.0, "final_drive": 3.3, "front_split": 0.35, "paint": Color(0.33, 0.22, 0.52)},
+	"vela_gt": {"name": "VelaGT", "mass": 1390.0, "torque": 480.0, "final_drive": 3.6, "front_split": 0.0, "paint": Color(0.075, 0.21, 0.41), "idle_rpm": 950.0, "max_rpm": 7100.0},
+	"orion_rs": {"name": "OrionRS", "mass": 1190.0, "torque": 380.0, "final_drive": 3.9, "front_split": 0.0, "paint": Color(0.08, 0.45, 0.34), "idle_rpm": 1000.0, "max_rpm": 8500.0},
+	"kestrel_xr": {"name": "KestrelXR", "mass": 1540.0, "torque": 575.0, "final_drive": 3.3, "front_split": 0.35, "paint": Color(0.33, 0.22, 0.52), "idle_rpm": 800.0, "max_rpm": 6900.0},
 }
 
 static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
@@ -31,8 +32,8 @@ static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
 	# Simcade starting tune derived from GEVP's simcade example, re-authored for Vela GT.
 	car.vehicle_mass = preset["mass"]
 	car.max_torque = preset["torque"]
-	car.max_rpm = 7100.0
-	car.idle_rpm = 950.0
+	car.max_rpm = float(preset.get("max_rpm", 7100.0))
+	car.idle_rpm = float(preset.get("idle_rpm", 950.0))
 	car.final_drive = preset["final_drive"]
 	car.front_torque_split = preset["front_split"]
 	car.automatic_transmission = true
@@ -154,6 +155,13 @@ static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
 	_marker(mounts, "Cockpit", Vector3(-0.34, 0.94, -0.05))
 	var drift := DriftControllerScript.new()
 	car.add_child(drift)
+	var audio := AudioControllerScript.new()
+	audio.name = "VehicleAudio"
+	audio.car_profile = car_id
+	audio.set_profile(car_id)
+	audio.process_mode = Node.PROCESS_MODE_PAUSABLE
+	car.add_child(audio)
+	audio.bind_gevp_vehicle(car)
 	return car
 
 static func _marker(parent: Node3D, label: String, offset: Vector3) -> void:

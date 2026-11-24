@@ -2,7 +2,7 @@ extends SceneTree
 ## Run: godot --headless --path modules/audio --script res://tests/godot_smoke.gd
 
 func _initialize() -> void:
-	var controller_script = load("res://audio_controller.gd")
+	var controller_script = load("res://modules/audio/audio_controller.gd") if ResourceLoader.exists("res://modules/audio/audio_controller.gd") else load("res://audio_controller.gd")
 	var idling: Dictionary = controller_script.compute_targets({"rpm": 950.0, "speed_mps": 0.0})
 	var accelerating: Dictionary = controller_script.compute_targets({"rpm": 6800.0, "throttle": 1.0, "load": 1.0, "speed_mps": 40.0})
 	var slipping: Dictionary = controller_script.compute_targets({"rpm": 4000.0, "speed_mps": 25.0, "lateral_slip": 0.95, "grip": 0.2, "surface": "asphalt"})

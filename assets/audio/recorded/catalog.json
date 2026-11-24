@@ -1,0 +1,432 @@
+{
+  "version": 1,
+  "banks": [
+    {
+      "profile": "vela_gt",
+      "source": "https://github.com/justinagaudelli-eng/supercar-engine-sound/tree/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs",
+      "license": "CC-BY-3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "status": "audition_candidate",
+      "notes": "Real exhaust excerpts; upstream RPM and load labels are estimates from field recordings, not controlled dyno recordings. Verify original Commons license-review status and listening quality before production release.",
+      "credits": [
+        {
+          "title": "Porsche 911 GT3 RS - engine and exhaust sound (YouTube 1t2wz1iLHJ4)",
+          "author": "Supercars67",
+          "license": "CC BY 3.0",
+          "url": "https://commons.wikimedia.org/wiki/File:Porsche_911_GT3_RS_-_engine_and_exhaust_sound_(YouTube_1t2wz1iLHJ4).opus",
+          "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+        },
+        {
+          "title": "Porsche 911 GT3 RS - engine and exhaust sound (YouTube hpwTF8TXcaA)",
+          "author": "NEW CARS 2015   Official",
+          "license": "CC BY 3.0",
+          "url": "https://commons.wikimedia.org/wiki/File:Porsche_911_GT3_RS_-_engine_and_exhaust_sound_(YouTube_hpwTF8TXcaA).opus",
+          "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+        },
+        {
+          "title": "Porsche 911 GT3 RS (991) - engine and exhaust sound (YouTube otznJ2rBoks)",
+          "author": "Automotion Media",
+          "license": "CC BY 3.0",
+          "url": "https://commons.wikimedia.org/wiki/File:Porsche_911_GT3_RS_(991)_-_engine_and_exhaust_sound_(YouTube_otznJ2rBoks).opus",
+          "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+        }
+      ],
+      "loops": [
+        {
+          "file": "on_2000.wav",
+          "rpm": 2000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_2000.wav",
+          "git_blob": "6353b59231c475b9e096700b7c05a1047a09f065",
+          "size": 134444
+        },
+        {
+          "file": "on_3000.wav",
+          "rpm": 3000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_3000.wav",
+          "git_blob": "cea7026750a65b4bf093b65c4d250f1e0658ede4",
+          "size": 29484
+        },
+        {
+          "file": "on_4000.wav",
+          "rpm": 4000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_4000.wav",
+          "git_blob": "be59a6a5a84280bb144c205cd2309c2d0693598d",
+          "size": 25004
+        },
+        {
+          "file": "on_5000.wav",
+          "rpm": 5000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_5000.wav",
+          "git_blob": "1ebf804c053418d5e9595883f5590a1889b01589",
+          "size": 93740
+        },
+        {
+          "file": "on_6000.wav",
+          "rpm": 6000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_6000.wav",
+          "git_blob": "d1a22986f791cd4fc573e4b3f410a4f0d216674d",
+          "size": 101164
+        },
+        {
+          "file": "on_7000.wav",
+          "rpm": 7000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_7000.wav",
+          "git_blob": "40c41a0e95e87ab52c10d7a11cb59a13297d8028",
+          "size": 101256
+        },
+        {
+          "file": "on_8000.wav",
+          "rpm": 8000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/on_8000.wav",
+          "git_blob": "9b41ae861621e7dd8e962be410a1d5b4df39f154",
+          "size": 135164
+        },
+        {
+          "file": "off_2000.wav",
+          "rpm": 2000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_2000.wav",
+          "git_blob": "3e776e7afc3a4b7460c2bc77a45c070ccba913d6",
+          "size": 74924
+        },
+        {
+          "file": "off_3000.wav",
+          "rpm": 3000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_3000.wav",
+          "git_blob": "308f8edc6daf017e46d59806761400cdc4a7048f",
+          "size": 36524
+        },
+        {
+          "file": "off_4000.wav",
+          "rpm": 4000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_4000.wav",
+          "git_blob": "a1411f57ded8df00285770b686c18806f3adfe22",
+          "size": 17324
+        },
+        {
+          "file": "off_5000.wav",
+          "rpm": 5000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_5000.wav",
+          "git_blob": "3c851db9ca4a3d90edfdfeea96c9fc48872a2d96",
+          "size": 21548
+        },
+        {
+          "file": "off_6000.wav",
+          "rpm": 6000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_6000.wav",
+          "git_blob": "95d0b39a831c1f29104124e4d4bf47e007aaa172",
+          "size": 110764
+        },
+        {
+          "file": "off_7000.wav",
+          "rpm": 7000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_7000.wav",
+          "git_blob": "271f2d428cf468a8e88cde762973b13cef4622e4",
+          "size": 111952
+        },
+        {
+          "file": "off_8000.wav",
+          "rpm": 8000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/gt3rs/off_8000.wav",
+          "git_blob": "e6ad2924c940814885735f522724b31874cad260",
+          "size": 93884
+        }
+      ]
+    },
+    {
+      "profile": "kestrel_xr",
+      "source": "https://github.com/justinagaudelli-eng/supercar-engine-sound/tree/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt",
+      "license": "CC-BY-3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "status": "audition_candidate",
+      "notes": "Real exhaust excerpts; upstream RPM and load labels are estimates from field recordings, not controlled dyno recordings. Verify original Commons license-review status and listening quality before production release.",
+      "credits": [
+        {
+          "title": "McLaren 765LT - engine and exhaust sound (YouTube 5oSRv66QFW0)",
+          "author": "Hungarian Supercar Spotters",
+          "license": "CC BY 3.0",
+          "url": "https://commons.wikimedia.org/wiki/File:McLaren_765LT_-_engine_and_exhaust_sound_(YouTube_5oSRv66QFW0).opus",
+          "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+        },
+        {
+          "title": "McLaren 600LT with Fi Exhaust system - engine and exhaust sound (YouTube RXj9PUkF0gk)",
+          "author": "FiExhaust",
+          "license": "CC BY 3.0",
+          "url": "https://commons.wikimedia.org/wiki/File:McLaren_600LT_with_Fi_Exhaust_system_-_engine_and_exhaust_sound_(YouTube_RXj9PUkF0gk).opus",
+          "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+        },
+        {
+          "title": "McLaren 720S with Novitec exhaust - engine and exhaust sound (YouTube XfgP-gX7KNg)",
+          "author": "Supercars67",
+          "license": "CC BY 3.0",
+          "url": "https://commons.wikimedia.org/wiki/File:McLaren_720S_with_Novitec_exhaust_-_engine_and_exhaust_sound_(YouTube_XfgP-gX7KNg).opus",
+          "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+        }
+      ],
+      "loops": [
+        {
+          "file": "on_1000.wav",
+          "rpm": 1000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_1000.wav",
+          "git_blob": "f98bda415e5e0dc65c0a9f735cc6c45e32ac0c76",
+          "size": 100844
+        },
+        {
+          "file": "on_2000.wav",
+          "rpm": 2000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_2000.wav",
+          "git_blob": "21b8c0bd0c2453c5d72faf0c2993f5396c2319f1",
+          "size": 20924
+        },
+        {
+          "file": "on_3000.wav",
+          "rpm": 3000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_3000.wav",
+          "git_blob": "e91acac13bce6aa3c7d70f8ec07ef67eb3f6fab3",
+          "size": 101324
+        },
+        {
+          "file": "on_4000.wav",
+          "rpm": 4000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_4000.wav",
+          "git_blob": "a32fdf446f76a4f7190e43d9ce9e8427e0d21d38",
+          "size": 101204
+        },
+        {
+          "file": "on_5000.wav",
+          "rpm": 5000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_5000.wav",
+          "git_blob": "27ca46750641c1b454876e5c21583ea73e820f6f",
+          "size": 131660
+        },
+        {
+          "file": "on_6000.wav",
+          "rpm": 6000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_6000.wav",
+          "git_blob": "92b5dbd646c219923a4a2b95b9f0ef72c56ccf86",
+          "size": 101324
+        },
+        {
+          "file": "on_7000.wav",
+          "rpm": 7000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/on_7000.wav",
+          "git_blob": "b7f84d885ad0b5a87dd1798a9ed7e757c1f90a82",
+          "size": 93644
+        },
+        {
+          "file": "off_3000.wav",
+          "rpm": 3000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/off_3000.wav",
+          "git_blob": "bef350f52a8bb621b2c99f96eceb96060cfb515d",
+          "size": 92684
+        },
+        {
+          "file": "off_4000.wav",
+          "rpm": 4000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/off_4000.wav",
+          "git_blob": "246ed84e256c2edb17a105e7589ed34e515b1d98",
+          "size": 37124
+        },
+        {
+          "file": "off_5000.wav",
+          "rpm": 5000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/off_5000.wav",
+          "git_blob": "c0b4babb9fe836365f51aab55716988d14adb3c2",
+          "size": 95372
+        },
+        {
+          "file": "off_6000.wav",
+          "rpm": 6000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/off_6000.wav",
+          "git_blob": "17cbc3c921debc28e797f96e94944656864d98bd",
+          "size": 17564
+        },
+        {
+          "file": "off_7000.wav",
+          "rpm": 7000,
+          "layer": "off",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/justinagaudelli-eng/supercar-engine-sound/3a3875f33f4025b05472bc1312eba1b3e0debac7/public/samples/765lt/off_7000.wav",
+          "git_blob": "20800da9c30f4fb8c6ba23282f938baa2d941bee",
+          "size": 93644
+        }
+      ]
+    },
+    {
+      "profile": "orion_rs",
+      "source": "https://opengameart.org/content/racing-car-engine-sound-loops",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "status": "temporary_recorded_fallback",
+      "notes": "Six pitch-adjusted loops derived from the SAME public-domain car recording. Not true RPM/load capture; RPM anchors below are provisional tuning values, not measured source RPM. Replace with real four-cylinder recording before production acceptance.",
+      "credits": [
+        {
+          "author": "qubodup (Iwan Gabovitch); source recording pdsounds.org",
+          "url": "https://opengameart.org/content/racing-car-engine-sound-loops",
+          "changes": "Original editor cut and pitch-adjusted a single recording; this pipeline resamples to mono 48k PCM and applies common bank headroom."
+        }
+      ],
+      "loops": [
+        {
+          "file": "on_1000.wav",
+          "rpm": 1000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_0.wav",
+          "git_blob": "9bee83cd655dfe70536776e108b9cd1ce27d2662",
+          "size": 76332
+        },
+        {
+          "file": "on_1800.wav",
+          "rpm": 1800,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_1_0.wav",
+          "git_blob": "b90bc103f57ce7613d475df31af1fa26b7bfc196",
+          "size": 58920
+        },
+        {
+          "file": "on_3000.wav",
+          "rpm": 3000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_2_0.wav",
+          "git_blob": "e2e7dfade416013d4010c8a4f9c5d49f6a60ee52",
+          "size": 60322
+        },
+        {
+          "file": "on_4400.wav",
+          "rpm": 4400,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_3_0.wav",
+          "git_blob": "48345e4b0e579aa097be65cc45f324137e5ebb41",
+          "size": 54454
+        },
+        {
+          "file": "on_6000.wav",
+          "rpm": 6000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_4_0.wav",
+          "git_blob": "fa9909ff69107b549145ef8d983839579fe9bd4e",
+          "size": 55760
+        },
+        {
+          "file": "on_8000.wav",
+          "rpm": 8000,
+          "layer": "on",
+          "gain": 1,
+          "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/engine/loop_5_0.wav",
+          "git_blob": "60d961be63cf7b203e01b781cd29b24cbbedb81c",
+          "size": 55648
+        }
+      ]
+    }
+  ],
+  "effects": [
+    {
+      "file": "tires/roll_gravel.wav",
+      "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/tires_gravel.mp3",
+      "git_blob": "f2497f3aa08f7780229717d62ac93752767c1cd2",
+      "size": 305317,
+      "author": "OBXJohn",
+      "source": "https://freesound.org/people/OBXJohn/sounds/251661/",
+      "license": "CC0-1.0",
+      "loop": true,
+      "seconds": 6,
+      "notes": "Trailer tire gravel recording; possible background voices; audition before use. MP3 source, not lossless."
+    },
+    {
+      "file": "ambience/mountain_wind_bed.wav",
+      "url": "https://raw.githubusercontent.com/yashimosh/border-run/38d6afa442a06bbd414f21ac05c0f1b4d08bd705/public/sfx/wind_desert.mp3",
+      "git_blob": "b4faa2fbec8c668a28d623bd6a594ac061d60a7a",
+      "size": 2731680,
+      "author": "Félix Blume",
+      "source": "https://freesound.org/people/felix.blume/sounds/147777/",
+      "license": "CC0-1.0",
+      "loop": true,
+      "seconds": 20,
+      "notes": "Wind around fence, not vehicle airflow. MP3 source; use as ambience only."
+    },
+    {
+      "file": "tires/screech.wav",
+      "url": "https://lpc.opengameart.org/sites/default/files/tires_squal_loop.wav",
+      "author": "Tom Haigh (audible-edge); loop edit by Iwan Gabovitch (qubodup)",
+      "source": "https://lpc.opengameart.org/content/car-tire-squeal-skid-loop",
+      "license": "CC-BY-3.0",
+      "loop": true,
+      "seconds": 0,
+      "notes": "Real tire squeal; 96kHz/24-bit upstream loop, resampled to 48kHz PCM."
+    }
+  ],
+  "impact_pack": {
+    "url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+    "source": "https://kenney.nl/assets/impact-sounds",
+    "author": "Kenney",
+    "license": "CC0-1.0",
+    "notes": "Select up to 4 metal-heavy and 3 generic heavy impact recordings by actual archive names; audition before binding to suspension/collision."
+  },
+  "missing_sources": [
+    {
+      "role": "orion four-cylinder true RPM/load bank and gearshift",
+      "source": "https://freesound.org/people/TheLittleCrow/sounds/669618/",
+      "author": "TheLittleCrow",
+      "license": "CC0-1.0",
+      "notes": "48kHz 24-bit original; login required for original; source not downloaded. Additional shift recording https://freesound.org/people/TheLittleCrow/sounds/669623/."
+    },
+    {
+      "role": "asphalt roll, scrub, in-car wind, grass roll, separate intake, transmission whine, backfire, regional ambience",
+      "notes": "No verified independent source yet. Keep explicit missing slots, source only redistribution-safe recordings, no synthesized stand-ins."
+    }
+  ]
+}
