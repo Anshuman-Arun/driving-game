@@ -41,6 +41,10 @@ cutoff_hz = 20500.0
 [sub_resource type="AudioEffectLowPassFilter" id="AudioEffectLowPassFilter_ruxv2"]
 cutoff_hz = 20500.0
 
+[sub_resource type="AudioEffectHighPassFilter" id="AudioEffectHighPassFilter_intake"]
+cutoff_hz = 420.0
+resonance = 0.5
+
 [resource]
 bus/0/effect/0/effect = SubResource("AudioEffectCompressor_kj2iq")
 bus/0/effect/0/enabled = true
@@ -66,6 +70,8 @@ bus/3/mute = false
 bus/3/bypass_fx = false
 bus/3/volume_db = -12.0
 bus/3/send = &"Master"
+bus/3/effect/0/effect = SubResource("AudioEffectHighPassFilter_intake")
+bus/3/effect/0/enabled = true
 bus/4/name = &"Exhaust_Reflection"
 bus/4/solo = false
 bus/4/mute = false
