@@ -1,5 +1,13 @@
 # Project status — single current-state log
 
+## Recorded audio fidelity pass 2 (`fix/recorded-audio-mix`, 2026-11-24)
+
+Calibrated Orion's manifest by -13 dB: the existing asset ledger estimates its source RMS near -8 dBFS versus -19 to -25 dBFS for the other banks; trimmed Orion RMS is -21.11 to -21.02 dBFS. PCM and attribution are unchanged. Adjacent RPM loops now crossfade only in the interval where both can match nominal firing frequency (default pitch ratio 0.65–1.55), using a shared runtime/diagnostic constant-power function. A 420 Hz high-pass on the derived intake layer reduces duplication of exhaust fundamentals; it is not a genuine induction recording. Synthetic voices are no longer allocated or processed in recorded mode. Tire envelopes advance once per actual physics tick, retain wheel surface proportions, and reduce paved squeal on gravel/grass. Aerodynamic and camera low-pass controls no longer share a filter instance.
+
+Independent numeric sweep against all three actual manifests: 2,727 points across 27 adjacent anchor pairs, max nominal pitch error below 0.000001 RPM and max power-sum error below 0.000001. These are formula and ledger checks, not measured waveforms. Added engine and tire regression cases, not executed in Godot. No local Godot binary/private checkout; PR #37 remains draft pending import and audio playback/capture tests. Genuine idle/coast/intake recordings, Orion replacement, loop seam audition, actual reflection signal routing, traffic spatial sound and final listening/mastering remain open. The supplied samples are candidate field recordings with estimated RPM tags, not measured dyno banks; high-end racing audio quality cannot be certified from these tests.
+
+
+
 ## Recorded audio mix correction (`fix/recorded-audio-mix`, 2026-11-24)
 
 Follow-up to PR #33 (`audio-swarm-pass1`), not a replacement of the asset bank. Recorded engine and chassis own their respective shift, lift-off, impact and suspension events; the old synthetic event pool no longer doubles them. The low-RPM engine mix uses the lowest ON recording at restrained gain when no suitable OFF recording exists, transitioning smoothly into the coast bank near its first anchor. Limiter cuts require applied throttle. Ambient wind now routes through SFX in both the saved and generated layouts. Legacy regressions explicitly select synthetic mode; additional checks cover Kestrel idle/coast blending and recorded event ownership. No new external assets or dependencies.
