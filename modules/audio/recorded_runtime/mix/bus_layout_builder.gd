@@ -195,6 +195,15 @@ static func apply_to_audio_server(route_through_sfx: bool = false) -> void:
 	if exhaust_idx >= 0:
 		AudioServer.add_bus_effect(exhaust_idx, create_camera_lpf())
 
+	# The intake currently reuses exhaust recordings. High-pass the derived
+	# layer to keep it from doubling the exhaust's fundamental.
+	var intake_idx := AudioServer.get_bus_index(BUS_ENGINE_INTAKE)
+	if intake_idx >= 0:
+		var intake_hp := AudioEffectHighPassFilter.new()
+		intake_hp.cutoff_hz = 420.0
+		intake_hp.resonance = 0.5
+		AudioServer.add_bus_effect(intake_idx, intake_hp)
+
 	# 3. Exhaust_Reflection: Wet-only delay + wall acoustic absorption LPF
 	var refl_idx := AudioServer.get_bus_index(BUS_EXHAUST_REFLECTION)
 	if refl_idx >= 0:
