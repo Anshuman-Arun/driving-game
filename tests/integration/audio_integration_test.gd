@@ -67,6 +67,7 @@ func _initialize() -> void:
 		assert(audio.recorded_engine != null, "RecordedEngineController must be active")
 		assert(audio.recorded_tires != null, "RecordedTireController must be active")
 		assert(audio.recorded_chassis != null, "ChassisAudioController must be active")
+		assert(audio._players.is_empty(), "Recorded mode must not allocate legacy loop voices")
 		assert(audio.camera_mix != null, "AsterCameraMixController must be active")
 
 		# Check engine idle state immediately upon spawn
@@ -75,6 +76,9 @@ func _initialize() -> void:
 			pid, engine_ctrl._idle_rpm, engine_ctrl._redline_rpm
 		])
 		assert(engine_ctrl._smoothed_rpm >= engine_ctrl._idle_rpm - 1.0, "Engine must be at idle RPM upon spawn")
+		assert(engine_ctrl._reflection_players.size() == engine_ctrl._exhaust_players.size(), "Every recorded exhaust anchor has a wet reflection route")
+		for mirror in engine_ctrl._reflection_players.values():
+			assert(mirror.bus == &"Exhaust_Reflection", "Reflection voice must route to dedicated wet bus")
 
 		# Clean up car
 		root.remove_child(car)
