@@ -6,6 +6,8 @@ extends SceneTree
 ## 4. Pause mode is Node.PROCESS_MODE_PAUSABLE so vehicle audio pauses cleanly.
 ## 5. Camera mix controller binds and transitions cleanly.
 
+const AudioTestCleanup := preload("res://tests/integration/audio_qa/audio_test_cleanup.gd")
+
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -59,8 +61,7 @@ func _run() -> void:
 		if audio == null:
 			push_error("FAIL: Car %s missing VehicleAudio child node!" % pid)
 			failed = true
-			root.remove_child(car)
-			car.free()
+			await AudioTestCleanup.dispose(self, car)
 			continue
 
 		print("  [PASS] %s has VehicleAudio child node." % pid)
@@ -85,8 +86,7 @@ func _run() -> void:
 			assert(mirror.bus == &"Exhaust_Reflection", "Reflection voice must route to dedicated wet bus")
 
 		# Clean up car
-		root.remove_child(car)
-		car.free()
+		await AudioTestCleanup.dispose(self, car)
 
 	# 3. Test Camera Mix Controller binding
 	print("\n[Check 3] Camera Mix Controller Binding & Perspectives...")
@@ -124,8 +124,7 @@ func _run() -> void:
 
 	root.remove_child(cam)
 	cam.free()
-	root.remove_child(test_car)
-	test_car.free()
+	await AudioTestCleanup.dispose(self, test_car)
 
 	print("\n==================================================")
 	if failed:
