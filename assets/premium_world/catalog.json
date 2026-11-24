@@ -1,0 +1,73 @@
+{
+  "provider": "Poly Haven",
+  "license": "CC0-1.0",
+  "license_url": "https://polyhaven.com/license",
+  "assets": [
+    {
+      "id": "pine_tree_01",
+      "kind": "model",
+      "resolution": "2k",
+      "use": "Cedar Woods mature roadside conifers"
+    },
+    {
+      "id": "pine_sapling_medium",
+      "kind": "model",
+      "resolution": "2k",
+      "use": "Forest edge age variation"
+    },
+    {
+      "id": "fir_sapling_medium",
+      "kind": "model",
+      "resolution": "2k",
+      "use": "North Ridge evergreen variation"
+    },
+    {
+      "id": "tree_small_02",
+      "kind": "model",
+      "resolution": "2k",
+      "use": "Alder Town broadleaf and lake edge"
+    },
+    {
+      "id": "fern_02",
+      "kind": "model",
+      "resolution": "1k",
+      "use": "Woodland understory"
+    },
+    {
+      "id": "grass_medium_01",
+      "kind": "model",
+      "resolution": "1k",
+      "use": "Near-road clumps; not entire terrain"
+    },
+    {
+      "id": "rock_moss_set_02",
+      "kind": "model",
+      "resolution": "2k",
+      "use": "Forest boulders and lake shore"
+    },
+    {
+      "id": "rock_face_02",
+      "kind": "model",
+      "resolution": "2k",
+      "use": "North Ridge road cuts"
+    },
+    {
+      "id": "tree_stump_02",
+      "kind": "model",
+      "resolution": "1k",
+      "use": "Forest detail and deadwood"
+    },
+    {
+      "id": "clean_asphalt",
+      "kind": "texture",
+      "resolution": "4k",
+      "use": "Fresh resurfaced road sections"
+    },
+    {
+      "id": "road_damaged_clean",
+      "kind": "texture",
+      "resolution": "4k",
+      "use": "Older mountain asphalt and patched sections"
+    }
+  ]
+}
