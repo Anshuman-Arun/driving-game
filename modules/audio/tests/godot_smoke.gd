@@ -15,6 +15,7 @@ func _initialize() -> void:
 	assert(float(gravel["roll_gravel"]) > 0.0 and float(gravel["roll_asphalt"]) == 0.0)
 	assert(float(air["roll_asphalt"]) == 0.0)
 	var audio = controller_script.new()
+	audio.use_recorded_runtime = false
 	root.add_child.call_deferred(audio)
 	call_deferred("_check_audio", audio)
 
