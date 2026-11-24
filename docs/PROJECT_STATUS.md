@@ -1,5 +1,13 @@
 # Project status — single current-state log
 
+## Recorded audio fidelity pass 5 (`fix/recorded-audio-mix`, 2026-11-24)
+
+CI run 45441993515 (job 138615380879, revision 2d01ff1) completed. Godot import and all three real-time 31-second profile captures executed: Vela peak -9.34 dBFS, Kestrel -9.83 dBFS, Orion -9.97 dBFS; zero clipped samples and hard flats. The capture runner's signal/coverage gates passed. Strict CI still failed four suites due to ObjectDB/resource leaks at shutdown (tires, legacy smoke, root integration, capture runner); their assertions passed. The other suites, including legacy regression, passed the strict gate. These measurements apply only to the earlier revision and do not establish subjective sound quality.
+
+Added explicit mixer-drain teardown for affected suites, stopping playback before freeing nodes and giving the audio thread time to release resources. Added isolated exhaust-bus capture checks (including idle signal) to prevent ambience from concealing a silent engine, and optional stereo 16-bit PCM audition export via `ASTER_AUDIO_CAPTURE_DIR`. Run `ASTER_AUDIO_CAPTURE_DIR=/absolute/path/to/captures bash tests/integration/audio_qa/run_all.sh` on a Linux checkout with the pinned Godot executable. WAVs are local outputs, not committed assets; no new captured WAVs have been auditioned. Chassis and environment now honor the root gain controls, ambience fades in and is no longer substituted as a duplicate aerodynamic wind layer. All source recordings and vehicle physics are unchanged. New revision requires CI revalidation. Main untouched; PR #37 remains draft.
+
+
+
 ## Recorded audio fidelity pass 4 (`fix/recorded-audio-mix`, 2026-11-24)
 
 Collision loudness now estimates velocity change across a contact step instead of treating road speed as impact speed. This is an approximation of impulse per unit mass, not measured contact force. Suspension and impact cooldowns advance on one clock, not both render and physics ticks. Landings retain pre-contact downward velocity, prioritize touchdown over spring events, and clear stale spring histories when wheels leave contact. The QA jump telemetry includes descending velocity. Added regression checks for these cases.
