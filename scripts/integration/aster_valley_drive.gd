@@ -21,7 +21,7 @@ const PARKED_LIMIT_MPS := 4.0 / 3.6
 @onready var world: WorldRuntime = $WorldRuntime
 var vehicle_body: Vehicle
 var adapter: VehicleAdapter
-var camera: DrivingChaseCamera
+var camera: Camera3D
 var load_ms := 0
 var active_vehicle_id := PlayerCarFactory.DEFAULT_CAR
 var shell_managed := false
@@ -63,6 +63,11 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
+	if ResourceLoader.exists("res://modules/world_runtime/src/guardrail_spline_generator.gd"):
+		var guardrail_gen = load("res://modules/world_runtime/src/guardrail_spline_generator.gd")
+		if guardrail_gen != null and guardrail_gen.has_method("generate_all_corridors"):
+			guardrail_gen.generate_all_corridors(world, self)
+
 	var bounds: Dictionary = world.get_world_metadata()["bounds"]
 	_bounds = Rect2(bounds["min_x"], bounds["min_z"],
 		bounds["max_x"] - bounds["min_x"], bounds["max_z"] - bounds["min_z"])
@@ -77,7 +82,11 @@ func _ready() -> void:
 		push_error("Aster Valley has no valid road spawn.")
 		get_tree().quit(1)
 		return
-	camera = DrivingChaseCamera.new()
+	if ResourceLoader.exists("res://scripts/vehicle/forza_chase_camera.gd"):
+		var CamClass = load("res://scripts/vehicle/forza_chase_camera.gd")
+		camera = CamClass.new()
+	else:
+		camera = DrivingChaseCamera.new()
 	camera.name = "ChaseCamera"
 	camera.process_mode = Node.PROCESS_MODE_PAUSABLE
 	camera.keep_aspect = Camera3D.KEEP_HEIGHT
@@ -118,6 +127,13 @@ func set_scenery_enabled(enabled: bool) -> bool:
 		layer.mesh_overrides["assets/curated/models/environment/pine_tree_lod0.glb"] = pine_mesh
 		layer.mesh_overrides["assets/curated/models/environment/pine_tree_lod1.glb"] = vegetation.conifer_mesh(true)
 	add_child(layer)
+	if ResourceLoader.exists("res://scripts/integration/premium_foliage_runtime.gd"):
+		var FoliageClass = load("res://scripts/integration/premium_foliage_runtime.gd")
+		if FoliageClass != null:
+			var prem_foliage = FoliageClass.new()
+			prem_foliage.name = "PremiumFoliageRuntime"
+			add_child(prem_foliage)
+			prem_foliage.build(world, graphics_preset)
 	if not layer.build_scenery(world):
 		scenery_enabled = false
 		remove_child(layer)

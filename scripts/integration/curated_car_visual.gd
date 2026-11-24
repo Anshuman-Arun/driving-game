@@ -97,6 +97,15 @@ static func mount(car: Vehicle, car_id: String) -> bool:
 	fx.setup(car, model, caliper_pairs)
 	car.add_child(fx)
 
+	# Attach dynamic contact shadow and apply Forza multi-layer paint / glass / tire materials
+	if ResourceLoader.exists("res://scripts/integration/car_material_spec.gd"):
+		var spec = load("res://scripts/integration/car_material_spec.gd")
+		if spec != null:
+			if spec.has_method("attach_contact_shadow"):
+				spec.attach_contact_shadow(car)
+			if spec.has_method("apply_to_vehicle"):
+				spec.apply_to_vehicle(car)
+
 	fallback.hide()
 	for visual in fallback_wheels:
 		visual.hide()
