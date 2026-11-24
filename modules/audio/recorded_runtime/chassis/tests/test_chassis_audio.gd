@@ -117,6 +117,8 @@ func _test_suspension_compression_and_cooldown() -> void:
 	assert(not triggered2, "Trigger during 0.16s cooldown must be suppressed")
 
 	# Advance time by 0.10s (still within 0.16s cooldown)
+	suspension.call("process_physics", 0.10, null, {"on_ground": true})
+	assert(float(suspension.get("_suspension_cooldown_timer")) > 0.15, "Physics must not advance cooldown a second time")
 	suspension._process(0.10)
 	var triggered3: bool = bool(suspension.call("trigger_suspension", 0.8, 1.0))
 	assert(not triggered3, "Trigger at 0.10s must still be suppressed")
@@ -140,20 +142,15 @@ func _test_landing_thump() -> void:
 	# Simulate airborne flight
 	var dt: float = 0.016
 	for i in range(10): # 10 frames = 0.16s in air
-		suspension.call("process_physics", dt, null, {"on_ground": false})
+		suspension.call("process_physics", dt, null, {"on_ground": false, "vertical_speed_mps": -6.5})
 
 	assert(bool(suspension.get("_was_airborne")), "Vehicle must be flagged as airborne")
 
-	# Simulate touchdown with downward speed
-	var mock_vehicle := Node3D.new()
-	mock_vehicle.set("linear_velocity", Vector3(10.0, -6.5, 0.0))
-	root.add_child(mock_vehicle)
-
-	suspension.call("process_physics", dt, mock_vehicle, {"on_ground": true})
+	# Physics has already removed the descent velocity by the touchdown tick.
+	suspension.call("process_physics", dt, null, {"on_ground": true, "vertical_speed_mps": 0.0})
 	assert(not bool(suspension.get("_was_airborne")), "Airborne flag must clear upon touchdown")
 	assert(float(suspension.get("_suspension_cooldown_timer")) > 0.14, "Landing thump must set cooldown timer ~0.16s")
 
-	mock_vehicle.free()
 	suspension.free()
 	print("  -> Contact / landing thump verified.")
 
@@ -165,6 +162,9 @@ func _test_impact_velocity_scaling_and_cooldown() -> void:
 	root.add_child(suspension)
 
 	# 1. Velocity scaling calculation
+	var glancing_speed := ChassisAudioController.estimate_impact_speed(Vector3(40, 0, 0), Vector3(39.8, 0, 0))
+	var head_on_speed := ChassisAudioController.estimate_impact_speed(Vector3(40, 0, 0), Vector3.ZERO)
+	assert(glancing_speed < 1.5 and head_on_speed > 30.0, "Road speed alone must not set collision severity")
 	var gain_parking: float = ChassisSuspensionScript.compute_impact_gain(1.0)
 	assert(gain_parking == 0.0, "Speed < 1.5 m/s should have zero impact gain")
 
