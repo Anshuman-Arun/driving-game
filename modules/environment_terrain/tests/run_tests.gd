@@ -2,6 +2,7 @@ extends SceneTree
 const Preview := preload("../terrain_preview.gd")
 const Mask := preload("../biome_mask.gd")
 const Band := preload("../roadside_band.gd")
+const RockGate := preload("../rock_bank_recipe.gd")
 const Fixture := preload("fixture_world.gd")
 const Runtime := preload("res://modules/world_runtime/src/world_runtime.gd")
 const ValleyEnvironment := preload("res://scripts/integration/aster_valley_environment.gd")
@@ -35,6 +36,15 @@ func run() -> void:
 	check(not preview.apply_candidate(world, {"tuning": {"normal_strength": NAN}}), "nonfinite tuning rejected")
 	check(not preview.apply_candidate(world, {"pilot_bounds": Rect2(999, 999, 10, 10)}), "out-of-bounds pilot rejected")
 	check(world.ground.get_active_material(0) == original, "rejection leaves material untouched")
+	var gate := RockGate.new()
+	var local_box := AABB(Vector3(-0.5, -0.5, -0.5), Vector3.ONE)
+	check(not gate.accepts(Transform3D.IDENTITY, local_box), "unprepared rock gate fails closed")
+	check(gate.prepare(world), "water and road rock gate prepares")
+	check(not gate.accepts(Transform3D(Basis.IDENTITY, Vector3(0, 30, 0)), local_box), "rock over pavement rejected")
+	check(not gate.accepts(Transform3D(Basis.IDENTITY, Vector3(0, 30, 20)), local_box), "rock below bridge rejected")
+	check(not gate.accepts(Transform3D(Basis.IDENTITY, Vector3(14, 30, 14)), local_box), "rock in crossing water rejected")
+	check(gate.accepts(Transform3D(Basis.IDENTITY, Vector3(-15, 30, -18)), local_box), "dry clear bank footprint accepted")
+	check(not gate.accepts(Transform3D(Basis(Vector3.UP, PI / 4.0), Vector3(0, 30, 7.0)), local_box), "rotated rock footprint and setback rejected at shoulder")
 	var band := Band.new()
 	var image := band.build_image(world, region)
 	check(image != null, "roadside CPU raster builds")
@@ -93,6 +103,10 @@ func _test_mask(world, preview, region: Rect2) -> void:
 	bytes.resize(4000000)
 	bytes.fill(127)
 	bytes[0] = 255
+	bytes[1] = 64
+	bytes[2] = 32
+	bytes[3] = 16
+	bytes[4000] = 0
 	var hasher := HashingContext.new()
 	hasher.start(HashingContext.HASH_SHA256)
 	hasher.update(bytes)
@@ -109,7 +123,12 @@ func _test_mask(world, preview, region: Rect2) -> void:
 	raw_file.store_buffer(bytes)
 	raw_file.close()
 	var reader := Mask.new()
-	check(reader.load_mask(dir) is Texture2D, "valid RGBA mask accepted")
+	var cpu_mask := reader.load_image(dir)
+	check(cpu_mask != null, "valid RGBA mask accepted")
+	if cpu_mask != null:
+		var first := cpu_mask.get_pixel(0, 0)
+		check(first.r == 1.0 and absf(first.g - 64.0 / 255.0) < 0.001 and absf(first.b - 32.0 / 255.0) < 0.001 and absf(first.a - 16.0 / 255.0) < 0.001, "RGBA channel ordering preserved")
+		check(cpu_mask.get_pixel(0, 1).r == 0.0 and cpu_mask.get_pixel(1, 0).r > 0.0, "X-fastest Z-ascending row order preserved")
 	check(preview.apply_candidate(world, {"mask_dir": dir, "pilot_bounds": region}), "valid mask applies")
 	var mat: ShaderMaterial = world.ground.get_active_material(0)
 	check(mat.get_shader_parameter("use_biome_mask") == true and mat.get_shader_parameter("biome_mask") is Texture2D, "biome texture bound")
