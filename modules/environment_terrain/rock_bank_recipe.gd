@@ -1,0 +1,81 @@
+extends RefCounted
+## Clearance gate for an optional future visual-only embedded rock bank.
+## No instantiation, terrain deformation, or collision creation is performed.
+const BOULDER := "res://assets/curated/models/environment/boulder.glb"
+const LAKE := "res://content/scenery/lake/water_cells_v1.json"
+const GRID := 4.0
+const ORIGIN := -1000.0
+const MARGIN := 0.5
+var _water: Dictionary = {}
+var _world: WeakRef
+var status := "unprepared"
+
+func prepare(world: Node) -> bool:
+	_world = null
+	_water.clear()
+	status = "water or road clearance unavailable"
+	if not is_instance_valid(world) or not world.is_inside_tree():
+		return false
+	var clearance: Variant = world.get("road_clearance")
+	if not clearance is RefCounted or not clearance.has_method("overlaps") or int(clearance.get("triangle_count")) <= 0:
+		return false
+	var roadworks: Variant = world.get("roadworks")
+	if not roadworks is Dictionary or not roadworks.get("waters") is Array:
+		return false
+	var lake: Variant = JSON.parse_string(FileAccess.get_file_as_string(LAKE))
+	if not lake is Dictionary or lake.get("schema_version") != 1 or lake.get("origin_x") != ORIGIN or lake.get("origin_z") != ORIGIN or lake.get("spacing_m") != GRID:
+		return false
+	if not _add_cells(lake.get("cells")):
+		return false
+	for pool in roadworks.waters:
+		if not pool is Dictionary or not _add_cells(pool.get("cells")):
+			_water.clear()
+			return false
+	_world = weakref(world)
+	status = "ready"
+	return true
+
+func _add_cells(cells: Variant) -> bool:
+	if not cells is Array or cells.is_empty():
+		return false
+	for cell in cells:
+		if not cell is Array or cell.size() != 2:
+			return false
+		for value in cell:
+			if not (value is int or value is float) or not is_finite(float(value)) or float(value) != floorf(float(value)) or value < 0 or value >= 500:
+				return false
+		_water[Vector2i(int(cell[0]), int(cell[1]))] = true
+	return true
+
+func accepts(frame: Transform3D, local_bounds: AABB) -> bool:
+	if _world == null or not is_instance_valid(_world.get_ref()):
+		return false
+	if not frame.is_finite() or not local_bounds.position.is_finite() or not local_bounds.size.is_finite():
+		return false
+	if local_bounds.size.x <= 0.0 or local_bounds.size.y <= 0.0 or local_bounds.size.z <= 0.0:
+		return false
+	var bounds := frame * local_bounds
+	if not bounds.position.is_finite() or not bounds.size.is_finite():
+		return false
+	if bounds.size.x <= 0.0 or bounds.size.z <= 0.0 or bounds.size.x > 20.0 or bounds.size.z > 20.0:
+		return false
+	if bounds.position.x - MARGIN < -1000.0 or bounds.position.z - MARGIN < -1000.0 or bounds.end.x + MARGIN >= 1000.0 or bounds.end.z + MARGIN >= 1000.0:
+		return false
+	var world: Node = _world.get_ref()
+	var clearance: Variant = world.get("road_clearance")
+	if not clearance is RefCounted or not clearance.has_method("overlaps") or int(clearance.get("triangle_count")) <= 0:
+		return false
+	# Reject all deck columns rather than only the vehicle-height clearance slab.
+	var column := AABB(Vector3(bounds.position.x, -10000.0, bounds.position.z), Vector3(bounds.size.x, 20000.0, bounds.size.z))
+	if clearance.overlaps(column, MARGIN, true):
+		return false
+	# Water geometry is the union of 4m cells in the actual rendered data.
+	var x0 := floori((bounds.position.x - MARGIN - ORIGIN) / GRID)
+	var z0 := floori((bounds.position.z - MARGIN - ORIGIN) / GRID)
+	var x1 := floori((bounds.end.x + MARGIN - ORIGIN) / GRID)
+	var z1 := floori((bounds.end.z + MARGIN - ORIGIN) / GRID)
+	for z in range(z0, z1 + 1):
+		for x in range(x0, x1 + 1):
+			if _water.has(Vector2i(x, z)):
+				return false
+	return true
