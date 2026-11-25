@@ -580,6 +580,8 @@ func test_hero_redline_stability() -> bool:
 		for row in renderer.diagnostics:
 			if float(row["rpm"]) >= 4000.0:
 				long_count += int(int(row["hop_cycles"]) > renderer.hop)
+				var expected := float(row["rpm"])*renderer.order/60.0
+				assert(absf(float(row["hz"])/expected-1.0) < 0.032, "High RPM fit cannot jump to unrelated repetition rate")
 		assert(long_count >= 4, "High RPM must use longer recorded takes")
 		# Holding actual redline must not impose a second artificial 20 Hz gate.
 		engine.update_telemetry({"rpm": engine._redline_rpm, "throttle":1.0, "gear":3})

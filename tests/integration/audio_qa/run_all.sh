@@ -45,6 +45,9 @@ for suite in \
   fi
 done
 if [[ -n "${ASTER_AUDIO_CAPTURE_DIR:-}" ]]; then
+  if ! run_gate high_rpm_modulation python3 tests/integration/audio_qa/analyze_high_rpm.py "$ASTER_AUDIO_CAPTURE_DIR"; then
+    failures=$((failures + 1))
+  fi
   if ! run_gate isolated_exhaust_continuity python3 tests/integration/audio_qa/analyze_hero_captures.py "$ASTER_AUDIO_CAPTURE_DIR"; then
     failures=$((failures + 1))
   fi

@@ -128,6 +128,44 @@ static func fit_period(pcm: PackedFloat32Array, rate: int, hz: float, center: in
 	return Vector2(best if best_score >= 0.18 else nominal,best_score)
 
 
+# The upstream high-RPM clips have been pitch-flattened to annotated RPM.
+# A broadband autocorrelation maximum can instead lock to a subharmonic
+# mixture (e.g. 744 Hz in the SVJ's measured ~800 Hz anchor). Use a narrow
+# Hann-windowed projection at the expected firing order, with fractional
+# frequency resolution. Reject weak estimates instead of warping the take.
+static func fit_high_rpm_period(pcm: PackedFloat32Array,rate: int,hz: float,center: int) -> Vector2:
+	var radius := mini(roundi(float(rate)*0.06),mini(center,pcm.size()-1-center))
+	if radius < 64:
+		return Vector2(float(rate)/hz,0.0)
+	var stride := maxi(1,floori(float(rate)/(hz*12.0)))
+	var weighted := PackedFloat32Array()
+	var energy := 0.0
+	var weight_sum := 0.0
+	for i in range(-radius,radius+1,stride):
+		var w := 0.5+0.5*cos(PI*float(i)/radius)
+		var v := pcm[center+i]
+		weighted.append(v*w)
+		energy += v*v*w
+		weight_sum += w
+	var best := hz
+	var best_power := -1.0
+	for step in range(-15,16):
+		var frequency := hz*(1.0+float(step)*0.002)
+		var coefficient := 2.0*cos(TAU*frequency*stride/float(rate))
+		var s1 := 0.0
+		var s2 := 0.0
+		for v in weighted:
+			var q := v+coefficient*s1-s2
+			s2 = s1
+			s1 = q
+		var power := maxf(0.0,s1*s1+s2*s2-coefficient*s1*s2)
+		if power > best_power:
+			best_power = power
+			best = frequency
+	var confidence := clampf(2.0*best_power/maxf(energy*weight_sum,0.000000001),0.0,1.0)
+	return Vector2(float(rate)/(best if confidence >= 0.025 else hz),confidence)
+
+
 static func build_grains(data: PackedByteArray, rate: int, expected_hz: float, hop_cycles: int = 8) -> Dictionary:
 	var size := hop_cycles * 2 * SPC + 1
 	var count := data.size() >> 1
@@ -148,7 +186,8 @@ static func build_grains(data: PackedByteArray, rate: int, expected_hz: float, h
 	for i in range(count-1,-1,-1):
 		y = lerpf(y,pcm[i],alpha)
 		pcm[i] = y
-	var fit := fit_period(pcm,rate,expected_hz,count >> 1,mini(count/3,rate/5))
+	var high_rpm := expected_hz >= 260.0
+	var fit := fit_high_rpm_period(pcm,rate,expected_hz,count >> 1) if high_rpm else fit_period(pcm,rate,expected_hz,count >> 1,mini(count/3,rate/5))
 	var period := fit.x
 	var room := float(count)-(hop_cycles*2.0+5.0)*period-3.0
 	if room < 0.0:
@@ -157,12 +196,14 @@ static func build_grains(data: PackedByteArray, rate: int, expected_hz: float, h
 	atlas.resize(size*VARIANTS)
 	for g in range(VARIANTS):
 		var start := 2.0*period+room*(float(g)+0.5)/float(VARIANTS)
-		var local_fit := fit_period(pcm,rate,float(rate)/period,roundi(start+period*float(hop_cycles)),roundi(period*float(hop_cycles)))
-		var local_period := clampf(local_fit.x,period*0.95,period*1.05)
+		var fit_center := roundi(start+period*float(hop_cycles))
+		var local_fit := fit_high_rpm_period(pcm,rate,expected_hz,fit_center) if high_rpm else fit_period(pcm,rate,float(rate)/period,fit_center,roundi(period*float(hop_cycles)))
+		var nominal_period := float(rate)/expected_hz
+		var local_period := clampf(local_fit.x,nominal_period*0.97,nominal_period*1.03) if high_rpm else clampf(local_fit.x,period*0.95,period*1.05)
 		var c := 0.0
 		var s := 0.0
-		var n := maxi(8,roundi(local_period*minf(12.0,float(hop_cycles)*0.5)))
-		var center := roundi(start)
+		var n := maxi(8,roundi(local_period*minf(24.0,float(hop_cycles)*0.5)))
+		var center := roundi(start+local_period*float(hop_cycles)*0.5) if high_rpm else roundi(start)
 		# Fundamental phase reference; preserve the complete source waveform.
 		for j in range(-n,n+1):
 			var a := TAU*float(j)/local_period
@@ -170,6 +211,8 @@ static func build_grains(data: PackedByteArray, rate: int, expected_hz: float, h
 			c += v*cos(a)
 			s += v*sin(a)
 		var pos := float(center)+atan2(s,c)/TAU*local_period
+		if high_rpm:
+			pos -= roundf((pos-start)/local_period)*local_period
 		var delta := local_period/float(SPC)
 		while pos+float(size-1)*delta >= float(count-1):
 			pos -= local_period
