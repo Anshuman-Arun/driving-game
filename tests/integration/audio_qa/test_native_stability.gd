@@ -1,5 +1,5 @@
 extends SceneTree
-const Engine := preload("res://modules/audio/recorded_runtime/engine/recorded_engine_controller.gd")
+const EngineControllerScript := preload("res://modules/audio/recorded_runtime/engine/recorded_engine_controller.gd")
 var failures := 0
 
 func _initialize() -> void:
@@ -12,7 +12,7 @@ func check(ok: bool, label: String) -> void:
 
 func _run() -> void:
 	var id := OS.get_environment("ASTER_AUDIO_TEST_PROFILE")
-	var engine := Engine.new()
+	var engine := EngineControllerScript.new()
 	engine.setup(id)
 	var renderer: PhaseGrainEngine = engine._grain_engine
 	if renderer == null or not engine._native_tuning:
