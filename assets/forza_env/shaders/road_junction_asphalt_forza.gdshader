@@ -9,9 +9,9 @@ uniform sampler2D asphalt_normal : hint_normal, filter_linear_mipmap_anisotropic
 uniform sampler2D asphalt_roughness : filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D asphalt_ao : filter_linear_mipmap_anisotropic, repeat_enable;
 
-uniform float world_tile_scale = 0.34;
-uniform float normal_depth : hint_range(0.0, 2.0) = 0.45;
-uniform vec3 asphalt_tint : source_color = vec3(0.84, 0.85, 0.87);
+uniform float world_tile_scale = 0.38;
+uniform float normal_depth : hint_range(0.0, 2.0) = 0.42;
+uniform vec3 asphalt_tint : source_color = vec3(1.26, 1.27, 1.29);
 
 varying vec3 world_pos;
 
@@ -59,9 +59,9 @@ void fragment() {
 	float base_ao = texture(asphalt_ao, uv_det).r;
 	vec3 tex_n = texture(asphalt_normal, uv_det).rgb;
 
-	vec3 col = base_col * mix(0.88, 1.10, macro_var);
-	col *= mix(1.0, 0.88, scuff * 0.45);
-	col *= mix(1.0, 0.78, tar_patch * 0.35);
+	vec3 col = base_col * mix(0.92, 1.07, macro_var);
+	col *= mix(1.0, 0.92, scuff * 0.40);
+	col *= mix(1.0, 0.90, tar_patch * 0.28);
 
 	float rough = base_rgh * 0.68 + 0.24 - scuff * 0.05;
 	rough -= smoothstep(0.55, 0.85, macro_var) * 0.05;

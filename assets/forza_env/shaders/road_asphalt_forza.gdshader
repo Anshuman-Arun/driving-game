@@ -15,10 +15,10 @@ uniform float detail_tile_u = 1.6;
 uniform float detail_tile_v = 2.6;
 uniform float normal_depth : hint_range(0.0, 2.0) = 0.45;
 
-uniform vec3 asphalt_tint : source_color = vec3(0.84, 0.85, 0.87);
+uniform vec3 asphalt_tint : source_color = vec3(1.26, 1.27, 1.29);
 uniform vec3 center_stripe_color : source_color = vec3(0.86, 0.65, 0.14);
 uniform vec3 edge_stripe_color : source_color = vec3(0.86, 0.87, 0.85);
-uniform vec3 verge_dust_color : source_color = vec3(0.30, 0.27, 0.22);
+uniform vec3 verge_dust_color : source_color = vec3(0.42, 0.40, 0.35);
 
 varying vec3 world_pos;
 
@@ -74,15 +74,15 @@ void fragment() {
 	float track_r = exp(-pow((across - 0.66) * 18.0, 2.0)) + exp(-pow((across - 0.81) * 18.0, 2.0));
 	float tire_wear = clamp((track_l + track_r) * 0.68, 0.0, 1.0);
 
-	// Weathering, darkened rubber tire tracks, and subtle tar patches.
-	vec3 col = base_col * mix(0.88, 1.10, macro_var);
-	col *= mix(1.0, 0.84, tire_wear * 0.65);
-	col *= mix(1.0, 0.78, tar_patch * 0.35);
+	// Weathering, subtle darkened rubber tire tracks, and mild repair variation.
+	vec3 col = base_col * mix(0.92, 1.07, macro_var);
+	col *= mix(1.0, 0.90, tire_wear * 0.55);
+	col *= mix(1.0, 0.90, tar_patch * 0.28);
 
-	// Subtle edge dust transition where asphalt meets the shoulder.
+	// Subtle dusty-gravel edge transition where asphalt meets the verge.
 	float edge_dist = min(across, 1.0 - across);
-	float edge_dust = (1.0 - smoothstep(0.0, 0.045, edge_dist)) * (0.55 + 0.45 * fine_var);
-	col = mix(col, verge_dust_color, edge_dust * 0.48);
+	float edge_dust = (1.0 - smoothstep(0.0, 0.035, edge_dist)) * (0.45 + 0.55 * fine_var);
+	col = mix(col, verge_dust_color, edge_dust * 0.36);
 
 	// --- Crisp Highway Road Markings ---
 	// Anti-aliased width using screen-space derivative so lines stay sharp without shimmer.

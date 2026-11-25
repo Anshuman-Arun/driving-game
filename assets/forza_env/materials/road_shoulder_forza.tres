@@ -1,11 +1,12 @@
-[gd_resource type="ShaderMaterial" load_steps=7 format=3]
+[gd_resource type="ShaderMaterial" load_steps=8 format=3]
 
 [ext_resource type="Shader" path="res://assets/forza_env/shaders/road_shoulder_forza.gdshader" id="1_shader"]
-[ext_resource type="Texture2D" path="res://assets/forza_env/textures/shoulder/albedo.jpg" id="2_albedo"]
-[ext_resource type="Texture2D" path="res://assets/forza_env/textures/shoulder/normal.png" id="3_normal"]
-[ext_resource type="Texture2D" path="res://assets/forza_env/textures/shoulder/roughness.png" id="4_rough"]
-[ext_resource type="Texture2D" path="res://assets/forza_env/textures/shoulder/ao.png" id="5_ao"]
-[ext_resource type="Texture2D" path="res://assets/forza_env/textures/grass/albedo.jpg" id="6_grass"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/farm_soil/albedo.jpg" id="2_albedo"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/farm_soil/normal.png" id="3_normal"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/farm_soil/roughness.png" id="4_rough"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/farm_soil/ao.png" id="5_ao"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/grass_ground/albedo.jpg" id="6_grass"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/grass_ground/normal.png" id="7_grass_n"]
 
 [resource]
 render_priority = 0
@@ -15,7 +16,8 @@ shader_parameter/shoulder_normal = ExtResource("3_normal")
 shader_parameter/shoulder_roughness = ExtResource("4_rough")
 shader_parameter/shoulder_ao = ExtResource("5_ao")
 shader_parameter/grass_albedo = ExtResource("6_grass")
-shader_parameter/world_tile_scale = 0.32
-shader_parameter/normal_depth = 0.5
-shader_parameter/shoulder_tint = Color(0.74, 0.7, 0.62, 1)
-shader_parameter/grass_tint = Color(0.46, 0.68, 0.36, 1)
+shader_parameter/grass_normal = ExtResource("7_grass_n")
+shader_parameter/grass_scale = 0.22
+shader_parameter/normal_depth = 0.48
+shader_parameter/shoulder_tint = Color(0.82, 0.8, 0.74, 1)
+shader_parameter/grass_tint = Color(0.6, 0.72, 0.54, 1)

@@ -21,7 +21,21 @@ API = "https://api.polyhaven.com"
 HEADERS = {"User-Agent": "AsterValleyEnvironmentAssetLibrary/1.0 (Powered by Poly Haven)"}
 MIB = 1024 * 1024
 KINDS = ("models", "textures", "hdris")
-MAPS = ("diff", "nor_gl", "rough", "ao", "disp", "metal", "opacity", "alpha", "transmission", "sss", "spec", "emission")
+MAP_ALIASES = {
+    "diff": ("Diffuse", "diff", "col", "albedo"),
+    "nor_gl": ("nor_gl",),
+    "rough": ("Rough", "rough"),
+    "ao": ("AO", "ao"),
+    "arm": ("arm",),
+    "disp": ("Displacement", "disp"),
+    "metal": ("Metal", "metal"),
+    "opacity": ("Opacity", "opacity", "Mask", "mask"),
+    "alpha": ("Alpha", "alpha"),
+    "transmission": ("Transmission", "transmission"),
+    "sss": ("SSS", "sss"),
+    "spec": ("Specular", "spec"),
+    "emission": ("Emission", "emission"),
+}
 
 def request(url):
     for attempt in range(3):
@@ -120,8 +134,17 @@ def make_plan(candidate, resolution):
         for rel, info in entry.get("include",{}).items():
             result.append(file_spec(rel,info))
     elif kind == "textures":
-        for key in MAPS:
-            entry,res,fmt = choose_entry(files.get(key,{}),resolutions,["png","jpg","jpeg","exr"])
+        files_lower = {k.lower(): v for k, v in files.items() if isinstance(v, dict)}
+        for key, aliases in MAP_ALIASES.items():
+            node = {}
+            for alias in aliases:
+                if isinstance(files.get(alias), dict):
+                    node = files[alias]
+                    break
+                if alias.lower() in files_lower:
+                    node = files_lower[alias.lower()]
+                    break
+            entry,res,fmt = choose_entry(node,resolutions,["png","jpg","jpeg","exr"])
             if entry:
                 result.append(file_spec(key+"/"+Path(urlparse(entry["url"]).path).name,entry))
         if not any(x["path"].startswith("diff/") for x in result):

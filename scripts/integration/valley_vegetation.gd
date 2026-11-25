@@ -1,28 +1,113 @@
 extends Node3D
-## Visual-only, deterministic vegetation cells baked from the canonical world.
+## Visual-only, deterministic multi-species vegetation cells with LOD switching,
+## INSTANCE_CUSTOM variation, and frame-budgeted streaming.
 
-const FOLIAGE = preload("res://assets/valley_art/vegetation.gdshader")
-const CARDS = preload("res://assets/valley_art/foliage_cards.gdshader")
-const Trees = preload("valley_tree_factory.gd")
-const GRASS_ATLAS = preload("res://assets/valley_art/grass_cutout.png")
+const SHADER_TREE_BARK = preload("res://assets/environment_realism/shaders/tree_bark.gdshader")
+const SHADER_TREE_FOLIAGE = preload("res://assets/environment_realism/shaders/tree_foliage.gdshader")
+const SHADER_UNDERGROWTH_GRASS = preload("res://assets/environment_realism/shaders/undergrowth_grass.gdshader")
+const SHADER_UNDERGROWTH_CUTOUT = preload("res://assets/environment_realism/shaders/undergrowth_cutout.gdshader")
+const FOLIAGE_FALLBACK = preload("res://assets/valley_art/vegetation.gdshader")
 const LEAF_DETAIL = preload("res://assets/valley_art/leaf_litter_albedo.jpg")
-const BARK = preload("res://assets/forza_env/textures/bark/albedo.jpg")
-const BOULDER = preload("res://assets/curated/models/environment/boulder.glb")
+const BOULDER_FALLBACK = preload("res://assets/curated/models/environment/boulder.glb")
+const Trees = preload("valley_tree_factory.gd")
+
 const DATA_PATH := "res://data/world/vegetation.bin"
-const STRIDE := 7
-const CANOPY_CELL := 120.0
-const GROUND_CELL := 48.0
+const STRIDE := 8
+const CANOPY_CELL := 96.0
+const MID_CELL := 64.0
+const GROUND_CELL := 32.0
 const LEAF_COUNT := 28
-const GROUND_RANGES := [75.0, 112.0, 144.0]
+const MAX_BATCHES_PER_TICK := 5
+
+const KIND_CONIFER_TALL := 0
+const KIND_BROADLEAF_OAK := 1
+const KIND_GRASS_MEADOW := 2
+const KIND_WILDFLOWER := 3
+const KIND_ROCK := 4
+const KIND_CONIFER_MEDIUM := 5
+const KIND_BROADLEAF_BIRCH := 6
+const KIND_SAPLING_CONIFER := 7
+const KIND_GRASS_SHORT := 8
+const KIND_GRASS_TALL_VERGE := 9
+const KIND_FERN := 10
+const KIND_SHRUB_WOODLAND := 11
+
+const TREE_KINDS := [
+	KIND_CONIFER_TALL, KIND_BROADLEAF_OAK, KIND_CONIFER_MEDIUM,
+	KIND_BROADLEAF_BIRCH, KIND_SAPLING_CONIFER,
+]
+const MID_KINDS := [KIND_ROCK, KIND_SHRUB_WOODLAND]
+const GROUND_KINDS := [
+	KIND_GRASS_SHORT, KIND_GRASS_MEADOW, KIND_GRASS_TALL_VERGE,
+	KIND_FERN, KIND_WILDFLOWER,
+]
+
+const ASSET_PATHS := {
+	KIND_CONIFER_TALL: [
+		"res://assets/environment_realism/trees/conifer_tall_lod0.glb",
+		"res://assets/environment_realism/trees/conifer_tall_lod1.glb",
+		"res://assets/environment_realism/trees/conifer_tall_lod2.glb",
+	],
+	KIND_BROADLEAF_OAK: [
+		"res://assets/environment_realism/trees/broadleaf_oak_lod0.glb",
+		"res://assets/environment_realism/trees/broadleaf_oak_lod1.glb",
+		"res://assets/environment_realism/trees/broadleaf_oak_lod2.glb",
+	],
+	KIND_CONIFER_MEDIUM: [
+		"res://assets/environment_realism/trees/conifer_medium_lod0.glb",
+		"res://assets/environment_realism/trees/conifer_medium_lod1.glb",
+		"res://assets/environment_realism/trees/conifer_medium_lod2.glb",
+	],
+	KIND_BROADLEAF_BIRCH: [
+		"res://assets/environment_realism/trees/broadleaf_birch_lod0.glb",
+		"res://assets/environment_realism/trees/broadleaf_birch_lod1.glb",
+		"res://assets/environment_realism/trees/broadleaf_birch_lod2.glb",
+	],
+	KIND_SAPLING_CONIFER: [
+		"res://assets/environment_realism/trees/sapling_conifer_lod0.glb",
+		"res://assets/environment_realism/trees/sapling_conifer_lod1.glb",
+	],
+	KIND_SHRUB_WOODLAND: [
+		"res://assets/environment_realism/undergrowth/shrub_woodland_lod0.glb",
+		"res://assets/environment_realism/undergrowth/shrub_woodland_lod1.glb",
+	],
+	KIND_ROCK: [
+		"res://assets/environment_realism/undergrowth/rock_moss_lod0.glb",
+		"res://assets/environment_realism/undergrowth/rock_moss_lod1.glb",
+	],
+	KIND_GRASS_SHORT: [
+		"res://assets/environment_realism/undergrowth/grass_short_lod0.glb",
+		"res://assets/environment_realism/undergrowth/grass_short_lod1.glb",
+	],
+	KIND_GRASS_MEADOW: [
+		"res://assets/environment_realism/undergrowth/grass_meadow_lod0.glb",
+		"res://assets/environment_realism/undergrowth/grass_meadow_lod1.glb",
+	],
+	KIND_GRASS_TALL_VERGE: [
+		"res://assets/environment_realism/undergrowth/grass_tall_verge_lod0.glb",
+		"res://assets/environment_realism/undergrowth/grass_tall_verge_lod1.glb",
+	],
+	KIND_FERN: [
+		"res://assets/environment_realism/undergrowth/fern_lod0.glb",
+		"res://assets/environment_realism/undergrowth/fern_lod1.glb",
+	],
+	KIND_WILDFLOWER: [
+		"res://assets/environment_realism/undergrowth/wildflower_lod0.glb",
+		"res://assets/environment_realism/undergrowth/wildflower_lod1.glb",
+	],
+}
 
 var _world: Node
 var _placements := PackedFloat32Array()
-var _ground: Dictionary = {}
+var _mid_cells: Dictionary = {}
+var _visible_mid: Dictionary = {}
+var _ground_cells: Dictionary = {}
 var _visible_ground: Dictionary = {}
 var _canopy: Dictionary = {}
-var _meshes: Array[Mesh] = []
-var _distant_trees: Array[Mesh] = []
-var _ground_center := Vector2i(99999, 99999)
+var _lods: Dictionary = {} # kind -> Array[Mesh] ([lod0, lod1, ...])
+var _white_tex: ImageTexture
+var _flat_normal_tex: ImageTexture
+var _last_sync_pos := Vector2(99999.0, 99999.0)
 var _elapsed := 0.0
 var _leaf_clock := 0.0
 var _leaf_batch: MultiMesh
@@ -35,101 +120,266 @@ var _quality := 1
 func build(world: Node, preset: String) -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	_world = world
+	_init_fallback_textures()
 	var file := FileAccess.open(DATA_PATH, FileAccess.READ)
 	if file == null or file.get_length() % (STRIDE * 4) != 0:
 		push_warning("Valley vegetation data could not be loaded.")
 		return
 	_placements = file.get_buffer(file.get_length()).to_float32_array()
-	var cells: Dictionary = {}
+
+	var canopy_buckets: Dictionary = {}
 	for offset in range(0, _placements.size(), STRIDE):
 		var kind := int(_placements[offset + 5])
-		var near_ground := kind == 2 or kind == 3
-		var spacing := GROUND_CELL if near_ground else CANOPY_CELL
-		var cell := Vector2i(floori(_placements[offset] / spacing), floori(_placements[offset + 2] / spacing))
-		var key := Vector3i(cell.x, cell.y, kind)
-		var buckets := _ground if near_ground else cells
-		if not buckets.has(key):
-			buckets[key] = []
-		buckets[key].append(offset)
-	var material := ShaderMaterial.new()
-	material.shader = FOLIAGE
-	material.set_shader_parameter("leaf_pattern", LEAF_DETAIL)
-	_meshes = [
-		Trees.build(true), Trees.build(false),
-		_make_grass(_card_material(GRASS_ATLAS, 0.17, true)), _make_flowers(material), _rock_mesh(material),
-	]
-	_distant_trees = [Trees.build(true, true), Trees.build(false, true)]
-	for key: Vector3i in cells:
-		_canopy[key] = _make_batch(cells[key], key.z)
-		if key.z < _distant_trees.size():
-			_canopy[key].multimesh.mesh = _distant_trees[key.z]
+		var px := _placements[offset]
+		var pz := _placements[offset + 2]
+		if kind in GROUND_KINDS:
+			var key := Vector3i(floori(px / GROUND_CELL), floori(pz / GROUND_CELL), kind)
+			if not _ground_cells.has(key):
+				_ground_cells[key] = PackedInt32Array()
+			(_ground_cells[key] as PackedInt32Array).append(offset)
+		elif kind in MID_KINDS:
+			var key := Vector3i(floori(px / MID_CELL), floori(pz / MID_CELL), kind)
+			if not _mid_cells.has(key):
+				_mid_cells[key] = PackedInt32Array()
+			(_mid_cells[key] as PackedInt32Array).append(offset)
+		else:
+			var key := Vector3i(floori(px / CANOPY_CELL), floori(pz / CANOPY_CELL), kind)
+			if not canopy_buckets.has(key):
+				canopy_buckets[key] = PackedInt32Array()
+			(canopy_buckets[key] as PackedInt32Array).append(offset)
+
+	_load_all_species_lods()
+
+	for key: Vector3i in canopy_buckets:
+		var batch := _make_batch(canopy_buckets[key], key.z, 2)
+		if batch != null:
+			_canopy[key] = batch
+
+	var leaf_mat := ShaderMaterial.new()
+	leaf_mat.shader = FOLIAGE_FALLBACK
+	leaf_mat.set_shader_parameter("leaf_pattern", LEAF_DETAIL)
 	_rng.seed = 20261121
 	set_graphics(preset)
-	_build_leaves(material)
-	print("Valley vegetation: %d placements, %d canopy batches, %d ground groups" % [_placements.size() / STRIDE, _canopy.size(), _ground.size()])
+	_build_leaves(leaf_mat)
+	print("Valley vegetation: %d placements, %d canopy batches, %d mid cells, %d ground cells" % [
+		_placements.size() / STRIDE, _canopy.size(), _mid_cells.size(), _ground_cells.size()
+	])
 
 func conifer_mesh(distant := false) -> Mesh:
-	if _meshes.is_empty():
+	var lods: Array = _lods.get(KIND_CONIFER_TALL, [])
+	if lods.is_empty():
 		return null
-	return _distant_trees[0] if distant else _meshes[0]
+	return lods[mini(1, lods.size() - 1)] if distant else lods[0]
 
 func broadleaf_mesh() -> Mesh:
-	return _meshes[1] if not _meshes.is_empty() else null
-
-func _card_material(atlas: Texture2D, wind: float, meadow := false) -> ShaderMaterial:
-	var material := ShaderMaterial.new()
-	material.shader = CARDS
-	material.set_shader_parameter("canopy", atlas)
-	material.set_shader_parameter("bark", BARK)
-	material.set_shader_parameter("wind", wind)
-	material.set_shader_parameter("meadow", meadow)
-	return material
+	var lods: Array = _lods.get(KIND_BROADLEAF_OAK, [])
+	return lods[0] if not lods.is_empty() else null
 
 func set_graphics(preset: String) -> void:
 	_quality = 0 if preset == "low" else (2 if preset == "high" else 1)
-	_ground_center = Vector2i(99999, 99999)
-	for batch: MultiMeshInstance3D in _canopy.values():
-		batch.visibility_range_end = [420.0, 580.0, 700.0][_quality]
-		batch.visibility_range_end_margin = 55.0
+	_last_sync_pos = Vector2(99999.0, 99999.0)
+	var tree_end: float = [460.0, 620.0, 760.0][_quality]
+	var sapling_end: float = [200.0, 270.0, 340.0][_quality]
+	for key: Vector3i in _canopy:
+		var batch: MultiMeshInstance3D = _canopy[key]
+		batch.visibility_range_end = sapling_end if key.z == KIND_SAPLING_CONIFER else tree_end
+		batch.visibility_range_end_margin = 45.0 if key.z == KIND_SAPLING_CONIFER else 65.0
+	var ground_end: float = [105.0, 140.0, 165.0][_quality]
 	for batch: MultiMeshInstance3D in _visible_ground.values():
-		batch.visibility_range_end = GROUND_RANGES[_quality]
+		batch.visibility_range_end = ground_end
+		batch.visibility_range_end_margin = 20.0
+	var mid_end: float = [160.0, 215.0, 265.0][_quality]
+	for batch: MultiMeshInstance3D in _visible_mid.values():
+		batch.visibility_range_end = mid_end
+		batch.visibility_range_end_margin = 28.0
 
-func _make_batch(offsets: Array, kind: int) -> MultiMeshInstance3D:
-	var center := Vector3(_placements[offsets[0]], 0, _placements[offsets[0] + 2])
-	var mesh := MultiMesh.new()
-	mesh.transform_format = MultiMesh.TRANSFORM_3D
-	mesh.use_colors = true
-	mesh.mesh = _meshes[kind]
-	mesh.instance_count = offsets.size()
+func _init_fallback_textures() -> void:
+	var white_img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+	white_img.set_pixel(0, 0, Color(1.0, 1.0, 1.0, 1.0))
+	_white_tex = ImageTexture.create_from_image(white_img)
+	var norm_img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+	norm_img.set_pixel(0, 0, Color(0.5, 0.5, 1.0, 1.0))
+	_flat_normal_tex = ImageTexture.create_from_image(norm_img)
+
+func _load_all_species_lods() -> void:
+	for kind: int in ASSET_PATHS:
+		var paths: Array = ASSET_PATHS[kind]
+		var meshes: Array[Mesh] = []
+		for lod_idx in paths.size():
+			var p: String = paths[lod_idx]
+			if ResourceLoader.exists(p):
+				var built := _load_glb_mesh(p, kind, lod_idx)
+				if built != null:
+					meshes.append(built)
+		if meshes.is_empty():
+			if kind in [KIND_CONIFER_TALL, KIND_CONIFER_MEDIUM, KIND_SAPLING_CONIFER]:
+				meshes = [Trees.build(true, false), Trees.build(true, true)]
+			elif kind in [KIND_BROADLEAF_OAK, KIND_BROADLEAF_BIRCH]:
+				meshes = [Trees.build(false, false), Trees.build(false, true)]
+			elif kind == KIND_ROCK:
+				var fallback := _load_glb_mesh("res://assets/curated/models/environment/boulder.glb", kind, 0)
+				if fallback != null:
+					meshes = [fallback]
+		_lods[kind] = meshes
+
+func _load_glb_mesh(path: String, kind: int, lod: int) -> ArrayMesh:
+	var res := ResourceLoader.load(path)
+	if res == null:
+		return null
+	if res is ArrayMesh:
+		return _apply_species_shaders(res as ArrayMesh, kind, lod)
+	if not (res is PackedScene):
+		return null
+	var scene: Node = (res as PackedScene).instantiate()
+	var parts: Array = []
+	_collect_mesh_parts(scene, Transform3D.IDENTITY, parts)
+	if parts.is_empty():
+		scene.free()
+		return null
+	var out := ArrayMesh.new()
+	for part in parts:
+		var src: Mesh = part["mesh"]
+		var xform: Transform3D = part["xform"]
+		var has_xform := not xform.is_equal_approx(Transform3D.IDENTITY)
+		for s in src.get_surface_count():
+			var arrays := src.surface_get_arrays(s)
+			if has_xform:
+				var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+				for i in verts.size():
+					verts[i] = xform * verts[i]
+				arrays[Mesh.ARRAY_VERTEX] = verts
+				if arrays[Mesh.ARRAY_NORMAL] != null:
+					var norms: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+					var nbasis := xform.basis.inverse().transposed()
+					for i in norms.size():
+						norms[i] = (nbasis * norms[i]).normalized()
+					arrays[Mesh.ARRAY_NORMAL] = norms
+			var mat: Material = src.surface_get_material(s)
+			var surf_idx := out.get_surface_count()
+			out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+			out.surface_set_material(surf_idx, _make_surface_material(mat, kind, lod, surf_idx))
+	scene.free()
+	return out
+
+func _apply_species_shaders(src: ArrayMesh, kind: int, lod: int) -> ArrayMesh:
+	for s in src.get_surface_count():
+		src.surface_set_material(s, _make_surface_material(src.surface_get_material(s), kind, lod, s))
+	return src
+
+func _collect_mesh_parts(node: Node, parent_xform: Transform3D, parts: Array) -> void:
+	var xform := parent_xform
+	if node is Node3D:
+		xform = parent_xform * (node as Node3D).transform
+	if node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
+		parts.append({"mesh": (node as MeshInstance3D).mesh, "xform": xform})
+	for child in node.get_children():
+		_collect_mesh_parts(child, xform, parts)
+
+func _make_surface_material(src_mat: Material, kind: int, lod: int, surface_idx: int) -> Material:
+	if kind == KIND_ROCK:
+		return src_mat if src_mat != null else StandardMaterial3D.new()
+	var base := src_mat as BaseMaterial3D
+	var mat_name := src_mat.resource_name.to_lower() if src_mat != null else ""
+	var is_tree_or_shrub := kind in TREE_KINDS or kind == KIND_SHRUB_WOODLAND
+	var sm := ShaderMaterial.new()
+	if is_tree_or_shrub:
+		var is_foliage := (
+			surface_idx > 0
+			or "foliage" in mat_name or "canopy" in mat_name or "leaf" in mat_name
+			or "needle" in mat_name or "bough" in mat_name or "spray" in mat_name
+			or (base != null and base.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED)
+		)
+		sm.shader = SHADER_TREE_FOLIAGE if is_foliage else SHADER_TREE_BARK
+		if kind == KIND_SHRUB_WOODLAND:
+			sm.set_shader_parameter("wind_strength", 0.055)
+			if is_foliage:
+				sm.set_shader_parameter("leaf_flutter", 0.018)
+		elif kind == KIND_SAPLING_CONIFER:
+			sm.set_shader_parameter("wind_strength", 0.065)
+	else:
+		var is_opaque_grass := (kind == KIND_GRASS_SHORT or kind == KIND_GRASS_MEADOW) and lod == 0
+		sm.shader = SHADER_UNDERGROWTH_GRASS if is_opaque_grass else SHADER_UNDERGROWTH_CUTOUT
+		if not is_opaque_grass:
+			sm.set_shader_parameter("alpha_scissor", 0.38 if lod == 0 else 0.34)
+			sm.set_shader_parameter("alpha_scissor_far", 0.20)
+		if kind == KIND_FERN:
+			sm.set_shader_parameter("wind_strength", 0.095)
+			sm.set_shader_parameter("backlight_strength", 0.38)
+		elif kind == KIND_WILDFLOWER:
+			sm.set_shader_parameter("wind_strength", 0.11)
+			sm.set_shader_parameter("dry_tint", Vector3(1.06, 1.0, 0.88))
+
+	if base != null:
+		sm.set_shader_parameter("albedo_tex", base.albedo_texture if base.albedo_texture != null else _white_tex)
+		sm.set_shader_parameter("normal_tex", base.normal_texture if base.normal_texture != null else _flat_normal_tex)
+		sm.set_shader_parameter("roughness_tex", base.roughness_texture if base.roughness_texture != null else _white_tex)
+		sm.set_shader_parameter("ao_tex", base.ao_texture if base.ao_texture != null else _white_tex)
+	else:
+		sm.set_shader_parameter("albedo_tex", _white_tex)
+		sm.set_shader_parameter("normal_tex", _flat_normal_tex)
+		sm.set_shader_parameter("roughness_tex", _white_tex)
+		sm.set_shader_parameter("ao_tex", _white_tex)
+	return sm
+
+func _get_lod_mesh(kind: int, lod: int) -> Mesh:
+	var lods: Array = _lods.get(kind, [])
+	if lods.is_empty():
+		return null
+	return lods[clampi(lod, 0, lods.size() - 1)]
+
+func _make_batch(offsets: PackedInt32Array, kind: int, initial_lod: int) -> MultiMeshInstance3D:
+	var mesh_res := _get_lod_mesh(kind, initial_lod)
+	if mesh_res == null or offsets.is_empty():
+		return null
+	var center := Vector3(_placements[offsets[0]], 0.0, _placements[offsets[0] + 2])
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = true
+	mm.use_custom_data = true
+	mm.mesh = mesh_res
+	mm.instance_count = offsets.size()
+
+	var is_tree := kind in TREE_KINDS
 	for index in offsets.size():
 		var at: int = offsets[index]
 		var base := Vector3(_placements[at], _placements[at + 1], _placements[at + 2])
-		# Sink the roots slightly into hillsides without lowering roadside grass.
-		base.y -= 0.18 if kind < 2 else 0.04
-		var seed := _placements[at + 6]
+		var yaw := _placements[at + 3]
 		var scale := _placements[at + 4]
-		var form := Vector3(scale * lerpf(0.82, 1.24, seed), scale, scale * lerpf(1.17, 0.91, seed))
-		mesh.set_instance_transform(index, Transform3D(Basis(Vector3.UP, _placements[at + 3]).scaled(form), base - center))
-		var tint := Color(0.83, 0.86, 0.79).lerp(Color(1.18, 1.07, 0.86), seed)
-		if kind == 1 and seed > 0.41:
-			tint = Color(1.25, 0.79, 0.45).lerp(Color(1.62, 0.57, 0.31), seed)
-		mesh.set_instance_color(index, tint)
+		var seed := _placements[at + 6]
+		var warmth := _placements[at + 7]
+		var form := Vector3(scale * lerpf(0.90, 1.12, seed), scale, scale * lerpf(1.10, 0.90, seed))
+		if kind == KIND_ROCK:
+			form = Vector3(scale * lerpf(0.85, 1.25, seed), scale * lerpf(0.75, 1.10, warmth), scale * lerpf(1.18, 0.86, seed))
+		mm.set_instance_transform(index, Transform3D(Basis(Vector3.UP, yaw).scaled(form), base - center))
+
+		# Keep instance_color.a = 1.0 so vertex COLOR.a wind flex is never attenuated!
+		var tint := Color(0.90, 0.92, 0.87, 1.0).lerp(Color(1.08, 1.04, 0.94, 1.0), seed)
+		if kind == KIND_ROCK:
+			tint = Color(0.74, 0.77, 0.72, 1.0).lerp(Color(0.92, 0.93, 0.88, 1.0), seed)
+		elif is_tree and kind in [KIND_BROADLEAF_OAK, KIND_BROADLEAF_BIRCH] and seed > 0.72:
+			tint = Color(1.08, 0.96, 0.78, 1.0)
+		mm.set_instance_color(index, tint)
+
+		var stiffness := lerpf(0.25, 0.85, clampf(1.25 - scale * 0.5, 0.0, 1.0))
+		var root_ao := lerpf(0.55, 1.0, seed)
+		mm.set_instance_custom_data(index, Color(seed, stiffness, warmth, root_ao))
+
 	var draw := MultiMeshInstance3D.new()
-	draw.multimesh = mesh
+	draw.multimesh = mm
 	draw.position = center
-	draw.extra_cull_margin = 2.0
+	draw.extra_cull_margin = 3.0 if is_tree else 1.5
 	draw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(draw)
 	return draw
 
 func _process(delta: float) -> void:
-	if _meshes.is_empty():
+	if _lods.is_empty():
 		return
 	var camera := get_viewport().get_camera_3d()
 	if camera == null:
 		return
 	_elapsed += delta
-	if _elapsed >= 0.18:
+	if _elapsed >= 0.06:
 		_elapsed = 0.0
 		_sync_cells(camera.global_position)
 	_leaf_clock += delta
@@ -137,143 +387,138 @@ func _process(delta: float) -> void:
 		_update_leaves(camera, minf(_leaf_clock, 0.1))
 		_leaf_clock = 0.0
 
-func _sync_cells(position: Vector3) -> void:
-	var center := Vector2i(floori(position.x / GROUND_CELL), floori(position.z / GROUND_CELL))
-	var camera_xz := Vector2(position.x, position.z)
-	var shadow_radius: float = [124.0, 190.0, 242.0][_quality]
-	var shadow_radius_sq := shadow_radius * shadow_radius
-	var detail_radius: float = [150.0, 210.0, 280.0][_quality]
+func _sync_cells(cam_pos: Vector3) -> void:
+	var cam_xz := Vector2(cam_pos.x, cam_pos.z)
+	var lod1_r: float = [95.0, 130.0, 165.0][_quality]
+	var lod2_r: float = [200.0, 260.0, 320.0][_quality]
+	var shadow_tree_r_sq: float = pow([125.0, 185.0, 235.0][_quality], 2.0)
+	var shadow_sap_r_sq: float = pow([65.0, 90.0, 115.0][_quality], 2.0)
+
+	# 1. Canopy LOD + shadow distance hysteresis
 	for key: Vector3i in _canopy:
 		var middle := Vector2((key.x + 0.5) * CANOPY_CELL, (key.y + 0.5) * CANOPY_CELL)
-		var distance := middle.distance_squared_to(camera_xz)
+		var dist_sq := middle.distance_squared_to(cam_xz)
 		var batch: MultiMeshInstance3D = _canopy[key]
-		if key.z < _distant_trees.size():
-			var multimesh := batch.multimesh
-			var cutoff := detail_radius + (24.0 if multimesh.mesh == _meshes[key.z] else 0.0)
-			var mesh := _meshes[key.z] if distance < cutoff * cutoff else _distant_trees[key.z]
-			if multimesh.mesh != mesh:
-				multimesh.mesh = mesh
-		var shadow_mode := (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if distance < shadow_radius_sq
+		var mm := batch.multimesh
+		var lods: Array = _lods.get(key.z, [])
+		if lods.size() >= 2:
+			var cur_mesh := mm.mesh
+			var c1 := lod1_r + (14.0 if cur_mesh == lods[0] else -14.0)
+			var target_lod := 0 if dist_sq < c1 * c1 else 1
+			if lods.size() >= 3 and target_lod == 1:
+				var c2 := lod2_r + (18.0 if cur_mesh == lods[1] else -18.0)
+				if dist_sq >= c2 * c2:
+					target_lod = 2
+			var target_mesh: Mesh = lods[mini(target_lod, lods.size() - 1)]
+			if cur_mesh != target_mesh:
+				mm.mesh = target_mesh
+		var s_sq := shadow_sap_r_sq if key.z == KIND_SAPLING_CONIFER else shadow_tree_r_sq
+		var s_mode := (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if dist_sq < s_sq
 			else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
-		if batch.cast_shadow != shadow_mode:
-			batch.cast_shadow = shadow_mode
-	if center == _ground_center:
-		return
-	_ground_center = center
-	var radius := _quality + 1
-	var wanted: Dictionary = {}
-	for z in range(-radius, radius + 1):
-		for x in range(-radius, radius + 1):
-			for species in [2, 3]:
-				var key := Vector3i(center.x + x, center.y + z, species)
-				if not _ground.has(key):
-					continue
-				wanted[key] = true
-				if not _visible_ground.has(key):
-					var batch := _make_batch(_ground[key], species)
-					batch.visibility_range_end = GROUND_RANGES[_quality]
-					batch.visibility_range_end_margin = 26.0
-					_visible_ground[key] = batch
+		if batch.cast_shadow != s_mode:
+			batch.cast_shadow = s_mode
+
+	# 2. Stream Mid cells (shrubs & rocks) and Ground cells (grass, ferns, wildflowers)
+	var mid_load_r: float = [155.0, 210.0, 260.0][_quality]
+	var mid_unload_r_sq := pow(mid_load_r + 32.0, 2.0)
+	var mid_lod1_r: float = [52.0, 72.0, 92.0][_quality]
+	var mid_shadow_r_sq := pow([60.0, 85.0, 110.0][_quality], 2.0)
+	var rock_shadow_r_sq := pow([110.0, 160.0, 210.0][_quality], 2.0)
+
+	var ground_load_r: float = [105.0, 140.0, 165.0][_quality]
+	var ground_unload_r_sq := pow(ground_load_r + 24.0, 2.0)
+	var ground_lod1_r: float = [34.0, 44.0, 54.0][_quality]
+
+	# Unload far cells first
+	for key: Vector3i in _visible_mid.keys():
+		var middle := Vector2((key.x + 0.5) * MID_CELL, (key.y + 0.5) * MID_CELL)
+		var dist_sq := middle.distance_squared_to(cam_xz)
+		if dist_sq > mid_unload_r_sq:
+			(_visible_mid[key] as Node3D).queue_free()
+			_visible_mid.erase(key)
+		else:
+			var batch: MultiMeshInstance3D = _visible_mid[key]
+			var lods: Array = _lods.get(key.z, [])
+			if lods.size() >= 2:
+				var cutoff: float = mid_lod1_r + (10.0 if batch.multimesh.mesh == lods[0] else -10.0)
+				var target: Mesh = lods[0] if dist_sq < cutoff * cutoff else lods[1]
+				if batch.multimesh.mesh != target:
+					batch.multimesh.mesh = target
+			var sh_sq := rock_shadow_r_sq if key.z == KIND_ROCK else mid_shadow_r_sq
+			var sm := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if dist_sq < sh_sq else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			if batch.cast_shadow != sm:
+				batch.cast_shadow = sm
+
 	for key: Vector3i in _visible_ground.keys():
-		if not wanted.has(key):
+		var middle := Vector2((key.x + 0.5) * GROUND_CELL, (key.y + 0.5) * GROUND_CELL)
+		var dist_sq := middle.distance_squared_to(cam_xz)
+		if dist_sq > ground_unload_r_sq:
 			(_visible_ground[key] as Node3D).queue_free()
 			_visible_ground.erase(key)
+		else:
+			var batch: MultiMeshInstance3D = _visible_ground[key]
+			var lods: Array = _lods.get(key.z, [])
+			if lods.size() >= 2:
+				var cutoff: float = ground_lod1_r + (6.0 if batch.multimesh.mesh == lods[0] else -6.0)
+				var target: Mesh = lods[0] if dist_sq < cutoff * cutoff else lods[1]
+				if batch.multimesh.mesh != target:
+					batch.multimesh.mesh = target
 
-func _rock_mesh(material: ShaderMaterial) -> ArrayMesh:
-	var asset := BOULDER.instantiate()
-	var part: MeshInstance3D = asset if asset is MeshInstance3D else asset.find_children("*", "MeshInstance3D", true, false)[0]
-	var mesh := part.mesh
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for layer in mesh.get_surface_count():
-		var geometry := mesh.surface_get_arrays(layer)
-		var positions: PackedVector3Array = geometry[Mesh.ARRAY_VERTEX]
-		var normals: PackedVector3Array = geometry[Mesh.ARRAY_NORMAL]
-		var indices: PackedInt32Array = geometry[Mesh.ARRAY_INDEX]
-		var tint := Color("#706f60")
-		for vertex in indices:
-			var local := positions[vertex]
-			var light := clampf(0.76 + local.y * 0.085 + sin((local.x + local.z) * 5.0) * 0.065, 0.66, 1.15)
-			tool.set_color(Color(tint.r * light, tint.g * light, tint.b * light))
-			tool.set_normal(normals[vertex])
-			tool.set_uv(Vector2(-1, 0))
-			tool.add_vertex(local)
-	asset.free()
-	tool.index()
-	tool.set_material(material)
-	return tool.commit()
+	# Queue missing near cells sorted closest-first, capped per tick to avoid frame hitches
+	var pending: Array = []
+	var mid_center := Vector2i(floori(cam_pos.x / MID_CELL), floori(cam_pos.z / MID_CELL))
+	var mid_grid_r := ceili(mid_load_r / MID_CELL) + 1
+	var mid_load_r_sq := mid_load_r * mid_load_r
+	for gz in range(mid_center.y - mid_grid_r, mid_center.y + mid_grid_r + 1):
+		for gx in range(mid_center.x - mid_grid_r, mid_center.x + mid_grid_r + 1):
+			var middle := Vector2((gx + 0.5) * MID_CELL, (gz + 0.5) * MID_CELL)
+			var dist_sq := middle.distance_squared_to(cam_xz)
+			if dist_sq > mid_load_r_sq:
+				continue
+			for kind: int in MID_KINDS:
+				var key := Vector3i(gx, gz, kind)
+				if _mid_cells.has(key) and not _visible_mid.has(key):
+					pending.append({"dist_sq": dist_sq, "key": key, "is_mid": true})
 
-func _make_grass(material: ShaderMaterial) -> ArrayMesh:
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var random := RandomNumberGenerator.new()
-	random.seed = 48031
-	for index in 7:
-		var axis := Vector3.RIGHT.rotated(Vector3.UP, index * 2.39996)
-		var base := axis.cross(Vector3.UP) * sqrt(random.randf()) * 1.38
-		var width := random.randf_range(0.24, 0.47)
-		var top := Vector3.UP * random.randf_range(0.12, 0.33) + axis.cross(Vector3.UP) * 0.09
-		_card(tool, base - axis * width, base + axis * width,
-			base - axis * width + top, base + axis * width + top, Color("#b3ac80").lerp(Color("#a4ac7f"), index / 6.0))
-	for blade in 9:
-		var along := Vector3.FORWARD.rotated(Vector3.UP, blade * 2.39996)
-		var sideways := along.cross(Vector3.UP)
-		var root := along * random.randf_range(0.2, 1.46)
-		var height := random.randf_range(0.10, 0.28)
-		var base_width := random.randf_range(0.022, 0.047)
-		var tip := root + Vector3.UP * height + along * height * 0.77
-		var tint := Color("#8d9257").lerp(Color("#afaf73"), random.randf())
-		for point: Vector3 in [root - sideways * base_width, root + sideways * base_width, tip]:
-			var flex := 1.0 if point == tip else 0.0
-			tool.set_uv(Vector2(-2.0, flex))
-			tool.set_normal(Vector3.UP)
-			tool.set_color(Color(tint.r, tint.g, tint.b, flex))
-			tool.add_vertex(point)
-	tool.set_material(material)
-	return tool.commit()
+	var grd_center := Vector2i(floori(cam_pos.x / GROUND_CELL), floori(cam_pos.z / GROUND_CELL))
+	var grd_grid_r := ceili(ground_load_r / GROUND_CELL) + 1
+	var ground_load_r_sq := ground_load_r * ground_load_r
+	for gz in range(grd_center.y - grd_grid_r, grd_center.y + grd_grid_r + 1):
+		for gx in range(grd_center.x - grd_grid_r, grd_center.x + grd_grid_r + 1):
+			var middle := Vector2((gx + 0.5) * GROUND_CELL, (gz + 0.5) * GROUND_CELL)
+			var dist_sq := middle.distance_squared_to(cam_xz)
+			if dist_sq > ground_load_r_sq:
+				continue
+			for kind: int in GROUND_KINDS:
+				var key := Vector3i(gx, gz, kind)
+				if _ground_cells.has(key) and not _visible_ground.has(key):
+					pending.append({"dist_sq": dist_sq, "key": key, "is_mid": false})
 
-func _card(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, shade: Color, horizontal := false) -> void:
-	var points := [a, b, c, d]
-	var texels := [Vector2(0, 1), Vector2(1, 1), Vector2(0, 0), Vector2(1, 0)]
-	var normal := (c - a).cross(b - a).normalized().lerp(Vector3.UP, 0.60).normalized()
-	for index in [0, 1, 2, 2, 1, 3]:
-		var uv: Vector2 = texels[index]
-		var flex := 1.0 - uv.y
-		if horizontal:
-			uv = Vector2(flex, 1.0 - uv.x)
-		tool.set_uv(uv)
-		tool.set_normal(normal)
-		tool.set_color(Color(shade.r, shade.g, shade.b, flex))
-		tool.add_vertex(points[index])
-
-func _make_flowers(material: ShaderMaterial) -> ArrayMesh:
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var random := RandomNumberGenerator.new()
-	random.seed = 11289
-	for i in 13:
-		var axis := Vector3.FORWARD.rotated(Vector3.UP, random.randf_range(0, TAU))
-		var side := axis.cross(Vector3.UP)
-		var root := axis * sqrt(random.randf()) * 0.92
-		var height := random.randf_range(0.19, 0.72)
-		var width := random.randf_range(0.018, 0.043)
-		var half := root + Vector3.UP * height * 0.59 + axis * (height * 0.14)
-		var tip := root + Vector3.UP * height + axis * (height * 0.76)
-		var leaf_color := Color("#31553a").lerp(Color("#778448"), random.randf())
-		_triangle(tool, root - side * width, root + side * width, half + side * width * 0.62, leaf_color, Vector3(0, 0, 0.54))
-		_triangle(tool, root - side * width, half + side * width * 0.62, half - side * width * 0.62, leaf_color, Vector3(0, 0.54, 0.54))
-		_triangle(tool, half - side * width * 0.62, half + side * width * 0.62, tip, leaf_color.lightened(0.12), Vector3(0.54, 0.54, 1))
-		if i % 3 == 0:
-			var bloom := half + Vector3.UP * height * 0.58
-			var petals := Color("#ddcf97") if i % 2 == 0 else Color("#b4a2c7")
-			_triangle(tool, half, half + side * 0.018, bloom, leaf_color, Vector3(0.54, 0.54, 1))
-			for petal in 5:
-				var ray := Vector3.FORWARD.rotated(Vector3.UP, petal * TAU / 5.0)
-				var edge := ray.cross(Vector3.UP)
-				_triangle(tool, bloom, bloom + ray * 0.10 + edge * 0.047, bloom + ray * 0.10 - edge * 0.047,
-					petals, Vector3.ONE)
-	tool.set_material(material)
-	return tool.commit()
+	if pending.is_empty():
+		return
+	pending.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["dist_sq"] < b["dist_sq"])
+	var budget := MAX_BATCHES_PER_TICK if _last_sync_pos.x < 90000.0 else pending.size()
+	_last_sync_pos = cam_xz
+	var ground_end: float = [105.0, 140.0, 165.0][_quality]
+	var mid_end: float = [160.0, 215.0, 265.0][_quality]
+	for i in mini(budget, pending.size()):
+		var item: Dictionary = pending[i]
+		var key: Vector3i = item["key"]
+		var d_sq: float = item["dist_sq"]
+		if item["is_mid"]:
+			var lod := 0 if d_sq < mid_lod1_r * mid_lod1_r else 1
+			var batch := _make_batch(_mid_cells[key], key.z, lod)
+			if batch != null:
+				batch.visibility_range_end = mid_end
+				batch.visibility_range_end_margin = 28.0
+				_visible_mid[key] = batch
+		else:
+			var lod := 0 if d_sq < ground_lod1_r * ground_lod1_r else 1
+			var batch := _make_batch(_ground_cells[key], key.z, lod)
+			if batch != null:
+				batch.visibility_range_end = ground_end
+				batch.visibility_range_end_margin = 20.0
+				_visible_ground[key] = batch
 
 func _triangle(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, tint: Color, flex: Vector3) -> void:
 	var normal := (c - a).cross(b - a).normalized().lerp(Vector3.UP, 0.37).normalized()
@@ -311,8 +556,11 @@ func _build_leaves(material: ShaderMaterial) -> void:
 func _update_leaves(camera: Camera3D, delta: float) -> void:
 	var location := camera.global_position
 	var tree_cell := Vector2i(floori(location.x / CANOPY_CELL), floori(location.z / CANOPY_CELL))
-	var broadleaf: MultiMeshInstance3D = _canopy.get(Vector3i(tree_cell.x, tree_cell.y, 1))
-	var target_count := (12 if _quality == 0 else LEAF_COUNT) if broadleaf != null and broadleaf.multimesh.instance_count >= 5 else 0
+	var oak: MultiMeshInstance3D = _canopy.get(Vector3i(tree_cell.x, tree_cell.y, KIND_BROADLEAF_OAK))
+	var birch: MultiMeshInstance3D = _canopy.get(Vector3i(tree_cell.x, tree_cell.y, KIND_BROADLEAF_BIRCH))
+	var count_oak := oak.multimesh.instance_count if oak != null else 0
+	var count_birch := birch.multimesh.instance_count if birch != null else 0
+	var target_count := (12 if _quality == 0 else LEAF_COUNT) if (count_oak + count_birch) >= 4 else 0
 	var forward := -camera.global_basis.z.slide(Vector3.UP).normalized()
 	for i in LEAF_COUNT:
 		var lifetime := _leaf_life[i] - delta

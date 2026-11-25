@@ -30,11 +30,11 @@ uniform float shore_scale : hint_range(0.02, 0.5) = 0.16;
 
 uniform float water_level_m = 5.35;
 uniform float shore_height_m = 7.4;
-uniform float normal_strength : hint_range(0.0, 2.0) = 0.52;
+uniform float normal_strength : hint_range(0.0, 2.0) = 0.68;
 
-uniform vec3 grass_tint : source_color = vec3(0.46, 0.68, 0.36);
-uniform vec3 forest_tint : source_color = vec3(0.56, 0.58, 0.46);
-uniform vec3 rock_tint : source_color = vec3(0.76, 0.78, 0.82);
+uniform vec3 grass_tint : source_color = vec3(0.60, 0.72, 0.54);
+uniform vec3 forest_tint : source_color = vec3(0.84, 0.80, 0.72);
+uniform vec3 rock_tint : source_color = vec3(0.74, 0.76, 0.78);
 uniform vec3 shore_tint : source_color = vec3(0.84, 0.80, 0.72);
 
 varying vec3 world_pos;
@@ -175,9 +175,9 @@ void fragment() {
 	float wet_w = 1.0 - smoothstep(water_level_m - 0.1, water_level_m + 0.85, shore_h);
 
 	// 2) Forest floor: higher elevation + Cedar Woods northwest region + organic patches.
-	float cedar_region = (1.0 - smoothstep(-280.0, 100.0, xz.x)) * (1.0 - smoothstep(-60.0, 220.0, xz.y));
-	float elev_forest = smoothstep(56.0, 114.0, h + (macro_n - 0.5) * 18.0);
-	float forest_w = clamp(max(elev_forest, cedar_region * 0.82) * smoothstep(0.22, 0.68, macro_n + 0.18), 0.0, 1.0);
+	float cedar_region = (1.0 - smoothstep(-280.0, 120.0, xz.x)) * (1.0 - smoothstep(-60.0, 240.0, xz.y));
+	float elev_forest = smoothstep(54.0, 110.0, h + (macro_n - 0.5) * 18.0);
+	float forest_w = clamp(max(elev_forest, cedar_region * 0.92) * smoothstep(0.16, 0.62, macro_n + 0.22), 0.0, 1.0);
 	forest_w *= (1.0 - shore_w);
 
 	// 3) Steep cliff / alpine rock: slope-driven (17..33 deg) + high North Ridge peaks.
@@ -192,20 +192,21 @@ void fragment() {
 	tri_w /= max(dot(tri_w, vec3(1.0)), 0.0001);
 
 	// Meadow and woodland share the coarse biome blend, but keep separate materials up close.
-	vec3 meadow_tone = mix(vec3(0.71, 0.87, 0.63), vec3(0.95, 0.97, 0.79), smoothstep(0.24, 0.79, fields));
+	// Calibrated to match grass_medium_01/02 roots so undergrowth merges seamlessly into terrain.
+	vec3 meadow_tone = mix(vec3(0.86, 0.92, 0.84), vec3(1.06, 1.02, 0.88), smoothstep(0.24, 0.79, fields));
 	vec3 base_col = sample_planar_albedo(grass_albedo, xz, grass_scale, dist_blend) * grass_tint * meadow_tone;
 	float base_rgh = sample_planar_mono(grass_roughness, xz, grass_scale, dist_blend);
-	vec3 base_n = sample_planar_world_normal(grass_normal, xz, grass_scale, dist_blend, n, eff_normal_strength * 0.78);
-	float autumn = smoothstep(0.48, 0.79, detail_n * 0.62 + fields * 0.38);
+	vec3 base_n = sample_planar_world_normal(grass_normal, xz, grass_scale, dist_blend, n, eff_normal_strength * 0.82);
+	float autumn = smoothstep(0.46, 0.78, detail_n * 0.62 + fields * 0.38);
 	float town_hedges = (1.0 - smoothstep(130.0, 410.0, distance(xz, vec2(-625.0, 510.0))));
 	if (forest_w > 0.06 || autumn * town_hedges > 0.10) {
 		vec3 woodland = sample_planar_albedo(forest_albedo, xz, forest_scale, dist_blend) * forest_tint;
-		vec3 scattered_leaves = texture(leaf_litter, xz * 0.42).rgb * vec3(0.89, 0.83, 0.73);
-		woodland = mix(woodland, scattered_leaves, 0.14 + autumn * 0.53);
-		float blend_forest = max(forest_w * 0.77, autumn * town_hedges * 0.25);
+		vec3 scattered_leaves = texture(leaf_litter, xz * 0.36).rgb * vec3(0.86, 0.80, 0.70);
+		woodland = mix(woodland, scattered_leaves, 0.16 + autumn * 0.44);
+		float blend_forest = max(forest_w * 0.85, autumn * town_hedges * 0.25);
 		base_col = mix(base_col, woodland, blend_forest);
 		base_rgh = mix(base_rgh, sample_planar_mono(forest_roughness, xz, forest_scale, dist_blend), blend_forest);
-		base_n = normalize(mix(base_n, sample_planar_world_normal(forest_normal, xz, forest_scale, dist_blend, n, eff_normal_strength * 0.78), blend_forest));
+		base_n = normalize(mix(base_n, sample_planar_world_normal(forest_normal, xz, forest_scale, dist_blend, n, eff_normal_strength * 0.82), blend_forest));
 	}
 
 	// Blend shoreline when near lake elevation.
