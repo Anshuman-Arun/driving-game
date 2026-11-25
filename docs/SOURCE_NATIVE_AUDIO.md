@@ -37,3 +37,7 @@ The preceding automated selection and manual annotation pipeline remain availabl
 ## Whine isolation (owner listening feedback)
 
 Windows PowerShell: set `$env:ASTER_AUDIO_SOLO="exhaust"` and launch normally. This leaves only direct exhaust, excluding reflection, intake, tires, wind, music and UI. Repeat with `"nonengine"` (all non-engine buses), `"tires"` or `"reflection"` if necessary. Close the game between runs. `Remove-Item Env:ASTER_AUDIO_SOLO -ErrorAction SilentlyContinue` restores normal playback on next launch. The default mix and original samples are unchanged; the owner reports improved engine sound with an annoying whine, but its source is not yet identified. These controls isolate audio sources rather than mask them with broad EQ.
+
+## Native comfort tuning
+
+Default native tuning reduces shift ducking and random take changes, matches playback levels within bounded headroom, smooths small RPM/load flutter, and reduces competing synthetic scrub/squeal/wind plus dynamic reflection. No WAVs are changed. `ASTER_NATIVE_TUNING=0` restores the original native mix and renderer (not the bundled audio). Clear `ASTER_AUDIO_SOLO` for the full new mix. Exact whine origin and subjective sound remain owner listening gates.

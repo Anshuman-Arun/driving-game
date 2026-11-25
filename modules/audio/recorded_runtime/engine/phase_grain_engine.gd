@@ -36,9 +36,11 @@ var generated_frames := 0
 var max_render_usec := 0
 var diagnostics: Array[Dictionary] = []
 var texture_balance := false
+var native_stable := false
+var clipped_frames := 0
 
 
-func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, idle_level: float, balance_texture: bool = false, extended_grains: bool = true) -> bool:
+func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, idle_level: float, balance_texture: bool = false, extended_grains: bool = true, stable_native: bool = false) -> bool:
 	rows.clear()
 	on_indices.clear()
 	off_indices.clear()
@@ -46,6 +48,7 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 	prepared = false
 	order = firing_order
 	texture_balance = balance_texture
+	native_stable = stable_native
 	# Each hop is a complete 720-degree combustion cycle, not an arbitrary
 	# number of firing pulses. V12 and V8 retain their own cadence.
 	hop = maxi(2, roundi(order * 2.0))
@@ -62,11 +65,11 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 		# Prefer 8 whole engine cycles when the recording has sufficient room;
 		# fall back gracefully for the very short coast source recordings.
 		var row_hop := hop
-		if extended_grains and anchor_rpm >= 4000.0:
+		if extended_grains and (native_stable or anchor_rpm >= 4000.0):
 			for multiplier in [8, 4, 2]:
 				var candidate := hop * int(multiplier)
 				var required := (2.0*candidate+6.0)*float(wav.mix_rate)/(anchor_rpm*order/60.0)*1.10
-				if float(wav.data.size() >> 1) > required:
+				if float(wav.data.size() >> 1) > required and (not native_stable or float(candidate)/(anchor_rpm*order/60.0) <= 0.17):
 					row_hop = candidate
 					break
 		var row := build_grains(wav.data,wav.mix_rate,anchor_rpm*order/60.0,row_hop)
@@ -79,13 +82,15 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 			row.merge(balanced, true)
 		row["rpm"] = anchor_rpm
 		row["gain"] = float(entry.get("gain",1.0))
+		if native_stable:
+			calibrate_native_row(row, str(entry["layer"]))
 		var idx := rows.size()
 		rows.append(row)
 		if str(entry["layer"]) == "on":
 			on_indices.append(idx)
 		else:
 			off_indices.append(idx)
-		diagnostics.append({"file":fname,"rpm":anchor_rpm,"hz":row["hz"],"confidence":row["confidence"],"hop_cycles":row_hop,"tone_before":row.get("tone_before",0.0),"tone_after":row.get("tone_after",0.0),"trim_db":row.get("trim_db",0.0)})
+		diagnostics.append({"file":fname,"rpm":anchor_rpm,"hz":row["hz"],"confidence":row["confidence"],"hop_cycles":row_hop,"tone_before":row.get("tone_before",0.0),"tone_after":row.get("tone_after",0.0),"trim_db":row.get("trim_db",0.0),"stable_take":row.get("stable_take",-1),"playback_gain":row["gain"]})
 	on_indices.sort_custom(func(a: int,b: int) -> bool: return float(rows[a]["rpm"]) < float(rows[b]["rpm"]))
 	off_indices.sort_custom(func(a: int,b: int) -> bool: return float(rows[a]["rpm"]) < float(rows[b]["rpm"]))
 	if texture_balance:
@@ -96,7 +101,45 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 	print("Phase-grain engine: %d anchors, preparation %.1f ms" % [rows.size(),float(Time.get_ticks_usec()-started)/1000.0])
 	return prepared
 
-
+ 
+# Stable native audition: select a representative sustained portion instead
+# of randomly alternating six different RPM-ramp excerpts at steady speed.
+# Only playback gain changes; the installed PCM is untouched.
+static func calibrate_native_row(row: Dictionary, layer: String) -> void:
+	var pcm: PackedFloat32Array = row["pcm"]
+	var size := int(row["size"])
+	var levels := PackedFloat32Array()
+	var peak := 0.0
+	for take in range(VARIANTS):
+		var energy := 0.0
+		for j in range(size-1):
+			var sample := pcm[take*size+j]
+			energy += sample*sample
+			peak = maxf(peak,absf(sample))
+		levels.append(sqrt(energy/float(size-1)))
+	var sorted := levels.duplicate()
+	sorted.sort()
+	var median := (sorted[2]+sorted[3])*0.5
+	var best := 0
+	var cost := INF
+	for take in range(VARIANTS):
+		var distance := absf(log(maxf(levels[take],0.00001)/maxf(median,0.00001)))
+		# Prefer a central portion of a real ramp when levels are comparable.
+		distance += 0.035*absf(float(take)-2.5)
+		if distance < cost:
+			best = take
+			cost = distance
+	row["stable_take"] = best
+	var rpm_fraction := smoothstep(1000.0,7500.0,float(row["rpm"]))
+	var target := lerpf(0.052,0.10,rpm_fraction) if layer == "on" else lerpf(0.035,0.065,rpm_fraction)
+	var common := float(row["gain"])
+	# Bounded static matching reduces huge accidental recording-level gaps
+	# without pumping, limiter action, or normalizing every PCM sample.
+	var trim := clampf(target/maxf(levels[best]*common,0.00001),0.65,4.0)
+	row["gain"] = minf(common*trim,0.44/maxf(peak,0.00001))
+	row["calibrated_rms"] = levels[best]*float(row["gain"])
+ 
+ 
 # Fit fractional period near the supplied firing frequency, never an
 # unconstrained dominant harmonic. A low-confidence fit keeps nominal pitch.
 static func fit_period(pcm: PackedFloat32Array, rate: int, hz: float, center: int, window: int) -> Vector2:
@@ -316,6 +359,7 @@ func reset(idle: float) -> void:
 	gain = 0.0
 	phase = 0.0
 	generated_frames = 0
+	clipped_frames = 0
 	max_render_usec = 0
 	mirror_resyncs = 0
 	push_failures = 0
@@ -353,6 +397,10 @@ func weights_for(target_rpm: float, target_load: float) -> PackedFloat32Array:
 		var first := float(rows[off_indices[0]]["rpm"])
 		available = smoothstep(first*0.75,first,target_rpm)
 	var off := (1.0-l)*available
+	if native_stable:
+		# At light load keep a bed of the loaded exhaust; coast character
+		# remains the dominant layer at zero pedal. No hard tone switches.
+		off *= 0.72
 	var level := lerpf(lerpf(idle_gain,1.0,l),1.0,available)
 	layer_weights(weights,on_indices,target_rpm,(1.0-off)*level)
 	layer_weights(weights,off_indices,target_rpm,off*level)
@@ -389,6 +437,7 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 	var epochs := PackedInt64Array()
 	var grains := PackedInt32Array()
 	var old_grains := PackedInt32Array()
+	var fixed_takes := PackedInt32Array()
 	for i in range(rows.size()):
 		if maxf(a[i],b[i]) > 0.000001:
 			var atlas: PackedFloat32Array = rows[i]["pcm"]
@@ -401,8 +450,10 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 			sizes.append(int(rows[i]["size"]))
 			local_phases.append(phase-float(epoch*h))
 			epochs.append(epoch)
-			grains.append(_take_index(epoch))
-			old_grains.append(_take_index(epoch-1))
+			var fixed_take := int(rows[i].get("stable_take",-1))
+			fixed_takes.append(fixed_take)
+			grains.append(fixed_take if fixed_take >= 0 else _take_index(epoch))
+			old_grains.append(fixed_take if fixed_take >= 0 else _take_index(epoch-1))
 	var source_count := sources.size()
 	var p := phase
 	var increment := rpm*order/(60.0*RATE)
@@ -433,9 +484,12 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 				local -= float(h)
 				epochs[j] += 1
 				old_grains[j] = grains[j]
-				grains[j] = _take_index(epochs[j])
+				grains[j] = fixed_takes[j] if fixed_takes[j] >= 0 else _take_index(epochs[j])
 			local_phases[j] = local
-		sample = clampf(sample*amp,-0.95,0.95)
+		sample *= amp
+		if absf(sample) >= 0.95:
+			clipped_frames += 1
+		sample = clampf(sample,-0.95,0.95)
 		out[i] = Vector2(sample,sample)
 		p += increment
 		increment += increment_step

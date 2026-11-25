@@ -140,5 +140,7 @@ func _drive(id: String, capture: AudioEffectCapture) -> void:
 	_check(max_rpm_error < 1500.0, id + " audio follows real motor RPM within a physics tick")
 	_check(frames > AudioServer.get_mix_rate() * 9.0 and peak > 0.02 and peak < 0.95, id + " real exhaust signal and headroom")
 	_check(skips == 0 and renderer.push_failures == 0 and capture.get_discarded_frames() == discard_start and gap_ms < 2.0, id + " continuous real-drive audio")
+	if OS.get_environment("ASTER_REQUIRE_NATIVE_AUDIO") == "1" and engine._native_tuning:
+		_check(renderer.clipped_frames == 0, id + " no renderer hard clipping")
 	print("LIVE HERO %s speed=%.2f max_rpm=%.1f coast_rpm=%.1f shifts=%d rpm_error=%.1f peak=%.4f frames=%d rendered=%d skips=%d max_gap_ms=%.3f" % [id,max_speed,max_rpm,coast_rpm,shift_count,max_rpm_error,peak,frames,renderer.generated_frames-initial_frames,skips,gap_ms])
 	await Cleanup.dispose(self, car)

@@ -101,6 +101,8 @@ var _last_raw_throttle: float = 0.0
 var _intake_load: float = 0.0
 var _active_bank: String = ""
 var _grain_engine: PhaseGrainEngine
+var _native_tuning := false
+var _shift_load_hold := 0.0
 @export var use_phase_grains := true
 
 var _current_gear: int = 1
@@ -174,12 +176,17 @@ func set_profile(profile_name: String) -> void:
 		if native != null:
 			_manifest = native
 			_active_bank = profile_name
+	_native_tuning = _manifest.bank_status == "local_source_native_audition" and OS.get_environment("ASTER_NATIVE_TUNING") != "0"
+	if _native_tuning:
+		torque_cut_depth = 0.82
 	_rebuild_loop_players()
 	if _manifest.bank_status == "local_source_native_audition":
 		if not is_instance_valid(_grain_engine):
 			push_warning("Native bank preparation failed; using bundled audition bank")
 			_manifest = manifest
 			_active_bank = bank
+			_native_tuning = false
+			torque_cut_depth = float(cfg.get("shift_depth",0.20))
 			_rebuild_loop_players()
 		else:
 			print("Source-native local audio active: ", profile_name)
@@ -194,6 +201,7 @@ func snap_to_idle() -> void:
 	_last_raw_throttle = 0.0
 	_last_gear = -999
 	_live_shift = false
+	_shift_load_hold = 0.0
 	_shift_timer = 0.0
 	_shift_envelope = 1.0
 	_is_on_limiter = false
@@ -233,6 +241,7 @@ func update_telemetry(t: Dictionary) -> void:
 	var requested := int(t.get("requested_gear", gear))
 	var live_shift := bool(t.get("shift_active", false)) and gear > 0 and requested > 0
 	if live_shift and not _live_shift:
+		_shift_load_hold = maxf(_smoothed_throttle,raw_throttle)
 		trigger_gear_shift(gear, requested)
 	elif not live_shift and not _live_shift and _last_gear > 0 and gear > 0 and gear != _last_gear:
 		# Fallback for external telemetry producers without shift state.
@@ -294,11 +303,23 @@ func _process(delta: float) -> void:
 		return
 
 	# 1. Exponential smoothing for RPM (30-60ms) and throttle (80ms)
-	var rpm_alpha := 1.0 - exp(-dt / maxf(0.001, rpm_smoothing_ms * 0.001))
+	var rpm_tau := rpm_smoothing_ms*0.001
+	if _native_tuning and not _live_shift:
+		# Suppress tiny motor-RPM flutter without masking real gear changes.
+		var rpm_error := absf(_target_rpm-_smoothed_rpm)
+		rpm_tau = lerpf(0.16,0.050,smoothstep(80.0,500.0,rpm_error))
+	var rpm_alpha := 1.0 - exp(-dt / maxf(0.001,rpm_tau))
 	_smoothed_rpm = lerpf(_smoothed_rpm, _target_rpm, rpm_alpha)
 
-	var throttle_alpha := 1.0 - exp(-dt / maxf(0.001, throttle_smoothing_ms * 0.001))
-	_smoothed_throttle = lerpf(_smoothed_throttle, _target_throttle, throttle_alpha)
+	var audio_throttle := _target_throttle
+	var throttle_tau := throttle_smoothing_ms*0.001
+	if _native_tuning:
+		throttle_tau = 0.10 if audio_throttle > _smoothed_throttle else 0.20
+		if _live_shift:
+			# Physical shift already changes pitch; avoid a second deep load cut.
+			audio_throttle = maxf(audio_throttle,_shift_load_hold*0.75)
+	var throttle_alpha := 1.0 - exp(-dt / maxf(0.001,throttle_tau))
+	_smoothed_throttle = lerpf(_smoothed_throttle,audio_throttle,throttle_alpha)
 	var cfg: Dictionary = PROFILE_CONFIGS[car_profile]
 	var lag := float(cfg.get("intake_lag_ms", 80.0)) * 0.001
 	var intake_tau := lag if _target_throttle > _intake_load else 0.055
@@ -378,11 +399,14 @@ func _apply_audio_blend() -> void:
 	var intake_ratio: float = float(cfg.get("intake_ratio", 0.55))
 
 	var overall_gain := base_profile_gain * master_gain * _shift_envelope * _limiter_envelope
+	if _native_tuning:
+		# 4.35 dB of headroom-aware lift. Peak bound applied per source row.
+		overall_gain = base_profile_gain * minf(master_gain,1.0) * _shift_envelope * _limiter_envelope * 1.65
 
 	# Shared with the diagnostic helper so the tested curve is the live curve.
 	var shaped_load := pow(_smoothed_throttle, float(cfg.get("load_curve", 1.0)))
 	if use_phase_grains and is_instance_valid(_grain_engine) and _grain_engine.prepared:
-		_grain_engine.pump(_smoothed_rpm, shaped_load, overall_gain, _resolve_bus(exhaust_bus), &"Exhaust_Reflection")
+		_grain_engine.pump(_smoothed_rpm, shaped_load, overall_gain, _resolve_bus(exhaust_bus), &"NoNativeReflection" if _native_tuning and OS.get_environment("ASTER_AUDIO_SOLO") != "reflection" else &"Exhaust_Reflection")
 		return
 	var load_gains := compute_load_gains(_smoothed_rpm, shaped_load, _manifest.off_anchors, float(cfg.get("idle_gain", 0.40)))
 	# ON/OFF waveforms from different field sessions do not share phase.
@@ -578,7 +602,7 @@ func _rebuild_loop_players() -> void:
 	if use_phase_grains and cfg.has("firing_order") and _active_bank == car_profile:
 		var renderer := PhaseGrainEngineScript.new()
 		renderer.name = "PhaseGrainEngine"
-		if renderer.prepare(_manifest.loops,_prepared_loops,float(cfg["firing_order"]),_idle_rpm,float(cfg.get("idle_gain",0.58)),car_profile == "mclaren_senna" and _manifest.bank_status != "local_source_native_audition"):
+		if renderer.prepare(_manifest.loops,_prepared_loops,float(cfg["firing_order"]),_idle_rpm,float(cfg.get("idle_gain",0.58)),car_profile == "mclaren_senna" and _manifest.bank_status != "local_source_native_audition",true,_native_tuning):
 			_grain_engine = renderer
 			add_child(renderer)
 		else:

@@ -355,8 +355,16 @@ func _process(delta: float) -> void:
 			recorded_engine.set("master_gain", master_gain)
 		if is_instance_valid(recorded_tires):
 			recorded_tires.set("master_tire_gain", master_gain)
+			# Native audition mix: no synthetic scrub tone; real squeal remains
+			# available quietly for high-slip events. Normal legacy mix unchanged.
+			var quiet_native := is_instance_valid(recorded_engine) and bool(recorded_engine.get("_native_tuning")) and OS.get_environment("ASTER_AUDIO_SOLO") not in ["tires","nonengine"]
+			recorded_tires.set("scrub_gain",0.0 if quiet_native else 0.70)
+			recorded_tires.set("screech_gain",0.20 if quiet_native else 0.85)
+			if quiet_native:
+				recorded_tires.set("master_tire_gain",master_gain*0.75)
 		if is_instance_valid(recorded_chassis):
-			recorded_chassis.call("set_mix_gains", master_gain, master_gain * ambient_gain)
+			var quiet_native := is_instance_valid(recorded_engine) and bool(recorded_engine.get("_native_tuning")) and OS.get_environment("ASTER_AUDIO_SOLO") != "nonengine"
+			recorded_chassis.call("set_mix_gains", master_gain * (0.50 if quiet_native else 1.0), master_gain * ambient_gain)
 		return
 	var step := maxf(delta, 0.0)
 	_clock += step

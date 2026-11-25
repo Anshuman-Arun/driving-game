@@ -78,6 +78,8 @@ jobs:
           export ASTER_AUDIO_TEST_PROFILE="${{ matrix.profile }}"
           export ASTER_AUDIO_CAPTURE_DIR="$RUNNER_TEMP/native-captures"
           godot --headless --path . --editor --import > "$RUNNER_TEMP/native-reports/import.log" 2>&1
+          timeout 90 godot --headless --path . --script res://tests/integration/audio_qa/test_native_stability.gd 2>&1 | tee "$RUNNER_TEMP/native-reports/stability.log"
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|^ERROR:' "$RUNNER_TEMP/native-reports/stability.log"
           timeout 100 godot --headless --path . --script res://tests/integration/audio_qa/test_hero_live_drive.gd 2>&1 | tee "$RUNNER_TEMP/native-reports/live.log"
           ! grep -E 'SCRIPT ERROR:|Parse Error:|^ERROR:' "$RUNNER_TEMP/native-reports/live.log"
           for id in "$ASTER_AUDIO_TEST_PROFILE"; do
