@@ -77,6 +77,7 @@ func _run() -> void:
     _test_opposing_flow()
     _test_cleanup()
     _test_stop_dwell_during_conflict()
+    _test_convoy_yields_to_older_conflicting_stop()
     for jid in COMPLEX:
         _test_conflicting_movements(str(jid))
     _test_seeded_flow()
@@ -383,6 +384,55 @@ func _test_stop_dwell_during_conflict() -> void:
     waiting["speed_mps"] = 1.0
     _check(sim._junction_blocked(waiting, jid, control) and float(waiting["wait_s"]) == 0.0,
         "rolling before completing dwell resets the stop timer")
+
+
+func _test_convoy_yields_to_older_conflicting_stop() -> void:
+    var sim = _simulation(51)
+    if sim == null:
+        _check(false, "convoy fairness fixture setup")
+        return
+    var jid := "junction_alder"
+    var pair: Array[String] = _pick_conflicting_pair(sim, jid)
+    if pair.size() != 2:
+        _check(false, "convoy fairness uses real conflicting turns")
+        return
+    if sim.graph.lane_length(pair[0]) <= 13.0 or float(sim.movement_pair_release[pair[0]][pair[1]]) <= 13.0:
+        pair.reverse()
+    if sim.graph.lane_length(pair[0]) <= 13.0 or float(sim.movement_pair_release[pair[0]][pair[1]]) <= 13.0:
+        _check(false, "convoy fairness fixture has continuing conflict after entry headway")
+        return
+    var owner_id: int = _spawn_routed(sim, jid, pair[0])
+    if owner_id <= 0:
+        _check(false, "convoy owner spawns")
+        return
+    var owner: Dictionary = sim.agents[owner_id]
+    owner["lane_id"] = pair[0]
+    owner["s"] = 13.0
+    owner["position"] = sim.graph.get_pose(pair[0], 13.0)["position"]
+    owner["reservation_zone"] = jid
+    owner["reservation_movement"] = pair[0]
+    owner["reserved_junction"] = "%s@%d" % [jid, owner_id]
+    sim.reservations[owner["reserved_junction"]] = owner_id
+    var older_id: int = _spawn_routed(sim, jid, pair[1])
+    var later_id: int = _spawn_routed(sim, jid, pair[0])
+    if older_id <= 0 or later_id <= 0:
+        _check(false, "convoy fairness waiting approaches spawn")
+        return
+    var older: Dictionary = sim.agents[older_id]
+    var later: Dictionary = sim.agents[later_id]
+    for driver in [older, later]:
+        driver["s"] = sim.graph.lane_length(driver["lane_id"]) - float(sim.inbound_stop_offsets[driver["lane_id"]])
+        driver["speed_mps"] = 0.0
+        driver["stop_done"] = true
+    older["stop_ready_tick"] = 20
+    later["stop_ready_tick"] = 50
+    var control: Dictionary = sim.junctions[jid]
+    _check(sim._junction_blocked(older, jid, control), "older driver still yields to active conflicting owner")
+    _check(sim._junction_blocked(later, jid, control), "convoy follower cannot extend conflict over older completed stop")
+    sim.despawn_agent(owner_id)
+    _check(not sim._junction_blocked(older, jid, control), "older stopped approach becomes eligible when active conflict clears")
+    sim.despawn_agent(older_id)
+    _check(not sim._junction_blocked(later, jid, control), "convoy follower remains eligible without older competing stop")
 
 
 func _seed_trace(seed_value: int) -> Dictionary:

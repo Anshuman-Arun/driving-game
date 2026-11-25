@@ -306,7 +306,7 @@ func spawn_agent(lane_id: String, s: float, initial_speed_mps: float = 0.0, spee
 		"target_speed_mps": 0.0, "speed_factor": multiplier, "vehicle_type": vehicle_type,
 		"density_managed": false,
 		"position": pos, "tangent": pose["tangent"], "state": "FOLLOW_LANE",
-		"wait_s": 0.0, "stop_done": false, "reserved_junction": "",
+		"wait_s": 0.0, "stop_done": false, "stop_ready_tick": -1, "reserved_junction": "",
 		"entered_lane": "", "clearance_m": 0.0,
 		"reservation_zone": "", "reservation_movement": "",
 		"last_acceleration_mps2": 0.0, "dead_end_seconds": 0.0})
@@ -488,6 +488,7 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 			a["wait_s"] += FIXED_STEP
 			if a["wait_s"] >= j["stop_s"]:
 				a["stop_done"] = true
+				a["stop_ready_tick"] = tick
 		else:
 			a["wait_s"] = 0.0
 		if not a["stop_done"]:
@@ -510,6 +511,11 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 				# than queuing every following car through the entire long turn.
 				if _movement_progress(other, movement) < 12.0:
 					return true
+				# Do not extend a same-movement convoy over an older conflicting
+				# stopped approach. The active owner still clears normally; once
+				# clear, admission is free to choose the next eligible movement.
+				if mode == "stop" and _older_conflicting_stop_waits(a, junction_id, movement):
+					return true
 				continue
 			if movement_conflicts[movement].has(other_movement):
 				# An owner may still be clearing some OTHER turn. Do not block
@@ -522,6 +528,29 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 	if mode == "signal":
 		var phase: float = fposmod(elapsed_s + j["phase_s"], j["period_s"])
 		if phase >= j["green_s"]:
+			return true
+	return false
+
+
+func _older_conflicting_stop_waits(a: Dictionary, jid: String, movement: String) -> bool:
+	var ready := int(a.get("stop_ready_tick", -1))
+	if ready < 0:
+		return false
+	for other_id in agents:
+		if other_id == a["id"]:
+			continue
+		var other: Dictionary = agents[other_id]
+		if other["reserved_junction"] != "" or not other["stop_done"] or inbound_junction.get(other["lane_id"], "") != jid:
+			continue
+		var other_ready := int(other.get("stop_ready_tick", -1))
+		if other_ready < 0 or other_ready > ready or (other_ready == ready and int(other_id) > int(a["id"])):
+			continue
+		var other_movement: String = other["next_lane"]
+		if not movement_conflicts[movement].has(other_movement):
+			continue
+		var remaining: float = graph.lane_length(other["lane_id"]) - float(other["s"])
+		var offset: float = float(inbound_stop_offsets.get(other["lane_id"], STOP_OFFSET_M))
+		if remaining <= offset + 0.9:
 			return true
 	return false
 
@@ -613,6 +642,7 @@ func _integrate(a: Dictionary, command: Dictionary, dt: float) -> void:
 		else:
 			a["next_lane"] = _choose_next(graph.lanes[next_lane]["next_lane_ids"])
 		a["stop_done"] = false
+		a["stop_ready_tick"] = -1
 		a["wait_s"] = 0.0
 		transitions += 1
 	if a["reserved_junction"] != "" and a["lane_id"] == a["entered_lane"] and a["s"] >= a["clearance_m"]:

@@ -1,5 +1,10 @@
 # Project status — single current-state log
 
+## Narrow convoy fairness candidate (2026-11-25)
+
+Current-head run 45691718802 restored dwell-only traces (902/984 ticks, 87/89 advanced, 48/48 basic; safety/replay true). New owner diagnostics show seed 73 held the market driver behind two consecutive owners of the same 65.15 m chapel-to-market circulating connector, the second already granted while the first was still traversing. Unlike #38's broad priority rule, this candidate only prevents an additional same-movement owner from extending an active convoy over an older, actually stopped conflicting approach. No blanket serialization or changed conflict/headway thresholds; stop-completion tick and targeted real-turn fixture added. Original queue gates unchanged. This is a narrowly evidenced candidate pending verification; no world geometry or art changes.
+
+
 ## Rejected routing trial and stronger environment preservation gate (2026-11-25)
 
 Run 45691412373 on 833cb52: basic 48/48; all three cost-routing tests passed and reservation safety/replay remained true, but canonical waits worsened to 939/1140 ticks (31.3/38.0 s), so the trial is reverted rather than retained. Stop-dwell correction remains; original random route selection and all queue/safety thresholds restored/unchanged. Owner-state diagnostics retained. The outstanding queue bottleneck needs an independent traffic/connector investigation, not more speculative changes to map geometry. Added an exact pre-widening vegetation baseline audit: rerun production filter with identical baked source and meshes, compare retained placement attributes, and require each removed baseline placement to intersect actual current road clearance at the original safety margin. No asset, map, rendering or vehicle runtime changes. New audit pending CI; Windows visual acceptance remains open.
