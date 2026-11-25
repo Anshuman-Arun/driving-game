@@ -115,6 +115,33 @@ func _setup_recorded_runtime() -> void:
 		if is_instance_valid(_bound_camera) and camera_mix.has_method("bind_camera"):
 			camera_mix.call("bind_camera", _bound_camera)
 
+	# Explicit local A/B isolation. No mix changes during a normal launch.
+	var audition := OS.get_environment("ASTER_AUDIO_SOLO").strip_edges().to_lower()
+	if not audition.is_empty():
+		if apply_audio_isolation(audition):
+			print("Audio diagnostic isolation: ", audition)
+		else:
+			push_warning("Unknown ASTER_AUDIO_SOLO; use exhaust, nonengine, tires or reflection")
+
+
+# Do not touch Master/SFX or their routing. Camera/vehicle gain updates leave
+# mute flags intact. Diagnostic mode is fixed for the lifetime of the game.
+static func apply_audio_isolation(mode: String) -> bool:
+	var groups := {
+		"exhaust": ["Engine_Exhaust"],
+		"nonengine": ["Tires", "Wind_Chassis", "Ambience", "Music", "UI"],
+		"tires": ["Tires"],
+		"reflection": ["Exhaust_Reflection"],
+	}
+	if not groups.has(mode):
+		return false
+	var audible: Array = groups[mode]
+	for bus in ["Engine_Exhaust", "Engine_Intake", "Exhaust_Reflection", "Tires", "Wind_Chassis", "Ambience", "Music", "UI"]:
+		var idx := AudioServer.get_bus_index(bus)
+		if idx >= 0:
+			AudioServer.set_bus_mute(idx, not audible.has(bus))
+	return true
+
 
 func _setup_legacy_players() -> void:
 	for band in ENGINE_BANDS:

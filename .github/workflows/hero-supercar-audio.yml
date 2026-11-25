@@ -60,6 +60,7 @@ jobs:
           python3 -m unittest discover -s modules/audio/tests -p test_source_native_bank.py -v
           export XDG_DATA_HOME="$RUNNER_TEMP/native-audio-fixture"
           godot --headless --path . --script res://tests/integration/audio_qa/test_native_bank.gd
+          godot --headless --path . --script res://tests/integration/audio_qa/test_audio_isolation.gd
       - name: Upload capture WAVs and QA logs (optional; storage quota may block)
         if: always()
         continue-on-error: true

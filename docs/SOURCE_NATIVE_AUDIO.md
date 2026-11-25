@@ -33,3 +33,7 @@ Both passed all live-drive checks, including actual native bank selection, accel
 ## Research and manual override
 
 The preceding automated selection and manual annotation pipeline remain available for future alternative sources; use the tested frozen plans for normal installation. See earlier commits for research commands. Source labels and inferred load are deliberately not represented as measured.
+
+## Whine isolation (owner listening feedback)
+
+Windows PowerShell: set `$env:ASTER_AUDIO_SOLO="exhaust"` and launch normally. This leaves only direct exhaust, excluding reflection, intake, tires, wind, music and UI. Repeat with `"nonengine"` (all non-engine buses), `"tires"` or `"reflection"` if necessary. Close the game between runs. `Remove-Item Env:ASTER_AUDIO_SOLO -ErrorAction SilentlyContinue` restores normal playback on next launch. The default mix and original samples are unchanged; the owner reports improved engine sound with an annoying whine, but its source is not yet identified. These controls isolate audio sources rather than mask them with broad EQ.
