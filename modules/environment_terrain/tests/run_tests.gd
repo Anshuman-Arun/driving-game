@@ -4,7 +4,7 @@ const Mask := preload("../biome_mask.gd")
 const Band := preload("../roadside_band.gd")
 const Fixture := preload("fixture_world.gd")
 const Runtime := preload("res://modules/world_runtime/src/world_runtime.gd")
-const Environment := preload("res://scripts/integration/aster_valley_environment.gd")
+const ValleyEnvironment := preload("res://scripts/integration/aster_valley_environment.gd")
 var failures := 0
 var checks := 0
 
@@ -23,7 +23,7 @@ func run() -> void:
 	var world := Fixture.new()
 	root.add_child(world)
 	world.build_fixture()
-	var original := world.ground.get_active_material(0)
+	var original := world.ground.get_active_material(0) as ShaderMaterial
 	var mesh := world.ground.mesh
 	var collision := world.collision.shape
 	var road := world.road.mesh
@@ -85,7 +85,7 @@ func run() -> void:
 	print("[EnvironmentTerrain] %d checks, %d failures" % [checks, failures])
 	quit(1 if failures > 0 else 0)
 
-func _test_mask(world: Node, preview: RefCounted, region: Rect2) -> void:
+func _test_mask(world, preview, region: Rect2) -> void:
 	var dir := "user://terrain_mask_%d" % Time.get_ticks_usec()
 	var absolute := ProjectSettings.globalize_path(dir)
 	check(DirAccess.make_dir_recursive_absolute(absolute) == OK, "mask fixture directory")
@@ -131,7 +131,7 @@ func _test_production() -> void:
 	var world := Runtime.new()
 	world.build_on_ready = false
 	world.build_full_world = true
-	Environment.apply_world_materials(world)
+	ValleyEnvironment.apply_world_materials(world)
 	var works: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/world/roadworks.json"))
 	if not works is Dictionary:
 		check(false, "production roadworks available")
@@ -152,7 +152,7 @@ func _test_production() -> void:
 	var originals: Dictionary = {}
 	for child in terrain.get_children():
 		if child is MeshInstance3D:
-			originals[child] = child.get_active_material(0)
+			originals[child] = (child as MeshInstance3D).get_active_material(0)
 	var preview := Preview.new()
 	var region := Rect2(-810, -450, 220, 220)
 	check(preview.apply_candidate(world, {"pilot_bounds": region, "roadside_bounds": region}), "real generated world material adapter")
