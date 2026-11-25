@@ -1,5 +1,10 @@
 # Project status — single current-state log
 
+## Convoy trial rejected; stop scoped traffic experimentation (2026-11-25)
+
+Run 45691957849 on 90c4494: all four targeted convoy assertions passed, basic 48/48 and advanced 91/93, but the original seeded waits worsened to 1002/984 ticks (33.4/32.8 s). Both safety and replay remained true. The convoy trial is reverted; retain only the tested mandatory dwell correction, original routing/headway/conflict policy, and diagnostic owner states. No test thresholds or original assertions removed. Multiple admissions/spawn trials have now failed to resolve congestion; the observed long looping canonical connectors and conservative conflict occupation require a dedicated traffic geometry/throughput design, not further speculative changes in the map PR. The production environment remains unchanged except scoped road/clearance work. Exact vegetation baseline audit and final combined CI/Windows visual acceptance are outstanding; do not merge unconditionally.
+
+
 ## Narrow convoy fairness candidate (2026-11-25)
 
 Current-head run 45691718802 restored dwell-only traces (902/984 ticks, 87/89 advanced, 48/48 basic; safety/replay true). New owner diagnostics show seed 73 held the market driver behind two consecutive owners of the same 65.15 m chapel-to-market circulating connector, the second already granted while the first was still traversing. Unlike #38's broad priority rule, this candidate only prevents an additional same-movement owner from extending an active convoy over an older, actually stopped conflicting approach. No blanket serialization or changed conflict/headway thresholds; stop-completion tick and targeted real-turn fixture added. Original queue gates unchanged. This is a narrowly evidenced candidate pending verification; no world geometry or art changes.
