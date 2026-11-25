@@ -62,6 +62,10 @@ User prioritizes Aventador SVJ and McLaren Senna from scenic PR #36. Created sep
 
 Last updated: 2026-11-24
 
+## Source-native audio audition (`fix/source-native-audio`)
+
+Follow-up to PR #39: prior run 45527198610 downloaded and analyzed both professional onboard originals. Added hash-pinned local acquisition, minimally edited source-window bank builder, strict load/RPM coverage and opt-in local bank selection, preserving the existing grain runtime and disabling tonal suppression for this source. No restricted audio distributed, no real annotation plan or replacement bank installed, and Godot/listening QA remains pending. See `docs/SOURCE_NATIVE_AUDIO.md`.
+
 ## Scenic driving and exact supercars (`feat/aster-scenic-supercars`)
 
 The garage has six cars, including BlackCube's Aventador SVJ and Black Snow's McLaren Senna. The supplied meshes share the normal showroom and driving entry points, with measured wheel locations, separate rolling and brake parts, and distinct AWD and RWD presets. The visual pass removes intense road glare, fixes sideways guardrails, adds distant ridges and differentiates meadow and woodland materials. The premium pack now supplies Alder's fuel station and lamps and the Eastwater pier. See [scenic and vehicle QA](SCENIC_SUPERCARS_QA.md).

@@ -175,3 +175,63 @@ func find_bracketing_anchors(layer: String, rpm: float) -> Dictionary:
 		"t": 1.0,
 		"is_single": true
 	}
+
+
+# Explicit local opt-in only. Validate identity, coverage and every file before
+# accepting a bank; an incomplete import must not override the bundled audio.
+static func load_native_bank(profile: String) -> RefCounted:
+	var limits: Dictionary = {"aventador_svj": Vector2(900, 8700), "mclaren_senna": Vector2(980, 8000)}
+	if not limits.has(profile):
+		return null
+	var bounds: Vector2 = limits[profile]
+	var dir := "user://native_engine_banks".path_join(profile)
+	var path := dir.path_join("manifest.json")
+	if not FileAccess.file_exists(path):
+		return null
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not (data is Dictionary):
+		return null
+	if data.get("profile") != profile or data.get("status") != "local_source_native_audition":
+		return null
+	var rows: Variant = data.get("loops")
+	if not (rows is Array) or rows.size() < 12 or rows.size() > 40:
+		return null
+	var groups: Dictionary = {"on": [], "off": []}
+	var names: Dictionary = {}
+	for row in rows:
+		if not (row is Dictionary):
+			return null
+		var rpm := float(row.get("rpm", 0))
+		var layer := str(row.get("layer", ""))
+		var filename := str(row.get("file", ""))
+		var level := float(row.get("gain", 0))
+		if not is_finite(rpm) or rpm != floorf(rpm) or rpm < 600 or rpm > bounds.y * 1.08 or not groups.has(layer):
+			return null
+		if not is_finite(level) or level <= 0 or level > 1:
+			return null
+		if filename != "%s_%d.wav" % [layer, int(rpm)] or names.has(filename):
+			return null
+		names[filename] = true
+		var wav_path := dir.path_join(filename)
+		var expected := str(row.get("sha256", ""))
+		if expected.length() != 64 or not FileAccess.file_exists(wav_path):
+			return null
+		if FileAccess.get_sha256(wav_path) != expected:
+			push_warning("Native bank checksum mismatch: " + filename)
+			return null
+		groups[layer].append(rpm)
+	for layer in ["on", "off"]:
+		var rpms: Array = groups[layer]
+		rpms.sort()
+		var low := bounds.x * 1.3 if layer == "on" else 2200.0
+		if rpms.size() < 6 or float(rpms[0]) > low or float(rpms[-1]) < bounds.y * 0.9:
+			return null
+		for i in range(1, rpms.size()):
+			if float(rpms[i]) - float(rpms[i-1]) > 1500:
+				return null
+	var script: GDScript = load("res://modules/audio/recorded_runtime/engine/engine_profile_manifest.gd")
+	var manifest: RefCounted = script.new()
+	manifest.manifest_directory = dir
+	if not manifest.parse_dictionary(data as Dictionary):
+		return null
+	return manifest

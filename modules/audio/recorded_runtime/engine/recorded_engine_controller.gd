@@ -167,7 +167,22 @@ func set_profile(profile_name: String) -> void:
 
 	_manifest = manifest
 	_active_bank = bank
+	# Local-only professional recordings: opt in per process, never replace
+	# the bundled bank or silently publish restricted source files.
+	if use_phase_grains and cfg.has("firing_order") and OS.get_environment("ASTER_NATIVE_AUDIO") == "1":
+		var native: RefCounted = EngineProfileManifestScript.load_native_bank(profile_name)
+		if native != null:
+			_manifest = native
+			_active_bank = profile_name
 	_rebuild_loop_players()
+	if _manifest.bank_status == "local_source_native_audition":
+		if not is_instance_valid(_grain_engine):
+			push_warning("Native bank preparation failed; using bundled audition bank")
+			_manifest = manifest
+			_active_bank = bank
+			_rebuild_loop_players()
+		else:
+			print("Source-native local audio active: ", profile_name)
 
 
 func snap_to_idle() -> void:
@@ -563,7 +578,7 @@ func _rebuild_loop_players() -> void:
 	if use_phase_grains and cfg.has("firing_order") and _active_bank == car_profile:
 		var renderer := PhaseGrainEngineScript.new()
 		renderer.name = "PhaseGrainEngine"
-		if renderer.prepare(_manifest.loops,_prepared_loops,float(cfg["firing_order"]),_idle_rpm,float(cfg.get("idle_gain",0.58)),car_profile == "mclaren_senna"):
+		if renderer.prepare(_manifest.loops,_prepared_loops,float(cfg["firing_order"]),_idle_rpm,float(cfg.get("idle_gain",0.58)),car_profile == "mclaren_senna" and _manifest.bank_status != "local_source_native_audition"):
 			_grain_engine = renderer
 			add_child(renderer)
 		else:
