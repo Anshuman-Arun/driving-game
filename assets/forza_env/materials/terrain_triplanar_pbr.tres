@@ -1,0 +1,58 @@
+[gd_resource type="ShaderMaterial" load_steps=16 format=3]
+
+[ext_resource type="Shader" path="res://shaders/terrain_triplanar.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://assets/premium_runtime/cliff_albedo.jpg" id="2_rad"]
+[ext_resource type="Texture2D" path="res://assets/premium_runtime/cliff_normal.jpg" id="3_rn"]
+[ext_resource type="Texture2D" path="res://assets/premium_runtime/cliff_arm.jpg" id="4_rarm"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/rock/roughness.png" id="5_rr"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/rock/ao.png" id="6_rao"]
+[ext_resource type="Texture2D" path="res://assets/valley_art/meadow_albedo.jpg" id="7_ga"]
+[ext_resource type="Texture2D" path="res://assets/valley_art/meadow_normal.jpg" id="8_gn"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/grass/roughness.png" id="9_gr"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/grass/ao.png" id="10_gao"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/forest_floor/albedo.jpg" id="11_da"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/forest_floor/normal.png" id="12_dn"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/forest_floor/roughness.png" id="13_dr"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/forest_floor/ao.png" id="14_dao"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/shore/albedo.jpg" id="15_sa"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/shore/normal.png" id="16_sn"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/shore/roughness.png" id="17_sr"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/slope_threshold = 0.76
+shader_parameter/slope_blend_margin = 0.14
+shader_parameter/normal_strength = 0.49
+shader_parameter/rock_albedo = ExtResource("2_rad")
+shader_parameter/rock_normal = ExtResource("3_rn")
+shader_parameter/rock_arm = ExtResource("4_rarm")
+shader_parameter/rock_roughness = ExtResource("5_rr")
+shader_parameter/rock_ao = ExtResource("6_rao")
+shader_parameter/use_rock_arm = true
+shader_parameter/rock_scale = 0.075
+shader_parameter/rock_tint = Color(0.78, 0.79, 0.80, 1)
+shader_parameter/rock_strata_strength = 0.08
+shader_parameter/rock_strata_freq = 0.22
+shader_parameter/triplanar_sharpness = 6.0
+shader_parameter/grass_albedo = ExtResource("7_ga")
+shader_parameter/grass_normal = ExtResource("8_gn")
+shader_parameter/grass_roughness = ExtResource("9_gr")
+shader_parameter/grass_ao = ExtResource("10_gao")
+shader_parameter/grass_scale = 0.22
+shader_parameter/grass_tint = Color(0.61, 0.86, 0.57, 1)
+shader_parameter/dirt_albedo = ExtResource("11_da")
+shader_parameter/dirt_normal = ExtResource("12_dn")
+shader_parameter/dirt_roughness = ExtResource("13_dr")
+shader_parameter/dirt_ao = ExtResource("14_dao")
+shader_parameter/dirt_scale = 0.13
+shader_parameter/dirt_tint = Color(0.69, 0.61, 0.52, 1)
+shader_parameter/shore_albedo = ExtResource("15_sa")
+shader_parameter/shore_normal = ExtResource("16_sn")
+shader_parameter/shore_roughness = ExtResource("17_sr")
+shader_parameter/shore_scale = 0.16
+shader_parameter/shore_tint = Color(0.84, 0.8, 0.72, 1)
+shader_parameter/water_level_m = 5.35
+shader_parameter/shore_height_m = 7.4
+shader_parameter/macro_scale = 0.0055
+shader_parameter/macro_luminance_mod = 0.18

@@ -26,6 +26,8 @@ class TestVehicle:
 	var current_gear := 1
 
 
+const AudioTestCleanup := preload("res://tests/integration/audio_qa/audio_test_cleanup.gd")
+
 var failures := 0
 
 
@@ -36,14 +38,15 @@ func _expect(ok: bool, message: String) -> void:
 
 
 func _initialize() -> void:
-	var script_resource = load("res://audio_controller.gd")
+	var script_resource = load("res://modules/audio/audio_controller.gd") if ResourceLoader.exists("res://modules/audio/audio_controller.gd") else load("res://audio_controller.gd")
 	var audio = script_resource.new()
+	audio.use_recorded_runtime = false
 	root.add_child.call_deferred(audio)
 	call_deferred("_test", audio)
 
 
 func _test(audio) -> void:
-	var script_resource = load("res://telemetry_bridge.gd")
+	var script_resource = load("res://modules/audio/telemetry_bridge.gd") if ResourceLoader.exists("res://modules/audio/telemetry_bridge.gd") else load("res://telemetry_bridge.gd")
 	_expect(audio._players.size() == 11, "eleven loop players created")
 	_expect(audio._alternate_engines.size() == 3, "three crossfade voices created")
 	_expect(audio._event_players.size() == 3, "three bounded event voices created")
@@ -188,7 +191,7 @@ func _test(audio) -> void:
 	car.free()
 	audio._physics_process(0.016)
 	_expect(not audio._tracking_vehicle and audio._telemetry["speed_mps"] == 0.0, "destroyed bound car recovers without stale playback")
-	audio.queue_free()
+	await AudioTestCleanup.dispose(self, audio)
 
 	if failures > 0:
 		print("Aster audio Godot regression FAILED: ", failures, " checks")

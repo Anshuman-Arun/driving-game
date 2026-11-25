@@ -5,12 +5,16 @@ extends RefCounted
 const VehicleScript = preload("res://addons/gevp/scripts/vehicle.gd")
 const WheelScript = preload("res://addons/gevp/scripts/wheel.gd")
 const DriftControllerScript = preload("res://scripts/vehicle/drift_controller.gd")
+const AudioControllerScript = preload("res://modules/audio/audio_controller.gd")
 
 const DEFAULT_CAR := "vela_gt"
 const PRESETS := {
-	"vela_gt": {"name": "VelaGT", "mass": 1390.0, "torque": 480.0, "final_drive": 3.6, "front_split": 0.0, "paint": Color(0.075, 0.21, 0.41)},
-	"orion_rs": {"name": "OrionRS", "mass": 1190.0, "torque": 380.0, "final_drive": 3.9, "front_split": 0.0, "paint": Color(0.08, 0.45, 0.34)},
-	"kestrel_xr": {"name": "KestrelXR", "mass": 1540.0, "torque": 575.0, "final_drive": 3.3, "front_split": 0.35, "paint": Color(0.33, 0.22, 0.52)},
+	"vela_gt": {"name": "VelaGT", "mass": 1390.0, "torque": 480.0, "final_drive": 3.6, "front_split": 0.0, "paint": Color(0.075, 0.21, 0.41), "idle_rpm": 950.0, "max_rpm": 7100.0},
+	"orion_rs": {"name": "OrionRS", "mass": 1190.0, "torque": 380.0, "final_drive": 3.9, "front_split": 0.0, "paint": Color(0.08, 0.45, 0.34), "idle_rpm": 1000.0, "max_rpm": 8500.0},
+	"kestrel_xr": {"name": "KestrelXR", "mass": 1540.0, "torque": 575.0, "final_drive": 3.3, "front_split": 0.35, "paint": Color(0.33, 0.22, 0.52), "idle_rpm": 800.0, "max_rpm": 6900.0},
+	"solace_gt": {"name": "SolaceGT", "mass": 1620.0, "torque": 510.0, "final_drive": 3.45, "front_split": 0.20, "paint": Color("#447b82"), "idle_rpm": 950.0, "max_rpm": 7100.0},
+	"aventador_svj": {"name": "AventadorSVJ", "mass": 1670.0, "torque": 720.0, "final_drive": 3.52, "front_split": 0.28, "paint": Color("#ed9f35"), "idle_rpm": 900.0, "max_rpm": 8700.0, "half_track": Vector2(0.8864, 0.9052), "half_wheelbase": 1.3408, "radii": Vector2(0.3074, 0.3668), "widths": Vector2(255, 355), "body_length": 4.75},
+	"mclaren_senna": {"name": "McLarenSenna", "mass": 1380.0, "torque": 800.0, "final_drive": 3.31, "front_split": 0.0, "paint": Color("#2b82ba"), "idle_rpm": 980.0, "max_rpm": 8000.0, "half_track": Vector2(0.8432, 0.8432), "half_wheelbase": 1.2678, "radii": Vector2(0.3458, 0.3458), "widths": Vector2(245, 315), "body_length": 4.58, "audio_profile": "mclaren_senna"},
 }
 
 static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
@@ -31,8 +35,8 @@ static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
 	# Simcade starting tune derived from GEVP's simcade example, re-authored for Vela GT.
 	car.vehicle_mass = preset["mass"]
 	car.max_torque = preset["torque"]
-	car.max_rpm = 7100.0
-	car.idle_rpm = 950.0
+	car.max_rpm = float(preset.get("max_rpm", 7100.0))
+	car.idle_rpm = float(preset.get("idle_rpm", 950.0))
 	car.final_drive = preset["final_drive"]
 	car.front_torque_split = preset["front_split"]
 	car.automatic_transmission = true
@@ -57,10 +61,12 @@ static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
 	car.rear_damping_ratio = 0.62
 	car.front_arb_ratio = 0.28
 	car.rear_arb_ratio = 0.25
-	car.front_tire_radius = 0.35
-	car.rear_tire_radius = 0.35
-	car.front_tire_width = 245.0
-	car.rear_tire_width = 265.0
+	var radii: Vector2 = preset.get("radii", Vector2(0.35, 0.35))
+	var widths: Vector2 = preset.get("widths", Vector2(245, 265))
+	car.front_tire_radius = radii.x
+	car.rear_tire_radius = radii.y
+	car.front_tire_width = widths.x
+	car.rear_tire_width = widths.y
 	car.front_brake_bias = 0.63
 	car.coefficient_of_friction = {"Road": 2.9, "Dirt": 1.8, "Grass": 1.45}
 	car.tire_stiffnesses = {"Road": 9.0, "Dirt": 2.0, "Grass": 1.3}
@@ -75,7 +81,7 @@ static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
 	var collider := CollisionShape3D.new()
 	collider.name = "BodyCollision"
 	var shape := BoxShape3D.new()
-	shape.size = Vector3(1.86, 0.56, 4.23)
+	shape.size = Vector3(1.86, 0.56, float(preset.get("body_length", 4.23)))
 	collider.shape = shape
 	collider.position = Vector3(0, 0.17, 0)
 	car.add_child(collider)
@@ -101,11 +107,16 @@ static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
 		_box(fallback, "SideSkirt", Vector3(0.12, 0.14, 2.15), Vector3(side * 0.94, 0.06, 0.02), dark)
 		_box(fallback, "Mirror", Vector3(0.24, 0.10, 0.31), Vector3(side * 0.83, 0.66, -0.49), paint)
 	_box(fallback, "SpoilerBlade", Vector3(1.70, 0.075, 0.32), Vector3(0, 0.63, 1.98), dark)
+	var track: Vector2 = preset.get("half_track", Vector2(0.88, 0.88))
+	var half_wheelbase: float = preset.get("half_wheelbase", 0.0)
 	for front in [true, false]:
 		for left in [true, false]:
 			var wheel = WheelScript.new()
 			wheel.name = ("Front" if front else "Rear") + ("Left" if left else "Right")
-			wheel.position = Vector3(-0.88 if left else 0.88, 0.03, -1.36 if front else 1.35)
+			var lateral := track.x if front else track.y
+			var longitudinal := (-half_wheelbase if front else half_wheelbase) if half_wheelbase > 0.0 else (-1.36 if front else 1.35)
+			var radius := radii.x if front else radii.y
+			wheel.position = Vector3(-lateral if left else lateral, 0.03 + radius - radii.x, longitudinal)
 			wheel.target_position = Vector3(0, -0.95, 0)
 			wheel.enabled = false
 			wheel.exclude_parent = true
@@ -121,8 +132,8 @@ static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
 			var rubber := MeshInstance3D.new()
 			rubber.name = "Rubber"
 			var tire_mesh := CylinderMesh.new()
-			tire_mesh.top_radius = 0.35
-			tire_mesh.bottom_radius = 0.35
+			tire_mesh.top_radius = radius
+			tire_mesh.bottom_radius = radius
 			tire_mesh.height = 0.27
 			rubber.mesh = tire_mesh
 			rubber.rotation.z = PI * 0.5
@@ -154,6 +165,12 @@ static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
 	_marker(mounts, "Cockpit", Vector3(-0.34, 0.94, -0.05))
 	var drift := DriftControllerScript.new()
 	car.add_child(drift)
+	var audio := AudioControllerScript.new()
+	audio.name = "VehicleAudio"
+	audio.car_profile = preset.get("audio_profile", car_id if AudioControllerScript.PROFILES.has(car_id) else DEFAULT_CAR)
+	audio.process_mode = Node.PROCESS_MODE_PAUSABLE
+	car.add_child(audio)
+	audio.bind_gevp_vehicle(car)
 	return car
 
 static func _marker(parent: Node3D, label: String, offset: Vector3) -> void:

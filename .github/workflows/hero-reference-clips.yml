@@ -1,0 +1,27 @@
+name: Hero reference clip audit
+on:
+  push:
+    branches: [feat/hero-supercar-audio]
+    paths: ['modules/audio/tools/reference_clip_audit.py', '.github/workflows/hero-reference-clips.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          lfs: false
+          persist-credentials: false
+      - run: |
+          python -m venv "$RUNNER_TEMP/reference-venv"
+          "$RUNNER_TEMP/reference-venv/bin/pip" install numpy==2.3.5 scipy==1.17.0 imageio-ffmpeg==0.6.0
+          "$RUNNER_TEMP/reference-venv/bin/python" modules/audio/tools/reference_clip_audit.py "$RUNNER_TEMP/reference-report" "$RUNNER_TEMP/reference-scratch"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: reference-clip-report
+          path: ${{ runner.temp }}/reference-report/
+          retention-days: 7

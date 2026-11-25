@@ -80,3 +80,47 @@ The textures below use the [Poly Haven CC0 license](https://polyhaven.com/licens
 | Broadleaf canopy | [Tree Small 02](https://polyhaven.com/a/tree_small_02) | Rico Cilliers | `broadleaf_spray.png`, assembled from leaf diffuse and alpha |
 | Building walls | [White Plaster 02](https://polyhaven.com/a/white_plaster_02) | Rob Tuytel | `plaster.jpg`, `plaster_normal.jpg` |
 | Grass tufts | [Grass Medium 01](https://polyhaven.com/a/grass_medium_01) | Rico Cilliers, Rob Tuytel | `grass_cutout.png`, cropped and packed from diffuse and alpha |
+
+## Premium world and garage runtime conversions
+
+The acquired source packs retain their catalogs and SHA-256 ledgers under `assets/premium_world/`, `assets/premium_garage_world/`, and `assets/audio/recorded/`. The Windows export uses the adopted visual runtime derivatives listed here.
+
+| Runtime files | Source and license | Changes |
+|---|---|---|
+| `assets/premium_runtime/{fir,fern}.glb` | [Fir Sapling Medium](https://polyhaven.com/a/fir_sapling_medium) and [Fern 02](https://polyhaven.com/a/fern_02), Poly Haven CC0 | Simplified geometry, restored the original UV-matched opacity, applied alpha scissor, and fit to existing planting scale. |
+| `assets/premium_runtime/{moss_rocks,rock_face}.glb` and `cliff_*.jpg` | [Rock Moss Set 02](https://polyhaven.com/a/rock_moss_set_02) and [Rock Face 02](https://polyhaven.com/a/rock_face_02), Poly Haven CC0 | Simplified scans, selected the largest individual mossy rock, and reused the matching cliff color, OpenGL normal, and packed ARM maps. |
+| `assets/premium_runtime/{village_house,village_shop,wooden_garage,hay_barn}_1.glb` | [Village House](https://tevy.dev/models/village-house), [Village Shop](https://tevy.dev/models/village-shop), [Garage](https://tevy.dev/models/garage), [Hay Barn](https://tevy.dev/models/hay-barn), tevy CC0 | Converted published lower LODs to Godot-readable GLB and fit them to existing lots. |
+| `assets/premium_runtime/solace_gt.glb` and `assets/ui/dashboard/solace_gt.png` | [Electric Grand Tourer](https://tevy.dev/models/electric-gt), tevy CC0 | Decoded meshopt geometry, preserved source textures, adapted the independent wheel and caliper nodes to GEVP, and captured a runtime thumbnail. |
+
+Source authors and package hashes are recorded in the individual ledgers. The two opacity maps have a [separate acquisition record](../assets/premium_world/alpha_fix/README.md).
+
+## Scenic driving and exact supercar assets
+
+| Runtime resource | Attribution | Changes |
+|---|---|---|
+| `assets/premium_runtime/aventador_svj.glb` | [Lamborghini Aventador](https://sketchfab.com/3d-models/lamborghini-aventador-2263b49846d840618046538012720c59) by [BlackCube](https://sketchfab.com/blackcube4), [CC Attribution 4.0](https://creativecommons.org/licenses/by/4.0/). User-supplied archive SHA-256 `d8604344c48157f46735d6b68ceb0304ae4d72c28be1d102ed44e776f26acb6d`. | Evaluated original Blender modifiers, kept exterior shapes and UVs, split the four source wheel assemblies, grouped light emitters, optimized geometry, and tuned materials in Godot. |
+| `assets/premium_runtime/mclaren_senna.glb` | [McLaren Senna Free](https://sketchfab.com/3d-models/mclaren-senna-free-ea3e43a6eb004853a87fe9c58422eb96) by [Black Snow](https://sketchfab.com/BlackSnow02), [CC Attribution 4.0](https://creativecommons.org/licenses/by/4.0/). User-supplied GLB SHA-256 `ffd124e440fad20faa83b633d27225c8138f9ae6b58cb1ee9846549eb6e1333d`. | Reoriented original meshes, removed the overlapping alternative driver seat, retained the regular cockpit, split wheel and brake meshes, grouped emitters, and optimized geometry. |
+| `assets/premium_runtime/town_lamp.glb` | [Street Lamp 01](https://polyhaven.com/a/street_lamp_01), Poly Haven CC0. | Converted the pack's 1K scan and simplified its meshes. |
+| `assets/premium_runtime/eastwater_pier.glb` | [Modular Wooden Pier](https://polyhaven.com/a/modular_wooden_pier), Poly Haven CC0. | Converted and simplified the 1K model, then fit it to the lake parcel. |
+| `assets/premium_runtime/alder_fuel_station.glb` | [Abandoned Fuel Station](https://tevy.dev/models/abandoned-fuel-station), tevy CC0. | Decoded the published lower LOD and placed it in Alder Town. |
+
+The garage thumbnails are live Forward+ captures of the respective rigged derivatives. Original source archives are retained by the owner.
+
+## Recorded Vehicle and Environment Audio Assets
+
+Updated: 2026-11-23. Machine-readable catalog and hash ledger: `assets/audio/recorded/payload/LICENSES_AND_HASHES.json` and `assets/audio/recorded/catalog.json`.
+
+| Subsystem / Profile | Source URL | Author / Provenance | License | Local Path |
+|---|---|---|---|---|
+| `engine_vela_gt` | [supercar-engine-sound / gt3rs](https://github.com/justinagaudelli-eng/supercar-engine-sound) | Supercars67, NEW CARS 2015, Automotion Media | CC BY 3.0 | `assets/audio/recorded/payload/engines/vela_gt/*.wav` (14 loops) |
+| `engine_kestrel_xr` | [supercar-engine-sound / 765lt](https://github.com/justinagaudelli-eng/supercar-engine-sound) | Hungarian Supercar Spotters, FiExhaust, Supercars67 | CC BY 3.0 | `assets/audio/recorded/payload/engines/kestrel_xr/*.wav` (12 loops) |
+| `engine_orion_rs` | [supercar-engine-sound / four-cyl](https://github.com/justinagaudelli-eng/supercar-engine-sound) | Upstream field recordings | CC BY 3.0 | `assets/audio/recorded/payload/engines/orion_rs/*.wav` (6 loops) |
+| `ambience_wind` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/ambience/mountain_wind_bed.wav` |
+| `tires_roll_gravel` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/tires/roll_gravel.wav` |
+| `tires_screech` | Project recorded / curated field recordings | Aster Valley audio contributors | CC0 | `assets/audio/recorded/payload/tires/screech.wav` |
+
+
+
+## Hero supercar audition recordings (private-build)
+
+The two new hero engine manifests at `assets/audio/recorded/payload/engines/aventador_svj/manifest.json` and `assets/audio/recorded/payload/engines/mclaren_senna/manifest.json` include all original creator credits, source URLs, declared CC BY 3.0 licenses, upstream processing details, and per-file Git blob identity. Commons independent review remains pending. The Senna uses related McLaren V8 recordings, not a measured Senna bank. See [HERO_SUPERCAR_AUDIO.md](HERO_SUPERCAR_AUDIO.md) for limitations and audition plan.

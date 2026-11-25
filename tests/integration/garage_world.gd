@@ -54,11 +54,21 @@ func _add_game(profile: String) -> Node:
 	return instance
 
 func _select_next(shell: Shell, car_id: String) -> void:
-	await _key(KEY_DOWN)
+	var focus := root.gui_get_focus_owner()
+	var roster := focus.get_parent() as GridContainer if focus != null else null
+	if car_id == "kestrel_xr" and roster != null and roster.columns == 2:
+		await _key(KEY_DOWN)
+		await _key(KEY_LEFT)
+	else:
+		await _key(KEY_RIGHT)
 	await _key(KEY_ENTER)
 	_check(shell.inspected_car == car_id, "garage focuses " + car_id)
-	await _key(KEY_RIGHT)
 	var button := root.gui_get_focus_owner() as Button
+	for i in 3:
+		if button != null and button.text == "SELECT VEHICLE":
+			break
+		await _key(KEY_RIGHT)
+		button = root.gui_get_focus_owner() as Button
 	_check(button != null and button.text == "SELECT VEHICLE", "keyboard can reach Select Vehicle")
 	await _key(KEY_ENTER)
 	_check(shell.save.selected_car() == car_id, "garage saves " + car_id)
@@ -151,7 +161,9 @@ func _run() -> void:
 
 	await _tap("drive_camera")
 	await _tap("drive_camera")
-	_check(drive.camera.mode == 2, "chase and hood camera switch on the live car")
+	_check(drive.camera.mode == 2, "close chase camera switches on the live car")
+	await _tap("drive_camera")
+	_check(drive.camera.mode == 3, "hood camera switches on the live car")
 	await _tap("drive_reset")
 	await _ticks(60)
 	_check(drive.adapter.get_speed_mps() < 1.1 and drive.vehicle_body.current_gear == 0,
@@ -170,7 +182,7 @@ func _run() -> void:
 	await _capture("03-parked-garage-kestrel")
 	await _key(KEY_BACKSPACE)
 	await _ticks(60)
-	_check(shell.screen == "FREE_ROAM" and not paused and drive.camera.mode == 2, "back resumes driving in the saved view")
+	_check(shell.screen == "FREE_ROAM" and not paused and drive.camera.mode == 3, "back resumes driving in the saved view")
 	var hood := drive.vehicle_body.get_node("CameraMounts/Hood") as Marker3D
 	_check(hood.global_position.distance_to(drive.camera.global_position) < 0.10, "hood follows the new chassis anchor")
 	await _capture("04-kestrel-hood")
@@ -184,28 +196,57 @@ func _run() -> void:
 	var reopened := Save.new(profile)
 	reopened.load()
 	_check(reopened.selected_car() == "kestrel_xr", "physical car selection persists to disk")
+	for id in ["aventador_svj", "mclaren_senna"]:
+		await _tap("drive_reset")
+		await _ticks(60)
+		shell.open_garage()
+		_check(shell.screen == "GARAGE", "garage reopens for " + id)
+		shell._inspect(id)
+		_assert_preview(shell, id)
+		shell._choose_car()
+		await _ticks(8)
+		_assert_car(drive, id)
+		shell._go_back()
+		await _ticks(50)
+		_check(drive.vehicle_body.wheel_array.all(func(wheel: Wheel) -> bool: return wheel.is_colliding()),
+			id + " settles onto four wheels")
+		Input.action_press("drive_throttle", 0.76)
+		await _ticks(170)
+		Input.action_release("drive_throttle")
+		_check(drive.adapter.get_speed_mps() > 3.0, id + " accelerates on the live chassis")
+		Input.action_press("drive_left", 0.55)
+		await _ticks(20)
+		Input.action_release("drive_left")
+		var wheel := drive.vehicle_body.front_left_wheel
+		_check(absf(wheel.rotation.y) > 0.01 and absf(wheel.wheel_node.rotation.x) > 0.01,
+			id + " steers and rolls its original wheel geometry")
+		reopened.load()
+		_check(reopened.selected_car() == id, id + " survives a save reload")
 	print("GARAGE PROFILE ", profile)
 	instance.queue_free()
 	await _frames()
 	_finish()
 
 func _assert_scenery(drive: Drive) -> void:
-	var bodies := drive.find_children("*", "StaticBody3D", true, false)
-	_check(bodies.size() == drive.world.report.get("static_colliders", 0), "scenery adds no collision bodies")
+	var bodies := drive.world.find_children("*", "StaticBody3D", true, false)
+	_check(bodies.size() == drive.world.report.get("static_colliders", 0), "world collider count matches the report")
 	if drive.scenery != null:
 		var placements: int = drive.scenery.report.get("placements", 0)
 		var displaced: int = drive.scenery.report.get("displaced_by_roadworks", 0)
-		_check(drive.scenery.report.get("regions", 0) == 5 and placements + displaced == 2791
+		var rejected := 0
+		for count: int in drive.scenery.report.get("rejected_for_clearance", {}).values():
+			rejected += count
+		_check(drive.scenery.report.get("regions", 0) == 5 and placements + displaced + rejected == 2792
 			and drive.scenery.report.get("height_mismatches", -1) == 0
-			and drive.scenery.report.get("selective_colliders", -1) == 0, "five authored scenery packs built")
+			and drive.scenery.report.get("selective_colliders", -1) > 0, "five authored scenery packs built with selective colliders")
 	else:
 		_check(false, "five authored scenery packs built")
 	if drive.scenery != null:
 		print("SCENERY ", drive.scenery.report)
 	_check(drive.set_scenery_enabled(false) and drive.scenery == null
-		and drive.find_children("*", "StaticBody3D", true, false) == bodies, "toggle off keeps the same world colliders")
+		and drive.world.find_children("*", "StaticBody3D", true, false) == bodies, "toggle off keeps the same world colliders")
 	_check(drive.set_scenery_enabled(true) and drive.scenery != null
-		and drive.find_children("*", "StaticBody3D", true, false) == bodies, "toggle on keeps the same world colliders")
+		and drive.world.find_children("*", "StaticBody3D", true, false) == bodies, "toggle on keeps the same world colliders")
 
 func _capture_regions(drive: Drive) -> void:
 	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":

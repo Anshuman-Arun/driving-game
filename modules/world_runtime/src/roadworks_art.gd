@@ -1,6 +1,8 @@
 extends RefCounted
 ## Geometry below and above an elevated road strip. The road builder owns the deck collision.
 
+const BRIDGE_CONCRETE := preload("bridge_concrete.gdshader")
+
 static func build_bridge(parent: Node3D, label: String, sections: Array, world: Variant, colliders: bool) -> void:
 	if sections.size() < 2:
 		return
@@ -69,16 +71,16 @@ static func build_bridge(parent: Node3D, label: String, sections: Array, world: 
 					piers.append(Transform3D(frame.scaled_local(size), Vector3(top.x, (top.y + floor_height) * 0.5, top.z)))
 					caps.append(Transform3D(frame.scaled_local(Vector3(width + 0.65, 0.65, 2.32)), top - Vector3.UP * 1.13))
 					caps.append(Transform3D(frame.scaled_local(Vector3(width + 1.1, 0.93, 2.80)), Vector3(top.x, floor_height + 0.78, top.z)))
-	deck.set_material(_material(Color("#666e70") if mountain else Color("#858477")))
+	deck.set_material(_concrete(Color("#5c676b") if mountain else Color("#74736d")))
 	var fascia := MeshInstance3D.new()
 	fascia.mesh = deck.commit()
 	bridge.add_child(fascia)
-	curbs.set_material(_material(Color("#9a9f98") if viaduct else Color("#777d78")))
+	curbs.set_material(_concrete(Color("#7c817e") if viaduct else Color("#6f7472"), true))
 	var footway := MeshInstance3D.new()
 	footway.mesh = curbs.commit()
 	bridge.add_child(footway)
 	_boxes(bridge, "Railings", posts, _material(Color("#645647") if mountain else Color("#3b4a48")))
-	_boxes(bridge, "Piers", piers, _material(Color("#989380") if mountain else Color("#868c8c")))
+	_boxes(bridge, "Piers", piers, _concrete(Color("#878577") if mountain else Color("#797d7e")))
 	_boxes(bridge, "BearingsAndCaps", caps, _material(Color("#656a66")))
 	_boxes(bridge, "RailReflectors", reflectors, _material(Color("#e0ac67")))
 	if colliders:
@@ -93,6 +95,13 @@ static func build_bridge(parent: Node3D, label: String, sections: Array, world: 
 		body.add_child(boundary)
 		bridge.add_child(body)
 
+static func _concrete(tint: Color, footway := false) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = BRIDGE_CONCRETE
+	material.set_shader_parameter("concrete_color", tint)
+	material.set_shader_parameter("footway", footway)
+	return material
+
 static func build_water(parent: Node3D, pools: Array, material: Material) -> void:
 	if material == null:
 		material = _material(Color("#3b6170"))
@@ -102,7 +111,12 @@ static func build_water(parent: Node3D, pools: Array, material: Material) -> voi
 		var water_level := float(pool["height"])
 		for cell: Array in pool["cells"]:
 			var at := Vector3(-1000.0 + float(cell[0]) * 4.0, water_level, -1000.0 + float(cell[1]) * 4.0)
-			_quad(builder, at, at + Vector3(4, 0, 0), at + Vector3(0, 0, 4), at + Vector3(4, 0, 4))
+			for offset: Vector3 in [Vector3.ZERO, Vector3(4, 0, 0), Vector3(0, 0, 4), Vector3(4, 0, 0), Vector3(4, 0, 4), Vector3(0, 0, 4)]:
+				var point := at + offset
+				builder.set_normal(Vector3.UP)
+				builder.set_uv(Vector2(point.x, point.z) / 24.0)
+				builder.add_vertex(point)
+		builder.generate_tangents()
 		builder.set_material(material)
 		var mesh := MeshInstance3D.new()
 		mesh.name = "CrossingWater"

@@ -3,30 +3,27 @@ extends RefCounted
 ## and PBR material overrides for Aster Valley Free Roam.
 
 const HDRI_SKY_PATH := "res://assets/forza_env/hdri/outdoor_sky.hdr"
-const MAT_TERRAIN_PATH := "res://assets/forza_env/materials/terrain_forza.tres"
-const MAT_ASPHALT_PATH := "res://assets/forza_env/materials/road_asphalt_forza.tres"
+const FORZA_ENV_PATH := "res://assets/forza_env/materials/forza_environment.tres"
+const MAT_TERRAIN_PATH := "res://assets/forza_env/materials/terrain_triplanar_pbr.tres"
+const MAT_TERRAIN_FALLBACK := "res://assets/forza_env/materials/terrain_forza.tres"
+const MAT_ASPHALT_PATH := "res://assets/forza_env/materials/road_asphalt_pbr.tres"
+const MAT_ASPHALT_FALLBACK := "res://assets/forza_env/materials/road_asphalt_forza.tres"
 const MAT_JUNCTION_ASPHALT_PATH := "res://assets/forza_env/materials/road_junction_asphalt_forza.tres"
 const MAT_GRAVEL_PATH := "res://assets/forza_env/materials/road_gravel_forza.tres"
 const MAT_SHOULDER_PATH := "res://assets/forza_env/materials/road_shoulder_forza.tres"
+const Lighting = preload("environment_config.gd")
 
 static func apply_environment(root: Node3D) -> void:
-	if not root.get("shell_managed"):
-		apply_quality(root.get_viewport(), "medium")
-	var world_env := root.get_node_or_null("WorldEnvironment") as WorldEnvironment
-	if world_env != null:
-		world_env.environment = build_environment()
-	var sun := root.get_node_or_null("Sun") as DirectionalLight3D
-	if sun != null:
-		configure_sun(sun)
+	Lighting.apply_to_root(root, str(root.get("graphics_preset")))
 
 static func apply_quality(viewport: Viewport, preset: String) -> void:
-	var low := preset == "low"
-	viewport.scaling_3d_scale = 0.85 if low else 1.0
-	viewport.msaa_3d = Viewport.MSAA_2X if preset == "high" else Viewport.MSAA_DISABLED
-	var forward_plus := RenderingServer.get_current_rendering_method() == "forward_plus"
-	viewport.use_taa = forward_plus and not low
-	viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED if viewport.use_taa else Viewport.SCREEN_SPACE_AA_FXAA
-	viewport.use_debanding = false
+	Lighting.apply_viewport_renderer_config(viewport, preset)
+
+static func apply_live_quality(root: Node3D, preset: String) -> void:
+	var world_env := root.get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if world_env != null:
+		Lighting.configure_environment(world_env.environment, preset)
+	Lighting.configure_sun(root.get_node_or_null("Sun") as DirectionalLight3D, preset)
 
 static func build_environment() -> Environment:
 	var env := Environment.new()
@@ -127,9 +124,13 @@ static func apply_world_materials(world: Node) -> void:
 	if world == null:
 		return
 	var terrain_mat := _load_material(MAT_TERRAIN_PATH)
+	if terrain_mat == null:
+		terrain_mat = _load_material(MAT_TERRAIN_FALLBACK)
 	if terrain_mat != null:
 		world.set("terrain_material_override", terrain_mat)
 	var asphalt_mat := _load_material(MAT_ASPHALT_PATH)
+	if asphalt_mat == null:
+		asphalt_mat = _load_material(MAT_ASPHALT_FALLBACK)
 	if asphalt_mat != null:
 		world.set("asphalt_material_override", asphalt_mat)
 	var junction_mat := _load_material(MAT_JUNCTION_ASPHALT_PATH)

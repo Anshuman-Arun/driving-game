@@ -9,6 +9,8 @@ const Vegetation = preload("valley_vegetation.gd")
 const SceneryRuntime = preload("res://modules/scenery/src/scenery_runtime.gd")
 const CuratedCar = preload("curated_car_visual.gd")
 const ValleyEnvironment = preload("aster_valley_environment.gd")
+const PremiumMesh = preload("premium_mesh.gd")
+const ValleyHorizon = preload("valley_horizon.gd")
 const ALDER_START := Vector3(-575.0, 0.0, 545.0)
 const JUNCTION_CLEARANCE_M := 26.0
 const SPAWN_HEIGHT_M := 0.58
@@ -21,16 +23,18 @@ const PARKED_LIMIT_MPS := 4.0 / 3.6
 @onready var world: WorldRuntime = $WorldRuntime
 var vehicle_body: Vehicle
 var adapter: VehicleAdapter
-var camera: DrivingChaseCamera
+var camera: Camera3D
 var load_ms := 0
 var active_vehicle_id := PlayerCarFactory.DEFAULT_CAR
 var shell_managed := false
-var scenery_enabled := false
+@export var scenery_enabled := true
 var scenery: SceneryRuntime
 var vegetation: Vegetation
 var graphics_preset := "medium":
 	set(value):
 		graphics_preset = value
+		if is_node_ready():
+			ValleyEnvironment.apply_live_quality(self, value)
 		if is_instance_valid(vegetation):
 			vegetation.set_graphics(value)
 var _pending_vehicle_id := ""
@@ -57,7 +61,10 @@ func _ready() -> void:
 	var design: Variant = JSON.parse_string(works) if not works.is_empty() else null
 	if design is Dictionary:
 		world.roadworks = design
-		world.crossing_water_material = preload("res://assets/forza_env/materials/lake_water_forza.tres")
+		if ResourceLoader.exists("res://assets/forza_env/materials/lake_water_forza.tres"):
+			var water_mat = load("res://assets/forza_env/materials/lake_water_forza.tres")
+			if water_mat != null:
+				world.crossing_water_material = water_mat
 	if not world.build_world():
 		push_error("Aster Valley could not load: " + world.error_message)
 		get_tree().quit(1)
@@ -67,6 +74,9 @@ func _ready() -> void:
 	_bounds = Rect2(bounds["min_x"], bounds["min_z"],
 		bounds["max_x"] - bounds["min_x"], bounds["max_z"] - bounds["min_z"])
 	_collect_lane_spans(world.get_road_graph()["lanes"])
+	var horizon := ValleyHorizon.new()
+	horizon.name = "DistantRanges"
+	add_child(horizon)
 	if scenery_enabled:
 		set_scenery_enabled(true)
 
@@ -77,10 +87,18 @@ func _ready() -> void:
 		push_error("Aster Valley has no valid road spawn.")
 		get_tree().quit(1)
 		return
-	camera = DrivingChaseCamera.new()
+	if ResourceLoader.exists("res://scripts/vehicle/forza_chase_camera.gd"):
+		var CamClass = load("res://scripts/vehicle/forza_chase_camera.gd")
+		camera = CamClass.new()
+	else:
+		camera = DrivingChaseCamera.new()
 	camera.name = "ChaseCamera"
 	camera.process_mode = Node.PROCESS_MODE_PAUSABLE
 	camera.keep_aspect = Camera3D.KEEP_HEIGHT
+	var listener := AudioListener3D.new()
+	listener.name = "AudioListener3D"
+	camera.add_child(listener)
+	listener.make_current()
 	add_child(camera)
 	_spawn_vehicle(active_vehicle_id, start)
 	load_ms = Time.get_ticks_msec() - started
@@ -100,22 +118,24 @@ func set_scenery_enabled(enabled: bool) -> bool:
 		return true
 	if scenery != null:
 		return true
-	if not is_node_ready():
+	if not is_inside_tree() or world == null:
 		return true
 	var layer := SceneryRuntime.new()
 	layer.name = "Scenery"
-	layer.generate_selective_colliders = false
+	layer.generate_selective_colliders = true
 	vegetation = Vegetation.new()
 	vegetation.name = "ValleyVegetation"
 	add_child(vegetation)
 	vegetation.build(world, graphics_preset)
 	layer.mesh_overrides = Buildings.new().assets()
+	_add_adopted_scenery(layer.mesh_overrides)
 	var oak_mesh := vegetation.broadleaf_mesh()
 	if oak_mesh != null:
 		layer.mesh_overrides["assets/curated/models/environment/broadleaf_tree.glb"] = oak_mesh
 	var pine_mesh := vegetation.conifer_mesh()
 	if pine_mesh != null:
-		layer.mesh_overrides["assets/curated/models/environment/pine_tree_lod0.glb"] = pine_mesh
+		var fir := PremiumMesh.fit("fir", Vector3(3.5, 5.2, 3.5))
+		layer.mesh_overrides["assets/curated/models/environment/pine_tree_lod0.glb"] = fir if fir != null else pine_mesh
 		layer.mesh_overrides["assets/curated/models/environment/pine_tree_lod1.glb"] = vegetation.conifer_mesh(true)
 	add_child(layer)
 	if not layer.build_scenery(world):
@@ -128,6 +148,31 @@ func set_scenery_enabled(enabled: bool) -> bool:
 		return false
 	scenery = layer
 	return true
+
+func _add_adopted_scenery(overrides: Dictionary) -> void:
+	var houses: Array = overrides["content/scenery/models/town_house.gltf"]
+	for candidate in ["village_house_1", "village_shop_1"]:
+		var mesh := PremiumMesh.fit(candidate, Vector3(11.5, 8.4, 9.0))
+		if mesh != null:
+			houses.append(mesh)
+	var replacements := {
+		"content/scenery/models/barn.gltf": ["hay_barn_1", Vector3(15, 9, 11)],
+		"content/scenery/models/garage.gltf": ["wooden_garage_1", Vector3(14, 7, 10)],
+		"content/scenery/models/pier.gltf": ["eastwater_pier", Vector3(6, 4, 17)],
+		"assets/curated/models/environment/street_lamp.glb": ["town_lamp", Vector3(1.35, 4.8, 1.35)],
+		"assets/curated/models/environment/shrub_cluster.glb": ["fern", Vector3(2.45, 1.25, 2.45)],
+		"assets/curated/models/environment/boulder.glb": ["moss_rocks", Vector3(3.3, 2.8, 3.3), true],
+		"assets/curated/models/environment/rock_cluster.glb": ["rock_face", Vector3(5.8, 3.8, 4.6)],
+	}
+	for path: String in replacements:
+		var choice: Array = replacements[path]
+		var mesh := PremiumMesh.fit(choice[0], choice[1], choice.size() > 2)
+		if mesh == null:
+			continue
+		if overrides.has(path):
+			overrides[path].append(mesh)
+		else:
+			overrides[path] = mesh
 
 func _process(_delta: float) -> void:
 	if adapter == null:
@@ -238,12 +283,18 @@ func _spawn_vehicle(car_id: String, pose: Transform3D) -> void:
 	vehicle_spawned.emit(vehicle_body, active_vehicle_id)
 	camera.setup(vehicle_body)
 	camera.far = 1800.0
+	var audio := vehicle_body.get_node_or_null("VehicleAudio")
+	if audio != null and audio.has_method("bind_camera"):
+		audio.call("bind_camera", camera)
 
 func respawn() -> void:
 	var pose: Variant = find_road_pose(vehicle_body.global_position, -vehicle_body.global_basis.z)
 	if pose != null:
 		adapter.reset_to(pose)
 		camera.snap_to_vehicle()
+		var audio := vehicle_body.get_node_or_null("VehicleAudio")
+		if audio != null and audio.has_method("snap_to_idle"):
+			audio.call("snap_to_idle")
 
 func _collect_lane_spans(lanes: Array) -> void:
 	for lane: Dictionary in lanes:

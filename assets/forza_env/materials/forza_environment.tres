@@ -1,0 +1,53 @@
+[gd_resource type="Environment" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/forza_env/hdri/outdoor_sky.hdr" id="1_ph5xl"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_sl0tr"]
+panorama = ExtResource("1_ph5xl")
+
+[sub_resource type="Sky" id="Sky_17ak4"]
+sky_material = SubResource("PanoramaSkyMaterial_sl0tr")
+process_mode = 1
+
+[resource]
+background_mode = 2
+sky = SubResource("Sky_17ak4")
+sky_rotation = Vector3(0, 0.42, 0)
+ambient_light_source = 3
+ambient_light_color = Color(0.76, 0.84, 0.94, 1)
+ambient_light_sky_contribution = 0.85
+ambient_light_energy = 0.65
+reflected_light_source = 2
+tonemap_mode = 4
+tonemap_exposure = 1.05
+tonemap_white = 6.0
+ssr_enabled = false
+ssao_enabled = true
+ssao_radius = 1.3
+ssao_intensity = 1.1
+ssil_enabled = false
+sdfgi_enabled = false
+sdfgi_use_occlusion = false
+sdfgi_cascades = 4
+sdfgi_y_scale = 1
+glow_enabled = true
+glow_normalized = true
+glow_intensity = 0.26
+glow_strength = 0.85
+glow_bloom = 0.12
+glow_blend_mode = 2
+glow_hdr_threshold = 1.1
+glow_hdr_scale = 1.8
+fog_enabled = true
+fog_light_color = Color(0.66, 0.77, 0.9, 1)
+fog_light_energy = 0.92
+fog_sun_scatter = 0.22
+fog_density = 0.00045
+fog_aerial_perspective = 1.0
+fog_sky_affect = 0.0
+fog_height = 24.0
+fog_height_density = 0.0014
+adjustment_enabled = true
+adjustment_brightness = 1.01
+adjustment_contrast = 1.12
+adjustment_saturation = 1.07

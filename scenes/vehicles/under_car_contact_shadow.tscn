@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/vehicle/under_car_contact_shadow.gd" id="1_shadow"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_shadow"]
+size = Vector2(2.4, 4.8)
+orientation = 1
+
+[node name="UnderCarContactShadow" type="Node3D"]
+script = ExtResource("1_shadow")
+
+[node name="ShadowDecal" type="Decal" parent="."]
+size = Vector3(2.4, 2.4, 4.8)
+upper_fade = 0.35
+lower_fade = 0.25
+cull_mask = 1
+
+[node name="GroundRayCast" type="RayCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+target_position = Vector3(0, -3.5, 0)
+collision_mask = 1
+hit_from_inside = true
+
+[node name="ShadowQuad" type="MeshInstance3D" parent="."]
+visible = false
+top_level = true
+cast_shadow = 0
+mesh = SubResource("QuadMesh_shadow")

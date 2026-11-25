@@ -283,6 +283,17 @@
       "draw": 340,
       "kind": "landmark"
     },
+    "fuel_station": {
+      "path": "assets/premium_runtime/alder_fuel_station.glb",
+      "tri": 3210,
+      "surfaces": 3,
+      "r": 12,
+      "slope": 8,
+      "road": 18,
+      "turn": 28,
+      "draw": 420,
+      "kind": "landmark"
+    },
     "windmill": {
       "path": "content/scenery/models/windmill.gltf",
       "tri": 168,

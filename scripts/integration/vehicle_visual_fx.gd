@@ -61,6 +61,8 @@ func _collect_unique_materials(mi: MeshInstance3D, out: Array[StandardMaterial3D
 	var surf_count := mi.mesh.get_surface_count()
 	for s in range(surf_count):
 		var src := mi.get_active_material(s)
+		if src is StandardMaterial3D and not src.emission_enabled and not src.resource_name.is_empty():
+			continue
 		var mat: StandardMaterial3D
 		if src is StandardMaterial3D:
 			mat = src.duplicate() as StandardMaterial3D

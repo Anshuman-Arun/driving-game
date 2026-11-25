@@ -423,8 +423,10 @@ func _garage(root: VBoxContainer) -> void:
 	body.add_child(stage)
 	var showroom := _showroom(stage, inspected_car)
 	showroom.custom_minimum_size.y = 500 if layout_is_narrow else 280
-	var roster := HBoxContainer.new()
-	roster.add_theme_constant_override("separation", 10)
+	var roster := GridContainer.new()
+	roster.columns = 2 if layout_is_narrow else 3
+	roster.add_theme_constant_override("h_separation", 10)
+	roster.add_theme_constant_override("v_separation", 8)
 	stage.add_child(roster)
 	var cars: Array[Button] = []
 	for item: Dictionary in Catalog.CARS:
@@ -432,8 +434,13 @@ func _garage(root: VBoxContainer) -> void:
 		var selected := car_id == inspected_car
 		var current: bool = car_id == save.selected_car()
 		var tint := Color("#304958") if selected else Color("#1f303d")
-		var card := _dashboard_tile(roster, item["name"], _inspect.bind(car_id), tint, 102)
-		var thumbnail := _tile_art(card, GARAGE_THUMBNAILS[car_id])
+		var card := _dashboard_tile(roster, item["name"], _inspect.bind(car_id), tint, 74)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var art: Texture2D = GARAGE_THUMBNAILS.get(car_id)
+		var artwork_path := "res://assets/ui/dashboard/%s.png" % car_id
+		if art == null and ResourceLoader.exists(artwork_path, "Texture2D"):
+			art = load(artwork_path) as Texture2D
+		var thumbnail := _tile_art(card, art)
 		thumbnail.anchor_left = 0.47
 		thumbnail.offset_top = 8
 		thumbnail.offset_right = -12
@@ -443,7 +450,7 @@ func _garage(root: VBoxContainer) -> void:
 		var state := "ACTIVE CAR" if current else "IN PREVIEW" if selected else str(item["class"])
 		_dashboard_label(content, state, 13, Color("#ffc28b") if current else Color("#b6cbd4"), 700)
 		_spacer(content)
-		_dashboard_label(content, item["name"], 25 if not layout_is_narrow else 19, Color("#f7f5ec"), 800)
+		_dashboard_label(content, item["name"], 23 if not layout_is_narrow else 18, Color("#f7f5ec"), 800)
 		cars.append(card)
 		if selected:
 			first_focus = card
@@ -476,19 +483,18 @@ func _garage(root: VBoxContainer) -> void:
 	var back := _dashboard_tab(specs, "BACK", _go_back, false)
 	for index in cars.size():
 		var card := cars[index]
-		var next := cars[mini(index + 1, cars.size() - 1)]
-		var previous := cars[maxi(0, index - 1)]
-		_link_focus(card, SIDE_BOTTOM, next)
-		_link_focus(card, SIDE_TOP, tabs[0] if index == 0 else previous)
-		_link_focus(card, SIDE_LEFT, previous)
-		_link_focus(card, SIDE_RIGHT, select)
+		var col := index % roster.columns
+		_link_focus(card, SIDE_BOTTOM, cars[mini(index + roster.columns, cars.size() - 1)])
+		_link_focus(card, SIDE_TOP, tabs[0] if index < roster.columns else cars[index - roster.columns])
+		_link_focus(card, SIDE_LEFT, cars[index - 1] if col > 0 else card)
+		_link_focus(card, SIDE_RIGHT, cars[index + 1] if col + 1 < roster.columns and index + 1 < cars.size() else select)
 	_link_focus(tabs[0], SIDE_BOTTOM, first_focus)
 	_link_focus(select, SIDE_LEFT, first_focus)
 	_link_focus(select, SIDE_TOP, tabs[0])
 	_link_focus(select, SIDE_BOTTOM, back)
 	_link_focus(back, SIDE_LEFT, first_focus)
 	_link_focus(back, SIDE_TOP, select)
-	_dashboard_footer(root, "↑ ↓ / D-pad   Browse cars      Enter / A   Select      Esc / B   Back", "%d CARS" % Catalog.CARS.size())
+	_dashboard_footer(root, "Arrow keys / D-pad   Browse cars      Enter / A   Select      Esc / B   Back", "%d CARS" % Catalog.CARS.size())
 
 func _garage_metric(parent: Node, caption: String, value: String) -> void:
 	var divider := ColorRect.new()
@@ -587,10 +593,20 @@ func enter_free_roam() -> void:
 	if drive == null:
 		drive = FreeRoam.instantiate()
 		drive.shell_managed = true
-		drive.graphics_preset = str(save.data["settings"]["graphics_quality"])
-		drive.steering_sensitivity = float(save.data["settings"]["controller_sensitivity"])
+		var g_preset := "high"
+		var sens := 0.6
+		var sel_car := PlayerCarFactory.DEFAULT_CAR
+		if save != null and save.data != null and save.data.has("settings"):
+			g_preset = str(save.data["settings"].get("graphics_quality", "high"))
+			sens = float(save.data["settings"].get("controller_sensitivity", 0.6))
+			if save.has_method("selected_car"):
+				sel_car = save.selected_car()
+		drive.graphics_preset = g_preset
+		drive.steering_sensitivity = sens
 		drive.scenery_enabled = bool(ProjectSettings.get_setting("aster_valley/visuals/scenery_enabled", true))
-		drive.queue_vehicle_selection(save.selected_car())
+		drive.queue_vehicle_selection(sel_car)
+		if game == null:
+			game = LiveSession.new()
 		game.drive = drive
 		free_roam_created.emit(drive)
 		get_parent().add_child(drive)

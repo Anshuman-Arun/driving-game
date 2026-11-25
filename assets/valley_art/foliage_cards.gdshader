@@ -27,19 +27,20 @@ void fragment() {
 	} else if (UV.x < 0.0) {
 		float around = atan(local_position.z, local_position.x) / TAU;
 		vec3 wood = texture(bark, vec2(around, local_position.y * 0.58)).rgb;
-		texel = vec4(mix(vec3(0.45, 0.40, 0.34), wood, 0.72), 1.0);
+		texel = vec4(mix(vec3(0.19, 0.16, 0.12), wood, 0.76), 1.0);
 		tint = vec3(0.65 + dot(tint, vec3(0.25, 0.60, 0.15)) * 0.25);
 	}
 	ALBEDO = pow(texel.rgb, vec3(meadow ? 0.83 : 0.88)) * tint;
 	if (meadow) {
 		vec3 up = (VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
 		NORMAL = normalize(mix(NORMAL, up, 0.76));
-		ALBEDO *= mix(vec3(1.0), vec3(1.12, 0.88, 0.69), smoothstep(48.0, 106.0, terrain_height));
+		ALBEDO *= mix(vec3(0.78, 0.98, 0.73), vec3(1.02, 0.92, 0.77), smoothstep(48.0, 106.0, terrain_height));
 	} else if (UV.x >= 0.0) {
 		NORMAL = normalize(mix(NORMAL, crown_normal, 0.58));
 	}
 	ALPHA = texel.a;
-	ALPHA_SCISSOR_THRESHOLD = mix(0.41, 0.20, smoothstep(11.0, 130.0, length(VERTEX)));
+	float distance_blend = smoothstep(11.0, 130.0, length(VERTEX));
+	ALPHA_SCISSOR_THRESHOLD = meadow ? mix(0.43, 0.36, distance_blend) : mix(0.41, 0.24, distance_blend);
 	ROUGHNESS = 0.92;
 	SPECULAR = 0.11;
 	BACKLIGHT = ALBEDO * (meadow ? 0.13 : 0.28);

@@ -1,0 +1,406 @@
+{
+  "version": 1,
+  "reference_database": "https://jenkinstr.github.io/JMD-Forza-Vehicle-Database/",
+  "references": [
+    "Lexus LFA 2010",
+    "Ferrari SF90 Stradale 2020",
+    "Ferrari 812 Superfast 2018",
+    "McLaren Senna 2018",
+    "Lamborghini Aventador SVJ 2019"
+  ],
+  "note": "Reference names are design references only; no extracted Forza assets or actual branded models. All payloads are independent source candidates; no new playable cars added.",
+  "assets": [
+    {
+      "id": "electric_grand_tourer",
+      "category": "hero_vehicles",
+      "source": "https://tevy.dev/models/electric-gt",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/electric-gt/v1/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/electric-gt/v1/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/electric-gt/v1/lod2.glb"
+        }
+      ],
+      "notes": "LFA/GR GT inspired long-hood slot; independent electric GT, not actual LFA or GR GT. No physics or powertrain changes."
+    },
+    {
+      "id": "mid_engine_exotic",
+      "category": "hero_vehicles",
+      "source": "https://www.innerscene.com/tools/library/3d-parts/generic-mid-engine-supercar-73f252c5",
+      "author": "Innerscene",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://files.innerscene.com/library/generic-mid-engine-supercar-73f252c5/b41b620d8a8890b1b70a/generic-mid-engine-supercar.glb"
+        }
+      ],
+      "notes": "SF90 design-reference slot; independent mid-engine coupe, not Ferrari."
+    },
+    {
+      "id": "front_engine_grand_tourer",
+      "category": "hero_vehicles",
+      "source": "https://www.innerscene.com/tools/library/3d-parts/generic-front-engine-grand-tourer-coupe-9a08f635",
+      "author": "Innerscene",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://files.innerscene.com/library/generic-front-engine-grand-tourer-coupe-9a08f635/8455a600024dec32dad0/generic-front-engine-grand-tourer-coupe.glb"
+        }
+      ],
+      "notes": "812 design-reference slot; independent unbranded GT."
+    },
+    {
+      "id": "spectral_gt_rs",
+      "category": "hero_vehicles",
+      "source": "https://jaronkbragg7337.github.io/spectral-gt-rs/",
+      "author": "Jaron K Bragg",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://jaronkbragg7337.github.io/spectral-gt-rs/spectral_gt_rs_game_ready.glb"
+        }
+      ],
+      "notes": "Senna design-reference slot; original sports car, +X forward, separate cockpit details. Main has earlier Spectral experiments; compare before adopting."
+    },
+    {
+      "id": "wedge_supercar",
+      "category": "hero_vehicles",
+      "source": "https://tevy.dev/models/supercar",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/supercar/v2/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/supercar/v2/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/supercar/v2/lod2.glb"
+        }
+      ],
+      "notes": "SVJ design-reference slot; 159,952 source triangles LOD0; distinct wheel, steering and panel nodes."
+    },
+    {
+      "id": "retro_jdm_coupe",
+      "category": "hero_vehicles",
+      "source": "https://www.innerscene.com/tools/library/3d-parts/generic-1990s-japanese-style-sports-coupe-ace64592",
+      "author": "Innerscene",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://files.innerscene.com/library/generic-1990s-japanese-style-sports-coupe-ace64592/696200cf9cd0b540e6cd/generic-1990s-japanese-style-sports-coupe.glb"
+        }
+      ],
+      "notes": "Bonus retro Japanese-style candidate; not a specific licensed real car."
+    },
+    {
+      "id": "hay_barn",
+      "category": "buildings",
+      "source": "https://tevy.dev/models/hay-barn",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/hay-barn/v2/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/hay-barn/v2/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/hay-barn/v2/lod2.glb"
+        }
+      ],
+      "notes": "Green Valley farm"
+    },
+    {
+      "id": "village_house",
+      "category": "buildings",
+      "source": "https://tevy.dev/models/village-house",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/village-house/v2/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/village-house/v2/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/village-house/v2/lod2.glb"
+        }
+      ],
+      "notes": "Alder Town residential"
+    },
+    {
+      "id": "village_shop",
+      "category": "buildings",
+      "source": "https://tevy.dev/models/village-shop",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/village-shop/v2/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/village-shop/v2/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/village-shop/v2/lod2.glb"
+        }
+      ],
+      "notes": "Alder Town retail"
+    },
+    {
+      "id": "wooden_garage",
+      "category": "buildings",
+      "source": "https://tevy.dev/models/garage",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/garage/v2/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/garage/v2/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/garage/v2/lod2.glb"
+        }
+      ],
+      "notes": "Small rural workshop"
+    },
+    {
+      "id": "fuel_station",
+      "category": "buildings",
+      "source": "https://tevy.dev/models/abandoned-fuel-station",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/abandoned-fuel-station/v2/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/abandoned-fuel-station/v2/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/abandoned-fuel-station/v2/lod2.glb"
+        }
+      ],
+      "notes": "Weathered optional roadside landmark, not an active modern fuel station"
+    },
+    {
+      "id": "overpass",
+      "category": "infrastructure",
+      "source": "https://tevy.dev/models/concrete-overpass",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/concrete-overpass/v1/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/concrete-overpass/v1/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/concrete-overpass/v1/lod2.glb"
+        }
+      ],
+      "notes": "Visual reference only; preserve existing collision and road alignments"
+    },
+    {
+      "id": "tunnel_portal",
+      "category": "infrastructure",
+      "source": "https://tevy.dev/models/tunnel-portal",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/tunnel-portal/v1/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/tunnel-portal/v1/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/tunnel-portal/v1/lod2.glb"
+        }
+      ],
+      "notes": "Visual reference; do not place across a live road without geometry/collision validation"
+    },
+    {
+      "id": "utility_pole",
+      "category": "roadside",
+      "source": "https://tevy.dev/models/utility-pole",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/utility-pole/v1/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/utility-pole/v1/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/utility-pole/v1/lod2.glb"
+        }
+      ],
+      "notes": "Roadside and farm detail"
+    },
+    {
+      "id": "highway_light",
+      "category": "roadside",
+      "source": "https://tevy.dev/models/highway-street-light",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/highway-street-light/v1/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/highway-street-light/v1/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/highway-street-light/v1/lod2.glb"
+        }
+      ],
+      "notes": "Lighting mesh, not an actual light source"
+    },
+    {
+      "id": "hatchback",
+      "category": "traffic",
+      "source": "https://tevy.dev/models/hatchback",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/hatchback/v1/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/hatchback/v1/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/hatchback/v1/lod2.glb"
+        }
+      ],
+      "notes": "Civilian traffic candidate"
+    },
+    {
+      "id": "pickup",
+      "category": "traffic",
+      "source": "https://tevy.dev/models/pickup-truck",
+      "author": "tevy",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "files": [
+        {
+          "name": "lod0.glb",
+          "url": "https://tevy.dev/models/pickup-truck/v1/lod0.glb"
+        },
+        {
+          "name": "lod1.glb",
+          "url": "https://tevy.dev/models/pickup-truck/v1/lod1.glb"
+        },
+        {
+          "name": "lod2.glb",
+          "url": "https://tevy.dev/models/pickup-truck/v1/lod2.glb"
+        }
+      ],
+      "notes": "Civilian traffic candidate"
+    },
+    {
+      "id": "modular_fort_01",
+      "category": "architecture_scans",
+      "source": "https://polyhaven.com/a/modular_fort_01",
+      "author": "Poly Haven (resolve original authors via API)",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "polyhaven": "modular_fort_01",
+      "resolution": "1k",
+      "notes": "Real source glTF package; reject oversized geometry, preserve existing world and road collisions."
+    },
+    {
+      "id": "modular_wooden_pier",
+      "category": "architecture_scans",
+      "source": "https://polyhaven.com/a/modular_wooden_pier",
+      "author": "Poly Haven (resolve original authors via API)",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "polyhaven": "modular_wooden_pier",
+      "resolution": "1k",
+      "notes": "Real source glTF package; reject oversized geometry, preserve existing world and road collisions."
+    },
+    {
+      "id": "street_lamp_01",
+      "category": "roadside",
+      "source": "https://polyhaven.com/a/street_lamp_01",
+      "author": "Poly Haven (resolve original authors via API)",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "polyhaven": "street_lamp_01",
+      "resolution": "1k",
+      "notes": "Real source glTF package; reject oversized geometry, preserve existing world and road collisions."
+    }
+  ]
+}

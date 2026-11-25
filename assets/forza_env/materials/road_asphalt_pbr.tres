@@ -1,0 +1,39 @@
+[gd_resource type="ShaderMaterial" load_steps=6 format=3]
+
+[ext_resource type="Shader" path="res://shaders/asphalt_road.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/asphalt/albedo.jpg" id="2_albedo"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/asphalt/normal.png" id="3_normal"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/asphalt/roughness.png" id="4_rough"]
+[ext_resource type="Texture2D" path="res://assets/forza_env/textures/asphalt/ao.png" id="5_ao"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_shader")
+shader_parameter/asphalt_albedo = ExtResource("2_albedo")
+shader_parameter/asphalt_normal = ExtResource("3_normal")
+shader_parameter/asphalt_roughness = ExtResource("4_rough")
+shader_parameter/asphalt_ao = ExtResource("5_ao")
+shader_parameter/road_uv_width = 1.7
+shader_parameter/detail_tile_u = 1.6
+shader_parameter/detail_tile_v = 2.6
+shader_parameter/macro_tile_ratio = 0.37
+shader_parameter/normal_depth = 0.36
+shader_parameter/asphalt_tint = Color(0.67, 0.71, 0.76, 1)
+shader_parameter/center_stripe_color = Color(0.86, 0.65, 0.14, 1)
+shader_parameter/edge_stripe_color = Color(0.812, 0.812, 0.812, 1)
+shader_parameter/verge_dirt_color = Color(0.32, 0.28, 0.23, 1)
+shader_parameter/macro_noise_scale_low = 0.022
+shader_parameter/macro_noise_scale_mid = 0.075
+shader_parameter/roughness_min = 0.66
+shader_parameter/roughness_max = 0.94
+shader_parameter/wheel_track_darkening = 0.18
+shader_parameter/wheel_track_polish = 0.035
+shader_parameter/wheel_track_width = 0.045
+shader_parameter/dash_cycle_length = 1.0
+shader_parameter/center_dash_ratio = 0.4
+shader_parameter/stripe_width = 0.011
+shader_parameter/edge_stripe_pos = 0.055
+shader_parameter/marking_wear_intensity = 0.6
+shader_parameter/marking_chipping_strength = 0.5
+shader_parameter/verge_blend_width = 0.065
+shader_parameter/verge_noise_scale = 0.42

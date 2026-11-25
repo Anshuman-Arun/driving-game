@@ -1,0 +1,96 @@
+name: Professional source-native driving audition
+on:
+  push:
+    branches: [fix/source-native-audio]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-audition-${{ github.sha }}
+  cancel-in-progress: true
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [aventador_svj, mclaren_senna]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          lfs: true
+          persist-credentials: false
+      - name: Install checksum-pinned Godot 4.7.2
+        shell: bash
+        run: |
+          #!/usr/bin/env bash
+          # Official Godot 4.7.2 stable standard Linux x86_64 editor; integrity-pinned.
+          set -Eeuo pipefail
+          install_dir="$RUNNER_TEMP/godot/bin"
+          version="4.7.2-stable"
+          archive="Godot_v${version}_linux.x86_64.zip"
+          digest="cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4"
+          url="https://github.com/godotengine/godot-builds/releases/download/${version}/${archive}"
+          mkdir -p "$install_dir"
+          zip_path="${RUNNER_TEMP:-/tmp}/$archive"
+          curl --fail --location --show-error --silent --retry 3 --retry-delay 3 --connect-timeout 20 --max-time 300 "$url" -o "$zip_path"
+          printf '%s  %s\n' "$digest" "$zip_path" | sha256sum --check --status || {
+            echo "::error::Godot download SHA-256 mismatch (official godotengine/godot-builds release)" >&2
+            exit 1
+          }
+          unzip -oq "$zip_path" -d "$install_dir"
+          engine="$install_dir/Godot_v${version}_linux.x86_64"
+          test -f "$engine" || { echo "::error::Godot executable missing from verified archive" >&2; exit 1; }
+          chmod +x "$engine"
+          ln -sfn "$engine" "$install_dir/godot"
+          actual="$("$install_dir/godot" --headless --version)"
+          printf 'Godot engine: %s\n' "$actual"
+          [[ "$actual" == 4.7.2.stable* ]] || {
+            echo "::error::Unexpected Godot version: $actual" >&2
+            exit 1
+          }
+          if [[ -n "${GITHUB_PATH:-}" ]]; then printf '%s\n' "$install_dir" >> "$GITHUB_PATH"; fi
+      - name: Ensure FFmpeg
+        run: |
+          command -v ffmpeg || { sudo apt-get update -qq && sudo apt-get install -y ffmpeg; }
+      - name: Verify archive fallback and pinned plans offline
+        run: |
+          python3 -m unittest discover -s modules/audio/tests -p test_professional_download.py -v
+          python3 -m unittest discover -s modules/audio/tests -p test_verified_banks.py -v
+      - name: Install exact verified professional bank using normal user path
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export XDG_DATA_HOME="$RUNNER_TEMP/native-data"
+          export XDG_CACHE_HOME="$RUNNER_TEMP/native-cache"
+          mkdir -p "$RUNNER_TEMP/native-reports"
+          python3 modules/audio/tools/install_verified_banks.py --profile "${{ matrix.profile }}" --accept-license | tee "$RUNNER_TEMP/native-reports/install.log"
+          python3 modules/audio/tools/install_verified_banks.py --profile "${{ matrix.profile }}" --accept-license | tee "$RUNNER_TEMP/native-reports/reinstall.log"
+          grep -F "VERIFIED_BANK_ALREADY_INSTALLED" "$RUNNER_TEMP/native-reports/reinstall.log"
+      - name: Drive selected car with actual professional bank
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export XDG_DATA_HOME="$RUNNER_TEMP/native-data"
+          unset ASTER_NATIVE_AUDIO
+          export ASTER_REQUIRE_NATIVE_AUDIO=1
+          export ASTER_AUDIO_TEST_PROFILE="${{ matrix.profile }}"
+          export ASTER_AUDIO_CAPTURE_DIR="$RUNNER_TEMP/native-captures"
+          godot --headless --path . --editor --import > "$RUNNER_TEMP/native-reports/import.log" 2>&1
+          timeout 90 godot --headless --path . --script res://tests/integration/audio_qa/test_native_stability.gd 2>&1 | tee "$RUNNER_TEMP/native-reports/stability.log"
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|^ERROR:' "$RUNNER_TEMP/native-reports/stability.log"
+          timeout 100 godot --headless --path . --script res://tests/integration/audio_qa/test_hero_live_drive.gd 2>&1 | tee "$RUNNER_TEMP/native-reports/live.log"
+          ! grep -E 'SCRIPT ERROR:|Parse Error:|^ERROR:' "$RUNNER_TEMP/native-reports/live.log"
+          for id in "$ASTER_AUDIO_TEST_PROFILE"; do
+            grep -F "Source-native local audio active: $id" "$RUNNER_TEMP/native-reports/live.log"
+            grep -F "PASS $id actually uses professional source-native bank" "$RUNNER_TEMP/native-reports/live.log"
+          done
+      - name: Upload only metadata and validation logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-bank-metadata-${{ matrix.profile }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/native-reports/
+          if-no-files-found: warn
+          retention-days: 14

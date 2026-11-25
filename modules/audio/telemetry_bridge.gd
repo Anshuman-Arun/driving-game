@@ -12,7 +12,8 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 	var raw_velocity: Variant = _read(vehicle, properties, "linear_velocity", Vector3.ZERO)
 	var velocity: Vector3 = raw_velocity if raw_velocity is Vector3 else Vector3.ZERO
 	var speed := velocity.length()
-	var lateral := absf(velocity.dot(vehicle.global_basis.x))
+	var basis := vehicle.global_basis if vehicle.is_inside_tree() else vehicle.basis
+	var lateral := absf(velocity.dot(basis.x))
 	var gear := int(_read(vehicle, properties, "current_gear", 1))
 	var throttle_input := clampf(float(_read(vehicle, properties, "throttle_input", 0.0)), 0.0, 1.0)
 	var brake_input := clampf(float(_read(vehicle, properties, "brake_input", 0.0)), 0.0, 1.0)
@@ -21,6 +22,7 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 	var throttle := brake_input if gear == -1 else throttle_input
 	var brake := throttle_input if gear == -1 else brake_input
 	var grounded := false
+	var grounded_count := 0
 	var surface_counts := {"asphalt": 0, "gravel": 0, "grass": 0}
 	var slip_amount := 0.0
 	var wheel_list: Variant = _read(vehicle, properties, "wheel_array", [])
@@ -32,6 +34,7 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 			if not wheel.has_method("is_colliding") or not bool(wheel.call("is_colliding")):
 				continue
 			grounded = true
+			grounded_count += 1
 			var wheel_props := _property_names(wheel)
 			var surface := _surface(str(_read(wheel, wheel_props, "surface_type", "Road")))
 			surface_counts[surface] = int(surface_counts[surface]) + 1
@@ -46,19 +49,41 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 		if int(surface_counts[name]) > int(surface_counts[surface]):
 			surface = name
 	var combined_slip := clampf(maxf(slip_amount, lateral / 9.0), 0.0, 1.0)
+	# A kinematic RPM reference is available on the real GEVP car only.
+	# Audio uses this as a steady-road hint, not a replacement for free
+	# revs, launch, wheelspin, clutch disengagement or gear transitions.
+	var radius := float(_read(vehicle,properties,"average_drive_wheel_radius",0.0))
+	var clutch := float(_read(vehicle,properties,"clutch_amount",1.0))
+	var shifting := bool(_read(vehicle,properties,"is_shifting",false))
+	var locked_rpm := 0.0
+	var coupled := false
+	if radius > 0.05 and gear > 0 and grounded_count >= 3 and not shifting and clutch < 0.15 and speed > 6.0 and vehicle.has_method("get_gear_ratio"):
+		var ratio := absf(float(vehicle.call("get_gear_ratio",gear)))
+		locked_rpm = absf(velocity.dot(basis.z))*ratio/radius*60.0/TAU
+		coupled = ratio > 0.0 and combined_slip < 0.65
 	return {
+		"audio_locked_rpm":locked_rpm,
+		"audio_coupled":coupled,
 		"rpm": float(_read(vehicle, properties, "motor_rpm", 1000.0)),
 		"idle_rpm": float(_read(vehicle, properties, "idle_rpm", 950.0)),
 		"max_rpm": float(_read(vehicle, properties, "max_rpm", 7100.0)),
 		"throttle": throttle,
+		# Keep the legacy pedal contract, but GEVP's actual motor pedal is
+		# throttle_input in both forward and reverse (adapter swaps it).
+		"engine_throttle": throttle_input,
+		"shift_active": bool(_read(vehicle, properties, "is_shifting", false)),
+		"requested_gear": int(_read(vehicle, properties, "requested_gear", gear)),
 		"load": clampf(throttle + brake * 0.07, 0.0, 1.0),
 		"gear": gear,
 		"speed_mps": speed,
-		"forward_speed_mps": -velocity.dot(vehicle.global_basis.z),
+		"vertical_speed_mps": velocity.y,
+		"forward_speed_mps": -velocity.dot(basis.z),
 		"lateral_slip": combined_slip if grounded else 0.0,
+		"slip_amount": combined_slip if grounded else 0.0,
 		"grip": clampf(1.0 - combined_slip * 0.8, 0.0, 1.0),
 		"on_ground": grounded,
 		"surface": surface,
+		"surface_counts": surface_counts,
 		"handbrake": float(_read(vehicle, properties, "handbrake_input", 0.0)) > 0.3,
 		"engine_braking": throttle < 0.08 and speed > 3.0,
 	}

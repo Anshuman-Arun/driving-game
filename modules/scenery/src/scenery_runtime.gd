@@ -25,6 +25,7 @@ var _content_dir: String = ""
 var _generated: Node3D = null
 var _cells: Array[Dictionary] = []
 var _mesh_cache: Dictionary = {}
+var _bounds_cache: Dictionary = {}
 var _frame_accumulator: float = 0.0
 
 func _ready() -> void:
@@ -41,8 +42,8 @@ func _repo_root() -> String:
 func _discover_content_directory() -> String:
 	if not content_directory.is_empty():
 		return content_directory
-	if FileAccess.file_exists(ProjectSettings.globalize_path("res://content/scenery/manifest.json")):
-		return ProjectSettings.globalize_path("res://content/scenery")
+	if FileAccess.file_exists("res://content/scenery/manifest.json"):
+		return "res://content/scenery"
 	var sibling: String = _repo_root().path_join("content/scenery")
 	if FileAccess.file_exists(sibling.path_join("manifest.json")):
 		return sibling
@@ -54,7 +55,7 @@ func _discover_world_directory() -> String:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--world-data-dir="):
 			return arg.trim_prefix("--world-data-dir=")
-	var in_game: String = ProjectSettings.globalize_path("res://data/world")
+	var in_game := "res://data/world"
 	if FileAccess.file_exists(in_game.path_join("world_metadata_v1.json")):
 		return in_game
 	var sibling: String = _repo_root().path_join("data/world")
@@ -85,6 +86,7 @@ func _fail(message: String) -> bool:
 func _reset() -> void:
 	_cells.clear()
 	_mesh_cache.clear()
+	_bounds_cache.clear()
 	report = {}
 	error_message = ""
 	_terrain = null
@@ -139,6 +141,7 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 	var colliders: int = 0
 	var skipped_by_quality: int = 0
 	var displaced_by_roadworks: int = 0
+	var rejected_for_clearance: Dictionary = {}
 	var height_mismatches: int = 0
 	var assets: Dictionary = manifest.get("assets", {})
 	for entry in manifest.get("region_packs", []):
@@ -178,13 +181,22 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 			if not _quality_keeps(item):
 				skipped_by_quality += 1
 				continue
+			var adjusted: Dictionary = item.duplicate()
+			adjusted["position"] = [x, surveyed_y + float(item.get("terrain_offset_m", 0.0)), z]
+			if _world != null and _world.has_method("get_road_graph") and _world.get("road_clearance") != null:
+				var bounds := _placement_frame(adjusted) * _model_bounds(assets[asset_id])
+				if generate_selective_colliders and _collidable_asset(asset_id):
+					bounds = bounds.merge(_placement_frame(adjusted) * _local_collider_bounds(asset_id))
+				var roadside_barrier := asset_id in ["guardrail", "barrier"]
+				var margin := 0.16 if roadside_barrier else (1.6 if bounds.size.y > 2.0 else 0.38)
+				if _world.road_clearance.overlaps(bounds, margin, not roadside_barrier):
+					rejected_for_clearance[asset_id] = int(rejected_for_clearance.get(asset_id, 0)) + 1
+					continue
 			var cell_x: int = int(floor(x / 128.0))
 			var cell_z: int = int(floor(z / 128.0))
 			var cell_key: String = "%d:%d:%s" % [cell_x, cell_z, asset_id]
 			if not grouped.has(cell_key):
 				grouped[cell_key] = {"asset": asset_id, "cell_x": cell_x, "cell_z": cell_z, "items": []}
-			var adjusted: Dictionary = item.duplicate()
-			adjusted["position"] = [x, surveyed_y + float(item.get("terrain_offset_m", 0.0)), z]
 			grouped[cell_key]["items"].append(adjusted)
 			placements += 1
 			if generate_selective_colliders and _collidable_asset(asset_id):
@@ -225,6 +237,7 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 		"regions": manifest.get("region_packs", []).size(),
 		"placements": placements, "skipped_quality": skipped_by_quality,
 		"displaced_by_roadworks": displaced_by_roadworks,
+		"rejected_for_clearance": rejected_for_clearance,
 		"height_mismatches": height_mismatches, "selective_colliders": colliders,
 		"chunk_asset_groups": _cells.size(), "mesh_component_batches": batches,
 		"water_triangles": water_triangles, "missing_assets": missing.keys(),
@@ -250,14 +263,23 @@ func _surface_height(x: float, z: float) -> float:
 	return NAN
 
 func _collidable_asset(asset: String) -> bool:
-	return asset in ["house", "barn", "garage", "windmill", "arch", "overlook", "pier", "quarry", "guardrail", "barrier"]
+	return asset in [
+		"house", "barn", "garage", "windmill", "arch", "overlook", "pier", "quarry",
+		"guardrail", "barrier", "pine_tree", "broadleaf_tree", "tree", "rock", "boulder", "rock_face", "rock_moss", "tree_stump"
+	]
 
-func _add_collider(root: Node3D, item: Dictionary, asset: String) -> void:
+func _local_collider_bounds(asset: String) -> AABB:
 	var dimensions := Vector3(6.0, 3.0, 6.0)
 	if asset == "guardrail":
 		dimensions = Vector3(4.0, 0.9, 0.5)
 	elif asset == "barrier":
 		dimensions = Vector3(3.0, 1.0, 0.8)
+	elif asset in ["pine_tree", "broadleaf_tree", "tree"]:
+		dimensions = Vector3(1.1, 8.0, 1.1)
+	elif asset in ["rock", "boulder", "rock_face", "rock_moss"]:
+		dimensions = Vector3(3.0, 2.5, 3.0)
+	elif asset == "tree_stump":
+		dimensions = Vector3(1.4, 1.5, 1.4)
 	elif asset == "house":
 		dimensions = Vector3(12.0, 7.0, 9.0)
 	elif asset == "barn":
@@ -270,21 +292,59 @@ func _add_collider(root: Node3D, item: Dictionary, asset: String) -> void:
 		dimensions = Vector3(9.0, 6.0, 2.8)
 	elif asset == "quarry":
 		dimensions = Vector3(17.0, 9.0, 13.0)
-	var point: Array = item["position"]
+	return AABB(Vector3(-dimensions.x * 0.5, 0.0, -dimensions.z * 0.5), dimensions)
+
+func _placement_frame(item: Dictionary) -> Transform3D:
+	var p: Array = item["position"]
+	var yaw := deg_to_rad(float(item.get("yaw_deg", 0.0)))
+	var size := Vector3.ONE * float(item.get("scale", 1.0))
+	if item["asset"] == "guardrail":
+		# The authored bearing points along +Z at zero. The rail beam and collider run along +X.
+		yaw -= PI * 0.5
+		size.x *= 1.38
+	return Transform3D(Basis(Vector3.UP, yaw).scaled_local(size), Vector3(float(p[0]), float(p[1]), float(p[2])))
+
+func _model_bounds(desc: Dictionary) -> AABB:
+	var path := str(desc["path"])
+	if _bounds_cache.has(path):
+		return _bounds_cache[path]
+	var bounds := AABB()
+	var has_bounds := false
+	var parts := _get_mesh_parts(path).duplicate()
+	var replacement: Variant = mesh_overrides.get(path)
+	if replacement is Array:
+		for variant: Mesh in replacement:
+			parts.append({"mesh": variant, "local": Transform3D.IDENTITY})
+	if desc.has("lod"):
+		parts.append_array(_get_mesh_parts(str(desc["lod"])))
+	for part: Dictionary in parts:
+		var frame: Transform3D = part["local"]
+		var mesh: Mesh = part["mesh"]
+		var box := frame * mesh.get_aabb()
+		bounds = bounds.merge(box) if has_bounds else box
+		has_bounds = true
+	_bounds_cache[path] = bounds
+	return bounds
+
+func _add_collider(root: Node3D, item: Dictionary, asset: String) -> void:
+	var bounds := _local_collider_bounds(asset)
 	var body := StaticBody3D.new()
 	body.name = str(item["id"]) + "_Collision"
-	body.position = Vector3(float(point[0]), float(point[1]), float(point[2]))
-	body.rotation.y = deg_to_rad(float(item.get("yaw_deg", 0.0)))
-	body.scale = Vector3.ONE * float(item.get("scale", 1.0))
+	var frame := _placement_frame(item)
+	var size := frame.basis.get_scale()
+	body.transform = Transform3D(frame.basis.orthonormalized(), frame.origin)
+	body.set_meta("roadside_barrier", asset in ["guardrail", "barrier"])
 	root.add_child(body)
 	var shape := CollisionShape3D.new()
 	var box_shape := BoxShape3D.new()
-	box_shape.size = dimensions
+	box_shape.size = bounds.size * size
 	shape.shape = box_shape
-	shape.position.y = dimensions.y * 0.5
+	shape.position = bounds.get_center() * size
 	body.add_child(shape)
 
 func _asset_path(relative: String) -> String:
+	if relative.begins_with("assets/premium_runtime/"):
+		return "res://" + relative
 	if relative.begins_with("assets/curated/"):
 		var suffix: String = relative.trim_prefix("assets/curated/")
 		var game_path: String = "res://assets/curated/" + suffix
@@ -353,14 +413,11 @@ func _make_batches(parent: Node3D, items: Array, parts: Array, label: String) ->
 		batch.instance_count = items.size()
 		for i in range(items.size()):
 			var item: Dictionary = items[i]
-			var p: Array = item["position"]
-			var angle: float = deg_to_rad(float(item.get("yaw_deg", 0.0)))
-			var sc: float = float(item.get("scale", 1.0))
-			var frame := Transform3D(Basis(Vector3.UP, angle).scaled(Vector3.ONE * sc), Vector3(float(p[0]), float(p[1]), float(p[2])))
-			batch.set_instance_transform(i, frame * (part["local"] as Transform3D))
+			batch.set_instance_transform(i, _placement_frame(item) * (part["local"] as Transform3D))
 		var draw := MultiMeshInstance3D.new()
 		draw.name = label + "_Part_" + str(k)
 		draw.multimesh = batch
+		draw.set_meta("roadside_barrier", str(items[0]["asset"]) in ["guardrail", "barrier"])
 		if label.begins_with("Far") or parent.name.begins_with("shrub_") or parent.name.begins_with("bollard_") or parent.name.begins_with("warning_"):
 			draw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(draw)

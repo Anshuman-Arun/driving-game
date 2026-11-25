@@ -31,6 +31,9 @@ func _ready() -> void:
 	camera.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(camera)
 	camera.setup(vehicle_body)
+	var audio := vehicle_body.get_node_or_null("VehicleAudio")
+	if audio != null and audio.has_method("bind_camera"):
+		audio.call("bind_camera", camera)
 	_make_hud()
 
 func _physics_process(delta: float) -> void:

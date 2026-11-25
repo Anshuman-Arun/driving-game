@@ -4,6 +4,7 @@ extends Node3D
 const FOLIAGE = preload("res://assets/valley_art/vegetation.gdshader")
 const CARDS = preload("res://assets/valley_art/foliage_cards.gdshader")
 const Trees = preload("valley_tree_factory.gd")
+const PremiumMesh = preload("premium_mesh.gd")
 const GRASS_ATLAS = preload("res://assets/valley_art/grass_cutout.png")
 const LEAF_DETAIL = preload("res://assets/valley_art/leaf_litter_albedo.jpg")
 const BARK = preload("res://assets/forza_env/textures/bark/albedo.jpg")
@@ -31,6 +32,7 @@ var _leaf_velocity := PackedVector3Array()
 var _leaf_life := PackedFloat32Array()
 var _rng := RandomNumberGenerator.new()
 var _quality := 1
+var clearance_report: Dictionary = {}
 
 func build(world: Node, preset: String) -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
@@ -40,17 +42,6 @@ func build(world: Node, preset: String) -> void:
 		push_warning("Valley vegetation data could not be loaded.")
 		return
 	_placements = file.get_buffer(file.get_length()).to_float32_array()
-	var cells: Dictionary = {}
-	for offset in range(0, _placements.size(), STRIDE):
-		var kind := int(_placements[offset + 5])
-		var near_ground := kind == 2 or kind == 3
-		var spacing := GROUND_CELL if near_ground else CANOPY_CELL
-		var cell := Vector2i(floori(_placements[offset] / spacing), floori(_placements[offset + 2] / spacing))
-		var key := Vector3i(cell.x, cell.y, kind)
-		var buckets := _ground if near_ground else cells
-		if not buckets.has(key):
-			buckets[key] = []
-		buckets[key].append(offset)
 	var material := ShaderMaterial.new()
 	material.shader = FOLIAGE
 	material.set_shader_parameter("leaf_pattern", LEAF_DETAIL)
@@ -58,7 +49,22 @@ func build(world: Node, preset: String) -> void:
 		Trees.build(true), Trees.build(false),
 		_make_grass(_card_material(GRASS_ATLAS, 0.17, true)), _make_flowers(material), _rock_mesh(material),
 	]
+	var fern := PremiumMesh.fit("fern", Vector3(1.5, 0.92, 1.5))
+	if fern != null:
+		_meshes.append(fern)
 	_distant_trees = [Trees.build(true, true), Trees.build(false, true)]
+	_filter_placements()
+	var cells: Dictionary = {}
+	for offset in range(0, _placements.size(), STRIDE):
+		var kind := int(_placements[offset + 5])
+		var near_ground := kind in [2, 3, 5]
+		var spacing := GROUND_CELL if near_ground else CANOPY_CELL
+		var cell := Vector2i(floori(_placements[offset] / spacing), floori(_placements[offset + 2] / spacing))
+		var key := Vector3i(cell.x, cell.y, kind)
+		var buckets := _ground if near_ground else cells
+		if not buckets.has(key):
+			buckets[key] = []
+		buckets[key].append(offset)
 	for key: Vector3i in cells:
 		_canopy[key] = _make_batch(cells[key], key.z)
 		if key.z < _distant_trees.size():
@@ -67,6 +73,46 @@ func build(world: Node, preset: String) -> void:
 	set_graphics(preset)
 	_build_leaves(material)
 	print("Valley vegetation: %d placements, %d canopy batches, %d ground groups" % [_placements.size() / STRIDE, _canopy.size(), _ground.size()])
+	print("[VegetationClearance] ", JSON.stringify(clearance_report))
+
+func _filter_placements() -> void:
+	var source := _placements
+	_placements = PackedFloat32Array()
+	_placements.resize(source.size())
+	var kept := 0
+	var blocked := [0, 0, 0, 0, 0, 0]
+	var footprints: Array[AABB] = []
+	for mesh in _meshes:
+		footprints.append(mesh.get_aabb())
+	for kind in _distant_trees.size():
+		footprints[kind] = footprints[kind].merge(_distant_trees[kind].get_aabb())
+	for offset in range(0, source.size(), STRIDE):
+		var kind := int(source[offset + 5])
+		var origin := Vector3(source[offset], source[offset + 1], source[offset + 2])
+		if kind == 5 and _meshes.size() <= 5:
+			kind = 3
+		if kind == 3 and _meshes.size() > 5 and origin.x < -240.0 and origin.z < 180.0 and source[offset + 6] < 0.32:
+			kind = 5
+		var ground: float = _world.get_surface_height_at(origin.x, origin.z)
+		if not is_finite(ground) or kind < 0 or kind >= footprints.size():
+			continue
+		origin.y = ground - (0.18 if kind < 2 else 0.04)
+		var frame := _instance_frame(origin, source[offset + 3], source[offset + 4], source[offset + 6])
+		var margin := 1.8 if kind < 2 or kind == 4 else 0.34
+		if _world.road_clearance != null and _world.road_clearance.overlaps(frame * footprints[kind], margin):
+			blocked[kind] += 1
+			continue
+		for field in STRIDE:
+			_placements[kept + field] = source[offset + field]
+		_placements[kept + 1] = ground
+		_placements[kept + 5] = kind
+		kept += STRIDE
+	_placements.resize(kept)
+	clearance_report = {"candidates": source.size() / STRIDE, "accepted": kept / STRIDE, "rejected_by_kind": blocked}
+
+func _instance_frame(origin: Vector3, yaw: float, scale: float, seed: float) -> Transform3D:
+	var form := Vector3(scale * lerpf(0.82, 1.24, seed), scale, scale * lerpf(1.17, 0.91, seed))
+	return Transform3D(Basis(Vector3.UP, yaw).scaled(form), origin)
 
 func conifer_mesh(distant := false) -> Mesh:
 	if _meshes.is_empty():
@@ -108,11 +154,12 @@ func _make_batch(offsets: Array, kind: int) -> MultiMeshInstance3D:
 		base.y -= 0.18 if kind < 2 else 0.04
 		var seed := _placements[at + 6]
 		var scale := _placements[at + 4]
-		var form := Vector3(scale * lerpf(0.82, 1.24, seed), scale, scale * lerpf(1.17, 0.91, seed))
-		mesh.set_instance_transform(index, Transform3D(Basis(Vector3.UP, _placements[at + 3]).scaled(form), base - center))
-		var tint := Color(0.83, 0.86, 0.79).lerp(Color(1.18, 1.07, 0.86), seed)
-		if kind == 1 and seed > 0.41:
-			tint = Color(1.25, 0.79, 0.45).lerp(Color(1.62, 0.57, 0.31), seed)
+		mesh.set_instance_transform(index, _instance_frame(base - center, _placements[at + 3], scale, seed))
+		var tint := Color(0.80, 0.95, 0.81).lerp(Color(1.10, 1.06, 0.83), seed)
+		if kind == 0:
+			tint = Color(0.64, 0.87, 0.76).lerp(Color(0.99, 1.08, 0.80), seed)
+		elif kind == 1 and seed > 0.44:
+			tint = Color(1.36, 0.88, 0.38).lerp(Color(1.80, 0.51, 0.24), seed)
 		mesh.set_instance_color(index, tint)
 	var draw := MultiMeshInstance3D.new()
 	draw.multimesh = mesh
@@ -164,7 +211,7 @@ func _sync_cells(position: Vector3) -> void:
 	var wanted: Dictionary = {}
 	for z in range(-radius, radius + 1):
 		for x in range(-radius, radius + 1):
-			for species in [2, 3]:
+			for species in [2, 3, 5]:
 				var key := Vector3i(center.x + x, center.y + z, species)
 				if not _ground.has(key):
 					continue

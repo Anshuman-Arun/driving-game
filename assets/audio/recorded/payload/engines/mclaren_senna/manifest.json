@@ -1,0 +1,179 @@
+{
+  "profile": "mclaren_senna",
+  "source": "https://github.com/justinagaudelli-eng/supercar-engine-sound/tree/main/public/samples/765lt",
+  "source_character": "McLaren 765LT/600LT/720S family V8 (Senna proxy)",
+  "license": "CC-BY-3.0",
+  "license_url": "https://creativecommons.org/licenses/by/3.0/",
+  "license_review": "Upstream declares CC BY 3.0; Commons independent source review pending. User authorized private-build audition, not public distribution clearance.",
+  "status": "private_build_audition",
+  "notes": "Upstream estimated RPM and load layer labels, not controlled dyno capture. PCM unchanged, runtime seam conditioning. Multiple recording sessions; no independent microphone or measured load certification.",
+  "credits": [
+    {
+      "title": "McLaren 765LT - engine and exhaust sound (YouTube 5oSRv66QFW0)",
+      "author": "Hungarian Supercar Spotters",
+      "license": "CC BY 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:McLaren_765LT_-_engine_and_exhaust_sound_(YouTube_5oSRv66QFW0).opus",
+      "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+    },
+    {
+      "title": "McLaren 600LT with Fi Exhaust system - engine and exhaust sound (YouTube RXj9PUkF0gk)",
+      "author": "FiExhaust",
+      "license": "CC BY 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:McLaren_600LT_with_Fi_Exhaust_system_-_engine_and_exhaust_sound_(YouTube_RXj9PUkF0gk).opus",
+      "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+    },
+    {
+      "title": "McLaren 720S with Novitec exhaust - engine and exhaust sound (YouTube XfgP-gX7KNg)",
+      "author": "Supercars67",
+      "license": "CC BY 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:McLaren_720S_with_Novitec_exhaust_-_engine_and_exhaust_sound_(YouTube_XfgP-gX7KNg).opus",
+      "changes": "excerpts pitch-flattened to constant rpm, looped, level-matched"
+    }
+  ],
+  "loops": [
+    {
+      "file": "on_1000.wav",
+      "rpm": 1000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.05,
+      "source_git_blob": "f98bda415e5e0dc65c0a9f735cc6c45e32ac0c76",
+      "source_rms_dbfs": -22.2,
+      "source_peak_dbfs": -14.62,
+      "seam_delta": 1706,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_2000.wav",
+      "rpm": 2000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 0.2175,
+      "source_git_blob": "21b8c0bd0c2453c5d72faf0c2993f5396c2319f1",
+      "source_rms_dbfs": -21.59,
+      "source_peak_dbfs": -11.34,
+      "seam_delta": 527,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_3000.wav",
+      "rpm": 3000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.055,
+      "source_git_blob": "e91acac13bce6aa3c7d70f8ec07ef67eb3f6fab3",
+      "source_rms_dbfs": -21.02,
+      "source_peak_dbfs": -16.14,
+      "seam_delta": 98,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_4000.wav",
+      "rpm": 4000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.05375,
+      "source_git_blob": "a32fdf446f76a4f7190e43d9ce9e8427e0d21d38",
+      "source_rms_dbfs": -20.48,
+      "source_peak_dbfs": -11.83,
+      "seam_delta": 243,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_5000.wav",
+      "rpm": 5000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.371,
+      "source_git_blob": "27ca46750641c1b454876e5c21583ea73e820f6f",
+      "source_rms_dbfs": -19.98,
+      "source_peak_dbfs": -10.18,
+      "seam_delta": 99,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_6000.wav",
+      "rpm": 6000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 1.055,
+      "source_git_blob": "92b5dbd646c219923a4a2b95b9f0ef72c56ccf86",
+      "source_rms_dbfs": -19.5,
+      "source_peak_dbfs": -8.04,
+      "seam_delta": 44,
+      "clipped_samples": 0
+    },
+    {
+      "file": "on_7000.wav",
+      "rpm": 7000,
+      "layer": "on",
+      "gain": 1,
+      "duration_s": 0.975,
+      "source_git_blob": "b7f84d885ad0b5a87dd1798a9ed7e757c1f90a82",
+      "source_rms_dbfs": -19.05,
+      "source_peak_dbfs": -10.3,
+      "seam_delta": 96,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_3000.wav",
+      "rpm": 3000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.965,
+      "source_git_blob": "bef350f52a8bb621b2c99f96eceb96060cfb515d",
+      "source_rms_dbfs": -24.12,
+      "source_peak_dbfs": -19.69,
+      "seam_delta": 399,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_4000.wav",
+      "rpm": 4000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.38625,
+      "source_git_blob": "246ed84e256c2edb17a105e7589ed34e515b1d98",
+      "source_rms_dbfs": -23.58,
+      "source_peak_dbfs": -16.54,
+      "seam_delta": 2,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_5000.wav",
+      "rpm": 5000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.993,
+      "source_git_blob": "c0b4babb9fe836365f51aab55716988d14adb3c2",
+      "source_rms_dbfs": -23.08,
+      "source_peak_dbfs": -11.99,
+      "seam_delta": 160,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_6000.wav",
+      "rpm": 6000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.1825,
+      "source_git_blob": "17cbc3c921debc28e797f96e94944656864d98bd",
+      "source_rms_dbfs": -22.6,
+      "source_peak_dbfs": -13.83,
+      "seam_delta": 435,
+      "clipped_samples": 0
+    },
+    {
+      "file": "off_7000.wav",
+      "rpm": 7000,
+      "layer": "off",
+      "gain": 1,
+      "duration_s": 0.975,
+      "source_git_blob": "20800da9c30f4fb8c6ba23282f938baa2d941bee",
+      "source_rms_dbfs": -22.15,
+      "source_peak_dbfs": -11.78,
+      "seam_delta": 76,
+      "clipped_samples": 0
+    }
+  ]
+}

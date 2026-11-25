@@ -1,0 +1,66 @@
+{
+  "profile": "orion_rs",
+  "source": "https://opengameart.org/content/racing-car-engine-sound-loops",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "status": "temporary_recorded_fallback",
+  "notes": "Six pitch-adjusted loops derived from the SAME public-domain car recording. Not true RPM/load capture; RPM anchors below are provisional tuning values, not measured source RPM. Replace with real four-cylinder recording before production acceptance. Runtime trim of approximately -13 dB matches the other banks' documented RMS range without altering source PCM.",
+  "credits": [
+    {
+      "author": "qubodup (Iwan Gabovitch); source recording pdsounds.org",
+      "url": "https://opengameart.org/content/racing-car-engine-sound-loops",
+      "changes": "Original editor cut and pitch-adjusted a single recording; this pipeline resamples to mono 48k PCM and applies common bank headroom."
+    }
+  ],
+  "loops": [
+    {
+      "file": "on_1000.wav",
+      "rpm": 1000,
+      "layer": "on",
+      "gain": 0.223872,
+      "duration_s": 0.86408,
+      "seam_delta": 317
+    },
+    {
+      "file": "on_1800.wav",
+      "rpm": 1800,
+      "layer": "on",
+      "gain": 0.223872,
+      "duration_s": 0.66667,
+      "seam_delta": 290
+    },
+    {
+      "file": "on_3000.wav",
+      "rpm": 3000,
+      "layer": "on",
+      "gain": 0.223872,
+      "duration_s": 0.68256,
+      "seam_delta": 224
+    },
+    {
+      "file": "on_4400.wav",
+      "rpm": 4400,
+      "layer": "on",
+      "gain": 0.223872,
+      "duration_s": 0.61604,
+      "seam_delta": 117
+    },
+    {
+      "file": "on_6000.wav",
+      "rpm": 6000,
+      "layer": "on",
+      "gain": 0.223872,
+      "duration_s": 0.63085,
+      "seam_delta": 178
+    },
+    {
+      "file": "on_8000.wav",
+      "rpm": 8000,
+      "layer": "on",
+      "gain": 0.223872,
+      "duration_s": 0.62958,
+      "seam_delta": 560
+    }
+  ],
+  "missing": []
+}
