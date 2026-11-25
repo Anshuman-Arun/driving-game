@@ -213,12 +213,21 @@ def main():
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--output", type=pathlib.Path)
     parser.add_argument("--download", action="store_true")
+    parser.add_argument("--local", type=pathlib.Path, help="Analyze a user-supplied recording without network access")
+    parser.add_argument("--profile", choices=sorted(SOURCES), default="aventador_svj")
     args = parser.parse_args()
     self_test()
     if args.self_test:
         return
+    if args.local:
+        if not args.output or args.download:
+            parser.error("provide --local FILE --profile ID --output DIR, without --download")
+        args.output.mkdir(parents=True, exist_ok=True)
+        cfg = dict(SOURCES[args.profile], url=str(args.local), source_type="local candidate, identity not confirmed")
+        inspect(args.local, cfg, args.output)
+        return
     if not args.output or not args.download:
-        parser.error("provide --output and explicit --download")
+        parser.error("provide --output and explicit --download or --local")
     args.output.mkdir(parents=True,exist_ok=True)
     successful = 0
     for profile,cfg in SOURCES.items():

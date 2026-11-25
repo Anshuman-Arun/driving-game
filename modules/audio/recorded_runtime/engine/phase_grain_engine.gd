@@ -4,9 +4,9 @@ extends Node
 ## every RPM and load anchor. No oscillator and no independent note retriggers.
 const RATE := 32000
 const SPC := 256
-const HOP := 8
 const VARIANTS := 6
-const SIZE := HOP * 2 * SPC + 1
+# Overlap only the transition, preserving the original take's roughness.
+const OVERLAP_FRACTION := 0.35
 const MIN_QUEUE := 2048
 const HEADLESS_QUEUE := 4096
 const MAX_QUEUE := 6144
@@ -15,6 +15,8 @@ var rows: Array[Dictionary] = []
 var on_indices: Array[int] = []
 var off_indices: Array[int] = []
 var order := 6.0
+var hop := 12
+var grain_size := 12 * 2 * SPC + 1
 var phase := 0.0
 var grain := 0
 var previous_grain := VARIANTS-1
@@ -44,6 +46,10 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 	diagnostics.clear()
 	prepared = false
 	order = firing_order
+	# Each hop is a complete 720-degree combustion cycle, not an arbitrary
+	# number of firing pulses. V12 and V8 retain their own cadence.
+	hop = maxi(2, roundi(order * 2.0))
+	grain_size = hop * 2 * SPC + 1
 	idle_gain = idle_level
 	var started := Time.get_ticks_usec()
 	for entry in loops:
@@ -52,7 +58,7 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 		if wav == null or wav.format != AudioStreamWAV.FORMAT_16_BITS or wav.stereo:
 			return false
 		var anchor_rpm := float(entry["rpm"])
-		var row := build_grains(wav.data,wav.mix_rate,anchor_rpm*order/60.0)
+		var row := build_grains(wav.data,wav.mix_rate,anchor_rpm*order/60.0, hop)
 		if row.is_empty():
 			return false
 		row["rpm"] = anchor_rpm
@@ -103,7 +109,8 @@ static func fit_period(pcm: PackedFloat32Array, rate: int, hz: float, center: in
 	return Vector2(best if best_score >= 0.18 else nominal,best_score)
 
 
-static func build_grains(data: PackedByteArray, rate: int, expected_hz: float) -> Dictionary:
+static func build_grains(data: PackedByteArray, rate: int, expected_hz: float, hop_cycles: int = 8) -> Dictionary:
+	var size := hop_cycles * 2 * SPC + 1
 	var count := data.size() >> 1
 	if rate < 16000 or expected_hz < 25.0 or count < 128:
 		return {}
@@ -124,11 +131,11 @@ static func build_grains(data: PackedByteArray, rate: int, expected_hz: float) -
 		pcm[i] = y
 	var fit := fit_period(pcm,rate,expected_hz,count >> 1,mini(count/3,rate/5))
 	var period := fit.x
-	var room := float(count)-(HOP*2.0+5.0)*period-3.0
+	var room := float(count)-(hop_cycles*2.0+5.0)*period-3.0
 	if room < 0.0:
 		return {}
 	var atlas := PackedFloat32Array()
-	atlas.resize(SIZE*VARIANTS)
+	atlas.resize(size*VARIANTS)
 	for g in range(VARIANTS):
 		var start := 2.0*period+room*(float(g)+0.5)/float(VARIANTS)
 		var local_fit := fit_period(pcm,rate,float(rate)/period,roundi(start+period*6.0),roundi(period*7.0))
@@ -145,16 +152,16 @@ static func build_grains(data: PackedByteArray, rate: int, expected_hz: float) -
 			s += v*sin(a)
 		var pos := float(center)+atan2(s,c)/TAU*local_period
 		var delta := local_period/float(SPC)
-		while pos+float(SIZE-1)*delta >= float(count-1):
+		while pos+float(size-1)*delta >= float(count-1):
 			pos -= local_period
 		while pos < 0.0:
 			pos += local_period
-		if pos+float(SIZE-1)*delta >= float(count-1):
+		if pos+float(size-1)*delta >= float(count-1):
 			return {}
-		for j in range(SIZE):
+		for j in range(size):
 			var at := pos+float(j)*delta
 			var k := floori(at)
-			atlas[g*SIZE+j] = lerpf(pcm[k],pcm[k+1],at-float(k))
+			atlas[g*size+j] = lerpf(pcm[k],pcm[k+1],at-float(k))
 	return {"pcm":atlas,"hz":float(rate)/period,"confidence":fit.y}
 
 
@@ -240,9 +247,9 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 		var offset := p*SPC
 		var k := floori(offset)
 		var frac := offset-float(k)
-		var new_idx := g*SIZE+k
-		var old_idx := old*SIZE+HOP*SPC+k
-		var cross := 0.5-0.5*cos(PI*p/float(HOP))
+		var new_idx := g*grain_size+k
+		var old_idx := old*grain_size+hop*SPC+k
+		var cross := 0.5-0.5*cos(PI*minf(1.0,p/(float(hop)*OVERLAP_FRACTION)))
 		var sample := 0.0
 		for j in range(source_count):
 			var atlas := sources[j]
@@ -253,8 +260,8 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 		sample = clampf(sample*amp,-0.95,0.95)
 		out[i] = Vector2(sample,sample)
 		p += increment
-		if p >= HOP:
-			p -= HOP
+		if p >= hop:
+			p -= hop
 			old = g
 			# Deterministic varied take selection; never restart a pitched loop.
 			seq = (seq*48271)%2147483647

@@ -7,6 +7,11 @@ on:
     branches: [feat/aster-scenic-supercars]
     paths: ['modules/audio/tools/continuous_sweep_research.py', '.github/workflows/hero-sweep-research.yml']
   workflow_dispatch:
+    inputs:
+      fetch_originals:
+        description: 'Retry original Commons recordings (only after rate limit resolves)'
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -26,9 +31,13 @@ jobs:
           python -m venv "$RUNNER_TEMP/audio-research-venv"
           "$RUNNER_TEMP/audio-research-venv/bin/pip" install numpy==2.3.5 scipy==1.17.0 imageio-ffmpeg==0.6.0
           "$RUNNER_TEMP/audio-research-venv/bin/python" -c "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())"
-      - name: Analyze original continuous recordings (audition only)
+      - name: Analyze cached CC0 recording (unconfirmed engine identity)
         run: |
-          "$RUNNER_TEMP/audio-research-venv/bin/python" modules/audio/tools/continuous_sweep_research.py --download --output "$RUNNER_TEMP/hero-sweep-research"
+          "$RUNNER_TEMP/audio-research-venv/bin/python" modules/audio/tools/continuous_sweep_research.py --local assets/audio/recorded/candidates/car_engine_512558.mp3 --profile mclaren_senna --output "$RUNNER_TEMP/hero-sweep-research/cc0-candidate"
+      - name: Fetch original recordings only on explicit request
+        if: github.event_name == 'workflow_dispatch' && inputs.fetch_originals
+        run: |
+          "$RUNNER_TEMP/audio-research-venv/bin/python" modules/audio/tools/continuous_sweep_research.py --download --output "$RUNNER_TEMP/hero-sweep-research/originals"
       - name: Upload candidate reports and previews
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

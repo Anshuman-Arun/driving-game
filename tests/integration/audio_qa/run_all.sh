@@ -37,6 +37,7 @@ for suite in \
   modules/audio/tests/godot_regression.gd \
   tests/integration/audio_integration_test.gd \
   tests/integration/audio_qa/test_telemetry_bench.gd \
+  tests/integration/audio_qa/test_hero_live_drive.gd \
   tests/integration/audio_qa/run_audio_qa.gd; do
   if ! run_gate "$(basename "$suite" .gd)" "$GODOT_BIN" --headless --path . --script "res://$suite"; then
     failures=$((failures + 1))
