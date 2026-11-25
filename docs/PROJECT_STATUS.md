@@ -1,34 +1,8 @@
 # Project status — single current-state log
 
-## Convoy trial rejected; stop scoped traffic experimentation (2026-11-25)
+## Map-only PR #43 handoff (2026-11-25)
 
-Run 45691957849 on 90c4494: all four targeted convoy assertions passed, basic 48/48 and advanced 91/93, but the original seeded waits worsened to 1002/984 ticks (33.4/32.8 s). Both safety and replay remained true. The convoy trial is reverted; retain only the tested mandatory dwell correction, original routing/headway/conflict policy, and diagnostic owner states. No test thresholds or original assertions removed. Multiple admissions/spawn trials have now failed to resolve congestion; the observed long looping canonical connectors and conservative conflict occupation require a dedicated traffic geometry/throughput design, not further speculative changes in the map PR. The production environment remains unchanged except scoped road/clearance work. Exact vegetation baseline audit and final combined CI/Windows visual acceptance are outstanding; do not merge unconditionally.
-
-
-## Narrow convoy fairness candidate (2026-11-25)
-
-Current-head run 45691718802 restored dwell-only traces (902/984 ticks, 87/89 advanced, 48/48 basic; safety/replay true). New owner diagnostics show seed 73 held the market driver behind two consecutive owners of the same 65.15 m chapel-to-market circulating connector, the second already granted while the first was still traversing. Unlike #38's broad priority rule, this candidate only prevents an additional same-movement owner from extending an active convoy over an older, actually stopped conflicting approach. No blanket serialization or changed conflict/headway thresholds; stop-completion tick and targeted real-turn fixture added. Original queue gates unchanged. This is a narrowly evidenced candidate pending verification; no world geometry or art changes.
-
-
-## Rejected routing trial and stronger environment preservation gate (2026-11-25)
-
-Run 45691412373 on 833cb52: basic 48/48; all three cost-routing tests passed and reservation safety/replay remained true, but canonical waits worsened to 939/1140 ticks (31.3/38.0 s), so the trial is reverted rather than retained. Stop-dwell correction remains; original random route selection and all queue/safety thresholds restored/unchanged. Owner-state diagnostics retained. The outstanding queue bottleneck needs an independent traffic/connector investigation, not more speculative changes to map geometry. Added an exact pre-widening vegetation baseline audit: rerun production filter with identical baked source and meshes, compare retained placement attributes, and require each removed baseline placement to intersect actual current road clearance at the original safety margin. No asset, map, rendering or vehicle runtime changes. New audit pending CI; Windows visual acceptance remains open.
-
-
-## Verified root gates and follow-up traffic routing (2026-11-25)
-
-Run 45690637844 on b927e9c: all root, standalone, data and production audio jobs passed. Vehicle-world routes completed with 100% sampled ticks having at least three wheel contacts, including the 16.63 m climb and asphalt/grass/shoulder transitions; all four camera modes, 12/12 visual fallback checks and showcase passed. The engine still emits pre-existing cleanup errors; no graphical approval. Run 45691102865 on f6751a0: traffic basic 48/48 and all four added stop dwell assertions passed, safety and deterministic replay stayed true, waits 902/984 ticks vs previous 990/984. Both remaining failures originate on the Alder market approach with completed stop dwell. Prior broad priority/spawn experiments in #38 were unsuccessful and are not ported. The real graph has several circulating 62–65 m Alder turns beside 12–17 m direct turns, all at the same 20 km/h limit. Uniform random choice overweights expensive circulating movements. Trial cost-aware spontaneous routing using inverse free-flow travel time only for authored junction choices; no legal movement removed, explicit routes remain authoritative, legacy fixture selection unchanged. Added a distribution/explicit-route regression and owner-state diagnostics; original <900 tick and safety gates remain intact. This is a candidate, not a verified throughput fix. The graph, terrain, premium assets, road geometry and audio are unchanged.
-
-
-## Scoped traffic dwell correction (2026-11-25)
-
-Run 45690637844 confirmed the unchanged runtime meets both seeded safety and replay checks and reaches 20 agents, but queue waits are 990/984 ticks vs the original <900 gate. Code inspection found a concrete ordering bug: a conflicting reservation returned before the all-way-stop dwell timer could advance. A car already stopped while yielding therefore had to perform its mandatory stop dwell again after the previous reservation cleared. Count actual stopped time independently of conflict ownership; reset incomplete dwell when moving, and retain all conflict and queue thresholds. Added a targeted canonical conflicting-turn regression and richer queue diagnostics. This narrow inherited traffic fix is included for merge readiness; no old branch traffic experiments copied, no map/art/audio changes. Validation of this revision is pending.
-
-
-## PR #43 merge-readiness review (2026-11-25)
-Run [45562277806](https://github.com/Anshuman-Arun/driving-game/actions/runs/45562277806): import, data, standalone and production audio passed. Root road-width sweep: 1,782 edge rays, zero failures; four spans crossed by the live chassis; world visual regression: 222,579 accepted vegetation placements, 3,482 authored render instances, 1,058 colliders, zero road overlaps; 2,450/2,450 pavement rays; all six cars and all 16 corridors drove; 130 rails accepted vs 124 baseline, 85 relocated, zero unresolved. Headless counts do not prove scenic or guardrail continuity acceptance.
-
-Root job nevertheless failed: the vehicle-world and showcase harnesses still cast the active four-mode Forza camera to the legacy three-mode camera, aborting actual drive checks; the negative vehicle LOD fixture left the shipped distant model configured. Corrected the harnesses to use the actual camera and all four modes (including the authored hood mount), made all negative-fixture paths explicitly absent, and retained the physics/clearance checks. Added diagnostic output for existing traffic flow failures without changing the original safety/queue gate or traffic runtime. Traffic basic 48/48, advanced 83/85 on the preceding revision; rerun required. No visual, Windows, controller-hardware or final merge claim.
+Isolated the verified wider-road environment from traffic work at the owner's direction. Full root, standalone, data and strict production audio passed in [run 45692184040](https://github.com/Anshuman-Arun/driving-game/actions/runs/45692184040): 1,782 edge rays, 2,450 lane rays, four live bridge crossings, six cars, all 16 corridors; 222,579 unchanged retained vegetation poses with all 7,497 removals explained by widened clearance; 130 guardrails vs 124 baseline, 85 relocated, zero unresolved. The canonical graph, terrain, premium assets, audio and traffic source/test files match main. Prior traffic dwell correction and diagnostics remain available at [1b25a33](https://github.com/Anshuman-Arun/driving-game/commit/1b25a331bbe9209f3f859cc99fe2ee2bddc8ba4b) but are excluded from this PR's net changes. Baseline traffic basic 48/48; known canonical advanced 83/85, waits 990/984 ticks vs <900. Basic regressions remain automatic; independent canonical stress remains available as strict manual opt-in in the map workflow, with unmerged controls pinned to #22. New isolated CI pending; actual Windows visual/controller acceptance and existing cleanup warnings remain outstanding. No main edits or merge. See [MAP_WIDTH_INTEGRATION.md](MAP_WIDTH_INTEGRATION.md).
 
 
 ## Professional source-native audio audition (PR #41)
@@ -196,9 +170,3 @@ Known blockers:
 Next task:
 
 Do not mark a phase complete on the basis of code generation alone.
-
-## Current-main map integration (2026-11-24)
-
-Rebased by selective port onto main ffb791f60afbbf9e8ef98af4c26038d7350bbc89 (PR #41). See [MAP_WIDTH_INTEGRATION.md](MAP_WIDTH_INTEGRATION.md) for provenance, preservation rules, validation and next pass. The older PR #38 branch is not an integration source for audio, scenery runtime, or traffic experiments. First combined CI pending; no main change.
-
-Current-main integration first CI 45561552014: data and strict production audio passed; both hero live drives and zero clipping; root import passed. Standalone world/racing/shell passed, standalone scenery fixture failed missing premium fuel station staging and stale count. Main-identical traffic baseline remains 83/85, two queue failures. A single focused follow-up fixes fixture inputs and adds guarded outward rail placement with an exact pre-widening baseline count comparison; details in MAP_WIDTH_INTEGRATION.md. Root suite in progress at writing. No main edits, no traffic or audio implementation changes.
