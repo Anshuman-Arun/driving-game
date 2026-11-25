@@ -9,6 +9,9 @@ import json
 import pathlib
 import struct
 import urllib.request
+import urllib.parse
+import zipfile
+import time
 import zlib
 import shutil
 import subprocess
@@ -36,16 +39,16 @@ def get_range(url, start, count):
     end = start + count - 1
     req = urllib.request.Request(url, headers={"Range": f"bytes={start}-{end}",
                                 "User-Agent": "AsterValleyAudioResearch/1.0"})
-    with urllib.request.urlopen(req, timeout=90) as response:
+    with urllib.request.urlopen(req, timeout=25) as response:
         if response.status != 206 or not response.headers.get("Content-Range", "").startswith(f"bytes {start}-{end}/"):
-            raise RuntimeError(f"Expected matching HTTP 206; got {response.status} {response.headers.get('Content-Range')}")
+            raise RuntimeError(f"Expected HTTP 206; got {response.status}, range={response.headers.get('Content-Range')}, type={response.headers.get('Content-Type')}, length={response.headers.get('Content-Length')}, prefix={response.read(24)!r}")
         body = response.read(count + 1)
     if len(body) != count:
         raise RuntimeError(f"Wrong range size: {len(body)} instead of {count}")
     return body
 
 
-def acquire(cfg, target):
+def acquire_range(cfg, target):
     header = get_range(cfg["url"], cfg["offset"], 30)
     sig, version, flags, method, tm, dt, crc, csize, usize, nlen, xlen = struct.unpack("<I5H3I2H", header)
     if sig != 0x04034B50 or flags & 1 or method != 8 or nlen > 4096:
@@ -84,6 +87,61 @@ def acquire(cfg, target):
             raise ValueError("Expected original WAV")
     print("Downloaded verified member",name,"bytes",written,"sha256",sha.hexdigest(),flush=True)
     return sha.hexdigest()
+
+
+def acquire_full(cfg, target):
+    # If a publisher serves a real ZIP but ignores Range, read the archive
+    # once rather than repeatedly requesting the same multi-GB object.
+    # Limit transfer, time and extraction size; never accept an HTML error.
+    archive=target.with_suffix(".zip")
+    request=urllib.request.Request(cfg["url"],headers={"User-Agent":"AsterValleyAudioResearch/1.0"})
+    deadline=time.monotonic()+180
+    try:
+        with urllib.request.urlopen(request,timeout=25) as response:
+            prefix=response.read(4)
+            length=int(response.headers.get("Content-Length","0"))
+            if prefix!=b"PK\\x03\\x04" or length>3_200_000_000:
+                raise ValueError(f"Not a bounded ZIP: {prefix!r}, length={length}")
+            with archive.open("wb") as out:
+                out.write(prefix)
+                count=4
+                while True:
+                    if time.monotonic()>deadline:
+                        raise TimeoutError("180-second archive transfer budget exceeded")
+                    chunk=response.read(4*1024*1024)
+                    if not chunk: break
+                    count+=len(chunk)
+                    if count>3_200_000_000:
+                        raise ValueError("Archive size limit exceeded")
+                    out.write(chunk)
+        with zipfile.ZipFile(archive) as z:
+            matches=[m for m in z.infolist() if pathlib.PurePosixPath(m.filename).name==cfg["file"]]
+            if len(matches)!=1 or matches[0].file_size>512*1024*1024:
+                raise ValueError("Expected a single bounded WAV member")
+            sha=hashlib.sha256()
+            with z.open(matches[0]) as source,target.open("wb") as out:
+                for chunk in iter(lambda:source.read(1024*1024),b""):
+                    sha.update(chunk);out.write(chunk)
+        print("Downloaded full archive member",cfg["file"],sha.hexdigest(),flush=True)
+        return sha.hexdigest()
+    finally:
+        archive.unlink(missing_ok=True)
+
+
+def acquire(cfg,target):
+    primary=cfg["url"]
+    mirror="https://hippolytus.feralhosting.com/sonniss/"+urllib.parse.urlsplit(primary).path.rsplit("/",1)[-1]
+    errors=[]
+    for url in (mirror,primary):
+        for method in (acquire_range,acquire_full):
+            try:
+                print("REFERENCE attempt",method.__name__,url,flush=True)
+                return method(dict(cfg,url=url),target)
+            except Exception as exc:
+                errors.append(f"{method.__name__}: {exc}")
+                print("REFERENCE attempt failed",repr(exc),flush=True)
+                target.unlink(missing_ok=True)
+    raise RuntimeError("; ".join(errors))
 
 
 def analyze(path, cfg):
