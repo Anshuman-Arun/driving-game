@@ -3,6 +3,9 @@ on:
   push:
     branches: [feat/hero-supercar-audio]
     paths: ['modules/audio/tools/continuous_sweep_research.py', '.github/workflows/hero-sweep-research.yml']
+  pull_request:
+    branches: [feat/aster-scenic-supercars]
+    paths: ['modules/audio/tools/continuous_sweep_research.py', '.github/workflows/hero-sweep-research.yml']
   workflow_dispatch:
 permissions:
   contents: read

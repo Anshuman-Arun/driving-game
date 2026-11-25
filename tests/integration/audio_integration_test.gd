@@ -84,7 +84,12 @@ func _run() -> void:
 		var active_exhaust := 0
 		for voice: AudioStreamPlayer in engine_ctrl._exhaust_players.values():
 			active_exhaust += int(voice.playing)
-		assert(active_exhaust >= 1 and active_exhaust <= 2, "Idle must use only its active exhaust loops")
+		if pid in ["aventador_svj", "mclaren_senna"]:
+			assert(engine_ctrl._grain_engine != null and engine_ctrl._grain_engine.prepared, "Hero phase renderer prepared")
+			assert(active_exhaust == 0, "Hero pitched loops must remain silent")
+			assert(engine_ctrl._grain_engine.direct != null and engine_ctrl._grain_engine.direct.playing, "Hero generator playing")
+		else:
+			assert(active_exhaust >= 1 and active_exhaust <= 2, "Idle must use only its active exhaust loops")
 		if pid in ["aventador_svj", "mclaren_senna"]:
 			assert(engine_ctrl.car_profile == pid and engine_ctrl._active_bank != "", "Hero profile selected")
 			assert(is_equal_approx(engine_ctrl._idle_rpm, car.idle_rpm), "Hero idle uses actual factory RPM")

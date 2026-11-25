@@ -29,6 +29,7 @@ func _initialize() -> void:
 	success = test_overrun_backfire() and success
 	success = test_profile_switching() and success
 	success = test_hero_voicings() and success
+	success = test_phase_grain_renderer() and success
 
 	print("==================================================")
 	if success:
@@ -524,4 +525,35 @@ func test_hero_voicings() -> bool:
 	assert(float(RecordedEngineController.PROFILE_CONFIGS["mclaren_senna"]["intake_ratio"]) == 0.0)
 	engine.free()
 	print("  Hero voicing response and profile switching PASS")
+	return true
+
+
+func test_phase_grain_renderer() -> bool:
+	var engine := RecordedEngineController.new()
+	engine.setup("aventador_svj")
+	var renderer: PhaseGrainEngine = engine._grain_engine
+	assert(renderer != null and renderer.prepared)
+	assert(renderer.diagnostics.size() == 14)
+	var energy := 0.0
+	var peak := 0.0
+	var jump := 0.0
+	var previous := 0.0
+	var started := Time.get_ticks_usec()
+	for i in range(120):
+		var target := lerpf(900.0,8700.0,float(i)/59.0) if i < 60 else lerpf(8700.0,900.0,float(i-60)/59.0)
+		var block := renderer.render_frames(267,target,1.0 if i < 60 else 0.0,0.7)
+		assert(block.size() == 267)
+		for v in block:
+			assert(is_finite(v.x))
+			energy += v.x*v.x
+			peak = maxf(peak,absf(v.x))
+			jump = maxf(jump,absf(v.x-previous))
+			previous = v.x
+	assert(renderer.generated_frames == 32040)
+	assert(energy > 0.1 and peak < 0.96 and jump < 0.8)
+	print("Hero grains: 1s render %.1f ms; peak %.3f; max sample delta %.3f" % [float(Time.get_ticks_usec()-started)/1000.0,peak,jump])
+	engine.setup("mclaren_senna")
+	assert(engine._grain_engine != null and engine._grain_engine.prepared)
+	assert(engine._grain_engine.diagnostics.size() == 12)
+	engine.free()
 	return true

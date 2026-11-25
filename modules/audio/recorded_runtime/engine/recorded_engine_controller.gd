@@ -8,6 +8,7 @@ extends Node
 
 const EngineWavLoaderScript := preload("engine_wav_loader.gd")
 const EngineProfileManifestScript := preload("engine_profile_manifest.gd")
+const PhaseGrainEngineScript := preload("phase_grain_engine.gd")
 
 # Profile defaults
 const PROFILE_CONFIGS := {
@@ -19,7 +20,7 @@ const PROFILE_CONFIGS := {
 		"gain": 0.98, "intake_ratio": 0.0, "rpm_ms": 35.0,
 		"throttle_ms": 60.0, "shift_ms": 125.0, "shift_depth": 0.22,
 		"shift_gain": 0.0, "overrun_gain": 0.0, "synthetic_events": false, "intake_lag_ms": 60.0,
-		"load_curve": 0.85, "idle_gain": 0.58
+		"load_curve": 0.85, "idle_gain": 0.58, "firing_order": 6.0
 	},
 	"mclaren_senna": {
 		"label": "McLaren Senna (recorded McLaren V8 family audition)",
@@ -27,7 +28,7 @@ const PROFILE_CONFIGS := {
 		"gain": 0.94, "intake_ratio": 0.0, "rpm_ms": 42.0,
 		"throttle_ms": 75.0, "shift_ms": 85.0, "shift_depth": 0.42,
 		"shift_gain": 0.0, "overrun_gain": 0.0, "synthetic_events": false, "intake_lag_ms": 165.0,
-		"load_curve": 1.12, "idle_gain": 0.60
+		"load_curve": 1.12, "idle_gain": 0.60, "firing_order": 4.0
 	},
 	"vela_gt": {
 		"label": "Vela GT (Flat-Six)",
@@ -99,6 +100,8 @@ var _smoothed_throttle: float = 0.0
 var _last_raw_throttle: float = 0.0
 var _intake_load: float = 0.0
 var _active_bank: String = ""
+var _grain_engine: PhaseGrainEngine
+@export var use_phase_grains := true
 
 var _current_gear: int = 1
 var _last_gear: int = -999
@@ -183,6 +186,8 @@ func snap_to_idle() -> void:
 	_limiter_envelope = 1.0
 	_overrun_cooldown_timer = 0.0
 	_active_overrun_burst.clear()
+	if is_instance_valid(_grain_engine):
+		_grain_engine.reset(_idle_rpm)
 	# Reset all active one-shots, not just pending bursts. A previous car's
 	# exhaust crackle or gear clunk must never bleed into the next car's idle.
 	for voice in [_shift_player, _overrun_player]:
@@ -360,6 +365,9 @@ func _apply_audio_blend() -> void:
 
 	# Shared with the diagnostic helper so the tested curve is the live curve.
 	var shaped_load := pow(_smoothed_throttle, float(cfg.get("load_curve", 1.0)))
+	if use_phase_grains and is_instance_valid(_grain_engine) and _grain_engine.prepared:
+		_grain_engine.pump(_smoothed_rpm, shaped_load, overall_gain, _resolve_bus(exhaust_bus), &"Exhaust_Reflection")
+		return
 	var load_gains := compute_load_gains(_smoothed_rpm, shaped_load, _manifest.off_anchors, float(cfg.get("idle_gain", 0.40)))
 	# ON/OFF waveforms from different field sessions do not share phase.
 	# Do not duplicate the same sample as "intake" until independent material exists.
@@ -474,6 +482,11 @@ func _update_reflection_voice(fname: String, direct: AudioStreamPlayer, gain: fl
 
 
 func _rebuild_loop_players() -> void:
+	if is_instance_valid(_grain_engine):
+		_grain_engine.stop_audio()
+		remove_child(_grain_engine)
+		_grain_engine.queue_free()
+		_grain_engine = null
 	for mirror in _reflection_players.values():
 		if is_instance_valid(mirror):
 			mirror.stop()
@@ -543,6 +556,18 @@ func _rebuild_loop_players() -> void:
 			_intake_players[fname] = player
 		else:
 			push_warning("RecordedEngineController: Could not load intake loop: " + fname)
+
+	# Legacy voices remain available for explicit A/B, not concurrently mixed.
+	var cfg: Dictionary = PROFILE_CONFIGS[car_profile]
+	if use_phase_grains and cfg.has("firing_order") and _active_bank == car_profile:
+		var renderer := PhaseGrainEngineScript.new()
+		renderer.name = "PhaseGrainEngine"
+		if renderer.prepare(_manifest.loops,_prepared_loops,float(cfg["firing_order"]),_idle_rpm,float(cfg.get("idle_gain",0.58))):
+			_grain_engine = renderer
+			add_child(renderer)
+		else:
+			renderer.free()
+			push_error("Hero phase-grain source preparation failed: "+car_profile)
 
 
 func _init_auxiliary_players() -> void:
