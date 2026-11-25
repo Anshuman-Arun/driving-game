@@ -36,6 +36,29 @@ works = {
     "valley_lake": {"name": "Eastwater Scenic Road", "center": 408, "width_m": 10.2, "wide_radius": 230},
     "market_valley": {"name": "Market Approach", "center": 242, "width_m": 9.6, "wide_radius": 134},
 }
+network_upgrade = {
+    "widths_m": {
+        "alder_cedar": 10.8,
+        "cedar_ridge": 10,
+        "ridge_valley": 10.4,
+        "valley_lake": 11.2,
+        "lake_alder": 11.2,
+        "cedar_pine": 10,
+        "pine_valley": 10.8,
+        "alder_market": 10,
+        "market_valley": 9,
+        "ridge_overlook": 10,
+        "overlook_orchard": 8.4,
+        "orchard_lake": 8.4,
+        "alder_depot": 10,
+        "depot_chapel": 10,
+        "chapel_alder": 10,
+        "pine_ridge": 8.4
+    },
+    "asphalt_shoulder_m": 2,
+    "gravel_shoulder_m": 1.6,
+    "junction_extra_m": 1
+}
 waters = []
 designed = {}
 for corridor, work in works.items():
@@ -70,7 +93,12 @@ for corridor, work in works.items():
         record["bridge_end"] = round(float(distances[indices[-1]]), 3)
         record["water_level"] = work["water_level"]
         print(corridor, record["bridge_start"], record["bridge_end"], len(waters[-1]["cells"]))
+    if corridor == "valley_lake":
+        # Existing road deck spans a deep depression in the roadworks raster.
+        # Use exact centerline stations to support the span without changing water.
+        record["support_start"] = round(float(distances[84]), 3)
+        record["support_end"] = round(float(distances[99]), 3)
     designed[corridor] = record
 
 np.round(height * 100).astype("<u2").tofile(output / "terrain_roadworks_r16le.bin")
-(output / "roadworks.json").write_text(json.dumps({"roads": designed, "waters": waters}, separators=(",", ":")) + "\n")
+(output / "roadworks.json").write_text(json.dumps({"roads": designed, "waters": waters, "network_upgrade": network_upgrade}, separators=(",", ":")) + "\n")

@@ -59,9 +59,10 @@ func _run() -> void:
 		and report["physical_corridors"] == 16 and report["junction_pads"] == 11,
 		"canonical full world and every corridor and junction loaded")
 	var bodies := scene.find_children("*", "StaticBody3D", true, false)
-	_check(report["shoulder_colliders"] == 27 and bodies.size() == 310
+	var expected_static: int = int(report["terrain_chunks"]) + int(report["physical_corridors"]) + int(report["junction_pads"]) + int(report["shoulder_colliders"]) + int(report.get("bridges", 0))
+	_check(report["shoulder_colliders"] == 27 and bodies.size() == expected_static
 		and bodies.size() == report["static_colliders"]
-		and scene.find_children("*", "CollisionShape3D", true, false).size() == 311,
+		and scene.find_children("*", "CollisionShape3D", true, false).size() == expected_static + 1,
 		"one collider per terrain chunk, deck, shoulder or skirt plus the Vela chassis")
 	for body in bodies:
 		if not body.has_meta("world_surface") or body.get_child_count() != 1:
@@ -91,12 +92,13 @@ func _run() -> void:
 	_check(uphill_stats.get("gain", 0.0) > 14.0 and uphill_stats.get("dirt", false),
 		"Vela climbs the gravel grade under its own power")
 
-	var coast := _points(lanes["lane_valley_lake_ab"]).slice(76, 92)
+	## Use a dry, graded stretch well before the new elevated causeway.
+	var coast := _points(lanes["lane_valley_lake_ab"]).slice(38, 57)
 	var edge := PackedVector3Array()
 	for i in coast.size():
 		var forward := coast[mini(i + 1, coast.size() - 1)] - coast[maxi(0, i - 1)]
 		var lateral := forward.cross(Vector3.UP).normalized()
-		var offset := 5.6 * pow(sin(PI * float(i) / (coast.size() - 1)), 2.0)
+		var offset := 9.2 * pow(sin(PI * float(i) / (coast.size() - 1)), 2.0)
 		edge.append(coast[i] + lateral * offset)
 	var edge_stats: Dictionary = await _drive(edge, 7.2, "04-road-grass-road")
 	_check(edge_stats.get("grass", false) and edge_stats.get("road_reentry", false),

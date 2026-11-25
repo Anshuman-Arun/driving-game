@@ -165,8 +165,20 @@ def main():
             width += (design["width_m"] * 0.5 - width) * factor**2 * (3 - 2 * factor) * end_factor**2 * (3 - 2 * end_factor)
             if "bridge_start" in design:
                 eligible &= (along < design["bridge_start"] - 5) | (along > design["bridge_end"] + 5)
+            if "support_start" in design:
+                eligible &= (along < design["support_start"] - 5) | (along > design["support_end"] + 5)
+        network = roadworks.get("network_upgrade", {})
+        target = network.get("widths_m", {}).get(lane["road_id"], float(lane["width_m"]) * 2) * 0.5
+        factor = np.clip((np.minimum(along, length - along) - 6) / 28, 0, 1)
+        factor = factor**2 * (3 - 2 * factor)
+        if "bridge_start" in design:
+            gap = np.maximum(design["bridge_start"] - along, along - design["bridge_end"])
+            taper = np.clip(gap / 28, 0, 1)
+            factor *= taper**2 * (3 - 2 * taper)
+        width += (np.maximum(width, target) - width) * factor
+        shoulder = 1.35 + (network.get(lane["surface"] + "_shoulder_m", 1.35) - 1.35) * factor
         for side in [-1, 1]:
-            offset = (width + rng.uniform(2.65, 4.75, len(along))) * side
+            offset = (width + shoulder + rng.uniform(2.0, 4.1, len(along))) * side
             px, pz = east + across[:, 0] * offset, north + across[:, 1] * offset
             ix = np.clip(np.rint((px + 1000) / 4).astype(int), 0, 500)
             iz = np.clip(np.rint((pz + 1000) / 4).astype(int), 0, 500)

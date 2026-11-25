@@ -148,6 +148,7 @@ func get_physical_road_centerlines() -> Array[Dictionary]:
 			"id": road["id"], "name": road.get("name", road["id"]),
 			"region": road.get("region", ""), "points": line,
 			"width_m": 2.0 * float(lane["width_m"]), "surface": lane["surface"],
+			"target_pavement_width_m": float(roadworks.get("network_upgrade", {}).get("widths_m", {}).get(road["id"], 2.0 * float(lane["width_m"]))),
 			"speed_limit_kph": lane["speed_limit_kph"]
 		})
 	return corridors

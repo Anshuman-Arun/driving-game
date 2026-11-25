@@ -28,6 +28,7 @@ func run() -> void:
 	var profiles: Dictionary = world.roadworks["roads"]
 	var checked := 0
 	var crossings := 0
+	var supported_spans := 0
 	for road: Dictionary in world.get_physical_road_centerlines():
 		var id: String = road["id"]
 		if not profiles.has(id):
@@ -40,6 +41,24 @@ func run() -> void:
 		var side := center.basis.x * (float(profile["width_m"]) * 0.5 - 0.34)
 		var context: PhysicsDirectSpaceState3D = drive.get_world_3d().direct_space_state
 		check(is_pavement(cast_down(context, center.origin + side)) and is_pavement(cast_down(context, center.origin - side)), id + " widened edges are drivable")
+		if profile.has("support_start"):
+			supported_spans += 1
+			var support_start := float(profile["support_start"])
+			var support_end := float(profile["support_end"])
+			var supported_deck := true
+			var supported_rails := true
+			for sample in range(1, 13):
+				var pose := at_station(points, lerpf(support_start, support_end, sample / 13.0))
+				var hit := cast_down(context, pose.origin)
+				if not is_pavement(hit):
+					supported_deck = false
+					continue
+				for direction in [-1.0, 1.0]:
+					var from: Vector3 = hit.position + Vector3.UP * 0.62
+					var rail := context.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + pose.basis.x * float(direction) * 10.0))
+					supported_rails = supported_rails and not rail.is_empty() and rail.collider.get_meta("world_surface", "") == "barrier"
+			check(supported_deck and supported_rails, id + " new elevated span has continuous deck and rails on both sides")
+			check(await drive_crossing(drive, points, support_start, support_end), id + " new elevated span crossed with live chassis")
 		if not profile.has("bridge_start"):
 			continue
 		crossings += 1
@@ -67,7 +86,7 @@ func run() -> void:
 			await capture(drive, id, at_station(points, lerpf(before, after, 0.32)))
 		var crossed := await drive_crossing(drive, points, before, after)
 		check(crossed, id + " crossed on the live car chassis under throttle and steering")
-	check(checked == 5 and crossings == 3, "Verified five widened approaches and three crossings")
+	check(checked == 5 and crossings == 3 and supported_spans == 1, "Verified five widened approaches, three water crossings and one new elevated span")
 	if not capture_dir.is_empty():
 		await capture_alder(drive)
 	quit(failures)

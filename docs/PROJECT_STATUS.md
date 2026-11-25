@@ -165,3 +165,7 @@ Known blockers:
 Next task:
 
 Do not mark a phase complete on the basis of code generation alone.
+
+## Current-main map integration (2026-11-24)
+
+Rebased by selective port onto main ffb791f60afbbf9e8ef98af4c26038d7350bbc89 (PR #41). See [MAP_WIDTH_INTEGRATION.md](MAP_WIDTH_INTEGRATION.md) for provenance, preservation rules, validation and next pass. The older PR #38 branch is not an integration source for audio, scenery runtime, or traffic experiments. First combined CI pending; no main change.
