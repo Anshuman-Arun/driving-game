@@ -342,6 +342,8 @@ func _run_profile_simulation(
 	tire_node.call("queue_telemetry", idle_telemetry)
 	chassis_node.call("update_telemetry", idle_telemetry)
 	await tree.create_timer(0.5).timeout
+	var phase_renderer: PhaseGrainEngine = engine_node.get("_grain_engine")
+	var initial_skips := phase_renderer.stream_skips() if is_instance_valid(phase_renderer) else 0
 
 	if tire_node.has_method("set_profile"):
 		tire_node.call("set_profile", profile)
@@ -542,12 +544,20 @@ func _run_profile_simulation(
 	var idle_rms_dbfs := _linear_to_db(sqrt(exhaust_idle_energy / float(maxi(1, exhaust_idle_frames))))
 	print("  Stable idle exhaust RMS: %.2f dBFS (%d frames)" % [idle_rms_dbfs, exhaust_idle_frames])
 	var exhaust_ok := exhaust_frames >= int(bench.get_total_duration() * AudioServer.get_mix_rate() * 0.85) and exhaust_peak > 0.005 and exhaust_idle_peak > 0.001 and exhaust_idle_frames > 0 and exhaust_capture.get_discarded_frames() == exhaust_discarded_before
-	var profile_passed := (is_signal_present and has_headroom and no_clipping and all_scenarios_ok and sufficient_frames and discarded == 0 and exhaust_ok)
+	var generator_skips := phase_renderer.stream_skips()-initial_skips if is_instance_valid(phase_renderer) else 0
+	var render_ok := is_instance_valid(phase_renderer) and phase_renderer.prepared and generator_skips == 0 and phase_renderer.push_failures == 0
+	if is_instance_valid(phase_renderer):
+		print("  Phase grains: generated %d frames, %d underruns after warmup, %d push failures, worst block %.2f ms, reflection resyncs %d" % [phase_renderer.generated_frames,generator_skips,phase_renderer.push_failures,float(phase_renderer.max_render_usec)/1000.0,phase_renderer.mirror_resyncs])
+	var profile_passed := (is_signal_present and has_headroom and no_clipping and all_scenarios_ok and sufficient_frames and discarded == 0 and exhaust_ok and render_ok)
 	print("  Exhaust stem: %d frames, peak %.2f dBFS, idle peak %.2f dBFS, passed=%s" % [exhaust_frames, _linear_to_db(exhaust_peak), _linear_to_db(exhaust_idle_peak), str(exhaust_ok)])
 
 	return {
 		"profile": profile,
 		"recording_bank": actual_bank,
+		"renderer": "phase_grains" if is_instance_valid(phase_renderer) else "legacy_loops",
+		"generator_underruns": generator_skips,
+		"generator_render_ok": render_ok,
+		"generator_max_block_usec": phase_renderer.max_render_usec if is_instance_valid(phase_renderer) else 0,
 		"uses_fallback_bank": actual_bank != profile,
 		"source_character": str(active_manifest.get("source_character")),
 		"bank_status": str(active_manifest.get("bank_status")),

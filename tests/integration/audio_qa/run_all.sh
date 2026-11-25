@@ -11,7 +11,9 @@ echo "Audio QA: $version; logs: $LOG_DIR"
 run_gate() {
   local label="$1"; shift
   echo "=== $label ==="
-  if ! timeout 900 "$@" 2>&1 | tee "$LOG_DIR/$label.log"; then
+  local limit=60
+  case "$label" in import) limit=240;; run_audio_qa) limit=150;; esac
+  if ! timeout "$limit" "$@" 2>&1 | tee "$LOG_DIR/$label.log"; then
     echo "FAILED: $label" >&2
     return 1
   fi
@@ -40,5 +42,10 @@ for suite in \
     failures=$((failures + 1))
   fi
 done
+if [[ -n "${ASTER_AUDIO_CAPTURE_DIR:-}" ]]; then
+  if ! run_gate isolated_exhaust_continuity python3 tests/integration/audio_qa/analyze_hero_captures.py "$ASTER_AUDIO_CAPTURE_DIR"; then
+    failures=$((failures + 1))
+  fi
+fi
 echo "$failures audio test suites failed"
 test "$failures" -eq 0

@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import pathlib
+import shutil
 import subprocess
 import urllib.request
 
@@ -34,12 +35,16 @@ SOURCES = {
 
 
 def decode(path):
-    data = subprocess.check_output(["ffmpeg", "-v", "error", "-i", str(path),
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        import imageio_ffmpeg
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    data = subprocess.check_output([ffmpeg, "-v", "error", "-i", str(path), "-t", "120",
                                     "-ar", str(SR), "-ac", "1", "-f", "f32le", "-"])
     x = np.frombuffer(data, dtype="<f4").copy()
     if len(x) < SR or not np.isfinite(x).all():
         raise ValueError("short or invalid recording")
-    return signal.sosfilt(signal.butter(2, 35, fs=SR, btype="highpass", output="sos"), x)
+    return signal.sosfilt(signal.butter(2, 35, fs=SR, btype="highpass", output="sos"), x).astype(np.float32)
 
 
 def track(x, order, idle, redline):
@@ -49,7 +54,7 @@ def track(x, order, idle, redline):
                           boundary=None, padded=False)
     magnitude = np.abs(z)
     db = 20 * np.log10(np.maximum(magnitude, 1e-7))
-    contrast = np.maximum(0, db - ndimage.median_filter(db, size=(31, 1)))
+    contrast = np.maximum(0, db - ndimage.uniform_filter1d(db, size=31, axis=0))
     grid = np.geomspace(idle * order / 60 * 0.75, redline * order / 60 * 1.05, 180)
     salience = np.zeros((len(grid), len(t)), dtype=np.float32)
     for h, weight in [(1, 1.0), (2, 0.72), (3, 0.54), (4, 0.42), (5, 0.30)]:
@@ -215,6 +220,7 @@ def main():
     if not args.output or not args.download:
         parser.error("provide --output and explicit --download")
     args.output.mkdir(parents=True,exist_ok=True)
+    successful = 0
     for profile,cfg in SOURCES.items():
         output = args.output/profile
         output.mkdir(exist_ok=True)
@@ -227,9 +233,12 @@ def main():
                 raise ValueError("source is not a bounded Ogg file")
             path.write_bytes(raw)
             inspect(path,cfg,output)
+            successful += 1
         except Exception as exc:
             (output/"error.txt").write_text(str(exc)+"\n")
             print(profile,"source unavailable or analysis failed:",exc)
+    if successful != len(SOURCES):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

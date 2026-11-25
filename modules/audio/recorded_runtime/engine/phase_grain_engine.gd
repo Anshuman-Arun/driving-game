@@ -7,7 +7,9 @@ const SPC := 256
 const HOP := 8
 const VARIANTS := 6
 const SIZE := HOP * 2 * SPC + 1
-const TARGET_QUEUE := 2048
+const MIN_QUEUE := 2048
+const HEADLESS_QUEUE := 4096
+const MAX_QUEUE := 6144
 
 var rows: Array[Dictionary] = []
 var on_indices: Array[int] = []
@@ -26,6 +28,9 @@ var mirror: AudioStreamPlayer
 var playback: AudioStreamGeneratorPlayback
 var wet_playback: AudioStreamGeneratorPlayback
 var capacity := 0
+var target_queue := MIN_QUEUE
+var mirror_resyncs := 0
+var push_failures := 0
 var prepared := false
 var generated_frames := 0
 var max_render_usec := 0
@@ -163,6 +168,8 @@ func reset(idle: float) -> void:
 	sequence = 7
 	generated_frames = 0
 	max_render_usec = 0
+	mirror_resyncs = 0
+	push_failures = 0
 	if is_instance_valid(playback):
 		playback.clear_buffer()
 	if is_instance_valid(wet_playback):
@@ -269,7 +276,7 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 func make_voice(bus: StringName) -> AudioStreamPlayer:
 	var stream := AudioStreamGenerator.new()
 	stream.mix_rate = RATE
-	stream.buffer_length = 0.12
+	stream.buffer_length = 0.24
 	var voice := AudioStreamPlayer.new()
 	voice.bus = bus
 	voice.stream = stream
@@ -292,6 +299,13 @@ func ensure_streams(exhaust_bus: StringName, reflection_bus: StringName) -> bool
 		if playback == null:
 			return false
 		capacity = playback.get_frames_available()
+		# Dummy audio drains 4096 output samples at a time. 2048 source
+		# frames starved every 92 ms in actual 44.1 kHz CI captures.
+		# Real drivers use their reported output latency plus a frame margin.
+		var driver_queue := ceili((maxf(0.0,AudioServer.get_output_latency())+0.045)*RATE)
+		var floor_queue := HEADLESS_QUEUE if DisplayServer.get_name() == "headless" else MIN_QUEUE
+		target_queue = mini(capacity,clampi(driver_queue,floor_queue,MAX_QUEUE))
+		print("Phase grain queue: %d/%d frames (%.1f ms), driver latency %.1f ms" % [target_queue,capacity,1000.0*target_queue/RATE,1000.0*AudioServer.get_output_latency()])
 	if is_instance_valid(mirror) and not is_instance_valid(wet_playback):
 		wet_playback = mirror.get_stream_playback() as AudioStreamGeneratorPlayback
 	return true
@@ -300,16 +314,18 @@ func ensure_streams(exhaust_bus: StringName, reflection_bus: StringName) -> bool
 func pump(target_rpm: float, target_load: float, target_gain: float, exhaust_bus: StringName, reflection_bus: StringName) -> void:
 	if not prepared or not ensure_streams(exhaust_bus,reflection_bus):
 		return
-	var free := playback.get_frames_available()
-	var queued := maxi(0,capacity-free)
-	var count := mini(free,maxi(0,TARGET_QUEUE-queued))
+	var writable := playback.get_frames_available()
+	var queued := maxi(0,capacity-writable)
+	var count := mini(writable,maxi(0,target_queue-queued))
 	if count <= 0:
 		return
 	var frames := render_frames(count,target_rpm,target_load,target_gain)
 	if not playback.push_buffer(frames):
+		push_failures += 1
 		return
 	if is_instance_valid(wet_playback):
 		if wet_playback.get_frames_available() < count:
+			mirror_resyncs += 1
 			wet_playback.clear_buffer()
 		if wet_playback.get_frames_available() >= count:
 			wet_playback.push_buffer(frames)

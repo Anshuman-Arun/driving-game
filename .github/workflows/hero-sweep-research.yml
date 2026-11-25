@@ -21,8 +21,8 @@ jobs:
       - name: Prepare analysis environment
         run: |
           python -m venv "$RUNNER_TEMP/audio-research-venv"
-          "$RUNNER_TEMP/audio-research-venv/bin/pip" install numpy scipy
-          command -v ffmpeg
+          "$RUNNER_TEMP/audio-research-venv/bin/pip" install numpy==2.3.5 scipy==1.17.0 imageio-ffmpeg==0.6.0
+          "$RUNNER_TEMP/audio-research-venv/bin/python" -c "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())"
       - name: Analyze original continuous recordings (audition only)
         run: |
           "$RUNNER_TEMP/audio-research-venv/bin/python" modules/audio/tools/continuous_sweep_research.py --download --output "$RUNNER_TEMP/hero-sweep-research"
