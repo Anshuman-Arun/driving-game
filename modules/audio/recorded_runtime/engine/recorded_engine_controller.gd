@@ -167,9 +167,9 @@ func set_profile(profile_name: String) -> void:
 
 	_manifest = manifest
 	_active_bank = bank
-	# Local-only professional recordings: opt in per process, never replace
-	# the bundled bank or silently publish restricted source files.
-	if use_phase_grains and cfg.has("firing_order") and OS.get_environment("ASTER_NATIVE_AUDIO") == "1":
+	# Use a verified installed professional bank by default. The original
+	# bundled bank remains available with ASTER_NATIVE_AUDIO=0 for A/B.
+	if use_phase_grains and cfg.has("firing_order") and OS.get_environment("ASTER_NATIVE_AUDIO") != "0":
 		var native: RefCounted = EngineProfileManifestScript.load_native_bank(profile_name)
 		if native != null:
 			_manifest = native

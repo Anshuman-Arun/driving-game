@@ -51,30 +51,30 @@ jobs:
             exit 1
           }
           if [[ -n "${GITHUB_PATH:-}" ]]; then printf '%s\n' "$install_dir" >> "$GITHUB_PATH"; fi
-      - name: Install analysis dependencies
+      - name: Ensure FFmpeg
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg
-          python3 -m venv "$RUNNER_TEMP/native-venv"
-          "$RUNNER_TEMP/native-venv/bin/pip" install numpy==2.2.6 scipy==1.15.3
-      - name: Verify archive fallback offline
+          command -v ffmpeg || { sudo apt-get update -qq && sudo apt-get install -y ffmpeg; }
+      - name: Verify archive fallback and pinned plans offline
         run: |
           python3 -m unittest discover -s modules/audio/tests -p test_professional_download.py -v
-          "$RUNNER_TEMP/native-venv/bin/python" -m unittest discover -s modules/audio/tests -p test_professional_selection.py -v
-      - name: Download originals and install source-native banks
+          python3 -m unittest discover -s modules/audio/tests -p test_verified_banks.py -v
+      - name: Install exact verified professional bank using normal user path
         shell: bash
         run: |
+          set -Eeuo pipefail
           export XDG_DATA_HOME="$RUNNER_TEMP/native-data"
-          bank_dir="$XDG_DATA_HOME/godot/app_userdata/Aster Valley — Free Roam/native_engine_banks"
-          "$RUNNER_TEMP/native-venv/bin/python" modules/audio/tools/install_professional_banks.py \
-            --source-dir "$RUNNER_TEMP/native-originals" --bank-dir "$bank_dir" \
-            --report-dir "$RUNNER_TEMP/native-reports" --profile "${{ matrix.profile }}" --accept-license
+          export XDG_CACHE_HOME="$RUNNER_TEMP/native-cache"
+          mkdir -p "$RUNNER_TEMP/native-reports"
+          python3 modules/audio/tools/install_verified_banks.py --profile "${{ matrix.profile }}" --accept-license | tee "$RUNNER_TEMP/native-reports/install.log"
+          python3 modules/audio/tools/install_verified_banks.py --profile "${{ matrix.profile }}" --accept-license | tee "$RUNNER_TEMP/native-reports/reinstall.log"
+          grep -F "VERIFIED_BANK_ALREADY_INSTALLED" "$RUNNER_TEMP/native-reports/reinstall.log"
       - name: Drive selected car with actual professional bank
         shell: bash
         run: |
           set -Eeuo pipefail
           export XDG_DATA_HOME="$RUNNER_TEMP/native-data"
-          export ASTER_NATIVE_AUDIO=1 ASTER_REQUIRE_NATIVE_AUDIO=1
+          unset ASTER_NATIVE_AUDIO
+          export ASTER_REQUIRE_NATIVE_AUDIO=1
           export ASTER_AUDIO_TEST_PROFILE="${{ matrix.profile }}"
           export ASTER_AUDIO_CAPTURE_DIR="$RUNNER_TEMP/native-captures"
           godot --headless --path . --editor --import > "$RUNNER_TEMP/native-reports/import.log" 2>&1

@@ -1,36 +1,35 @@
-# Source-native supercar audio (local audition)
+# Professional source-native supercar audio — playable local installation
 
-This follows PR #39 rather than editing its moving branch. PRs #11 and #19 are the synthesized legacy system; #31 supplied the first field samples; #33 integrates recorded audio; #37 refines it; #39 has a phase-grain renderer and current supercar IDs. Keep those systems, but replace pitch-flattened source material when a reviewed full-coverage bank exists.
+**Technical validation:** Both real original recordings were acquired and cut into 17 samples per vehicle, then played through the actual Godot 4.7.2 GEVP vehicle controller in [run 45552767921](https://github.com/Anshuman-Arun/driving-game/actions/runs/45552767921) at revision 50c317a. Neither car fell back to bundled audio. Source-native plans are frozen to those exact timestamps in `modules/audio/tools/professional_plans/`. RPM and load labels are signal estimates, not measured telemetry; subjective listening acceptance still required.
 
-## Verified originals
-Both professional WAVs were actually downloaded by the prior branch's [run 45527198610](https://github.com/Anshuman-Arun/driving-game/actions/runs/45527198610), job 138913472572:
-- 2014 Aventador onboard exhaust: 527.787 s, 153148216 bytes.
-- 2019 McLaren 720S Spider onboard exhaust: 533.737 s, 155002642 bytes. Related V8 family, not an exact Senna.
-- Original file names, official archive URLs and ZIP offsets are in professional_reference.py. The new tool pins both verified SHA-256 hashes.
-- The [current Sonniss GDC EULA](https://sonniss.com/gdc-bundle-license/) allows game synchronization and sharing within a project team, not standalone sample redistribution. Download yourself, accept terms and keep all source/derived WAVs outside Git. Do not use commercial-game rips. The game audio work is not AI model training.
+## Install and play (Windows)
 
-## Windows local workflow
-From the repository root, with Python 3.11+ and FFmpeg installed:
-1. Download the originals with `python modules/audio/tools/source_native_bank.py fetch aventador_svj D:/AsterAudioSources` and repeat for `mclaren_senna`. Read the EULA before downloading.
-2. Listen to the actual takes, annotate steady windows throughout the RPM range, both loaded and coast, in a JSON file. The previous spectral report contains candidate timestamps, not confirmed tachometer/load data. Do not convert harmonic ambiguity into fictional RPM labels. Require >=6 per layer, <=1500 RPM gaps, loaded idle and near-redline coverage, and genuinely identified load.
-3. Plan shape: {"profile":"aventador_svj","rpm_basis":"explain the evidence","anchors":[{"rpm":1000,"layer":"on","start_s":0.0,"end_s":0.8,"rpm_basis":"explain measurement","load_basis":"explain load evidence"}]}. The single row is only a schema example, not an actual source annotation; a complete plan is required.
-4. Build using `python modules/audio/tools/source_native_bank.py build plan.json D:/AsterAudioSources/aventador_svj.wav "<Godot user data directory>/native_engine_banks"`. Open the actual user data directory from Godot's Project menu. The tool rejects repository output and existing target banks; move old audition folders aside.
-5. In PowerShell set `$env:ASTER_NATIVE_AUDIO = "1"` before launching the editor/game. The runtime uses the verified local bank if available, and logs selection. Unset the variable for baseline. Missing/invalid banks keep the bundled audio. No WAVs are shared via Git.
-6. A/B with same car, throttle, gears and route. Compare sustained idle/part throttle/high RPM, lift-off, downshifts and rapid throttle changes; require owner listening acceptance. Current original-take annotations are not complete, so no replacement bank is installed by this PR.
-
-The new pipeline only cuts the source, converts to mono 48 kHz PCM16, and uses one shared downward playback trim. It does not flatten pitch, normalize each clip, generate harmonics or seam-edit the source WAV. Existing runtime phase-grain blending and private loop seam handling remain; tonal suppression is disabled for the native bank. It is still a sampled/grain engine, not literal uninterrupted video playback.
-
-## Validation
-`python -m unittest discover -s modules/audio/tests -p test_source_native_bank.py -v` checks coverage rejection and a sample-exact native PCM cut with a test-only fixture. Godot import/runtime, real source annotation, actual bank integration and listening remain pending. No source audio is committed here.
-
-## Professional original automated audition (owner approved related-car audio)
-
-Use the deterministic installer to download the exact originals, evaluate raw windows for RPM coverage and probable load, and install both local banks without manual clip preparation. The user explicitly accepts V12/V8 family proxies. Source estimates are not measured RPM/load; listening acceptance remains required. In PowerShell:
+From the repository root, with Python 3.11+ and FFmpeg on PATH, after reading the [Sonniss GDC EULA](https://sonniss.com/gdc-bundle-license/):
 
 ```powershell
-python -m pip install numpy==2.2.6 scipy==1.15.3
-python modules/audio/tools/install_professional_banks.py --source-dir "$env:LOCALAPPDATA/AsterAudioSources" --bank-dir "$env:APPDATA/Godot/app_userdata/Aster Valley — Free Roam/native_engine_banks" --report-dir "$env:LOCALAPPDATA/AsterAudioReports" --accept-license
-$env:ASTER_NATIVE_AUDIO = "1"
+python modules/audio/tools/install_verified_banks.py --accept-license
 ```
 
-Run from repository root with FFmpeg available. Read the Sonniss license first. Existing banks are never overwritten. Selection logs show gaps and actual timestamp/RPM evidence; incomplete coverage is rejected rather than padded. The separate professional-source workflow installs the original recordings on its runner and requires both real GEVP cars to select the local source-native bank and pass live-drive checks. No audio files are uploaded; only metadata and logs. This is actual source installation and playback testing rather than the fixture-only gate, but quality remains unverified until audition.
+Launch the game normally. The game automatically selects the valid installed banks. No environment variable or manual annotation is required. For a legacy A/B comparison only, set `$env:ASTER_NATIVE_AUDIO="0"` before launching, then remove the variable to return to the professional banks. Re-running the installer verifies the existing banks and does not overwrite; if an older/different bank exists, move the named folder aside before installation.
+
+The installer caches the verified originals under LocalAppData/AsterAudioSources and writes banks to the Godot user-data folder (AppData/Roaming/Godot/app_userdata/Aster Valley — Free Roam/native_engine_banks). Linux/macOS paths use the corresponding standard user data/cache directories. Optional --source-dir / --bank-dir overrides exist for isolated tests. It requires no numpy/scipy and installs no dependencies automatically. No network is required once installed.
+
+## Source and audio treatment
+
+- Aventador: 2014 Lamborghini Aventador Pole Position Production onboard right exhaust, 527.787 s, SHA-256 92986d10dd09f45cda5b57cca3805387e25c7235154741234f1aed60a5355a54.
+- McLaren: 2019 McLaren 720S Spider SSG onboard left exhaust, 533.737 s, SHA-256 06b730e76a0987cf782bb47f472b3f87515ef7c00556b83cb3ef418a23fb24d2. Related V8 recording, not exact Senna; owner approved proxy.
+- Official source archive URLs and exact member names: professional_reference.py. The [current Sonniss GDC EULA](https://sonniss.com/gdc-bundle-license/) allows game synchronization, not supplying standalone sample packs. Source and derived PCM stay on the installation machine; no loose WAVs uploaded to Git. No commercial-game rips or AI training.
+- Cuts are native pitch and original waveform, converted to mono 48 kHz PCM16, with a single common downward playback trim. The existing phase-grain runtime provides continuous RPM/load interpolation; native mode disables legacy tonal suppression. No added synthetic harmonics. Runtime resampling and phase alignment remain.
+
+## Real-source QA
+
+| Vehicle | On/off | Max motor RPM | Speed m/s | Shifts | Buffer underruns | Maximum digital gap | Peak |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Aventador | 9/8 | 8635.2 | 29.32 | 2 | 0 | 0.023 ms | 0.3180 |
+| McLaren | 9/8 | 7961.5 | 32.36 | 2 | 0 | 0.136 ms | 0.2672 |
+
+Both passed all live-drive checks, including actual native bank selection, acceleration, coast, shifts, RPM following, headroom and continuity. The subsequent pinned-installer workflow tests the same windows, the standard user-data install path, repeat install, and default activation without an opt-in variable. It does not upload raw or derived audio. Final manual listening and Windows desktop execution must be verified by the user.
+
+## Research and manual override
+
+The preceding automated selection and manual annotation pipeline remain available for future alternative sources; use the tested frozen plans for normal installation. See earlier commits for research commands. Source labels and inferred load are deliberately not represented as measured.
