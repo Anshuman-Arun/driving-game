@@ -53,7 +53,7 @@ def verify_mask(directory):
     for k, v in {"schema_version": 1, "width": 1000, "height": 1000,
                  "cell_size_m": 2, "origin_x": -1000, "origin_z": -1000,
                  "byte_order": "RGBA"}.items():
-        require(m.get(k) == v, f"mask {k}: expected {v}")
+        require(type(m.get(k)) is type(v) and m.get(k) == v, f"mask {k}: expected {v}")
     names = m.get("channels", m.get("channel_names"))
     if isinstance(names, dict):
         names = [names.get(k) for k in "RGBA"]
@@ -79,7 +79,7 @@ def sample(data, x, z):
     i, j = math.floor((x + 1000) / 2), math.floor((z + 1000) / 2)
     return tuple(data[4 * (j * 1000 + i):4 * (j * 1000 + i) + 4])
 
-def verify_assets(path):
+def verify_assets(path, root=ROOT):
     m = read_json(path)
     require(m.get("schema_version") == 1 and isinstance(m.get("assets"), list), "asset schema")
     require(bool(m["assets"]), "empty asset inventory")
@@ -98,8 +98,8 @@ def verify_assets(path):
             if not entry.get(lod):
                 continue
             resource = entry[lod]
-            target = (ROOT / resource.removeprefix("res://")).resolve()
-            require(target.is_relative_to(ROOT), "asset path escapes project")
+            target = (root / resource.removeprefix("res://")).resolve()
+            require(target.is_relative_to(root), "asset path escapes project")
             require(target.is_file(), f"missing asset payload {resource}")
             hashes = entry["sha256_by_path"]
             expected = hashes.get(resource, hashes.get(resource.removeprefix("res://")))
@@ -108,7 +108,9 @@ def verify_assets(path):
 def verify_understory(path):
     m = read_json(path)
     require(m.get("schema_version") == 1 and type(m.get("seed")) is int
-            and bool(m.get("source_hashes")), "understory metadata")
+            and isinstance(m.get("source_hashes"), dict) and bool(m["source_hashes"]), "understory metadata")
+    require(all(isinstance(v, str) and re.fullmatch("[0-9a-fA-F]{64}", v)
+                for v in m["source_hashes"].values()), "understory source hashes")
     require(isinstance(m.get("placements"), list), "understory placements")
     for p in m["placements"]:
         require(p["species_id"] in {"fern", "shrub", "sapling", "reed", "wildflower"}, "unknown species")
@@ -139,6 +141,9 @@ def main():
     p.add_argument("--suite", choices=["all", "owned", "root"], default="all")
     p.add_argument("--agent-command", action="append", default=[], help="JSON argv array, repeat per agent")
     p.add_argument("--rebake-command", help="JSON argv; regenerate mask in place, must preserve exact bytes")
+    p.add_argument("--agent-manifest", type=Path, help="JSON array of explicit agent test argv lists")
+    p.add_argument("--bend-margin", type=float, default=0.0, help="Additional swept bound margin in metres")
+    p.add_argument("--stats-map", type=Path, help="Map semantic counters to A top-level keys")
     args = p.parse_args()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -159,9 +164,11 @@ def main():
                      "data/world/world_metadata_v1.json"):
             require(bool(payload(ROOT / path)), f"missing canonical payload {path}")
     check("canonical", canonical)
-    check("candidate_discovery", lambda: require(args.mode == "baseline" or
-          all((ROOT / p).is_file() for p in CANDIDATES),
-          "missing candidate files: " + str([p for p in CANDIDATES if not (ROOT / p).is_file()])))
+    missing = [p for p in CANDIDATES if not (ROOT / p).is_file()]
+    if args.mode == "baseline" and missing:
+        results["candidate_discovery"] = "N/A: baseline omits " + ", ".join(missing)
+    else:
+        check("candidate_discovery", lambda: require(not missing, "missing candidate files: " + str(missing)))
     for key, path, validator in [
         ("mask", ROOT / MASK / "manifest.json", lambda: verify_mask(ROOT / MASK)),
         ("assets", ROOT / CANDIDATES[3], lambda: verify_assets(ROOT / CANDIDATES[3])),
@@ -189,13 +196,26 @@ def main():
     command("root-import", [args.godot, "--headless", "--path", ".", "--editor", "--import"], 900)
     if results["root-import"] == "PASS":
         if args.suite in ("all", "owned"):
-            command("environment-contract", [args.godot, "--headless", "--path", ".", "--fixed-fps", "60",
-                "--script", "res://tests/environment_overhaul/environment_check.gd", "--", args.mode])
+            runtime = [args.godot, "--headless", "--path", ".", "--fixed-fps", "60",
+                "--script", "res://tests/environment_overhaul/environment_check.gd", "--", args.mode,
+                f"--bend-margin={args.bend_margin}"]
+            if args.stats_map:
+                runtime.append(f"--stats-map={args.stats_map.resolve()}")
+            command("environment-contract", runtime)
         if args.suite in ("all", "root"):
             for script in ROOT_TESTS:
-                command(Path(script).stem, [args.godot, "--headless", "--path", ".", "--fixed-fps", "60", "--script", "res://" + script])
-        for i, raw in enumerate(args.agent_command):
-            command(f"agent-{i}", json.loads(raw))
+                command(script.removesuffix(".gd").replace("/", "__"), [args.godot, "--headless", "--path", ".", "--fixed-fps", "60", "--script", "res://" + script])
+        manifest = args.agent_manifest or ROOT / "tests/environment_overhaul/agent_commands.json"
+        agent_commands = [json.loads(raw) for raw in args.agent_command]
+        if manifest.is_file():
+            agent_commands.extend(read_json(manifest))
+        if not agent_commands:
+            results["agent_commands"] = "N/A: no explicit agent commands supplied"
+        for i, argv in enumerate(agent_commands):
+            if isinstance(argv, list) and argv and all(isinstance(v, str) and v for v in argv):
+                command(f"agent-{i}", argv)
+            else:
+                results[f"agent-{i}"] = "FAIL: expected nonempty JSON argv array"
     else:
         results["runtime"] = "NOT RUN: import failed"
     (out / "results.json").write_text(json.dumps(results, indent=2), encoding="utf-8")

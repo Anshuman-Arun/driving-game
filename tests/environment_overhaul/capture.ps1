@@ -7,6 +7,7 @@ param(
     [ValidateSet("stationary","offroad","manual","route")][string]$Scenario="stationary",
     [ValidateSet("medium","high","low")][string]$Preset="medium",
     [string]$Features="",
+    [string]$OptionsFile="",
     [ValidateRange(60,600)][int]$Seconds=60,
     [ValidateRange(5,120)][int]$Warmup=15,
     [ValidateRange(1,60.8)][double]$SpeedMps=22.35
@@ -33,6 +34,7 @@ try {
         "--script","res://tests/environment_overhaul/capture.gd","--",
         "--out=$Output","--mode=$Mode","--site=$Site","--scenario=$Scenario","--preset=$Preset",
         "--features=$Features","--seconds=$Seconds","--warmup=$Warmup","--speed-mps=$speed","--commit=$commit")
+    if ($OptionsFile) { $engineArgs += "--options=$((Resolve-Path $OptionsFile).Path)" }
     & $Godot @engineArgs 2>&1 | Tee-Object -FilePath (Join-Path $Output "console.log")
     $status = $LASTEXITCODE
     if ($status -ne 0 -or (Select-String -Path (Join-Path $Output "console.log") -Pattern 'SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error')) { throw "Capture failed; inspect console.log" }

@@ -20,6 +20,8 @@ var previews: Array[Object] = []
 var rid: RID
 var route := Curve3D.new()
 var route_done := false
+var route_departed := false
+var feature_options := {}
 var target_speed := 22.35
 var route_progress := 0.0
 var meta := {}
@@ -62,7 +64,7 @@ func frames(n: int) -> void:
 func string_vec(p: Vector3) -> Array:
 	return [p.x,p.y,p.z]
 
-func apply_preview(path: String, target: Node, render: bool, quality: String) -> bool:
+func apply_preview(path: String, target: Node, render: bool, quality: String, options: Dictionary) -> bool:
 	if not ResourceLoader.exists(path):
 		return false
 	var script := load(path) as Script
@@ -73,8 +75,8 @@ func apply_preview(path: String, target: Node, render: bool, quality: String) ->
 		root.add_child(obj)
 	previews.append(obj)
 	if render:
-		return bool(obj.call("apply_candidate", target, quality, {}))
-	return bool(obj.call("apply_candidate", target, {}))
+		return bool(obj.call("apply_candidate", target, quality, options))
+	return bool(obj.call("apply_candidate", target, options))
 
 func grass_count() -> String:
 	if not is_instance_valid(cover):
@@ -126,7 +128,9 @@ func route_controls() -> void:
 	var end := route.get_baked_length()
 	if route_progress >= end-3.0:
 		route_done = true
-	if route_done or p.distance_to(route.sample_baked(route_progress)) > 5.0:
+	if p.distance_to(route.sample_baked(route_progress)) > 5.0:
+		route_departed = true
+	if route_done or route_departed:
 		route_done = true
 		release_controls()
 		Input.action_press("drive_brake", 1.0)
@@ -164,6 +168,7 @@ func run() -> void:
 	var quality := str(opts.get("--preset","medium"))
 	var features := str(opts.get("--features",""))
 	var warmup := float(opts.get("--warmup","15"))
+	var expected_scale := float(opts.get("--scale","0.85" if quality=="low" else "1.0"))
 	var duration := float(opts.get("--seconds","60"))
 	target_speed = float(opts.get("--speed-mps","22.35"))
 	if out.is_empty() or not out.is_absolute_path() or not VIEWS.has(site) or not mode in ["baseline","candidate"] or not scenario in ["stationary","offroad","manual","route"] or not quality in ["low","medium","high"] or warmup<5 or duration<60 or duration>600 or target_speed<=0 or target_speed>60.8 or str(opts.get("--commit","")).is_empty():
@@ -175,6 +180,16 @@ func run() -> void:
 	if DirAccess.make_dir_recursive_absolute(out)!=OK:
 		await finish(1,"Cannot create capture directory")
 		return
+	if opts.has("--options"):
+		var parsed: Variant=JSON.parse_string(FileAccess.get_file_as_string(str(opts["--options"])))
+		if not parsed is Dictionary:
+			await finish(1,"Feature options must be a JSON object")
+			return
+		feature_options=parsed
+		for key: Variant in feature_options:
+			if not key in ["a","d","e"] or not feature_options[key] is Dictionary:
+				await finish(1,"Invalid feature options key")
+				return
 	profile = out.path_join("qa-profile-%d.json" % Time.get_ticks_usec())
 	game = GAME.instantiate()
 	var shell = game.get_node("GameShell")
@@ -233,8 +248,7 @@ func run() -> void:
 		await finish(1,"Actual curated Senna failed to mount")
 		return
 	drive.camera.snap_to_vehicle()
-	if scenario in ["stationary","offroad"]:
-		drive.vehicle_body.freeze=true
+	drive.vehicle_body.freeze=true
 	if mode=="baseline" and not features.is_empty():
 		await finish(1,"Baseline must not enable experimental features")
 		return
@@ -242,7 +256,13 @@ func run() -> void:
 		if features.is_empty():
 			await finish(1,"Explicit --features=a,d,e selection required")
 			return
+		var enabled := {}
 		for feature in features.split(",",false):
+			if enabled.has(feature):
+				await finish(1,"Duplicate feature: "+feature)
+				return
+			enabled[feature]=true
+			var options: Dictionary=feature_options.get(feature,{}).duplicate(true)
 			var ok := false
 			match feature:
 				"a":
@@ -252,11 +272,19 @@ func run() -> void:
 							cover=script.new() as Node3D
 							if cover!=null:
 								drive.add_child(cover)
-								ok=bool(cover.call("build",drive.world,quality,MASK,{"seed":1234}))
+								if not options.has("seed"):
+									options["seed"]=1234
+								if options.has("pilot_bounds"):
+									var bounds: Variant=options["pilot_bounds"]
+									if not bounds is Array or bounds.size()!=4:
+										await finish(1,"pilot_bounds requires [x,z,width,height]")
+										return
+									options["pilot_bounds"]=Rect2(float(bounds[0]),float(bounds[1]),float(bounds[2]),float(bounds[3]))
+								ok=bool(cover.call("build",drive.world,quality,MASK,options))
 				"d":
-					ok=apply_preview("res://modules/environment_terrain/terrain_preview.gd",drive.world,false,quality)
+					ok=apply_preview("res://modules/environment_terrain/terrain_preview.gd",drive.world,false,quality,options)
 				"e":
-					ok=apply_preview("res://modules/environment_rendering/render_profile.gd",drive,true,quality)
+					ok=apply_preview("res://modules/environment_rendering/render_profile.gd",drive,true,quality,options)
 			if not ok:
 				await finish(1,"Candidate feature refused: "+feature)
 				return
@@ -268,12 +296,9 @@ func run() -> void:
 		await process_frame
 		if is_instance_valid(cover):
 			cover.call("update_focus",drive.camera.global_position,drive.vehicle_body.linear_velocity)
-		if scenario in ["manual","route"]:
-			# Hold at start during warmup, release at capture start.
-			Input.action_press("drive_brake",1.0)
 	release_controls()
-	if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,1.0):
-		await finish(1,"Native 1920x1080 at scale 1 required; Low needs explicit later comparison")
+	if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale):
+		await finish(1,"1920x1080 output and requested scale required")
 		return
 	await RenderingServer.frame_post_draw
 	var image:=root.get_texture().get_image()
@@ -287,10 +312,14 @@ func run() -> void:
 		"scale":root.scaling_3d_scale,"renderer":RenderingServer.get_current_rendering_method(),
 		"gpu":RenderingServer.get_video_adapter_name(),"cpu":OS.get_processor_name(),"driver":driver_info,
 		"commit":opts["--commit"],"car":"mclaren_senna","fov":drive.camera.fov,
-		"pose":str(start_pose),"traffic":"unverified","audio":"enabled" if not AudioServer.is_bus_mute(0) else "muted",
+		"pose":str(pose),"actual_start_pose":str(start_pose),"camera_pose":str(drive.camera.global_transform),
+		"traffic":str(drive.get_meta("environment_qa_traffic_state","unverified")),
+		"audio":"enabled" if drive.vehicle_body.has_node("VehicleAudio") and not AudioServer.is_bus_mute(0) and AudioServer.get_bus_volume_db(0)>-80.0 else "unverified_or_muted",
 		"warmup_s":warmup,"sample_s":duration,"controls":str(scenario)+":"+str(target_speed),"lighting":"scene default; candidate flags recorded",
-		"vsync":"disabled","max_fps":Engine.max_fps,"features":features,"legacy_vegetation_visible":drive.vegetation!=null and drive.vegetation.visible,
+		"vsync":"disabled","max_fps":Engine.max_fps,"features":features,"feature_options":feature_options,"legacy_vegetation_visible":drive.vegetation!=null and drive.vegetation.visible,
 		"scene":"res://scenes/bootstrap/game.tscn","route_length_m":route.get_baked_length(),"complete":false}
+	if scenario in ["manual","route"]:
+		drive.vehicle_body.freeze=false
 	print("CAPTURE START ", JSON.stringify(meta), " — manual: drive now")
 	var start:=Time.get_ticks_usec()
 	var prev:=start
@@ -331,6 +360,7 @@ func run() -> void:
 	file.close()
 	meta["complete"]=photo_ok
 	meta["route_done"]=route_done
+	meta["route_departed"]=route_departed
 	meta["grass_stats"]=cover.call("get_stats") if is_instance_valid(cover) else {}
 	file=FileAccess.open(out.path_join("meta.json"),FileAccess.WRITE)
 	if file==null:

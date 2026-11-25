@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from qa import verify_mask, sample, digest, ERROR, payload
+from qa import verify_mask, verify_assets, verify_understory, sample, digest, ERROR, payload
 from report import percentile, summarize, compare, MATCH
 
 class QA(unittest.TestCase):
@@ -47,13 +47,61 @@ class QA(unittest.TestCase):
         self.assertEqual(s["deadline_misses"], 1)
         self.assertEqual(summarize([{"frame_ms":"nan"}])["invalid_intervals"], 1)
         m = dict.fromkeys(MATCH, "same")
-        m.update(scenario="stationary", traffic="enabled", audio="enabled", commit="abc", complete=True)
+        m.update(scenario="stationary", traffic="enabled", audio="enabled", commit="abc", complete=True,
+                 preset="medium",width=1920,height=1080,scale=1.0)
         frames = summarize([{"frame_ms": "16", "grass_instances": "1"}] * 4000)
         a, b = dict(m, mode="baseline"), dict(m, mode="candidate")
         self.assertTrue(compare((a, frames), (b, frames))["candidate_budget_met"])
         b["width"] = 1280
         self.assertFalse(compare((a, frames), (b, frames))["comparable"])
         self.assertIsNone(compare((a, frames), (b, frames))["candidate_budget_met"])
+
+    def test_assets_and_understory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            lod=root/"fern.glb"
+            lod.write_bytes(b"fixture payload, not an imported asset")
+            manifest=root/"manifest.json"
+            entry=dict(species_id="fern",variant_id="one",lod0="res://fern.glb",lod1="res://fern.glb",
+                dimensions_m=[1,.5,1],origin="ground_center",source_url="original fixture",
+                author="QA",license="fixture",license_notice="fixture",sha256_by_path={"fern.glb":digest(lod.read_bytes())})
+            manifest.write_text(json.dumps(dict(schema_version=1,assets=[entry])))
+            verify_assets(manifest,root)
+            lod.unlink()
+            with self.assertRaises(ValueError):
+                verify_assets(manifest,root)
+            entry["lod0"]="../outside.glb"
+            manifest.write_text(json.dumps(dict(schema_version=1,assets=[entry])))
+            with self.assertRaises(ValueError):
+                verify_assets(manifest,root)
+            row=dict(species_id="fern",x=-999,z=999,yaw_rad=0,scale=1,seed=1)
+            understory=dict(schema_version=1,seed=1,source_hashes={"fixture":"0"*64},placements=[row])
+            manifest.write_text(json.dumps(understory))
+            verify_understory(manifest)
+            row["x"]=1000
+            manifest.write_text(json.dumps(understory))
+            with self.assertRaises(ValueError):
+                verify_understory(manifest)
+            row["x"]=float("nan")
+            manifest.write_text(json.dumps(understory))
+            with self.assertRaises(ValueError):
+                verify_understory(manifest)
+
+    def test_moving_and_incomplete(self):
+        rows=[dict(frame_ms=16,elapsed_s=i*.016,speed_mps=22,x=i*.352,y=0,z=0,grass_instances=20) for i in range(4000)]
+        summary=summarize(rows)
+        m=dict.fromkeys(MATCH,"same")
+        m.update(scenario="route",traffic="enabled",audio="enabled",commit="abc",complete=True,
+                 preset="medium",width=1920,height=1080,scale=1.0)
+        a,b=dict(m,mode="baseline"),dict(m,mode="candidate")
+        self.assertTrue(compare((a,summary),(b,summary))["candidate_budget_met"])
+        b["traffic"]="unverified"
+        self.assertFalse(compare((a,summary),(b,summary))["comparable"])
+        b["traffic"]="enabled"
+        b["route_departed"]=True
+        result=compare((a,summary),(b,summary))
+        self.assertIsNone(result["candidate_budget_met"])
+        self.assertIsNotNone(result["observed_frame_ms_delta"])
 
     def test_log_gate(self):
         self.assertTrue(ERROR.search("SCRIPT ERROR: Parser failed"))

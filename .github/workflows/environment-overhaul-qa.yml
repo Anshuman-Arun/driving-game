@@ -155,7 +155,7 @@ jobs:
             echo "::group::$*"
             timeout 240 "$@" 2>&1 | tee /tmp/test.log
             status=${PIPESTATUS[0]}
-            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|FAIL ' /tmp/test.log; then
+            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error|FAIL ' /tmp/test.log; then
               failed=1
               echo "FAIL: $* (exit $status)" >> "$GITHUB_STEP_SUMMARY"
             else
@@ -185,7 +185,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          lfs: true
+          lfs: false
+        env:
+          GIT_LFS_SKIP_SMUDGE: '1'
+      - name: Fetch only traffic fixture LFS objects
+        run: git lfs pull --include='modules/traffic/**' --exclude=''
       - name: Install checksum-pinned Godot 4.7.2
         shell: bash
         run: |
@@ -225,7 +229,7 @@ jobs:
             echo "::group::$*"
             timeout 240 "$@" 2>&1 | tee /tmp/test.log
             status=${PIPESTATUS[0]}
-            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|FAIL ' /tmp/test.log; then
+            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error|FAIL ' /tmp/test.log; then
               failed=1
               echo "FAIL: $* (exit $status)" >> "$GITHUB_STEP_SUMMARY"
             else
@@ -243,11 +247,12 @@ jobs:
           set -euo pipefail
           # Controls are not on main; stage the pinned traffic-content PR only
           # for the separately requested diagnostic. Preserve all original gates.
+          git lfs pull --include='data/world/**' --exclude=''
           git fetch --depth=1 origin 02ff87ee726cc44dd8360d7a6043d178b1a1693f
           mkdir -p content/traffic
           git show FETCH_HEAD:content/traffic/controls_v1.json > content/traffic/controls_v1.json
           timeout 240 godot --headless --path . --script res://modules/traffic/tests/run_junction_safety.gd 2>&1 | tee /tmp/canonical-traffic.log
-          if grep -E 'SCRIPT ERROR|Parse Error|FAIL ' /tmp/canonical-traffic.log; then exit 1; fi
+          if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error|FAIL ' /tmp/canonical-traffic.log; then exit 1; fi
   audio:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
