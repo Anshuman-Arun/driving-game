@@ -77,6 +77,7 @@ func _run() -> void:
     _test_opposing_flow()
     _test_cleanup()
     _test_stop_dwell_during_conflict()
+    _test_cost_weighted_turn_choice()
     for jid in COMPLEX:
         _test_conflicting_movements(str(jid))
     _test_seeded_flow()
@@ -385,6 +386,26 @@ func _test_stop_dwell_during_conflict() -> void:
         "rolling before completing dwell resets the stop timer")
 
 
+func _test_cost_weighted_turn_choice() -> void:
+    var sim = _simulation(81)
+    if sim == null:
+        _check(false, "cost-weighted turn fixture setup")
+        return
+    var options: Array = sim.graph.lanes["lane_alder_market_ba"]["next_lane_ids"]
+    var counts: Dictionary = {}
+    for i in range(1600):
+        var chosen: String = sim._choose_next(options)
+        counts[chosen] = int(counts.get(chosen, 0)) + 1
+    _check(counts.size() == options.size(), "all legal authored turns remain selectable")
+    var short := "turn_alder_alder_market_ba__alder_cedar_ab"
+    var long := "turn_alder_alder_market_ba__chapel_alder_ba"
+    _check(int(counts.get(short, 0)) > 2 * int(counts.get(long, 0)),
+        "spontaneous route selection favors lower traversal cost")
+    var id: int = _spawn_routed(sim, "junction_alder", long)
+    _check(id > 0 and sim.get_state(id).get("next_lane", "") == long,
+        "explicit routing can still select long connector")
+
+
 func _seed_trace(seed_value: int) -> Dictionary:
     var sim = _simulation(seed_value)
     if sim == null:
@@ -419,10 +440,19 @@ func _seed_trace(seed_value: int) -> Dictionary:
                 wait_ticks[aid] = int(wait_ticks.get(aid, 0)) + 1
                 if int(wait_ticks[aid]) > longest_wait:
                     longest_wait = int(wait_ticks[aid])
+                    var owner_states: Array[Dictionary] = []
+                    for owner_id in sim.reservations.values():
+                        var owner: Dictionary = sim.agents.get(owner_id, {})
+                        if owner.is_empty():
+                            continue
+                        var movement: String = str(owner["reservation_movement"])
+                        owner_states.append({"id": owner_id, "lane": owner["lane_id"],
+                            "s": owner["s"], "speed": owner["speed_mps"], "movement": movement,
+                            "release_lane": owner["entered_lane"], "release_s": owner["clearance_m"]})
                     longest_wait_context = {"agent": aid, "lane": a["lane_id"],
                         "s": a["s"], "speed": a["speed_mps"], "next": a["next_lane"],
                         "stop_done": sim.agents[aid]["stop_done"], "tick": _tick,
-                        "owners": sim.reservations.duplicate()}
+                        "owners": owner_states}
             else:
                 wait_ticks.erase(aid)
         previous = now
