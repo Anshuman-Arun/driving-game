@@ -1,5 +1,10 @@
 # Project status — single current-state log
 
+## Map-only PR #43 handoff (2026-11-25)
+
+Isolated the verified wider-road environment from traffic work at the owner's direction. Full root, standalone, data and strict production audio passed in [run 45692184040](https://github.com/Anshuman-Arun/driving-game/actions/runs/45692184040): 1,782 edge rays, 2,450 lane rays, four live bridge crossings, six cars, all 16 corridors; 222,579 unchanged retained vegetation poses with all 7,497 removals explained by widened clearance; 130 guardrails vs 124 baseline, 85 relocated, zero unresolved. The canonical graph, terrain, premium assets, audio and traffic source/test files match main. Prior traffic dwell correction and diagnostics remain available at [1b25a33](https://github.com/Anshuman-Arun/driving-game/commit/1b25a331bbe9209f3f859cc99fe2ee2bddc8ba4b) but are excluded from this PR's net changes. Baseline traffic basic 48/48; known canonical advanced 83/85, waits 990/984 ticks vs <900. Basic regressions remain automatic; independent canonical stress remains available as strict manual opt-in in the map workflow, with unmerged controls pinned to #22. New isolated CI pending; actual Windows visual/controller acceptance and existing cleanup warnings remain outstanding. No main edits or merge. See [MAP_WIDTH_INTEGRATION.md](MAP_WIDTH_INTEGRATION.md).
+
+
 ## Professional source-native audio audition (PR #41)
 
 Revision 8e8ae40 passed native run 45558086331 and complete regression runs 45558091908/45558086419; owner still hears cruise oscillation and quieter whine. New steady-road candidate: phase-locked recorded cycle crossfade, road/gear RPM reference only under coupled conditions, synthetic asphalt/grass and wind suppressed, severe-slip squeal gate, optional local CSV trace. New sample-periodicity and coupled-flutter gates; validation pending, subjective acceptance not established.
