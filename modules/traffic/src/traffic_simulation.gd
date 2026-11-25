@@ -19,6 +19,8 @@ const CONFLICT_EXIT_GAP_M := 6.0
 const APPROACH_M := 16.0
 const DESPAWN_RADIUS_M := 230.0
 const SPAWN_RADIUS_M := 175.0
+const SPAWN_SLOT_SPACING_M := 12.0
+const SPAWN_APPROACH_BUFFER_M := 32.0
 
 var graph = RoadGraph.new()
 var graph_valid := false
@@ -51,6 +53,7 @@ var reused_agents := 0
 var total_spawned := 0
 var total_despawned := 0
 var _obstacles: Array = []
+var _travel_spawn_slots: Array[Dictionary] = []
 
 
 func load_road_graph(data: Dictionary) -> bool:
@@ -63,6 +66,7 @@ func load_road_graph(data: Dictionary) -> bool:
 	movement_pair_release.clear()
 	movement_release.clear()
 	inbound_stop_offsets.clear()
+	_travel_spawn_slots.clear()
 	graph_valid = graph.load_road_graph(data)
 	if not graph_valid:
 		return false
@@ -306,7 +310,7 @@ func spawn_agent(lane_id: String, s: float, initial_speed_mps: float = 0.0, spee
 		"target_speed_mps": 0.0, "speed_factor": multiplier, "vehicle_type": vehicle_type,
 		"density_managed": false,
 		"position": pos, "tangent": pose["tangent"], "state": "FOLLOW_LANE",
-		"wait_s": 0.0, "stop_done": false, "stop_ready_tick": -1, "reserved_junction": "",
+		"wait_s": 0.0, "stop_done": false, "reserved_junction": "",
 		"entered_lane": "", "clearance_m": 0.0,
 		"reservation_zone": "", "reservation_movement": "",
 		"last_acceleration_mps2": 0.0, "dead_end_seconds": 0.0})
@@ -352,6 +356,8 @@ func despawn_agent(id: int) -> void:
 func spawn_near(position: Vector3, attempts: int = 36) -> int:
 	if not graph_valid or graph.lane_order.is_empty():
 		return -1
+	if not movement_junction.is_empty():
+		return _spawn_on_local_travel_slots(position, attempts)
 	# Prefer usable travel roads after canonical controls are installed.
 	# Randomly choosing the many protected turn connectors would waste most
 	# attempts and starve otherwise safe local traffic density.
@@ -371,6 +377,38 @@ func spawn_near(position: Vector3, attempts: int = 36) -> int:
 		if pos.distance_to(position) > SPAWN_RADIUS_M or pos.distance_to(position) < PLAYER_SPAWN_GAP_M:
 			continue
 		var id: int = spawn_agent(lid, s, 0.0)
+		if id != -1:
+			agents[id]["density_managed"] = true
+			return id
+	return -1
+
+
+func _spawn_on_local_travel_slots(position: Vector3, attempts: int) -> int:
+	# Sample road *length* inside the spawn radius, not an entire lane with
+	# equal probability per ID. The old whole-lane rejection sampling heavily
+	# favored short town approaches over longer roads entering the same area.
+	# A cached grid keeps this deterministic and inexpensive at 20 agents.
+	if _travel_spawn_slots.is_empty():
+		for lid in graph.lane_order:
+			if movement_junction.has(lid) or str(graph.lanes[lid]["road_id"]).begins_with("junction_"):
+				continue
+			var length_m: float = graph.lane_length(lid)
+			var end_buffer: float = maxf(SPAWN_APPROACH_BUFFER_M, float(inbound_stop_offsets.get(lid, 0.0)) + SPAWN_GAP_M)
+			var station := SPAWN_SLOT_SPACING_M
+			while station < length_m - end_buffer:
+				var pose: Dictionary = graph.get_pose(lid, station)
+				_travel_spawn_slots.append({"lane": lid, "s": station, "position": pose["position"]})
+				station += SPAWN_SLOT_SPACING_M
+	var local: Array[Dictionary] = []
+	for slot in _travel_spawn_slots:
+		var distance: float = position.distance_to(slot["position"])
+		if distance <= SPAWN_RADIUS_M and distance >= PLAYER_SPAWN_GAP_M:
+			local.append(slot)
+	for _attempt in range(mini(attempts, local.size())):
+		var index: int = _rng.randi_range(0, local.size() - 1)
+		var slot: Dictionary = local[index]
+		local.remove_at(index)
+		var id: int = spawn_agent(slot["lane"], slot["s"], 0.0)
 		if id != -1:
 			agents[id]["density_managed"] = true
 			return id
@@ -520,25 +558,6 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 		if not authored_movement:
 			_update_stop_dwell(a, j)
 		return not a["stop_done"]
-	if authored_movement and mode == "stop" and a["stop_done"]:
-		# Do not admit another conflicting movement ahead of a driver who
-		# completed their stop earlier, even if that driver is still blocked
-		# by a clearing reservation. Same-direction platoons must not starve
-		# another approach. Legacy junctions retain original scheduling.
-		var ready: int = int(a.get("stop_ready_tick", -1))
-		if ready >= 0:
-			for other_id in agents:
-				if other_id == a["id"]:
-					continue
-				var other: Dictionary = agents[other_id]
-				if other["reserved_junction"] != "" or not other["stop_done"] or inbound_junction.get(other["lane_id"], "") != junction_id:
-					continue
-				var earlier: int = int(other.get("stop_ready_tick", -1))
-				if earlier < 0 or earlier > ready or (earlier == ready and int(other_id) > int(a["id"])):
-					continue
-				var other_movement: String = other["next_lane"]
-				if other_movement != movement and movement_conflicts[movement].has(other_movement):
-					return true
 	return false
 
 
@@ -549,7 +568,6 @@ func _update_stop_dwell(a: Dictionary, j: Dictionary) -> void:
 		a["wait_s"] += FIXED_STEP
 		if a["wait_s"] >= j["stop_s"]:
 			a["stop_done"] = true
-			a["stop_ready_tick"] = tick
 
 
 func _find_leader(a: Dictionary) -> Dictionary:
@@ -639,7 +657,6 @@ func _integrate(a: Dictionary, command: Dictionary, dt: float) -> void:
 		else:
 			a["next_lane"] = _choose_next(graph.lanes[next_lane]["next_lane_ids"])
 		a["stop_done"] = false
-		a["stop_ready_tick"] = -1
 		a["wait_s"] = 0.0
 		transitions += 1
 	if a["reserved_junction"] != "" and a["lane_id"] == a["entered_lane"] and a["s"] >= a["clearance_m"]:

@@ -75,7 +75,7 @@ func _run() -> void:
     _test_short_connector(sim)
     _test_nonconflicting_turns()
     _test_stop_dwell_during_conflict()
-    _test_authored_arrival_order()
+    _test_local_spawn_distribution()
     _test_opposing_flow()
     _test_cleanup()
     for jid in COMPLEX:
@@ -313,25 +313,27 @@ func _test_stop_dwell_during_conflict() -> void:
         "completed dwell allows immediate admission after conflict clears")
 
 
-func _test_authored_arrival_order() -> void:
-    var sim = _simulation(51)
+func _test_local_spawn_distribution() -> void:
+    var sim = _simulation(17)
     if sim == null:
-        _check(false, "arrival order setup")
+        _check(false, "local spawn distribution setup")
         return
-    var pair: Array[String] = _pick_conflicting_pair(sim, "junction_alder")
-    var later: int = _spawn_routed(sim, "junction_alder", pair[0])
-    var earlier: int = _spawn_routed(sim, "junction_alder", pair[1])
-    _check(later > 0 and earlier > 0, "arrival order conflicting agents spawn")
-    if later <= 0 or earlier <= 0:
-        return
-    sim.agents[later]["stop_done"] = true
-    sim.agents[later]["stop_ready_tick"] = 50
-    sim.agents[earlier]["stop_done"] = true
-    sim.agents[earlier]["stop_ready_tick"] = 20
-    _check(sim._junction_blocked(sim.agents[later], "junction_alder", sim.junctions["junction_alder"]),
-        "later conflicting driver yields to older completed stop")
-    _check(not sim._junction_blocked(sim.agents[earlier], "junction_alder", sim.junctions["junction_alder"]),
-        "older completed stop can proceed despite higher agent ID")
+    var viewer: Vector3 = sim.graph.get_pose("turn_alder_alder_cedar_ba__alder_depot_ab", 0.0)["position"]
+    var distinct: Dictionary = {}
+    var safe := true
+    for _i in range(20):
+        var id: int = sim.spawn_near(viewer, 128)
+        if id <= 0:
+            break
+        var a: Dictionary = sim.get_state(id)
+        var lid: String = a["lane_id"]
+        distinct[lid] = true
+        var distance: float = viewer.distance_to(a["position"])
+        safe = safe and distance >= sim.PLAYER_SPAWN_GAP_M and distance <= sim.SPAWN_RADIUS_M
+        safe = safe and not sim.movement_junction.has(lid)
+        safe = safe and sim.graph.lane_length(lid) - float(a["s"]) >= sim.SPAWN_APPROACH_BUFFER_M
+    _check(safe, "local length-weighted spawning respects radius, approach buffers and protected turns")
+    _check(sim.agents.size() >= 10 and distinct.size() >= 4, "local spawning distributes traffic across roads rather than starving density")
 
 
 func _test_opposing_flow() -> void:

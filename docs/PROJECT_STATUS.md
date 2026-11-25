@@ -94,3 +94,7 @@ Root game, data and standalone jobs passed; basic traffic restored to 48/48. Adv
 ### CI rerun 7 (run 45558759924)
 
 Data, root and standalone jobs passed; traffic fixtures 48/48 and authored stop-dwell checks passed. Advanced canonical waits fell from 990 to 902 ticks for seed 20261121, remained 984 for seed 73; no reservation/capacity violations. Add oldest-completed-stop priority only between different conflicting authored movements, preserving legacy scheduling and same-movement headway. New priority fixture, unchanged 30-second limit. Pending CI.
+
+### CI rerun 8 (run 45559138036)
+
+Data, root and standalone passed; both audio tests exited without resource leaks in this run. Basic traffic 48/48; advanced 89/91. Arrival-order priority increased one canonical wait to 1,002 ticks and left the other at 984; removed that unsuccessful policy and kept the verified authored stop-dwell correction. Inspection found a structural traffic-demand bias: equal probability per lane, followed by sampling its entire length, makes shorter town roads far more likely to supply nearby traffic than long roads crossing the same radius. Replace authored automatic spawning with cached 12 m arc-length slots filtered to the actual local radius, excluding protected connectors and a 32 m approach buffer (or safe stop offset plus 12 m). Explicitly spawned/assigned cars, legacy fixture spawning, geometric reservations, speed limits and 20-car cap are unchanged. Add local distribution checks; original canonical queue thresholds and seeds unchanged. Pending verification.
