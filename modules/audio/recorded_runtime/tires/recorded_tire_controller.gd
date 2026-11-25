@@ -45,6 +45,8 @@ const PATH_SCRUB_FALLBACK := "res://modules/audio/assets/tire_skid.wav"
 var _bound_vehicle: Node = null
 var _telemetry: Dictionary = {}
 var _is_screeching: bool = false
+var clean_native_mix := false
+var _severe_slip_time := 0.0
 var _is_scrubbing: bool = false
 
 var _ground_factor: float = 1.0
@@ -184,6 +186,16 @@ func _process_tires(delta: float) -> void:
 	if _is_screeching:
 		screech_raw = clampf(0.35 + 0.65 * ((slip - SCREECH_EXIT_THRESHOLD) / (1.0 - SCREECH_EXIT_THRESHOLD)), 0.0, 1.0)
 
+	if clean_native_mix:
+		# The asphalt/grass and scrub fallback WAVs are procedural, not
+		# recordings. Only audible real squeal during sustained heavy slip.
+		if on_ground and speed > 8.0 and slip > 0.80:
+			_severe_slip_time = minf(1.0,_severe_slip_time+dt)
+		else:
+			_severe_slip_time = 0.0
+		scrub_raw = 0.0
+		screech_raw *= smoothstep(0.18,0.38,_severe_slip_time)
+
 	# Gate by minimum speed and ground contact
 	var target_scrub := scrub_raw * _speed_gate * _ground_factor
 	# Rubber squeal is principally an asphalt sound; loose surfaces churn instead.
@@ -205,6 +217,9 @@ func _process_tires(delta: float) -> void:
 	var asphalt_gain := roll_vol * 0.45 * float(_surface_weights[AsterTireTelemetryScript.SURFACE_ASPHALT])
 	var gravel_gain := roll_vol * 0.65 * float(_surface_weights[AsterTireTelemetryScript.SURFACE_GRAVEL])
 	var grass_gain := roll_vol * 0.50 * float(_surface_weights[AsterTireTelemetryScript.SURFACE_GRASS])
+	if clean_native_mix:
+		asphalt_gain = 0.0
+		grass_gain = 0.0
 
 	# Boost gravel texture during slip / churn
 	if slip > 0.15:

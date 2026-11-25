@@ -22,6 +22,7 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 	var throttle := brake_input if gear == -1 else throttle_input
 	var brake := throttle_input if gear == -1 else brake_input
 	var grounded := false
+	var grounded_count := 0
 	var surface_counts := {"asphalt": 0, "gravel": 0, "grass": 0}
 	var slip_amount := 0.0
 	var wheel_list: Variant = _read(vehicle, properties, "wheel_array", [])
@@ -33,6 +34,7 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 			if not wheel.has_method("is_colliding") or not bool(wheel.call("is_colliding")):
 				continue
 			grounded = true
+			grounded_count += 1
 			var wheel_props := _property_names(wheel)
 			var surface := _surface(str(_read(wheel, wheel_props, "surface_type", "Road")))
 			surface_counts[surface] = int(surface_counts[surface]) + 1
@@ -47,7 +49,21 @@ static func from_gevp(vehicle: Node3D) -> Dictionary:
 		if int(surface_counts[name]) > int(surface_counts[surface]):
 			surface = name
 	var combined_slip := clampf(maxf(slip_amount, lateral / 9.0), 0.0, 1.0)
+	# A kinematic RPM reference is available on the real GEVP car only.
+	# Audio uses this as a steady-road hint, not a replacement for free
+	# revs, launch, wheelspin, clutch disengagement or gear transitions.
+	var radius := float(_read(vehicle,properties,"average_drive_wheel_radius",0.0))
+	var clutch := float(_read(vehicle,properties,"clutch_amount",1.0))
+	var shifting := bool(_read(vehicle,properties,"is_shifting",false))
+	var locked_rpm := 0.0
+	var coupled := false
+	if radius > 0.05 and gear > 0 and grounded_count >= 3 and not shifting and clutch < 0.15 and speed > 6.0 and vehicle.has_method("get_gear_ratio"):
+		var ratio := absf(float(vehicle.call("get_gear_ratio",gear)))
+		locked_rpm = absf(velocity.dot(basis.z))*ratio/radius*60.0/TAU
+		coupled = ratio > 0.0 and combined_slip < 0.65
 	return {
+		"audio_locked_rpm":locked_rpm,
+		"audio_coupled":coupled,
 		"rpm": float(_read(vehicle, properties, "motor_rpm", 1000.0)),
 		"idle_rpm": float(_read(vehicle, properties, "idle_rpm", 950.0)),
 		"max_rpm": float(_read(vehicle, properties, "max_rpm", 7100.0)),

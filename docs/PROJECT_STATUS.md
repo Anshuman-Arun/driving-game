@@ -2,6 +2,8 @@
 
 ## Professional source-native audio audition (PR #41)
 
+Revision 8e8ae40 passed native run 45558086331 and complete regression runs 45558091908/45558086419; owner still hears cruise oscillation and quieter whine. New steady-road candidate: phase-locked recorded cycle crossfade, road/gear RPM reference only under coupled conditions, synthetic asphalt/grass and wind suppressed, severe-slip squeal gate, optional local CSV trace. New sample-periodicity and coupled-flutter gates; validation pending, subjective acceptance not established.
+
 Owner reported whine disappears in isolation, excessive shift dips, quiet exhaust and two-tone oscillation at steady speed. Native-only candidate changes: hold a representative real grain rather than alternating takes, longer available grains, static bounded RMS matching and +4.35 dB headroom-aware lift; mild shift cut (0.82 vs 0.22/0.42), adaptive RPM and load smoothing, reduced synthetic scrub/squeal/wind and no dynamic reflection in normal native playback. ASTER_NATIVE_TUNING=0 restores prior native renderer/mix for A/B; no WAV reinstall required. Added actual native steady-state, shift and hard-clipping gates. Validation pending; exact whine source and listening acceptance remain unconfirmed.
 
 Final revision 16233fc passed both native/default installation and actual GEVP drive jobs in run 45553252368, and both full audio regression runs 45553258022/45553252571. Owner successfully installed both banks on Windows and reports improved sound but objectionable whine. Added opt-in bus-isolation diagnostic (direct exhaust, non-engine, tires, reflection), without changing normal mix; source identification and subjective acceptance remain open. Diagnostic validation pending.

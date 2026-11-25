@@ -38,6 +38,9 @@ var diagnostics: Array[Dictionary] = []
 var texture_balance := false
 var native_stable := false
 var clipped_frames := 0
+var cruise_enabled := false
+var cruise_target := 0.0
+var cruise_mix := 0.0
 
 
 func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, idle_level: float, balance_texture: bool = false, extended_grains: bool = true, stable_native: bool = false) -> bool:
@@ -49,6 +52,7 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 	order = firing_order
 	texture_balance = balance_texture
 	native_stable = stable_native
+	cruise_enabled = stable_native and OS.get_environment("ASTER_CRUISE_STABLE") != "0"
 	# Each hop is a complete 720-degree combustion cycle, not an arbitrary
 	# number of firing pulses. V12 and V8 retain their own cadence.
 	hop = maxi(2, roundi(order * 2.0))
@@ -84,6 +88,8 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 		row["gain"] = float(entry.get("gain",1.0))
 		if native_stable:
 			calibrate_native_row(row, str(entry["layer"]))
+			if cruise_enabled:
+				row["cruise_pcm"] = build_cruise_cycle(row, hop)
 		var idx := rows.size()
 		rows.append(row)
 		if str(entry["layer"]) == "on":
@@ -140,6 +146,58 @@ static func calibrate_native_row(row: Dictionary, layer: String) -> void:
 	row["calibrated_rms"] = levels[best]*float(row["gain"])
  
  
+# The long grains were cut from acceleration/deceleration ramps, so even
+# repeating one grain can repeatedly sweep the pitch and harmonic balance.
+# For steady cruise use one actual 720-degree recorded cycle on the SAME
+# phase clock. Choose a representative adjacent pair and crossfade only
+# the last firing pulse into the preceding cycle. No generated tone.
+static func build_cruise_cycle(row: Dictionary, cycle_hop: int) -> PackedFloat32Array:
+	var pcm: PackedFloat32Array = row["pcm"]
+	var size := int(row["size"])
+	var n := cycle_hop*SPC
+	var origin := int(row["stable_take"])*size
+	var cycles := int((size-1)/n)
+	var best := origin+n
+	var best_score := -INF
+	for k in range(1,cycles):
+		var at := origin+k*n
+		var xx := 0.0
+		var yy := 0.0
+		var xy := 0.0
+		for j in range(0,n,8):
+			var x := pcm[at+j]
+			var y := pcm[at-n+j]
+			xx += x*x
+			yy += y*y
+			xy += x*y
+		var score := xy/sqrt(maxf(xx*yy,0.000000001))
+		# Penalize an atypically quiet/loud cycle as well as phase mismatch.
+		var relative := sqrt(xx/maxf(yy,0.000000001))
+		score -= 0.20*absf(log(maxf(relative,0.001)))
+		if score > best_score:
+			best_score = score
+			best = at
+	var loop := PackedFloat32Array()
+	loop.resize(n+1)
+	var energy := 0.0
+	var peak := 0.0
+	for j in range(n):
+		var value := pcm[best+j]
+		if j >= n-SPC:
+			var t := float(j-(n-SPC))/float(SPC-1)
+			value = lerpf(value,pcm[best-n+j],0.5-0.5*cos(PI*t))
+		loop[j] = value
+		energy += value*value
+		peak = maxf(peak,absf(value))
+	var target_rms := float(row["calibrated_rms"])/maxf(float(row["gain"]),0.00001)
+	var scale := clampf(target_rms/maxf(sqrt(energy/n),0.00001),0.75,1.25)
+	scale = minf(scale,0.44/maxf(peak*float(row["gain"]),0.00001))
+	for j in range(n):
+		loop[j] *= scale
+	loop[n] = loop[0]
+	return loop
+
+
 # Fit fractional period near the supplied firing frequency, never an
 # unconstrained dominant harmonic. A low-confidence fit keeps nominal pitch.
 static func fit_period(pcm: PackedFloat32Array, rate: int, hz: float, center: int, window: int) -> Vector2:
@@ -358,6 +416,8 @@ func reset(idle: float) -> void:
 	load_amount = 0.0
 	gain = 0.0
 	phase = 0.0
+	cruise_mix = 0.0
+	cruise_target = 0.0
 	generated_frames = 0
 	clipped_frames = 0
 	max_render_usec = 0
@@ -429,6 +489,7 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 	var a := weights_for(rpm,load_amount)
 	var b := weights_for(target_rpm,target_load)
 	var sources: Array[PackedFloat32Array] = []
+	var cruise_sources: Array[PackedFloat32Array] = []
 	var weights := PackedFloat32Array()
 	var steps := PackedFloat32Array()
 	var hops := PackedInt32Array()
@@ -442,6 +503,9 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 		if maxf(a[i],b[i]) > 0.000001:
 			var atlas: PackedFloat32Array = rows[i]["pcm"]
 			sources.append(atlas)
+			if cruise_enabled:
+				var cruise: PackedFloat32Array = rows[i]["cruise_pcm"]
+				cruise_sources.append(cruise)
 			weights.append(a[i])
 			steps.append((b[i]-a[i])/float(count))
 			var h := int(rows[i]["hop"])
@@ -460,8 +524,14 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 	var increment_step := (target_rpm-rpm)*order/(60.0*RATE*float(count))
 	var amp := gain
 	var amp_step := (target_gain-gain)/float(count)
+	var blend := cruise_mix
+	var blend_step := (clampf(cruise_target,0.0,1.0)-blend)/float(count) if cruise_enabled else 0.0
+	var cruise_active := cruise_enabled and maxf(cruise_mix,cruise_target) > 0.000001
 	for i in range(count):
 		var sample := 0.0
+		var cycle_offset := fposmod(p,float(hop))*SPC if cruise_active else 0.0
+		var cycle_index := mini(hop*SPC-1,floori(cycle_offset))
+		var cycle_frac := clampf(cycle_offset-float(cycle_index),0.0,1.0)
 		for j in range(source_count):
 			var h := hops[j]
 			var local := local_phases[j]
@@ -477,6 +547,10 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 				var x := lerpf(atlas[old_idx],atlas[old_idx+1],frac)
 				var cross := 0.5-0.5*cos(PI*local/(float(h)*OVERLAP_FRACTION))
 				z = lerpf(x,z,cross)
+			if cruise_active:
+				var cycle: PackedFloat32Array = cruise_sources[j]
+				var stable := lerpf(cycle[cycle_index],cycle[cycle_index+1],cycle_frac)
+				z = lerpf(z,stable,clampf(blend,0.0,1.0))
 			sample += z*weights[j]
 			weights[j] += steps[j]
 			local += increment
@@ -494,6 +568,8 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 		p += increment
 		increment += increment_step
 		amp += amp_step
+		blend += blend_step
+	cruise_mix = clampf(blend,0.0,1.0)
 	phase = p
 	rpm = target_rpm
 	load_amount = target_load

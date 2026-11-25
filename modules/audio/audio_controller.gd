@@ -69,6 +69,9 @@ var _shift_timer := 0.0
 var _overrun_timer := 0.0
 var _suspension_cooldown := 0.0
 var _previous_springs: Dictionary = {}
+var _audio_trace: FileAccess
+var _audio_trace_clock := 0.0
+var _audio_trace_elapsed := 0.0
 
 
 func _ready() -> void:
@@ -358,13 +361,20 @@ func _process(delta: float) -> void:
 			# Native audition mix: no synthetic scrub tone; real squeal remains
 			# available quietly for high-slip events. Normal legacy mix unchanged.
 			var quiet_native := is_instance_valid(recorded_engine) and bool(recorded_engine.get("_native_tuning")) and OS.get_environment("ASTER_AUDIO_SOLO") not in ["tires","nonengine"]
+			recorded_tires.set("clean_native_mix",quiet_native and bool(recorded_engine.get("_cruise_enabled")))
 			recorded_tires.set("scrub_gain",0.0 if quiet_native else 0.70)
 			recorded_tires.set("screech_gain",0.20 if quiet_native else 0.85)
 			if quiet_native:
 				recorded_tires.set("master_tire_gain",master_gain*0.75)
 		if is_instance_valid(recorded_chassis):
 			var quiet_native := is_instance_valid(recorded_engine) and bool(recorded_engine.get("_native_tuning")) and OS.get_environment("ASTER_AUDIO_SOLO") != "nonengine"
-			recorded_chassis.call("set_mix_gains", master_gain * (0.50 if quiet_native else 1.0), master_gain * ambient_gain)
+			var clean_native := quiet_native and bool(recorded_engine.get("_cruise_enabled"))
+			recorded_chassis.call("set_mix_gains", master_gain * (0.50 if quiet_native else 1.0), 0.0 if clean_native else master_gain * ambient_gain)
+			var wind: Node = recorded_chassis.call("get_wind")
+			if is_instance_valid(wind):
+				wind.set("vehicle_mix_gain",0.0 if clean_native else master_gain*(0.50 if quiet_native else 1.0))
+		if OS.get_environment("ASTER_AUDIO_TRACE") == "1":
+			_write_audio_trace(delta)
 		return
 	var step := maxf(delta, 0.0)
 	_clock += step
@@ -418,6 +428,30 @@ func _process(delta: float) -> void:
 			var next_profile := _queued_profile
 			_queued_profile = ""
 			set_profile(next_profile)
+
+
+# Optional local telemetry only; no audio recordings are copied out of the bank.
+func _write_audio_trace(delta: float) -> void:
+	if not is_instance_valid(recorded_engine):
+		return
+	_audio_trace_elapsed += delta
+	_audio_trace_clock += delta
+	if _audio_trace_clock < 0.10:
+		return
+	_audio_trace_clock = 0.0
+	if _audio_trace == null:
+		_audio_trace = FileAccess.open("user://audio_cruise_trace.csv",FileAccess.WRITE)
+		if _audio_trace == null:
+			return
+		_audio_trace.store_line("time_s,profile,speed_mps,gear,raw_rpm,road_rpm,coupled,pitch_target,smoothed_rpm,render_rpm,raw_pedal,load,cruise_mix,slip,shift,skips")
+		print("Audio trace: ",ProjectSettings.globalize_path("user://audio_cruise_trace.csv"))
+	var eng := recorded_engine as RecordedEngineController
+	var renderer: PhaseGrainEngine = eng._grain_engine
+	var rendered := renderer.rpm if is_instance_valid(renderer) else 0.0
+	var mix := renderer.cruise_mix if is_instance_valid(renderer) else 0.0
+	var skips := renderer.stream_skips() if is_instance_valid(renderer) else 0
+	_audio_trace.store_line("%.3f,%s,%.3f,%d,%.1f,%.1f,%d,%.1f,%.1f,%.1f,%.3f,%.3f,%.3f,%.3f,%d,%d" % [_audio_trace_elapsed,car_profile,float(_telemetry.get("speed_mps",0.0)),int(_telemetry.get("gear",0)),eng._target_rpm,eng._locked_rpm,int(eng._coupled),eng._audio_pitch_target,eng._smoothed_rpm,rendered,eng._target_throttle,eng._smoothed_throttle,mix,float(_telemetry.get("slip_amount",0.0)),int(eng._live_shift),skips])
+	_audio_trace.flush()
 
 
 static func compute_targets(t: Dictionary, profile: String = "vela_gt") -> Dictionary:

@@ -142,5 +142,8 @@ func _drive(id: String, capture: AudioEffectCapture) -> void:
 	_check(skips == 0 and renderer.push_failures == 0 and capture.get_discarded_frames() == discard_start and gap_ms < 2.0, id + " continuous real-drive audio")
 	if OS.get_environment("ASTER_REQUIRE_NATIVE_AUDIO") == "1" and engine._native_tuning:
 		_check(renderer.clipped_frames == 0, id + " no renderer hard clipping")
+		_check(bool(audio.recorded_tires.get("clean_native_mix")),id + " native mix suppresses procedural tire layers")
+		var wind: Node = audio.recorded_chassis.call("get_wind")
+		_check(is_zero_approx(float(wind.get("vehicle_mix_gain"))) and is_zero_approx(float(wind.get("environment_mix_gain"))),id + " native mix suppresses procedural wind and fence ambience")
 	print("LIVE HERO %s speed=%.2f max_rpm=%.1f coast_rpm=%.1f shifts=%d rpm_error=%.1f peak=%.4f frames=%d rendered=%d skips=%d max_gap_ms=%.3f" % [id,max_speed,max_rpm,coast_rpm,shift_count,max_rpm_error,peak,frames,renderer.generated_frames-initial_frames,skips,gap_ms])
 	await Cleanup.dispose(self, car)

@@ -103,6 +103,16 @@ var _active_bank: String = ""
 var _grain_engine: PhaseGrainEngine
 var _native_tuning := false
 var _shift_load_hold := 0.0
+var _cruise_enabled := false
+var _locked_rpm := 0.0
+var _coupled := false
+var _speed_mps := 0.0
+var _slow_speed := 0.0
+var _rpm_residual := 0.0
+var _rpm_reference_ready := false
+var _cruise_weight := 0.0
+var _audio_pitch_target := 0.0
+var _slow_rpm := 0.0
 @export var use_phase_grains := true
 
 var _current_gear: int = 1
@@ -177,6 +187,7 @@ func set_profile(profile_name: String) -> void:
 			_manifest = native
 			_active_bank = profile_name
 	_native_tuning = _manifest.bank_status == "local_source_native_audition" and OS.get_environment("ASTER_NATIVE_TUNING") != "0"
+	_cruise_enabled = _native_tuning and OS.get_environment("ASTER_CRUISE_STABLE") != "0"
 	if _native_tuning:
 		torque_cut_depth = 0.82
 	_rebuild_loop_players()
@@ -186,6 +197,7 @@ func set_profile(profile_name: String) -> void:
 			_manifest = manifest
 			_active_bank = bank
 			_native_tuning = false
+			_cruise_enabled = false
 			torque_cut_depth = float(cfg.get("shift_depth",0.20))
 			_rebuild_loop_players()
 		else:
@@ -202,6 +214,15 @@ func snap_to_idle() -> void:
 	_last_gear = -999
 	_live_shift = false
 	_shift_load_hold = 0.0
+	_locked_rpm = 0.0
+	_coupled = false
+	_speed_mps = 0.0
+	_slow_speed = 0.0
+	_rpm_residual = 0.0
+	_rpm_reference_ready = false
+	_cruise_weight = 0.0
+	_audio_pitch_target = _idle_rpm
+	_slow_rpm = _idle_rpm
 	_shift_timer = 0.0
 	_shift_envelope = 1.0
 	_is_on_limiter = false
@@ -235,6 +256,11 @@ func update_telemetry(t: Dictionary) -> void:
 
 	_target_rpm = maxf(100.0, raw_rpm)
 	_target_throttle = raw_throttle
+	_locked_rpm = float(t.get("audio_locked_rpm",0.0))
+	_coupled = bool(t.get("audio_coupled",false))
+	_speed_mps = maxf(0.0,float(t.get("speed_mps",0.0)))
+	if gear != _current_gear:
+		_rpm_reference_ready = false
 
 	# GEVP cuts torque before current_gear changes. Start the audio cut at
 	# that actual shift edge, and do not play another clunk on completion.
@@ -303,18 +329,39 @@ func _process(delta: float) -> void:
 		return
 
 	# 1. Exponential smoothing for RPM (30-60ms) and throttle (80ms)
+	_audio_pitch_target = _target_rpm
+	if _cruise_enabled:
+		_slow_speed = lerpf(_slow_speed,_speed_mps,1.0-exp(-dt/0.40))
+		_slow_rpm = lerpf(_slow_rpm,_target_rpm,1.0-exp(-dt/0.40))
+		var road_stable := _speed_mps > 6.0 and absf(_speed_mps-_slow_speed) < 0.70
+		var valid_reference := _coupled and not _live_shift and _locked_rpm > _idle_rpm and absf(_locked_rpm-_target_rpm) < 700.0
+		if valid_reference:
+			var residual := _target_rpm-_locked_rpm
+			if not _rpm_reference_ready:
+				_rpm_residual = residual
+				_rpm_reference_ready = true
+			_rpm_residual = lerpf(_rpm_residual,residual,1.0-exp(-dt/0.65))
+			if road_stable:
+				_audio_pitch_target = clampf(_locked_rpm+_rpm_residual,_idle_rpm,_redline_rpm*1.1)
+		else:
+			_rpm_reference_ready = false
+		var steady := road_stable and not _live_shift and _shift_timer <= 0.0 and _current_gear > 0 and (_rpm_reference_ready or absf(_target_rpm-_slow_rpm) < 130.0)
+		var desired := 1.0 if steady else 0.0
+		_cruise_weight = lerpf(_cruise_weight,desired,1.0-exp(-dt/(0.30 if steady else 0.075)))
 	var rpm_tau := rpm_smoothing_ms*0.001
 	if _native_tuning and not _live_shift:
 		# Suppress tiny motor-RPM flutter without masking real gear changes.
-		var rpm_error := absf(_target_rpm-_smoothed_rpm)
+		var rpm_error := absf(_audio_pitch_target-_smoothed_rpm)
 		rpm_tau = lerpf(0.16,0.050,smoothstep(80.0,500.0,rpm_error))
 	var rpm_alpha := 1.0 - exp(-dt / maxf(0.001,rpm_tau))
-	_smoothed_rpm = lerpf(_smoothed_rpm, _target_rpm, rpm_alpha)
+	_smoothed_rpm = lerpf(_smoothed_rpm, _audio_pitch_target, rpm_alpha)
 
 	var audio_throttle := _target_throttle
 	var throttle_tau := throttle_smoothing_ms*0.001
 	if _native_tuning:
 		throttle_tau = 0.10 if audio_throttle > _smoothed_throttle else 0.20
+		if _cruise_enabled:
+			throttle_tau = lerpf(throttle_tau,0.55,_cruise_weight)
 		if _live_shift:
 			# Physical shift already changes pitch; avoid a second deep load cut.
 			audio_throttle = maxf(audio_throttle,_shift_load_hold*0.75)
@@ -406,6 +453,7 @@ func _apply_audio_blend() -> void:
 	# Shared with the diagnostic helper so the tested curve is the live curve.
 	var shaped_load := pow(_smoothed_throttle, float(cfg.get("load_curve", 1.0)))
 	if use_phase_grains and is_instance_valid(_grain_engine) and _grain_engine.prepared:
+		_grain_engine.cruise_target = _cruise_weight if _cruise_enabled else 0.0
 		_grain_engine.pump(_smoothed_rpm, shaped_load, overall_gain, _resolve_bus(exhaust_bus), &"NoNativeReflection" if _native_tuning and OS.get_environment("ASTER_AUDIO_SOLO") != "reflection" else &"Exhaust_Reflection")
 		return
 	var load_gains := compute_load_gains(_smoothed_rpm, shaped_load, _manifest.off_anchors, float(cfg.get("idle_gain", 0.40)))
