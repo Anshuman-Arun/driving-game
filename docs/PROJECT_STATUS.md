@@ -86,3 +86,7 @@ All data and root-game suites passed again, including 1,782 edge rays and direct
 ### CI rerun 5 (run 45557429329)
 
 The experimental oldest-first scheduling change did not reduce canonical queue waits (1,002/984 ticks) and introduced an overlap failure in the ordinary traffic fixture (47/48). Reverted the behavioral experiment and its new priority fixture to the previous traffic implementation; retained all original safety tests and expanded diagnostics to identify the blocking reservations and downstream leaders. A separate traffic CI job now exposes those results independently. Audio smoke teardown passed cleanly, while regression teardown still reported leaked references; allow the same 0.10 s cleanup interval in both tests. No failed test is waived.
+
+### CI rerun 6 (run 45557610817)
+
+Root game, data and standalone jobs passed; basic traffic restored to 48/48. Advanced traffic remains 83/85: 990/984 consecutive WAIT_AT_JUNCTION ticks at Alder, no reservation/capacity violations. Diagnostics show waiting drivers' stop dwell remains incomplete while conflicting owners are moving through long connectors. A narrower follow-up completes mandatory stop dwell during conflict occupancy only for authored movements (no changes to legacy fixture admission or reservation conflict checks). Added three focused assertions and retained the original 30-second threshold. Both audio functional suites pass, though regression teardown still reports 20 resource references; this is not a clean engine exit. Pending verification.

@@ -479,7 +479,13 @@ func _calculate_command(a: Dictionary, dt: float) -> Dictionary:
 
 func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> bool:
 	var movement: String = a["next_lane"]
-	if movement_junction.get(movement, "") == junction_id:
+	var authored_movement: bool = movement_junction.get(movement, "") == junction_id
+	# A mandatory full stop can be completed while a conflicting vehicle
+	# clears the intersection. Do not add another dwell after clearance.
+	# Legacy fixtures retain their original admission behavior.
+	if authored_movement and j["mode"] == "stop" and not a["stop_done"]:
+		_update_stop_dwell(a, j)
+	if authored_movement:
 		# Compare active turning movements; opposite-direction travel lanes
 		# are not automatically treated as occupying the same conflict zone.
 		for key in reservations:
@@ -511,14 +517,19 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 		if phase >= j["green_s"]:
 			return true
 	if mode == "stop" and not a["stop_done"]:
-		# Stop signs require full stop and a finite dwell, no instantaneous rolling stop.
-		var offset: float = float(inbound_stop_offsets.get(a["lane_id"], STOP_OFFSET_M))
-		if graph.lane_length(a["lane_id"]) - a["s"] < offset + 0.9 and a["speed_mps"] < 0.45:
-			a["wait_s"] += FIXED_STEP
-			if a["wait_s"] >= j["stop_s"]:
-				a["stop_done"] = true
+		if not authored_movement:
+			_update_stop_dwell(a, j)
 		return not a["stop_done"]
 	return false
+
+
+func _update_stop_dwell(a: Dictionary, j: Dictionary) -> void:
+	# Stop signs require a stationary dwell near the actual stop line.
+	var offset: float = float(inbound_stop_offsets.get(a["lane_id"], STOP_OFFSET_M))
+	if graph.lane_length(a["lane_id"]) - a["s"] < offset + 0.9 and a["speed_mps"] < 0.45:
+		a["wait_s"] += FIXED_STEP
+		if a["wait_s"] >= j["stop_s"]:
+			a["stop_done"] = true
 
 
 func _find_leader(a: Dictionary) -> Dictionary:

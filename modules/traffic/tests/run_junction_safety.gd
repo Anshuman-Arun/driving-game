@@ -74,6 +74,7 @@ func _run() -> void:
     _test_geometry(sim)
     _test_short_connector(sim)
     _test_nonconflicting_turns()
+    _test_stop_dwell_during_conflict()
     _test_opposing_flow()
     _test_cleanup()
     for jid in COMPLEX:
@@ -281,6 +282,34 @@ func _test_nonconflicting_turns() -> void:
         sim.junctions["junction_alder"]), "independent movements are not serialized unnecessarily")
     sim.despawn_agent(first)
     _check(sim.reservations.is_empty(), "independent movement ownership cleans up")
+
+
+func _test_stop_dwell_during_conflict() -> void:
+    var sim = _simulation(51)
+    if sim == null:
+        _check(false, "stop dwell setup")
+        return
+    var pair: Array[String] = _pick_conflicting_pair(sim, "junction_alder")
+    var first: int = _spawn_routed(sim, "junction_alder", pair[0])
+    var second: int = _spawn_routed(sim, "junction_alder", pair[1])
+    _check(first > 0 and second > 0, "stop dwell conflicting agents spawn")
+    if first <= 0 or second <= 0:
+        return
+    var owner: Dictionary = sim.agents[first]
+    var waiting: Dictionary = sim.agents[second]
+    owner["reservation_zone"] = "junction_alder"
+    owner["reservation_movement"] = pair[0]
+    owner["reserved_junction"] = "junction_alder@%d" % first
+    sim.reservations[owner["reserved_junction"]] = first
+    waiting["s"] = sim.graph.lane_length(waiting["lane_id"]) - float(sim.inbound_stop_offsets[waiting["lane_id"]])
+    waiting["speed_mps"] = 0.0
+    var blocked := true
+    for _tick in range(40):
+        blocked = sim._junction_blocked(waiting, "junction_alder", sim.junctions["junction_alder"]) and blocked
+    _check(blocked and bool(waiting["stop_done"]), "completed dwell does not permit conflicting entry")
+    sim.despawn_agent(first)
+    _check(not sim._junction_blocked(waiting, "junction_alder", sim.junctions["junction_alder"]),
+        "completed dwell allows immediate admission after conflict clears")
 
 
 func _test_opposing_flow() -> void:
