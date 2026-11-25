@@ -52,17 +52,37 @@ jobs:
         if: success()
         shell: bash
         run: |
+          set +e
           failed=0
-          for script in tests/core/smoke.gd tests/core/steering_camera.gd tests/core/drift_and_controller.gd tests/integration/map_width_check.gd tests/integration/roadworks_check.gd tests/integration/garage_world.gd tests/integration/vehicle_world.gd; do
+          for script in tests/core/smoke.gd tests/core/steering_camera.gd tests/core/drift_and_controller.gd tests/integration/map_width_check.gd tests/integration/roadworks_check.gd tests/integration/garage_world.gd tests/integration/vehicle_world.gd modules/vehicle_visuals/tests/smoke.gd tests/integration/forza_showcase_qa.gd; do
             echo "::group::$script"
-            timeout 240 godot --headless --path . --fixed-fps 120 --script "res://$script" 2>&1 | tee /tmp/test.log
+            timeout 240 godot --headless --path . --fixed-fps 60 --script "res://$script" 2>&1 | tee /tmp/test.log
             status=${PIPESTATUS[0]}
-            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|FAIL ' /tmp/test.log; then failed=1; fi
+            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|FAIL ' /tmp/test.log; then
+              failed=1
+              echo "FAIL: $script (exit $status)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "PASS: $script" >> "$GITHUB_STEP_SUMMARY"
+            fi
             echo "::endgroup::"
           done
           exit "$failed"
+  standalone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Install pinned Godot
+        shell: bash
+        run: |
+          curl -fL --retry 3 https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip -o /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp
+          chmod +x /tmp/Godot_v4.7.2-stable_linux.x86_64
+          sudo ln -s /tmp/Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+          godot --version
       - name: Standalone regression suites
-        if: always()
         shell: bash
         run: |
           set +e
@@ -71,14 +91,21 @@ jobs:
             echo "::group::$*"
             timeout 240 "$@" 2>&1 | tee /tmp/test.log
             status=${PIPESTATUS[0]}
-            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|FAIL ' /tmp/test.log; then failed=1; fi
+            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|FAIL ' /tmp/test.log; then
+              failed=1
+              echo "FAIL: $* (exit $status)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "PASS: $*" >> "$GITHUB_STEP_SUMMARY"
+            fi
             echo "::endgroup::"
           }
+          mkdir -p modules/scenery/.world_source modules/scenery/staged_art modules/scenery/staged_models
+          cp data/world/road_graph_v1.json data/world/world_metadata_v1.json data/world/terrain_height_r16le.bin modules/scenery/.world_source/ || exit 1
+          cp -a assets/curated/. modules/scenery/staged_art/ || exit 1
+          cp -a content/scenery/models/. modules/scenery/staged_models/ || exit 1
           for module in world_runtime traffic racing audio game_shell scenery; do
             run godot --headless --path "modules/$module" --editor --import
           done
-          mkdir -p modules/scenery/.world_source
-          cp data/world/road_graph_v1.json data/world/world_metadata_v1.json data/world/terrain_height_r16le.bin modules/scenery/.world_source/
           run godot --headless --path modules/world_runtime --script res://tests/smoke.gd -- --full-world
           run godot --headless --path modules/traffic --script res://tests/run_tests.gd
           run godot --headless --path modules/traffic --script res://tests/run_junction_safety.gd
