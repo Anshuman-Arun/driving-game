@@ -108,7 +108,12 @@ jobs:
           done
           run godot --headless --path modules/world_runtime --script res://tests/smoke.gd -- --full-world
           run godot --headless --path modules/traffic --script res://tests/run_tests.gd
-          run godot --headless --path modules/traffic --script res://tests/run_junction_safety.gd
+          # The canonical traffic controls are not merged into main. Stage the
+          # exact read-only content PR commit only for this integration test.
+          git fetch --depth=1 origin 02ff87ee726cc44dd8360d7a6043d178b1a1693f || exit 1
+          mkdir -p content/traffic
+          git show FETCH_HEAD:content/traffic/controls_v1.json > content/traffic/controls_v1.json || exit 1
+          run godot --headless --path . --script res://modules/traffic/tests/run_junction_safety.gd
           run godot --headless --path modules/racing --script res://tests/run_tests.gd
           run godot --headless --path modules/racing --script res://tests/run_grid_tests.gd
           run godot --headless --path modules/racing --script res://tests/run_production_tests.gd -- --graph="$PWD/data/world/road_graph_v1.json" --events="$PWD/content/races/events_v1.json"

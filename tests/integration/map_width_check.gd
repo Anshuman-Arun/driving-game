@@ -4,6 +4,7 @@ const World = preload("res://modules/world_runtime/src/world_runtime.gd")
 const Builder = preload("res://modules/world_runtime/src/mesh_builder.gd")
 var failures := 0
 var samples := 0
+var seam_rechecks := 0
 
 func _initialize() -> void:
 	run.call_deferred()
@@ -43,15 +44,28 @@ func run() -> void:
 			var lateral := Vector3(-d.z, 0, d.x).normalized()
 			for sign_value in [-1.0, 1.0]:
 				var point := p + lateral * float(sign_value) * (target * 0.5 - 0.35)
-				var query := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 40.0, point - Vector3.UP * 40.0)
-				var hit := space.intersect_ray(query)
-				samples += 1
-				check(not hit.is_empty() and hit.collider.get_meta("world_surface", "") in ["asphalt", "gravel"], str(road["id"]) + " expanded pavement at " + str(i))
+				# Exact cross-section stations are shared triangle edges. Check both
+				# adjacent interiors as well, so a numerical edge-ray miss cannot
+				# conceal a genuine opening or missing deck segment.
+				var forward := Vector3(d.x, 0.0, d.z).normalized()
+				var hit := cast_pavement(space, point)
+				var before := cast_pavement(space, point - forward * 0.10)
+				var after := cast_pavement(space, point + forward * 0.10)
+				samples += 3
+				if not hit and before and after:
+					seam_rechecks += 1
+					print("Isolated shared-edge ray miss: ", road["id"], " station ", i, " side ", sign_value)
+				check(before and after, str(road["id"]) + " expanded pavement on both sides of station " + str(i))
 				check(world.get_roadside_clearance(point.x, point.z) < 0.0, "clearance covers pavement")
 	check(samples > 200, "network-wide edge coverage")
 	check(int(world.report.get("bridges", 0)) == 4, "three existing crossings and one supported scenic span")
-	print("Map width: %d edge rays, %d failures" % [samples, failures])
+	print("Map width: %d edge rays, %d isolated seam rechecks, %d failures" % [samples, seam_rechecks, failures])
 	quit(1 if failures else 0)
+
+func cast_pavement(space: PhysicsDirectSpaceState3D, point: Vector3) -> bool:
+	var query := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 3.0, point - Vector3.UP * 5.0)
+	var hit := space.intersect_ray(query)
+	return not hit.is_empty() and hit.collider.get_meta("world_surface", "") in ["asphalt", "gravel"]
 
 func check(ok: bool, label: String) -> void:
 	if not ok:

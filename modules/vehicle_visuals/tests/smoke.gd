@@ -47,6 +47,8 @@ func _run() -> void:
 	var adapter: Node3D = ADAPTER.new()
 	adapter.name = "VisualQA"
 	adapter.set("hero_path", "res://assets/vehicle_upgrade/definitely_missing_hero.glb")
+	adapter.set("mid_path", "res://assets/vehicle_upgrade/definitely_missing_mid.glb")
+	adapter.set("distant_path", "res://assets/vehicle_upgrade/definitely_missing_distant.glb")
 	vehicle.add_child(adapter)
 	var attached: bool = adapter.connect_chassis(vehicle)
 	check(not attached, "Missing HD model must not be reported attached")
