@@ -121,12 +121,14 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 		var original := mesh.get_surface_override_material(surface)
 		var active := mesh.get_active_material(surface)
 		for previous in _paint_before:
-			if previous["mesh"] == mesh and previous["surface"] == surface:
+			if previous["mesh"] == mesh and previous["surface"] == surface and original == previous["candidate"]:
 				original = previous["original"]
 				active = original if original != null else mesh.mesh.surface_get_material(surface)
 				break
-		if not active is StandardMaterial3D and not (active is ShaderMaterial and active.shader != null and active.shader.resource_path == PAINT_SHADER):
-			return _reject("Paint requires StandardMaterial3D or the existing car_paint shader")
+		var shader_source := active as ShaderMaterial
+		if not active is StandardMaterial3D:
+			if shader_source == null or shader_source.shader == null or shader_source.shader.resource_path != PAINT_SHADER:
+				return _reject("Paint requires StandardMaterial3D or the existing car_paint shader")
 		var copy := active.duplicate() as Material
 		if copy == null:
 			return _reject("Paint resource duplication failed")
