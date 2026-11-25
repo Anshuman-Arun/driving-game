@@ -6,7 +6,7 @@ const RATE := 32000
 const SPC := 256
 const VARIANTS := 6
 # Overlap only the transition, preserving the original take's roughness.
-const OVERLAP_FRACTION := 0.35
+const OVERLAP_FRACTION := 0.5
 const MIN_QUEUE := 2048
 const HEADLESS_QUEUE := 4096
 const MAX_QUEUE := 6144
@@ -18,9 +18,7 @@ var order := 6.0
 var hop := 12
 var grain_size := 12 * 2 * SPC + 1
 var phase := 0.0
-var grain := 0
-var previous_grain := VARIANTS-1
-var sequence := 7
+## Unwrapped firing-cycle clock, shared by all active anchors.
 var rpm := 900.0
 var load_amount := 0.0
 var gain := 0.0
@@ -40,7 +38,7 @@ var diagnostics: Array[Dictionary] = []
 var texture_balance := false
 
 
-func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, idle_level: float, balance_texture: bool = false) -> bool:
+func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, idle_level: float, balance_texture: bool = false, extended_grains: bool = true) -> bool:
 	rows.clear()
 	on_indices.clear()
 	off_indices.clear()
@@ -60,11 +58,24 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 		if wav == null or wav.format != AudioStreamWAV.FORMAT_16_BITS or wav.stereo:
 			return false
 		var anchor_rpm := float(entry["rpm"])
-		var row := build_grains(wav.data,wav.mix_rate,anchor_rpm*order/60.0, hop)
+		# At high RPM a one-engine-cycle hop replaces the take 60–70 times/s.
+		# Prefer 8 whole engine cycles when the recording has sufficient room;
+		# fall back gracefully for the very short coast source recordings.
+		var row_hop := hop
+		if extended_grains and anchor_rpm >= 4000.0:
+			for multiplier in [8, 4, 2]:
+				var candidate := hop * int(multiplier)
+				var required := (2.0*candidate+6.0)*float(wav.mix_rate)/(anchor_rpm*order/60.0)*1.10
+				if float(wav.data.size() >> 1) > required:
+					row_hop = candidate
+					break
+		var row := build_grains(wav.data,wav.mix_rate,anchor_rpm*order/60.0,row_hop)
 		if row.is_empty():
 			return false
+		row["hop"] = row_hop
+		row["size"] = row_hop*2*SPC+1
 		if texture_balance and anchor_rpm >= 1800.0:
-			var balanced := balance_recorded_texture(row["pcm"], grain_size)
+			var balanced := balance_recorded_texture(row["pcm"], int(row["size"]))
 			row.merge(balanced, true)
 		row["rpm"] = anchor_rpm
 		row["gain"] = float(entry.get("gain",1.0))
@@ -74,7 +85,7 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 			on_indices.append(idx)
 		else:
 			off_indices.append(idx)
-		diagnostics.append({"file":fname,"rpm":anchor_rpm,"hz":row["hz"],"confidence":row["confidence"],"tone_before":row.get("tone_before",0.0),"tone_after":row.get("tone_after",0.0),"trim_db":row.get("trim_db",0.0)})
+		diagnostics.append({"file":fname,"rpm":anchor_rpm,"hz":row["hz"],"confidence":row["confidence"],"hop_cycles":row_hop,"tone_before":row.get("tone_before",0.0),"tone_after":row.get("tone_after",0.0),"trim_db":row.get("trim_db",0.0)})
 	on_indices.sort_custom(func(a: int,b: int) -> bool: return float(rows[a]["rpm"]) < float(rows[b]["rpm"]))
 	off_indices.sort_custom(func(a: int,b: int) -> bool: return float(rows[a]["rpm"]) < float(rows[b]["rpm"]))
 	if texture_balance:
@@ -146,11 +157,11 @@ static func build_grains(data: PackedByteArray, rate: int, expected_hz: float, h
 	atlas.resize(size*VARIANTS)
 	for g in range(VARIANTS):
 		var start := 2.0*period+room*(float(g)+0.5)/float(VARIANTS)
-		var local_fit := fit_period(pcm,rate,float(rate)/period,roundi(start+period*6.0),roundi(period*7.0))
+		var local_fit := fit_period(pcm,rate,float(rate)/period,roundi(start+period*float(hop_cycles)),roundi(period*float(hop_cycles)))
 		var local_period := clampf(local_fit.x,period*0.95,period*1.05)
 		var c := 0.0
 		var s := 0.0
-		var n := maxi(8,roundi(local_period*3.0))
+		var n := maxi(8,roundi(local_period*minf(12.0,float(hop_cycles)*0.5)))
 		var center := roundi(start)
 		# Fundamental phase reference; preserve the complete source waveform.
 		for j in range(-n,n+1):
@@ -170,6 +181,22 @@ static func build_grains(data: PackedByteArray, rate: int, expected_hz: float, h
 			var at := pos+float(j)*delta
 			var k := floori(at)
 			atlas[g*size+j] = lerpf(pcm[k],pcm[k+1],at-float(k))
+	# Modest take-to-take level matching prevents gratuitous amplitude flutter.
+	# Preserve natural within-take dynamics and all recorded harmonics.
+	if hop_cycles >= 32:
+		var energies := PackedFloat32Array()
+		var mean_energy := 0.0
+		for g in range(VARIANTS):
+			var energy := 0.0
+			for j in range(size-1):
+				var v := atlas[g*size+j]
+				energy += v*v
+			energies.append(energy)
+			mean_energy += energy/float(VARIANTS)
+		for g in range(VARIANTS):
+			var scale := clampf(sqrt(mean_energy/maxf(energies[g],0.000001)),0.80,1.25)
+			for j in range(size):
+				atlas[g*size+j] *= scale
 	return {"pcm":atlas,"hz":float(rate)/period,"confidence":fit.y}
 
 
@@ -245,9 +272,6 @@ func reset(idle: float) -> void:
 	load_amount = 0.0
 	gain = 0.0
 	phase = 0.0
-	grain = 0
-	previous_grain = VARIANTS-1
-	sequence = 7
 	generated_frames = 0
 	max_render_usec = 0
 	mirror_resyncs = 0
@@ -299,6 +323,12 @@ func weights_for(target_rpm: float, target_load: float) -> PackedFloat32Array:
 	return weights
 
 
+## Stateless take selection means a newly weighted anchor joins the shared
+## firing clock at its correct phase instead of restarting its grain.
+static func _take_index(epoch: int) -> int:
+	return posmod((epoch*48271) ^ (epoch >> 3),VARIANTS)
+
+
 func render_frames(count: int, target_rpm: float, target_load: float, target_gain: float) -> PackedVector2Array:
 	var out := PackedVector2Array()
 	if not prepared or count <= 0:
@@ -310,50 +340,64 @@ func render_frames(count: int, target_rpm: float, target_load: float, target_gai
 	var sources: Array[PackedFloat32Array] = []
 	var weights := PackedFloat32Array()
 	var steps := PackedFloat32Array()
+	var hops := PackedInt32Array()
+	var sizes := PackedInt32Array()
+	var local_phases := PackedFloat64Array()
+	var epochs := PackedInt64Array()
+	var grains := PackedInt32Array()
+	var old_grains := PackedInt32Array()
 	for i in range(rows.size()):
 		if maxf(a[i],b[i]) > 0.000001:
 			var atlas: PackedFloat32Array = rows[i]["pcm"]
 			sources.append(atlas)
 			weights.append(a[i])
 			steps.append((b[i]-a[i])/float(count))
+			var h := int(rows[i]["hop"])
+			var epoch := floori(phase/float(h))
+			hops.append(h)
+			sizes.append(int(rows[i]["size"]))
+			local_phases.append(phase-float(epoch*h))
+			epochs.append(epoch)
+			grains.append(_take_index(epoch))
+			old_grains.append(_take_index(epoch-1))
 	var source_count := sources.size()
 	var p := phase
-	var g := grain
-	var old := previous_grain
-	var seq := sequence
 	var increment := rpm*order/(60.0*RATE)
 	var increment_step := (target_rpm-rpm)*order/(60.0*RATE*float(count))
 	var amp := gain
 	var amp_step := (target_gain-gain)/float(count)
 	for i in range(count):
-		var offset := p*SPC
-		var k := floori(offset)
-		var frac := offset-float(k)
-		var new_idx := g*grain_size+k
-		var old_idx := old*grain_size+hop*SPC+k
-		var cross := 0.5-0.5*cos(PI*minf(1.0,p/(float(hop)*OVERLAP_FRACTION)))
 		var sample := 0.0
 		for j in range(source_count):
+			var h := hops[j]
+			var local := local_phases[j]
+			var offset := local*SPC
+			var k := floori(offset)
+			var frac := offset-float(k)
+			var new_idx := grains[j]*sizes[j]+k
 			var atlas := sources[j]
-			var x := lerpf(atlas[old_idx],atlas[old_idx+1],frac)
 			var z := lerpf(atlas[new_idx],atlas[new_idx+1],frac)
-			sample += lerpf(x,z,cross)*weights[j]
+			# Only evaluate the outgoing grain during the overlap.
+			if local < float(h)*OVERLAP_FRACTION:
+				var old_idx := old_grains[j]*sizes[j]+h*SPC+k
+				var x := lerpf(atlas[old_idx],atlas[old_idx+1],frac)
+				var cross := 0.5-0.5*cos(PI*local/(float(h)*OVERLAP_FRACTION))
+				z = lerpf(x,z,cross)
+			sample += z*weights[j]
 			weights[j] += steps[j]
+			local += increment
+			if local >= float(h):
+				local -= float(h)
+				epochs[j] += 1
+				old_grains[j] = grains[j]
+				grains[j] = _take_index(epochs[j])
+			local_phases[j] = local
 		sample = clampf(sample*amp,-0.95,0.95)
 		out[i] = Vector2(sample,sample)
 		p += increment
-		if p >= hop:
-			p -= hop
-			old = g
-			# Deterministic varied take selection; never restart a pitched loop.
-			seq = (seq*48271)%2147483647
-			g = (g+1+seq%(VARIANTS-1))%VARIANTS
 		increment += increment_step
 		amp += amp_step
 	phase = p
-	grain = g
-	previous_grain = old
-	sequence = seq
 	rpm = target_rpm
 	load_amount = target_load
 	gain = target_gain

@@ -30,6 +30,7 @@ func _initialize() -> void:
 	success = test_profile_switching() and success
 	success = test_hero_voicings() and success
 	success = test_phase_grain_renderer() and success
+	success = test_hero_redline_stability() and success
 
 	print("==================================================")
 	if success:
@@ -566,4 +567,26 @@ func test_phase_grain_renderer() -> bool:
 	assert(blended > 0, "Near-sine Senna anchor should blend with real same-layer neighbor")
 	print("Senna source texture: %d corrected anchors, %d neighbor blends" % [corrected, blended])
 	engine.free()
+	return true
+
+
+func test_hero_redline_stability() -> bool:
+	for id in ["aventador_svj","mclaren_senna"]:
+		var engine := RecordedEngineController.new()
+		engine.setup(id)
+		var renderer: PhaseGrainEngine = engine._grain_engine
+		assert(renderer != null and renderer.prepared)
+		var long_count := 0
+		for row in renderer.diagnostics:
+			if float(row["rpm"]) >= 4000.0:
+				long_count += int(int(row["hop_cycles"]) > renderer.hop)
+		assert(long_count >= 4, "High RPM must use longer recorded takes")
+		# Holding actual redline must not impose a second artificial 20 Hz gate.
+		engine.update_telemetry({"rpm": engine._redline_rpm, "throttle":1.0, "gear":3})
+		for i in range(120):
+			engine._process(1.0/60.0)
+			assert(is_equal_approx(engine._limiter_envelope,1.0), "No synthetic hero limiter pumping")
+		assert(not engine._is_on_limiter)
+		print("Hero redline stability %s: %d extended anchors, no artificial amplitude gate" % [id,long_count])
+		engine.free()
 	return true

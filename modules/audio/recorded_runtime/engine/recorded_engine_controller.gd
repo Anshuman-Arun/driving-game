@@ -303,8 +303,9 @@ func _process(delta: float) -> void:
 		if _shift_envelope > 0.999:
 			_shift_envelope = 1.0
 
-	# 3. Update rev limiter stutter envelope
-	if _smoothed_rpm >= _redline_rpm * 0.985 and _smoothed_throttle > 0.55 and not _live_shift:
+	# 3. Legacy-only limiter stutter. Hero audio follows the physical motor RPM;
+	# an extra 20 Hz amplitude gate near redline made sustained high RPM quiver.
+	if not cfg.has("firing_order") and _smoothed_rpm >= _redline_rpm * 0.985 and _smoothed_throttle > 0.55 and not _live_shift:
 		_is_on_limiter = true
 		_limiter_phase = fmod(_limiter_phase + dt * limiter_frequency, 1.0)
 		var in_cut: bool = _limiter_phase < limiter_cut_ratio
