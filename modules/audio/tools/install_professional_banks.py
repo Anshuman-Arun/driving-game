@@ -162,12 +162,15 @@ def choose(rows, cfg):
         targets.append(int(redline*.96))
     anchors, misses = [], []
     for layer in ("on", "off"):
+        last_rpm = None
         for target in reversed(targets):
             if layer == "off" and target < 1700:
                 continue
             pool = [row for row in rows
                     if abs(row["measured_rpm"]-target) <= (350 if target < 1500 else 500)
                     and (target != targets[-1] or row["measured_rpm"] >= redline*.9 + 12.5)
+                    and (target >= 1500 or row["measured_rpm"] <= idle*1.3 - 12.5)
+                    and (last_rpm is None or 0 < last_rpm - int(round(row["measured_rpm"]/25)*25) <= 1500)
                     and not any(min(row["end_s"], a["end_s"])-max(row["start_s"], a["start_s"]) > .1 for a in anchors)]
             if not pool:
                 misses.append([layer,target,"no credible window"])
@@ -192,8 +195,12 @@ def choose(rows, cfg):
                     misses.append([layer,target,"load proxy ambiguous"])
                     continue
                 pool = valid
-            row = max(pool,key=score)
+            # Prefer the target neighborhood rather than allowing strong
+            # harmonics at opposite edges to leave a coverage hole.
+            close = [a for a in pool if abs(a["measured_rpm"]-target) <= 350]
+            row = max(close or pool,key=score)
             rpm = int(round(row["measured_rpm"]/25)*25)
+            last_rpm = rpm
             anchors.append(dict(row, rpm=rpm, layer=layer,
                                 rpm_basis=row.get("method","Half-order harmonic tracker; full-order spectral corroboration") + "; estimated, not tachometer.",
                                 load_basis=("Idle/low RPM reference; actual throttle unknown" if target < 1500 else

@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: native-audition-${{ github.ref }}
+  group: native-audition-${{ github.sha }}
   cancel-in-progress: true
 jobs:
   native:
@@ -58,7 +58,9 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/native-venv"
           "$RUNNER_TEMP/native-venv/bin/pip" install numpy==2.2.6 scipy==1.15.3
       - name: Verify archive fallback offline
-        run: python3 -m unittest discover -s modules/audio/tests -p test_professional_download.py -v
+        run: |
+          python3 -m unittest discover -s modules/audio/tests -p test_professional_download.py -v
+          "$RUNNER_TEMP/native-venv/bin/python" -m unittest discover -s modules/audio/tests -p test_professional_selection.py -v
       - name: Download originals and install source-native banks
         shell: bash
         run: |

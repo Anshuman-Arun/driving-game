@@ -2,6 +2,8 @@
 
 ## Professional source-native audio audition (PR #41)
 
+Run 45552458694 Lamborghini found credible acceleration at 8025 RPM and coast at 8250 RPM, but the greedy selector left a 1725-RPM adjacent on-layer gap (5900–7625). Added hard per-step coverage bounds and a near-target preference, plus a regression reproducing that edge-selection problem. No threshold was relaxed; native driving still must pass. McLaren installation passed again; its live drive was in progress at this edit.
+
 Run 45551889284: both original recordings passed pinned SHA-256, both download regression tests passed, and the McLaren 720S bank installed 17 unflattened real windows (9 on/8 off). Lamborghini had 9 on/7 off candidates but insufficient high-end coverage; no Lamborghini bank installed. Live driving was skipped due to combined exit code. Independent per-car matrix jobs now allow real McLaren driving regardless of Lamborghini coverage. Added independent high-RPM full-order ridge search with harmonic corroboration; top anchor must meet the existing coverage threshold, selected first. RPM and load remain inferred, not listening-approved.
 
 Run 45551426278 failed during acquisition: both official ZIP endpoints returned HTTP 200 rather than partial content. Neither bank was generated and real-drive QA was skipped. Corrected the ZIP magic check in the existing bounded full-archive extractor, wired the native installer to the fallback, and added offline HTTP 200 extraction and cleanup regressions. Retry pending; no new playback claim.
