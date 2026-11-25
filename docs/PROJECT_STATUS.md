@@ -1,5 +1,11 @@
 # Project status — single current-state log
 
+## Two-car roster (work in progress)
+
+The playable garage offers the Lamborghini Aventador SVJ and McLaren Senna. New profiles unlock both, and older profiles migrate retired selections to the Aventador while retaining settings, credits, and race records. The original profile is backed up when migrated. Legacy vehicle assets and audio remain available in history and runtime dependencies while the active supercar audio work is reconciled.
+
+The game-shell regression passes 57 checks, including version 1 and version 2 save migration. The headless garage/world integration passes: both cars load, drive, switch, and survive save reload. An exported Windows game pack passed the headless package smoke test, including a garage preview, Senna drive, and recorded audio; the existing world-script UID warning fell back to its resource path. The previously built Windows executable booted headlessly with the new pack. Visual, physical-controller, interactive Windows, and active PR #41 audio acceptance are not yet verified on this branch. This branch is based on the scenic supercar integration; it does not include the unfinished local environment-realism pass.
+
 Last updated: 2026-11-24
 
 ## Scenic driving and exact supercars (`feat/aster-scenic-supercars`)

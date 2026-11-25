@@ -7,7 +7,7 @@ const WheelScript = preload("res://addons/gevp/scripts/wheel.gd")
 const DriftControllerScript = preload("res://scripts/vehicle/drift_controller.gd")
 const AudioControllerScript = preload("res://modules/audio/audio_controller.gd")
 
-const DEFAULT_CAR := "vela_gt"
+const DEFAULT_CAR := "aventador_svj"
 const PRESETS := {
 	"vela_gt": {"name": "VelaGT", "mass": 1390.0, "torque": 480.0, "final_drive": 3.6, "front_split": 0.0, "paint": Color(0.075, 0.21, 0.41), "idle_rpm": 950.0, "max_rpm": 7100.0},
 	"orion_rs": {"name": "OrionRS", "mass": 1190.0, "torque": 380.0, "final_drive": 3.9, "front_split": 0.0, "paint": Color(0.08, 0.45, 0.34), "idle_rpm": 1000.0, "max_rpm": 8500.0},
@@ -167,7 +167,7 @@ static func create(car_id: String = DEFAULT_CAR) -> Vehicle:
 	car.add_child(drift)
 	var audio := AudioControllerScript.new()
 	audio.name = "VehicleAudio"
-	audio.car_profile = preset.get("audio_profile", car_id if AudioControllerScript.PROFILES.has(car_id) else DEFAULT_CAR)
+	audio.car_profile = preset.get("audio_profile", car_id if AudioControllerScript.PROFILES.has(car_id) else "vela_gt")
 	audio.process_mode = Node.PROCESS_MODE_PAUSABLE
 	car.add_child(audio)
 	audio.bind_gevp_vehicle(car)

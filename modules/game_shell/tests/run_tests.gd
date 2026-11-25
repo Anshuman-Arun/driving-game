@@ -33,8 +33,8 @@ func _run() -> void:
 	var service := Save.new(path)
 	var start: Dictionary = service.load()
 	_ok(service.last_status == "new_profile", "Missing save defaults")
-	_ok(start["selected_car"] == "vela_gt" and service.is_unlocked("vela_gt"), "Starting car unlocked")
-	_ok(not service.select_car("orion_rs"), "Locked car cannot be selected")
+	_ok(start["selected_car"] == "aventador_svj" and service.is_unlocked("aventador_svj") and service.is_unlocked("mclaren_senna"), "Starting car unlocked")
+	_ok(not service.select_car("orion_rs"), "Retired car cannot be selected")
 	_ok(service.save(), "Fresh save writes")
 	_ok(service.set_setting("graphics_quality", "low"), "Setting change writes")
 	_ok(service.set_setting("controller_sensitivity", 0.35), "Sensitivity change writes")
@@ -45,18 +45,18 @@ func _run() -> void:
 	_ok(reopened.data["settings"]["resolution"] == "1280x720", "Invalid setting rolled back")
 	var event1: Dictionary = reopened.record_race("alder_circuit", 57.8, 2)
 	_ok(bool(event1.get("ok", false)), "Completed race persisted")
-	_ok(reopened.is_unlocked("orion_rs") and not reopened.is_unlocked("kestrel_xr"), "First unique event unlocks Orion")
-	_ok(reopened.select_car("orion_rs"), "Unlocked car selectable")
+	_ok(not reopened.is_unlocked("orion_rs") and reopened.is_unlocked("mclaren_senna"), "Race does not unlock retired cars")
+	_ok(reopened.select_car("mclaren_senna"), "Unlocked car selectable")
 	_ok(bool(reopened.record_race("alder_circuit", 61.2, 1).get("ok", false)), "Second result persists")
 	_ok(is_equal_approx(float(reopened.data["completed_events"]["alder_circuit"]["best_time_s"]), 57.8), "Best time not overwritten by slower replay")
 	_ok(int(reopened.data["completed_events"]["alder_circuit"]["wins"]) == 1, "Win counted correctly")
 	_ok(bool(reopened.record_race("ridge_climb", 48.1, 3).get("ok", false)), "Second distinct event")
 	_ok(bool(reopened.record_race("eastwater_dash", 39.1, 1).get("ok", false)), "Third distinct event")
-	_ok(reopened.is_unlocked("kestrel_xr"), "Third distinct event unlocks Kestrel")
-	_ok(reopened.select_car("kestrel_xr"), "Kestrel selection persisted")
+	_ok(not reopened.is_unlocked("kestrel_xr"), "Race progression keeps retired cars archived")
+	_ok(reopened.select_car("aventador_svj"), "Aventador selection persisted")
 	var reread := Save.new(path)
 	reread.load()
-	_ok(reread.selected_car() == "kestrel_xr" and reread.is_unlocked("kestrel_xr"), "Unlock and selection survive restart")
+	_ok(reread.selected_car() == "aventador_svj" and reread.is_unlocked("aventador_svj"), "Unlock and selection survive restart")
 	_ok(FileAccess.file_exists(path + ".bak"), "Valid backup retained")
 
 	## Corrupt primary: recover validated previous save, not garbage.
@@ -75,7 +75,7 @@ func _run() -> void:
 		"options":{"graphics_quality":"high","music_volume":0.25}}))
 	var migrating := Save.new(v1_path)
 	var migrated: Dictionary = migrating.load()
-	_ok(int(migrated["schema_version"]) == 2 and migrating.selected_car() == "orion_rs", "V1 selected car migrates")
+	_ok(int(migrated["schema_version"]) == 2 and migrating.selected_car() == "aventador_svj", "Retired V1 selected car migrates")
 	_ok(int(migrated["credits"]) == 650 and is_equal_approx(float(migrated["completed_events"]["alder_circuit"]["best_time_s"]),58.2), "V1 records/credits migrate")
 	_ok(is_equal_approx(float(migrated["settings"]["music_volume"]), 0.25), "V1 options migrate")
 	_ok(int(JSON.parse_string(FileAccess.get_file_as_string(v1_path))["schema_version"]) == 2, "V1 persisted as v2")
@@ -84,10 +84,26 @@ func _run() -> void:
 	_put(implicit_v1, JSON.stringify({"credits": 125}))
 	var implicit := Save.new(implicit_v1)
 	implicit.load()
-	_ok(implicit.last_status == "migrated_v1" and int(implicit.data["credits"]) == 125,
+	_ok(implicit.last_status == "migrated_profile" and int(implicit.data["credits"]) == 125,
 		"Versionless legacy save migrates")
 	_ok(Save.is_valid_v2(JSON.parse_string(FileAccess.get_file_as_string(implicit_v1))),
 		"Versionless migration writes schema 2")
+
+	## V2 saves containing retired vehicles migrate without losing progress.
+	var retired_path := test_root + "/retired_v2.json"
+	var retired := Save.defaults()
+	retired["selected_car"] = "kestrel_xr"
+	retired["unlocked_cars"] = ["vela_gt", "orion_rs", "kestrel_xr"]
+	retired["credits"] = 925
+	retired["settings"]["music_volume"] = 0.2
+	retired["completed_events"] = {"alder_circuit":{"best_time_s":58.0, "completions":2, "wins":1}}
+	_put(retired_path, JSON.stringify(retired))
+	var retired_save := Save.new(retired_path)
+	var retired_loaded: Dictionary = retired_save.load()
+	_ok(retired_save.last_status == "migrated_profile" and retired_save.selected_car() == "aventador_svj", "V2 retired selection migrates")
+	_ok(retired_loaded["unlocked_cars"] == ["aventador_svj", "mclaren_senna"] and retired_loaded["credits"] == 925, "V2 roster and credits preserved")
+	_ok(retired_loaded["completed_events"]["alder_circuit"]["wins"] == 1 and is_equal_approx(retired_loaded["settings"]["music_volume"], 0.2), "V2 records and settings preserved")
+	_ok(FileAccess.file_exists(retired_path + ".bak"), "Original V2 profile backed up")
 
 	## Temp recovery after interrupted write. Backup path absent, corrupt primary quarantined.
 	var temp_path := test_root + "/temp.json"
@@ -107,7 +123,7 @@ func _run() -> void:
 	_put(invalid_path + ".tmp", "not json")
 	var invalid := Save.new(invalid_path)
 	invalid.load()
-	_ok(invalid.last_status == "reset_corrupt" and invalid.selected_car() == "vela_gt", "Unrecoverable save loads defaults")
+	_ok(invalid.last_status == "reset_corrupt" and invalid.selected_car() == "aventador_svj", "Unrecoverable save loads defaults")
 	_ok(invalid.save(), "Unrecoverable profile can be saved without destructive loss")
 	_ok(FileAccess.file_exists(invalid_path) and Save.is_valid_v2(JSON.parse_string(FileAccess.get_file_as_string(invalid_path))), "New valid profile written")
 

@@ -6,7 +6,7 @@ const StudioFloor = preload("showroom_floor.gdshader")
 
 var viewport: SubViewport
 var turntable: Node3D
-var current_id := "vela_gt"
+var current_id := "aventador_svj"
 var orbit_enabled := true
 var _camera: Camera3D
 var _quality := 1.15
@@ -247,7 +247,7 @@ func _wheel(x: float, z: float) -> void:
 	turntable.add_child(rim)
 
 func set_car(car_id: String) -> void:
-	current_id = car_id if not Catalog.car(car_id).is_empty() else "vela_gt"
+	current_id = car_id if not Catalog.car(car_id).is_empty() else "aventador_svj"
 	if turntable == null:
 		return
 	_clear_car()
