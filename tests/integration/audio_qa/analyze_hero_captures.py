@@ -26,7 +26,7 @@ def inspect(directory, profile):
     assert frames >= 28 * rate, "Incomplete 31-second capture"
     with (directory / (profile + "_rpm_trace.csv")).open(newline="") as f:
         trace = list(csv.DictReader(f))
-    assert len(trace) >= 1700 and trace[-1]["scenario"] == "camera_perspective", "Incomplete telemetry trace"
+    assert len(trace) >= 1700 and trace[-1]["scenario"] == "camera_perspective_switching", "Incomplete telemetry trace"
     # Whole capture: a genuine engine cannot output repeated millisecond-long
     # exact digital zero runs. Ignore the first/last quarter second.
     max_zero = consecutive = runs = 0

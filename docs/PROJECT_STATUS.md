@@ -1,5 +1,18 @@
 # Project status — single current-state log
 
+## Phase-synchronous hero engine playback and defect detection (2026-11-25)
+
+The owner asked to continue until blocked, with priority on the piano-like acceleration/deceleration. The clean-loop revision 76f8b1d passed all ten Godot suites, but isolated exhaust spectra still showed high harmonic concentration (median dominant FFT-bin power fraction 0.284 Aventador / 0.399 Senna in sustained sweep, 40–4500 Hz, 2048-sample STFT). This is not a subjective quality score.
+
+Implemented PhaseGrainEngine: extracts six varied, 16-firing-cycle grains per anchor from the existing real PCM, fits a bounded fractional period, aligns starting phase, overlaps complementary windows and uses a single sample-clock firing phase for RPM and load blending. Both hero cars use the new renderer; older cars retain legacy loops. No artificial oscillator or copied game audio. The original continuous-take research is a separate candidate pipeline, not yet the installed source bank.
+
+First renderer revision f69eeaa, actual Godot 4.7.2 run 45514601359: 61/61 recorded asset checks, all ten runtime suites, both dedicated banks, zero clipped samples. Offline real-PCM rendering regression: 1 second of sample generation in 19.1 ms on CI runner, peak 0.195, max sample delta 0.090; hero preparation 130–150 ms. **Actual downloaded capture was NOT accepted**: 331 exact-zero runs >2 ms per car, longest about 31.9 ms, caused by a 2048-sample generator queue being drained by the 4096-frame headless mixer quantum. This defect escaped the older peak-only gate.
+
+Changed buffer sizing to use at least 4096 source frames in headless mode, and reported device latency plus margin for normal drivers; added underrun/push-failure telemetry and strict independent PCM gap detection. New validation requires zero post-warmup generator skips and no >=2 ms exact-zero runs, and checks complete RPM trace. Shortened test timeouts so a failed assertion cannot stall QA for 15 minutes. New revision not verified yet.
+
+Continuous recording research run 45514601347 failed before decoding because ffmpeg was absent; numpy/scipy installed correctly. Pinned Python analysis dependencies and bundled imageio-ffmpeg fallback. Local independently executed chirp-tracker fixture with faster spectral background filter gave median frequency error 0.338%, valid sweep and nonzero overlap-add output. Not a real-car result. Original source download still needs CI verification. No user listening sign-off or in-world performance validation.
+
+
 ## Piano-like acceleration and deceleration: player-reported quality failure (2026-11-24)
 
 The owner reports that acceleration and lift-off sound like piano notes. This supersedes prior technical acceptance; no subjective sign-off. Independently downloaded the exact 6609c6b capture artifact (run 45511642256, artifact 14976710538). Analyzed both 44.1 kHz stereo WAVs, 30.65 seconds each. During the full-throttle sweep (1.25–4.7 s), the dominant spectral bin within 40–4500 Hz occupied median 33.1% (Aventador) and 37.4% (Senna) of measured band energy, with 90th percentiles 61.6% and 65.7% (2048-sample spectrogram, 1792 overlap). These are concentration diagnostics, not a listening score. Aventador dominant peaks repeatedly alternate harmonic orders. The current upstream banks were deliberately pitch-flattened from spotter clips for a hybrid synth/sample app, not a purpose-built continuous ramp renderer.
