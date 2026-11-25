@@ -6,6 +6,10 @@ const CHANNELS := ["grass_suitability", "woodland_weight", "moisture", "exposed_
 var status := "not loaded"
 
 func load_mask(directory: String = DEFAULT_DIR) -> Texture2D:
+	var image := load_image(directory)
+	return ImageTexture.create_from_image(image) if image != null else null
+
+func load_image(directory: String = DEFAULT_DIR) -> Image:
 	status = "missing mask"
 	var manifest_path := directory.path_join("manifest.json")
 	var data_path := directory.path_join("biome_rgba8.bin")
@@ -27,7 +31,7 @@ func load_mask(directory: String = DEFAULT_DIR) -> Texture2D:
 	# Accept ordered names or explicit R/G/B/A mapping. The byte order is fixed by v1.
 	var channels: Variant = manifest.get("channels", manifest.get("channel_names"))
 	if channels is Dictionary:
-		channels = [channels.get("R"), channels.get("G"), channels.get("B"), channels.get("A")]
+		channels = [channels.get("R", channels.get("r")), channels.get("G", channels.get("g")), channels.get("B", channels.get("b")), channels.get("A", channels.get("a"))]
 	if not channels is Array or channels.size() != 4:
 		return null
 	for i in range(4):
@@ -62,4 +66,4 @@ func load_mask(directory: String = DEFAULT_DIR) -> Texture2D:
 		status = "mask image failed"
 		return null
 	status = "valid v1 mask"
-	return ImageTexture.create_from_image(image)
+	return image
