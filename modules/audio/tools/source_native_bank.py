@@ -38,7 +38,7 @@ def external(path):
 
 
 def fetch(profile, folder):
-    from professional_reference import SOURCES as configs, acquire_range
+    from professional_reference import SOURCES as configs, acquire
     folder = external(folder)
     folder.mkdir(parents=True, exist_ok=True)
     dest = folder / (profile + ".wav")
@@ -48,7 +48,7 @@ def fetch(profile, folder):
         return dest
     with tempfile.TemporaryDirectory(dir=folder) as tmp:
         source = Path(tmp) / "original.wav"
-        acquire_range(configs[profile], source)
+        acquire(configs[profile], source)
         if digest(source) != SOURCES[profile][0]:
             raise ValueError("Original SHA-256 mismatch")
         source.rename(dest)

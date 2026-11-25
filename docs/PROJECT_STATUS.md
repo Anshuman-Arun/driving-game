@@ -2,6 +2,8 @@
 
 ## Professional source-native audio audition (PR #41)
 
+Run 45551426278 failed during acquisition: both official ZIP endpoints returned HTTP 200 rather than partial content. Neither bank was generated and real-drive QA was skipped. Corrected the ZIP magic check in the existing bounded full-archive extractor, wired the native installer to the fallback, and added offline HTTP 200 extraction and cleanup regressions. Retry pending; no new playback claim.
+
 Prior revision 735bcb3 passed Godot import, original audio regression/capture suite and local manifest/PCM fixture checks in run 45549857470. Owner approved related supercar models. Added real original-source acquisition and deterministic provisional RPM/load window selection, local installation and dedicated live-drive CI requiring the professional bank to be active. No raw/derived sample files are distributed. Actual original bank coverage and playback results pending; listening approval remains required. See docs/SOURCE_NATIVE_AUDIO.md.
 
 ## Verified hero playback rebuild — actual driving and recorded texture (2026-11-25)

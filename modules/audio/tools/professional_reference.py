@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Acquire two original professional onboard ramp references from official free GDC ZIPs.
-Only fetch the selected members using public HTTP ranges. No source audio is committed,
+Prefer selected-member HTTP ranges; bounded full-ZIP fallback if unavailable. No source audio is committed,
 published or uploaded by CI. The index is a locator, not the audio provider.
 """
 import argparse
@@ -95,19 +95,19 @@ def acquire_full(cfg, target):
     # Limit transfer, time and extraction size; never accept an HTML error.
     archive=target.with_suffix(".zip")
     request=urllib.request.Request(cfg["url"],headers={"User-Agent":"AsterValleyAudioResearch/1.0"})
-    deadline=time.monotonic()+180
+    deadline=time.monotonic()+300
     try:
         with urllib.request.urlopen(request,timeout=25) as response:
             prefix=response.read(4)
             length=int(response.headers.get("Content-Length","0"))
-            if prefix!=b"PK\\x03\\x04" or length>3_200_000_000:
+            if prefix!=bytes.fromhex("504b0304") or length>3_200_000_000:
                 raise ValueError(f"Not a bounded ZIP: {prefix!r}, length={length}")
             with archive.open("wb") as out:
                 out.write(prefix)
                 count=4
                 while True:
                     if time.monotonic()>deadline:
-                        raise TimeoutError("180-second archive transfer budget exceeded")
+                        raise TimeoutError("300-second archive transfer budget exceeded")
                     chunk=response.read(4*1024*1024)
                     if not chunk: break
                     count+=len(chunk)
@@ -132,15 +132,15 @@ def acquire(cfg,target):
     primary=cfg["url"]
     mirror="https://hippolytus.feralhosting.com/sonniss/"+urllib.parse.urlsplit(primary).path.rsplit("/",1)[-1]
     errors=[]
-    for url in (mirror,primary):
-        for method in (acquire_range,acquire_full):
-            try:
-                print("REFERENCE attempt",method.__name__,url,flush=True)
-                return method(dict(cfg,url=url),target)
-            except Exception as exc:
-                errors.append(f"{method.__name__}: {exc}")
-                print("REFERENCE attempt failed",repr(exc),flush=True)
-                target.unlink(missing_ok=True)
+    for method, url in ((acquire_range, primary), (acquire_range, mirror),
+                        (acquire_full, primary), (acquire_full, mirror)):
+        try:
+            print("REFERENCE attempt",method.__name__,url,flush=True)
+            return method(dict(cfg,url=url),target)
+        except Exception as exc:
+            errors.append(f"{method.__name__}: {exc}")
+            print("REFERENCE attempt failed",repr(exc),flush=True)
+            target.unlink(missing_ok=True)
     raise RuntimeError("; ".join(errors))
 
 

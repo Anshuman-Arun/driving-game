@@ -11,7 +11,7 @@ concurrency:
 jobs:
   native:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -53,6 +53,8 @@ jobs:
           sudo apt-get install -y ffmpeg
           python3 -m venv "$RUNNER_TEMP/native-venv"
           "$RUNNER_TEMP/native-venv/bin/pip" install numpy==2.2.6 scipy==1.15.3
+      - name: Verify archive fallback offline
+        run: python3 -m unittest discover -s modules/audio/tests -p test_professional_download.py -v
       - name: Download originals and install source-native banks
         shell: bash
         run: |
