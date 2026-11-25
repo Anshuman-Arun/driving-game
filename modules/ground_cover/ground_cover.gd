@@ -25,6 +25,7 @@ var _state := "disabled"
 var _geometry_bytes := 0
 var _reason := ""
 var _material: ShaderMaterial
+var _plain_material: StandardMaterial3D
 var _meshes: Array = []
 var _active: Dictionary = {}
 var _queue: Array = []
@@ -70,10 +71,17 @@ func build(world: Node, preset: String, mask_dir: String, options: Dictionary = 
 		return _fail(_mask.error)
 	_material = ShaderMaterial.new()
 	_material.shader = SHADER
+	var draw_material: Material = _material
+	if bool(options.get("tuning", {}).get("plain_material", false)):
+		_plain_material = StandardMaterial3D.new()
+		_plain_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_plain_material.vertex_color_use_as_albedo = true
+		_plain_material.roughness = 0.96
+		draw_material = _plain_material
 	for s in range(SPECIES):
 		var variants: Array[Mesh] = []
 		for lod in range(3):
-			var mesh := Grass.make_mesh(s, lod, _material)
+			var mesh := Grass.make_mesh(s, lod, draw_material)
 			variants.append(mesh)
 			var arrays := mesh.surface_get_arrays(0)
 			_geometry_bytes += arrays[Mesh.ARRAY_VERTEX].size() * 48 + arrays[Mesh.ARRAY_INDEX].size() * 4
@@ -424,7 +432,7 @@ func _flush_active() -> void:
 
 func get_stats() -> Dictionary:
 	var total := int(_counts[0]+_counts[1]+_counts[2])
-	return {"state":_state,"fallback":_reason,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
+	return {"state":_state,"fallback":_reason,"plain_material":_plain_material != null,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
 
 func shutdown() -> void:
 	set_process(false)
@@ -435,6 +443,7 @@ func shutdown() -> void:
 	_meshes.clear()
 	_geometry_bytes = 0
 	_material = null
+	_plain_material = null
 	_mask.bytes.clear()
 	_fixture = Callable()
 	_world = null
