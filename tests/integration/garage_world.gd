@@ -119,14 +119,14 @@ func _run() -> void:
 	await _key(KEY_ENTER)
 	_check(shell.screen == "GARAGE", "keyboard opens the garage from the main menu")
 	_assert_preview(shell, "aventador_svj")
-	await _capture("garage-vela-gt")
+	await _capture("garage-aventador")
 	var fallback_car := PlayerCarFactory.create()
 	_check(not CuratedCar.mount(fallback_car, "missing") and fallback_car.get_node("FallbackBody").visible
 		and fallback_car.get_node("FrontLeft/WheelVisual/Rubber").visible, "missing art leaves original appearance intact")
 	fallback_car.free()
 	await _select_next(shell, "mclaren_senna")
 	_assert_preview(shell, "mclaren_senna")
-	await _capture("01-menu-garage-orion")
+	await _capture("01-menu-garage-senna")
 	await _key(KEY_ESCAPE)
 	await _key(KEY_ENTER)
 	await _ticks(125)
@@ -137,7 +137,7 @@ func _run() -> void:
 		return
 	_assert_car(drive, "mclaren_senna")
 	_assert_scenery(drive)
-	await _capture("02-orion-free-roam")
+	await _capture("02-senna-free-roam")
 	var start := drive.vehicle_body.global_position
 	Input.action_press("drive_throttle")
 	await _ticks(180)
@@ -173,16 +173,16 @@ func _run() -> void:
 	_check(mounted_ids == ["mclaren_senna", "aventador_svj"], "visual hook receives both production chassis")
 	_check(not is_instance_valid(old) and drive.vehicle_body.global_position.distance_to(parked_at) < 0.02,
 		"parked replacement removes the old body and keeps its position")
-	await _capture("03-parked-garage-kestrel")
+	await _capture("03-parked-garage-aventador")
 	await _key(KEY_BACKSPACE)
 	await _ticks(60)
 	_check(shell.screen == "FREE_ROAM" and not paused and drive.camera.mode == 3, "back resumes driving in the saved view")
 	var hood := drive.vehicle_body.get_node("CameraMounts/Hood") as Marker3D
 	_check(hood.global_position.distance_to(drive.camera.global_position) < 0.10, "hood follows the new chassis anchor")
-	await _capture("04-kestrel-hood")
+	await _capture("04-aventador-hood")
 	await _tap("drive_camera")
 	await _ticks(10)
-	await _capture("05-kestrel-chase")
+	await _capture("05-aventador-chase")
 
 	_check(drive.vehicle_body.wheel_array.all(func(wheel: Wheel) -> bool: return wheel.is_colliding()),
 		"replaced car settles onto all four wheels")
