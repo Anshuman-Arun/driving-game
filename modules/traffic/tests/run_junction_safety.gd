@@ -356,12 +356,15 @@ func _seed_trace(seed_value: int) -> Dictionary:
     var safe := true
     var wait_ticks: Dictionary = {}
     var longest_wait := 0
+    var longest_wait_state: Dictionary = {}
+    var violations: Dictionary = {}
     for _tick in range(1350):
         sim.step(DT, viewer)
         var states: Array = sim.get_states()
         peak = maxi(peak, states.size())
         if states.size() > 20:
             safe = false
+            violations["density_cap"] = int(violations.get("density_cap", 0)) + 1
         var now: Dictionary = {}
         for a in states:
             var aid: int = int(a["id"])
@@ -370,11 +373,14 @@ func _seed_trace(seed_value: int) -> Dictionary:
                 transitions += 1
             if a["reserved_junction"] != "" and int(sim.reservations.get(a["reserved_junction"], -1)) != aid:
                 safe = false
+                violations["missing_owner"] = int(violations.get("missing_owner", 0)) + 1
             var snap: String = "%s:%s:%.3f:%s" % [aid, a["lane_id"], float(a["s"]), a["reserved_junction"]]
             fingerprint = posmod(fingerprint * 131 + int(snap.hash()), 2147483647)
             if a["state"] == "WAIT_AT_JUNCTION":
                 wait_ticks[aid] = int(wait_ticks.get(aid, 0)) + 1
-                longest_wait = maxi(longest_wait, int(wait_ticks[aid]))
+                if int(wait_ticks[aid]) > longest_wait:
+                    longest_wait = int(wait_ticks[aid])
+                    longest_wait_state = {"id": aid, "lane": a["lane_id"], "s": a["s"], "next": a["next_lane"], "speed": a["speed_mps"], "tick": _tick}
             else:
                 wait_ticks.erase(aid)
         previous = now
@@ -383,12 +389,14 @@ func _seed_trace(seed_value: int) -> Dictionary:
             var first_owner: int = int(sim.reservations[keys[i]])
             if not sim.agents.has(first_owner):
                 safe = false
+                violations["stale_first_owner"] = int(violations.get("stale_first_owner", 0)) + 1
                 continue
             var first: Dictionary = sim.agents[first_owner]
             for j in range(i + 1, keys.size()):
                 var second_owner: int = int(sim.reservations[keys[j]])
                 if not sim.agents.has(second_owner):
                     safe = false
+                    violations["stale_second_owner"] = int(violations.get("stale_second_owner", 0)) + 1
                     continue
                 var second: Dictionary = sim.agents[second_owner]
                 if first["reservation_zone"] == second["reservation_zone"] and first["reservation_zone"] != "":
@@ -400,6 +408,7 @@ func _seed_trace(seed_value: int) -> Dictionary:
                         if first["lane_id"] == second["lane_id"] and (
                                 absf(float(first["s"]) - float(second["s"])) < sim.MIN_GAP_M - 0.05):
                             safe = false
+                            violations["same_lane_gap"] = int(violations.get("same_lane_gap", 0)) + 1
                     elif sim.movement_conflicts.has(movement) and (
                             sim.movement_conflicts[movement].has(other_movement)):
                         if sim._movement_progress(first, movement) < float(
@@ -407,6 +416,8 @@ func _seed_trace(seed_value: int) -> Dictionary:
                                 sim._movement_progress(second, other_movement) < float(
                                 sim.movement_pair_release[other_movement][movement])):
                             safe = false
+                            violations["conflicting_owners"] = int(violations.get("conflicting_owners", 0)) + 1
+    print("CANONICAL FLOW seed=", seed_value, " peak=", peak, " transitions=", transitions, " longest_wait_ticks=", longest_wait, " wait_state=", longest_wait_state, " violations=", violations)
     return {"ok": safe and peak > 0 and transitions > 0 and longest_wait < 900,
         "trace": fingerprint,
         "peak": peak, "transitions": transitions}

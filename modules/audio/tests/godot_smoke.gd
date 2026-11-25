@@ -25,5 +25,8 @@ func _check_audio(audio) -> void:
 	audio.update_telemetry({"rpm": 4600.0, "throttle": 0.9, "gear": 2, "speed_mps": 20.0})
 	audio.update_telemetry({"rpm": 3200.0, "throttle": 0.1, "gear": 3, "speed_mps": 23.0})
 	assert(audio._shift_timer > 0.0)
+	audio.queue_free()
+	await process_frame
+	await process_frame
 	print("Aster audio Godot telemetry/mixer smoke PASS")
 	quit(0)

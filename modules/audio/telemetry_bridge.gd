@@ -4,7 +4,7 @@ extends RefCounted
 ## No dependency on the core scripts, so the audio bench remains standalone.
 
 static func from_gevp(vehicle: Node3D) -> Dictionary:
-	if not is_instance_valid(vehicle):
+	if not is_instance_valid(vehicle) or not vehicle.is_inside_tree():
 		return _stationary()
 
 	# A single property-list lookup per vehicle sample, rather than one per field.
