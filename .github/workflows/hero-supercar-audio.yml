@@ -1,9 +1,9 @@
 name: Hero supercar audio validation
 on:
   push:
-    branches: [feat/hero-supercar-audio]
+    branches: [feat/hero-supercar-audio, fix/source-native-audio]
   pull_request:
-    branches: [feat/aster-scenic-supercars]
+    branches: [feat/aster-scenic-supercars, feat/hero-supercar-audio]
 permissions:
   contents: read
 concurrency:
@@ -54,6 +54,12 @@ jobs:
           export AUDIO_QA_LOG_DIR="$RUNNER_TEMP/audio-qa"
           export ASTER_AUDIO_CAPTURE_DIR="$RUNNER_TEMP/audio-qa/audition"
           bash tests/integration/audio_qa/run_all.sh
+      - name: Check source-native cut and local manifest validation
+        shell: bash
+        run: |
+          python3 -m unittest discover -s modules/audio/tests -p test_source_native_bank.py -v
+          export XDG_DATA_HOME="$RUNNER_TEMP/native-audio-fixture"
+          godot --headless --path . --script res://tests/integration/audio_qa/test_native_bank.gd
       - name: Upload capture WAVs and QA logs (optional; storage quota may block)
         if: always()
         continue-on-error: true

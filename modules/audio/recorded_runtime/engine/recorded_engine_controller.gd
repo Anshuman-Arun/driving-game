@@ -583,7 +583,10 @@ func _rebuild_loop_players() -> void:
 			add_child(renderer)
 		else:
 			renderer.free()
-			push_error("Hero phase-grain source preparation failed: "+car_profile)
+			if _manifest.bank_status == "local_source_native_audition":
+				push_warning("Native phase-grain source preparation failed: "+car_profile)
+			else:
+				push_error("Hero phase-grain source preparation failed: "+car_profile)
 
 
 func _init_auxiliary_players() -> void:
