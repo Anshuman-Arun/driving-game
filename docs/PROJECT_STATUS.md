@@ -90,3 +90,7 @@ The experimental oldest-first scheduling change did not reduce canonical queue w
 ### CI rerun 6 (run 45557610817)
 
 Root game, data and standalone jobs passed; basic traffic restored to 48/48. Advanced traffic remains 83/85: 990/984 consecutive WAIT_AT_JUNCTION ticks at Alder, no reservation/capacity violations. Diagnostics show waiting drivers' stop dwell remains incomplete while conflicting owners are moving through long connectors. A narrower follow-up completes mandatory stop dwell during conflict occupancy only for authored movements (no changes to legacy fixture admission or reservation conflict checks). Added three focused assertions and retained the original 30-second threshold. Both audio functional suites pass, though regression teardown still reports 20 resource references; this is not a clean engine exit. Pending verification.
+
+### CI rerun 7 (run 45558759924)
+
+Data, root and standalone jobs passed; traffic fixtures 48/48 and authored stop-dwell checks passed. Advanced canonical waits fell from 990 to 902 ticks for seed 20261121, remained 984 for seed 73; no reservation/capacity violations. Add oldest-completed-stop priority only between different conflicting authored movements, preserving legacy scheduling and same-movement headway. New priority fixture, unchanged 30-second limit. Pending CI.

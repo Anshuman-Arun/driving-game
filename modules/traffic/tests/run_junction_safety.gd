@@ -75,6 +75,7 @@ func _run() -> void:
     _test_short_connector(sim)
     _test_nonconflicting_turns()
     _test_stop_dwell_during_conflict()
+    _test_authored_arrival_order()
     _test_opposing_flow()
     _test_cleanup()
     for jid in COMPLEX:
@@ -310,6 +311,27 @@ func _test_stop_dwell_during_conflict() -> void:
     sim.despawn_agent(first)
     _check(not sim._junction_blocked(waiting, "junction_alder", sim.junctions["junction_alder"]),
         "completed dwell allows immediate admission after conflict clears")
+
+
+func _test_authored_arrival_order() -> void:
+    var sim = _simulation(51)
+    if sim == null:
+        _check(false, "arrival order setup")
+        return
+    var pair: Array[String] = _pick_conflicting_pair(sim, "junction_alder")
+    var later: int = _spawn_routed(sim, "junction_alder", pair[0])
+    var earlier: int = _spawn_routed(sim, "junction_alder", pair[1])
+    _check(later > 0 and earlier > 0, "arrival order conflicting agents spawn")
+    if later <= 0 or earlier <= 0:
+        return
+    sim.agents[later]["stop_done"] = true
+    sim.agents[later]["stop_ready_tick"] = 50
+    sim.agents[earlier]["stop_done"] = true
+    sim.agents[earlier]["stop_ready_tick"] = 20
+    _check(sim._junction_blocked(sim.agents[later], "junction_alder", sim.junctions["junction_alder"]),
+        "later conflicting driver yields to older completed stop")
+    _check(not sim._junction_blocked(sim.agents[earlier], "junction_alder", sim.junctions["junction_alder"]),
+        "older completed stop can proceed despite higher agent ID")
 
 
 func _test_opposing_flow() -> void:
