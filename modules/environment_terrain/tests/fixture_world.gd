@@ -4,6 +4,7 @@ const Clearance := preload("res://modules/world_runtime/src/road_clearance.gd")
 const MATERIAL := preload("res://assets/forza_env/materials/terrain_triplanar_pbr.tres")
 var generated_root: Node3D
 var road_clearance: RefCounted
+var roadworks := {"waters": [{"height": 30.0, "cells": [[253, 253]]}]}
 var ground: MeshInstance3D
 var road: MeshInstance3D
 var collision: CollisionShape3D
