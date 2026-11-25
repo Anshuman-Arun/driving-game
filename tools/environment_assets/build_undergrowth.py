@@ -1163,7 +1163,15 @@ def main():
     argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else sys.argv[1:]
     args = parser.parse_args(argv)
 
-    if args.blender_worker:
+    # Auto-detect Blender execution context: if 'bpy' is importable we ARE inside
+    # Blender's Python — skip host-only texture prep and go straight to blender_worker.
+    try:
+        import bpy as _bpy_probe  # noqa: F401
+        _in_blender = True
+    except ImportError:
+        _in_blender = False
+
+    if args.blender_worker or _in_blender:
         blender_worker(args)
         return
 
