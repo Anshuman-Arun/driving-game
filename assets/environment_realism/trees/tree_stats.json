@@ -1,0 +1,128 @@
+{
+  "conifer_tall_lod0.glb": {
+    "tris": 4164,
+    "bark_tris": 1800,
+    "foliage_tris": 2364,
+    "height_m": 15.054,
+    "min_y_m": -0.163,
+    "crown_radius_m": 2.735,
+    "size_kb": 7906.3
+  },
+  "conifer_tall_lod1.glb": {
+    "tris": 1734,
+    "bark_tris": 656,
+    "foliage_tris": 1078,
+    "height_m": 15.056,
+    "min_y_m": -0.164,
+    "crown_radius_m": 2.376,
+    "size_kb": 2160.6
+  },
+  "conifer_tall_lod2.glb": {
+    "tris": 144,
+    "bark_tris": 60,
+    "foliage_tris": 84,
+    "height_m": 15.061,
+    "min_y_m": -0.163,
+    "crown_radius_m": 2.435,
+    "size_kb": 2089.2
+  },
+  "conifer_medium_lod0.glb": {
+    "tris": 1334,
+    "bark_tris": 566,
+    "foliage_tris": 768,
+    "height_m": 10.482,
+    "min_y_m": -0.169,
+    "crown_radius_m": 4.367,
+    "size_kb": 7964.0
+  },
+  "conifer_medium_lod1.glb": {
+    "tris": 576,
+    "bark_tris": 256,
+    "foliage_tris": 320,
+    "height_m": 10.12,
+    "min_y_m": -0.168,
+    "crown_radius_m": 4.196,
+    "size_kb": 2196.8
+  },
+  "conifer_medium_lod2.glb": {
+    "tris": 84,
+    "bark_tris": 60,
+    "foliage_tris": 24,
+    "height_m": 10.076,
+    "min_y_m": -0.163,
+    "crown_radius_m": 3.4,
+    "size_kb": 2175.0
+  },
+  "broadleaf_oak_lod0.glb": {
+    "tris": 2072,
+    "bark_tris": 1112,
+    "foliage_tris": 960,
+    "height_m": 10.293,
+    "min_y_m": -0.174,
+    "crown_radius_m": 6.515,
+    "size_kb": 8836.4
+  },
+  "broadleaf_oak_lod1.glb": {
+    "tris": 1124,
+    "bark_tris": 404,
+    "foliage_tris": 720,
+    "height_m": 10.166,
+    "min_y_m": -0.17,
+    "crown_radius_m": 6.13,
+    "size_kb": 2427.9
+  },
+  "broadleaf_oak_lod2.glb": {
+    "tris": 208,
+    "bark_tris": 128,
+    "foliage_tris": 80,
+    "height_m": 9.895,
+    "min_y_m": -0.178,
+    "crown_radius_m": 6.163,
+    "size_kb": 2387.4
+  },
+  "broadleaf_birch_lod0.glb": {
+    "tris": 768,
+    "bark_tris": 480,
+    "foliage_tris": 288,
+    "height_m": 10.59,
+    "min_y_m": -0.16,
+    "crown_radius_m": 2.419,
+    "size_kb": 6729.6
+  },
+  "broadleaf_birch_lod1.glb": {
+    "tris": 508,
+    "bark_tris": 316,
+    "foliage_tris": 192,
+    "height_m": 10.731,
+    "min_y_m": -0.162,
+    "crown_radius_m": 2.463,
+    "size_kb": 1952.2
+  },
+  "broadleaf_birch_lod2.glb": {
+    "tris": 128,
+    "bark_tris": 96,
+    "foliage_tris": 32,
+    "height_m": 10.487,
+    "min_y_m": -0.16,
+    "crown_radius_m": 2.783,
+    "size_kb": 1936.3
+  },
+  "sapling_conifer_lod0.glb": {
+    "tris": 946,
+    "bark_tris": 368,
+    "foliage_tris": 578,
+    "height_m": 3.542,
+    "min_y_m": -0.151,
+    "crown_radius_m": 1.198,
+    "size_kb": 7764.7
+  },
+  "sapling_conifer_lod1.glb": {
+    "tris": 122,
+    "bark_tris": 60,
+    "foliage_tris": 62,
+    "height_m": 3.542,
+    "min_y_m": -0.151,
+    "crown_radius_m": 1.198,
+    "size_kb": 2087.4
+  }
+}
