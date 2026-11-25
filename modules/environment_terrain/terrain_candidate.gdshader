@@ -225,7 +225,7 @@ void fragment() {
 	vec4 biome = vec4(0.0);
 	float ecological_w = 0.0;
 	vec2 biome_uv = (xz + vec2(1000.0)) / 2000.0;
-	if (use_biome_mask && all(greaterThanEqual(biome_uv, vec2(0.0))) && all(lessThan(biome_uv, vec2(1.0)))) {
+	if (use_biome_mask && candidate_w > 0.0 && all(greaterThanEqual(biome_uv, vec2(0.0))) && all(lessThan(biome_uv, vec2(1.0)))) {
 		biome = texture(biome_mask, biome_uv);
 		ecological_w = biome_strength * candidate_w;
 	}
@@ -241,6 +241,8 @@ void fragment() {
 
 	// Macro distance anti-tiling blend
 	float dist_blend = clamp(anti_tile_w * 0.65 + smoothstep(50.0, 300.0, cam_dist) * 0.35, 0.15, 0.85);
+	// Use existing organic detail to modulate the rotated secondary projection at a finer scale.
+	dist_blend = clamp(dist_blend + (detail_noise - 0.5) * 0.18 * candidate_w, 0.15, 0.85);
 
 	// Slope Calculation:
 	// n.y is 1.0 for completely horizontal ground, 0.0 for vertical cliff.
@@ -275,11 +277,11 @@ void fragment() {
 	col_dirt *= mix(vec3(1.0), vec3(0.77, 0.90, 0.78), cedar);
 	col_dirt *= mix(vec3(1.0), vec3(0.81, 1.07, 0.80), moss_strength * candidate_w * forest_w * mix(0.5, biome.b, ecological_w));
 	float ground_forest = forest_w * 0.65;
-	if (use_roadside) {
+	if (use_roadside && candidate_w > 0.0) {
 		vec2 ruv = (xz - roadside_rect.xy) / roadside_rect.zw;
 		if (all(greaterThanEqual(ruv, vec2(0.0))) && all(lessThan(ruv, vec2(1.0)))) {
 			float band = texture(roadside_mask, ruv).r * roadside_strength * candidate_w;
-			ground_forest = max(ground_forest, band * (0.7 + 0.3 * detail_noise));
+			ground_forest = mix(ground_forest, 1.0, band * (0.7 + 0.3 * detail_noise));
 		}
 	}
 	vec3 flat_col = mix(col_grass, col_dirt, ground_forest);
@@ -294,7 +296,7 @@ void fragment() {
 
 	vec3 n_grass = sample_stochastic_world_normal(grass_normal, xz, grass_scale, dist_blend, n, eff_normal_str * 0.75);
 	vec3 n_dirt = sample_stochastic_world_normal(dirt_normal, xz, dirt_scale, dist_blend, n, eff_normal_str * 0.75);
-	vec3 flat_n = normalize(mix(n_grass, n_dirt, forest_w * 0.65));
+	vec3 flat_n = normalize(mix(n_grass, n_dirt, ground_forest));
 
 	// Shoreline handling near lake waterline
 	float shore_h = h + (detail_noise - 0.5) * 1.0;
