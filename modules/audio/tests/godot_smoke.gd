@@ -27,6 +27,6 @@ func _check_audio(audio) -> void:
 	assert(audio._shift_timer > 0.0)
 	audio.queue_free()
 	await process_frame
-	await process_frame
+	await create_timer(0.10).timeout
 	print("Aster audio Godot telemetry/mixer smoke PASS")
 	quit(0)

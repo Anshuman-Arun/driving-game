@@ -74,6 +74,7 @@ func _run() -> void:
     _test_geometry(sim)
     _test_short_connector(sim)
     _test_nonconflicting_turns()
+    _test_arrival_priority()
     _test_opposing_flow()
     _test_cleanup()
     for jid in COMPLEX:
@@ -281,6 +282,29 @@ func _test_nonconflicting_turns() -> void:
         sim.junctions["junction_alder"]), "independent movements are not serialized unnecessarily")
     sim.despawn_agent(first)
     _check(sim.reservations.is_empty(), "independent movement ownership cleans up")
+
+
+func _test_arrival_priority() -> void:
+    var sim = _simulation(51)
+    if sim == null:
+        _check(false, "arrival priority setup")
+        return
+    var pair: Array[String] = _pick_conflicting_pair(sim, "junction_alder")
+    var later: int = _spawn_routed(sim, "junction_alder", pair[0])
+    var earlier: int = _spawn_routed(sim, "junction_alder", pair[1])
+    _check(later > 0 and earlier > 0, "arrival priority agents spawn")
+    if later <= 0 or earlier <= 0:
+        return
+    # The earlier arrival deliberately has a higher ID, demonstrating that
+    # update order cannot starve a stopped approach.
+    sim.agents[later]["stop_done"] = true
+    sim.agents[later]["junction_ready_tick"] = 50
+    sim.agents[earlier]["stop_done"] = true
+    sim.agents[earlier]["junction_ready_tick"] = 20
+    _check(sim._junction_blocked(sim.agents[later], "junction_alder", sim.junctions["junction_alder"]),
+        "later conflicting arrival yields to earlier stopped driver")
+    _check(not sim._junction_blocked(sim.agents[earlier], "junction_alder", sim.junctions["junction_alder"]),
+        "oldest completed stop is eligible regardless of agent ID")
 
 
 func _test_opposing_flow() -> void:

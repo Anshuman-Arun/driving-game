@@ -124,6 +124,13 @@ func _exit_tree() -> void:
 	_disconnect_vehicle()
 	_bound_vehicle = null
 	_tracking_vehicle = false
+	# Stop both banks, including an in-progress crossfade, and release
+	# playback/stream references before the audio nodes are destroyed.
+	for player: AudioStreamPlayer in _players.values() + _alternate_engines.values() + _event_players:
+		if is_instance_valid(player):
+			player.stop()
+			player.stream = null
+	_event_streams.clear()
 
 
 func _disconnect_vehicle() -> void:
