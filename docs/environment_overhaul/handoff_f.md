@@ -1,0 +1,38 @@
+# Agent F — environment QA and performance handoff
+
+Base: `67023539e56e5e80d5efcd3f3239be9650c6f462` (verified identical to main at branch creation). Branch `feat/env-f-qa`; no production/root integration, no canonical asset edits. Only F-owned paths changed.
+
+## Headless
+Python 3.10+, Node, Git LFS, checksum-pinned Godot 4.7.2 stable. On a fresh checkout:
+
+    git lfs pull
+    python3 -m unittest discover -s tests/environment_overhaul -p 'test_*.py' -v
+    python3 tests/environment_overhaul/qa.py --mode baseline --out /tmp/aster-env-baseline
+
+Workflow `.github/workflows/environment-overhaul-qa.yml` triggers path-scoped pull requests and manual dispatch; it retains the pinned installer and the existing standalone, data, traffic and production audio suites. Baseline root tests are the existing ten scripts unchanged. Canonical traffic junction diagnostics remain a distinct manual opt-in (known baseline failures). Each owned command has a bounded timeout, actual log, strict return status and parse/script-error gate. CI root job uses full history for the protected-path comparison. Logs are not uploaded as large artifacts; the runner prints tail and JSON status. No external assets are imported by F.
+
+After candidate packages land, run:
+    
+    python3 tests/environment_overhaul/qa.py --mode integrated --out /tmp/aster-env-integrated
+
+Pass each agent's actual test argv as repeated `--agent-command '["godot","--headless","--path",".","--script","res://..."]'` and its actual deterministic generator invocation as `--rebake-command '["python3","..."]'`. Those commands are deliberately not guessed before the other agents land. Rebake checks both generated mask payloads against the original exact bytes, so run on a disposable checkout. Without the command, generator determinism is N/A, not a pass. Candidate manifest presence, mask schema/hash/coordinate orientation, asset inventory and available payloads, finite understory positions, exact triangle fixture (including shoulder/deck clearance), real candidate transforms, preset cycling, interaction, missing mask/invalid world, shutdown and same-seed traversal are checked. Asset path hashes require actual bytes, not LFS pointer text. Source-hash entries that are not resolvable project paths cannot be independently matched; coordinator should confirm names and coverage.
+
+The ground-cover inspector audits visible MultiMesh transforms against the runtime road index, including shoulders; it reports allocated and visible counts and enforces independent provisional limits (1.5 million allocated instances, 4096 batches, 2048 active/queued chunks where exposed). It does not prove shader-swept bounds or per-frame upload budgets: coordinator must use A's own swept-bound and work-budget tests and align stats names/caps with A's final interface. Direct RenderingServer batches would need an explicit inspection adapter. D's preview is exercised with restore; E needs a real scene and is exercised by its own tests and graphical capture. Optional understory actual mesh clearance requires the integrated species renderer; raw coordinates alone do not prove clearance. No visual claims.
+
+## Local graphical capture (Windows)
+Use a clean checkout, actual 4.7.2 console executable, real Forward+ GPU, LFS payloads imported, desktop large enough for a native 1920x1080 window. Use same graphics driver, monitor, refresh, resolution, fixed scene time, preset, settings and input. From repo root in PowerShell:
+
+    $godot = 'C:\Godot\Godot_v4.7.2-stable_win64_console.exe'
+    & $godot --headless --path . --editor --import
+    .\tests\environment_overhaul\capture.ps1 -Godot $godot -Output C:\qa\cedar-base -Site cedar
+    .\tests\environment_overhaul\capture.ps1 -Godot $godot -Output C:\qa\cedar-candidate -Site cedar -Mode candidate -Features a,d,e
+    python tests/environment_overhaul/report.py C:\qa\cedar-base C:\qa\cedar-candidate --out C:\qa\cedar-report.json
+
+Baseline and candidate can be captured on the same integrated commit with explicit opt-in adapters and no root wiring. The candidate currently adds cover alongside the live legacy vegetation (recorded); it is a preview, not an isolated replacement or a claim of final integration cost. Coordinator should provide an explicit reversible legacy-grass-only switch and a real traffic state hook; baseline root does not expose an integrated traffic toggle in the inspected driving script. Traffic is recorded unverified, not asserted enabled. Audio is kept on unless the master bus is muted; verify actual audible car and environment locally. The report refuses final budget acceptance if traffic/audio are unconfirmed. No GPU metrics are synthesized.
+
+All five sites use the exact visual_compare road anchors (cedar, valley, alder, ridge, eastwater). `-Scenario stationary` parks and freezes after settling; `offroad` locates a finite surface outside actual pavement/shoulder clearance. `manual` holds brake during warmup and releases when CAPTURE START prints; drive matching routes for at least 60 seconds with traffic/audio on. `route` drives the actual Senna using existing vehicle-world pure-pursuit controls and a selected forward lane segment, braking at its end; not a teleport or camera flythrough. Route speed and route progress are logged; short segments can finish before the capture ends, and a departure causes braking. Review trajectory and actual speed before using moving comparisons. Use `-SpeedMps 17.9` to `26.8` (40–60 mph), and only on verified safe straight routes/manual runs 44.7–60.8 m/s (100–136 mph). No high-speed control reliability has been verified; do not treat lane target speed as achieved speed. Repeat Cedar and Green Valley first, then all five regions, off-road and moving. Compare A/D/E individually before combined. Start Medium native; vary density and range via A's tuning and record those options. Low's reduced resolution scale is not interchangeable with Medium.
+
+Output: real start/end PNG after frame_post_draw, frames.csv raw process-frame wall-clock intervals, GPU/CPU viewport timing (blank for unsupported/zero), global draw calls/primitives/VRAM (engine counters, not whole-system GPU memory), speed/gear/world position/FOV, visible cover count sampled once a second, metadata with commit, preset, renderer, GPU/CPU and driver where available, scene pose, flags, last cover stats and completion flag. Capture files written outside repository and temporary save profile deleted on orderly exit. Screenshot time excluded from measurement. No headless screenshot or FPS accepted. External driver overlays, audio and display settings need owner verification. The raw interval is not OS compositor presentation telemetry; actual dropped present frames are unavailable. Report computes interpolated p50/p95/p99, mean FPS and 1% low = 1000 / mean of slowest ceil(1% of valid intervals), counts invalid/missing samples, compares metadata; no visual pass. Target Medium p95 <= 16.67 ms and provisional p99 <= 25 ms. Owner should judge visuals, actual driving, traffic/audio, GPU and VRAM. Prior scenic report was below 60 FPS; no new measurements here.
+
+## Verification status
+Connector implementation committed; CI status must be checked on PR head and reported with actual run logs. No local graphical acceptance or GPU tuning. No external assets, dependencies or license entries. Shared PROJECT_STATUS remains coordinator-owned; suggested entry: “Agent F added environment-overhaul QA runner, strict CI using existing regressions, schema/clearance/lifecycle checks and Windows Senna A/B capture with raw telemetry/reporting. Candidate integration and local visual/GPU acceptance pending; CI status see PR.” Do not mark release complete.
