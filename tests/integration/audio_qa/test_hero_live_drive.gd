@@ -52,6 +52,8 @@ func _drive(id: String, capture: AudioEffectCapture) -> void:
 	var audio: AsterAudioController = car.get_node("VehicleAudio")
 	var engine: RecordedEngineController = audio.recorded_engine
 	var renderer: PhaseGrainEngine = engine._grain_engine
+	if OS.get_environment("ASTER_REQUIRE_NATIVE_AUDIO") == "1":
+		_check(engine._manifest.bank_status == "local_source_native_audition", id + " actually uses professional source-native bank")
 	_check(is_instance_valid(renderer) and renderer.prepared, id + " uses dedicated renderer")
 	if not is_instance_valid(renderer):
 		await Cleanup.dispose(self, car)

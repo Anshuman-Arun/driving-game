@@ -1,5 +1,9 @@
 # Project status — single current-state log
 
+## Professional source-native audio audition (PR #41)
+
+Prior revision 735bcb3 passed Godot import, original audio regression/capture suite and local manifest/PCM fixture checks in run 45549857470. Owner approved related supercar models. Added real original-source acquisition and deterministic provisional RPM/load window selection, local installation and dedicated live-drive CI requiring the professional bank to be active. No raw/derived sample files are distributed. Actual original bank coverage and playback results pending; listening approval remains required. See docs/SOURCE_NATIVE_AUDIO.md.
+
 ## Verified hero playback rebuild — actual driving and recorded texture (2026-11-25)
 
 **Runtime code revision 6f086ff, [Godot 4.7.2 CI run 45516396755](https://github.com/Anshuman-Arun/driving-game/actions/runs/45516396755): PASS.** Supersedes the pending states in the historical entries below. 61/61 asset checks, all audio runtime suites, zero clipped samples, both real GEVP driving tests and isolated 31-second bench captures pass. No vehicle physics or model changes.

@@ -22,3 +22,15 @@ The new pipeline only cuts the source, converts to mono 48 kHz PCM16, and uses o
 
 ## Validation
 `python -m unittest discover -s modules/audio/tests -p test_source_native_bank.py -v` checks coverage rejection and a sample-exact native PCM cut with a test-only fixture. Godot import/runtime, real source annotation, actual bank integration and listening remain pending. No source audio is committed here.
+
+## Professional original automated audition (owner approved related-car audio)
+
+Use the deterministic installer to download the exact originals, evaluate raw windows for RPM coverage and probable load, and install both local banks without manual clip preparation. The user explicitly accepts V12/V8 family proxies. Source estimates are not measured RPM/load; listening acceptance remains required. In PowerShell:
+
+```powershell
+python -m pip install numpy==2.2.6 scipy==1.15.3
+python modules/audio/tools/install_professional_banks.py --source-dir "$env:LOCALAPPDATA/AsterAudioSources" --bank-dir "$env:APPDATA/Godot/app_userdata/Aster Valley — Free Roam/native_engine_banks" --report-dir "$env:LOCALAPPDATA/AsterAudioReports" --accept-license
+$env:ASTER_NATIVE_AUDIO = "1"
+```
+
+Run from repository root with FFmpeg available. Read the Sonniss license first. Existing banks are never overwritten. Selection logs show gaps and actual timestamp/RPM evidence; incomplete coverage is rejected rather than padded. The separate professional-source workflow installs the original recordings on its runner and requires both real GEVP cars to select the local source-native bank and pass live-drive checks. No audio files are uploaded; only metadata and logs. This is actual source installation and playback testing rather than the fixture-only gate, but quality remains unverified until audition.
