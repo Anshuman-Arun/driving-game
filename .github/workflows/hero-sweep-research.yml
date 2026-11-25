@@ -2,10 +2,10 @@ name: Hero continuous-recording research
 on:
   push:
     branches: [feat/hero-supercar-audio]
-    paths: ['modules/audio/tools/continuous_sweep_research.py', '.github/workflows/hero-sweep-research.yml']
+    paths: ['modules/audio/tools/continuous_sweep_research.py', 'modules/audio/tools/professional_reference.py', '.github/workflows/hero-sweep-research.yml']
   pull_request:
     branches: [feat/aster-scenic-supercars]
-    paths: ['modules/audio/tools/continuous_sweep_research.py', '.github/workflows/hero-sweep-research.yml']
+    paths: ['modules/audio/tools/continuous_sweep_research.py', 'modules/audio/tools/professional_reference.py', '.github/workflows/hero-sweep-research.yml']
   workflow_dispatch:
     inputs:
       fetch_originals:
@@ -35,9 +35,12 @@ jobs:
         run: |
           "$RUNNER_TEMP/audio-research-venv/bin/python" modules/audio/tools/continuous_sweep_research.py --local assets/audio/recorded/candidates/car_engine_512558.mp3 --profile mclaren_senna --output "$RUNNER_TEMP/hero-sweep-research/cc0-candidate"
       - name: Fetch original recordings (user requested reference comparison)
-        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.fetch_originals)
+        if: github.event_name == 'workflow_dispatch' && inputs.fetch_originals
         run: |
           "$RUNNER_TEMP/audio-research-venv/bin/python" modules/audio/tools/continuous_sweep_research.py --download --output "$RUNNER_TEMP/hero-sweep-research/originals"
+      - name: Download and measure professional GDC ramp references
+        run: |
+          "$RUNNER_TEMP/audio-research-venv/bin/python" modules/audio/tools/professional_reference.py --output "$RUNNER_TEMP/hero-sweep-research/professional" --raw-dir "$RUNNER_TEMP/professional-raw"
       - name: Upload candidate reports and previews
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
