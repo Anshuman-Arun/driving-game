@@ -54,13 +54,7 @@ func _add_game(profile: String) -> Node:
 	return instance
 
 func _select_next(shell: Shell, car_id: String) -> void:
-	var focus := root.gui_get_focus_owner()
-	var roster := focus.get_parent() as GridContainer if focus != null else null
-	if car_id == "kestrel_xr" and roster != null and roster.columns == 2:
-		await _key(KEY_DOWN)
-		await _key(KEY_LEFT)
-	else:
-		await _key(KEY_RIGHT)
+	await _key(KEY_LEFT if car_id == "aventador_svj" else KEY_RIGHT)
 	await _key(KEY_ENTER)
 	_check(shell.inspected_car == car_id, "garage focuses " + car_id)
 	var button := root.gui_get_focus_owner() as Button
@@ -124,14 +118,14 @@ func _run() -> void:
 	await _key(KEY_DOWN)
 	await _key(KEY_ENTER)
 	_check(shell.screen == "GARAGE", "keyboard opens the garage from the main menu")
-	_assert_preview(shell, "vela_gt")
+	_assert_preview(shell, "aventador_svj")
 	await _capture("garage-vela-gt")
 	var fallback_car := PlayerCarFactory.create()
 	_check(not CuratedCar.mount(fallback_car, "missing") and fallback_car.get_node("FallbackBody").visible
 		and fallback_car.get_node("FrontLeft/WheelVisual/Rubber").visible, "missing art leaves original appearance intact")
 	fallback_car.free()
-	await _select_next(shell, "orion_rs")
-	_assert_preview(shell, "orion_rs")
+	await _select_next(shell, "mclaren_senna")
+	_assert_preview(shell, "mclaren_senna")
 	await _capture("01-menu-garage-orion")
 	await _key(KEY_ESCAPE)
 	await _key(KEY_ENTER)
@@ -141,7 +135,7 @@ func _run() -> void:
 	if drive == null or drive.vehicle_body == null:
 		_finish()
 		return
-	_assert_car(drive, "orion_rs")
+	_assert_car(drive, "mclaren_senna")
 	_assert_scenery(drive)
 	await _capture("02-orion-free-roam")
 	var start := drive.vehicle_body.global_position
@@ -149,7 +143,7 @@ func _run() -> void:
 	await _ticks(180)
 	Input.action_release("drive_throttle")
 	_check(drive.adapter.get_speed_mps() > 3.0 and drive.vehicle_body.global_position.distance_to(start) > 4.0,
-		"real Orion moves on the world road")
+		"real Senna moves on the world road")
 	_check(absf(drive.vehicle_body.front_left_wheel.wheel_node.rotation.x) > 0.01,
 		"wheel visual rolls with actual vehicle motion")
 	await _key(KEY_G)
@@ -172,11 +166,11 @@ func _run() -> void:
 	_check(shell.screen == "GARAGE" and paused, "parked G opens the real garage")
 	var old := drive.vehicle_body
 	var parked_at := old.global_position
-	await _select_next(shell, "kestrel_xr")
-	_assert_preview(shell, "kestrel_xr")
+	await _select_next(shell, "aventador_svj")
+	_assert_preview(shell, "aventador_svj")
 	await _ticks(12)
-	_assert_car(drive, "kestrel_xr")
-	_check(mounted_ids == ["orion_rs", "kestrel_xr"], "visual hook receives both production chassis")
+	_assert_car(drive, "aventador_svj")
+	_check(mounted_ids == ["mclaren_senna", "aventador_svj"], "visual hook receives both production chassis")
 	_check(not is_instance_valid(old) and drive.vehicle_body.global_position.distance_to(parked_at) < 0.02,
 		"parked replacement removes the old body and keeps its position")
 	await _capture("03-parked-garage-kestrel")
@@ -195,7 +189,7 @@ func _run() -> void:
 	await _capture_regions(drive)
 	var reopened := Save.new(profile)
 	reopened.load()
-	_check(reopened.selected_car() == "kestrel_xr", "physical car selection persists to disk")
+	_check(reopened.selected_car() == "aventador_svj", "physical car selection persists to disk")
 	for id in ["aventador_svj", "mclaren_senna"]:
 		await _tap("drive_reset")
 		await _ticks(60)
@@ -292,11 +286,11 @@ func _observe_mounts(body: Vehicle, id: String) -> void:
 func _verify_reload(profile: String) -> void:
 	var instance := await _add_game(profile)
 	var shell: Shell = instance.get_node("GameShell")
-	_check(shell.save.selected_car() == "kestrel_xr", "fresh process reads Kestrel selection")
+	_check(shell.save.selected_car() == "mclaren_senna", "fresh process reads Senna selection")
 	await _key(KEY_ENTER)
 	await _ticks(100)
 	if shell.drive != null:
-		_assert_car(shell.drive, "kestrel_xr")
+		_assert_car(shell.drive, "mclaren_senna")
 	else:
 		_check(false, "fresh process starts world")
 	instance.queue_free()

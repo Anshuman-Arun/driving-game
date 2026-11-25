@@ -14,9 +14,8 @@ const LIVE_SAVE_PATH := "user://aster_valley_free_roam_v2.json"
 
 const VALLEY_MAP = preload("res://assets/ui/dashboard/valley_map.svg")
 const GARAGE_THUMBNAILS := {
-	"vela_gt": preload("res://assets/ui/dashboard/vela_gt.png"),
-	"orion_rs": preload("res://assets/ui/dashboard/orion_rs.png"),
-	"kestrel_xr": preload("res://assets/ui/dashboard/kestrel_xr.png"),
+	"aventador_svj": preload("res://assets/ui/dashboard/aventador_svj.png"),
+	"mclaren_senna": preload("res://assets/ui/dashboard/mclaren_senna.png"),
 }
 const DASH_INK := Color("#19252a")
 const DASH_MUTED := Color("#475752")

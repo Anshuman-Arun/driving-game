@@ -13,7 +13,7 @@ var game: Variant
 var screen: String = "MENU"  # MENU, FREE_ROAM, GARAGE, EVENTS, RACE, RESULTS, PAUSE, SETTINGS
 var return_screen: String = "MENU"
 var paused_from: String = "FREE_ROAM"
-var inspected_car: String = "vela_gt"
+var inspected_car: String = "aventador_svj"
 var large_map: bool = false
 var first_focus: Control
 var speed_label: Label

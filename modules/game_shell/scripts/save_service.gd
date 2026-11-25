@@ -3,6 +3,7 @@ extends RefCounted
 ## Atomic temp+rename on supported filesystems; validated backup/corrupt quarantine
 ## covers platforms that cannot atomically replace an existing open destination.
 const Catalog = preload("car_catalog.gd")
+const LEGACY_CAR_IDS := ["vela_gt", "orion_rs", "kestrel_xr", "solace_gt", "aventador_svj", "mclaren_senna"]
 const SCHEMA_VERSION := 2
 const DEFAULT_PATH := "user://aster_valley_save_v2.json"
 const GRAPHICS := ["low", "medium", "high"]
@@ -28,8 +29,8 @@ static func default_settings() -> Dictionary:
 static func defaults() -> Dictionary:
 	return {
 		"schema_version":SCHEMA_VERSION,
-		"selected_car":"vela_gt",
-		"unlocked_cars":["vela_gt"],
+		"selected_car":"aventador_svj",
+		"unlocked_cars":["aventador_svj", "mclaren_senna"],
 		"credits":0,
 		"completed_events":{},
 		"settings":default_settings()
@@ -47,24 +48,25 @@ static func _valid_unit(value: Variant) -> bool:
 	var n := float(value)
 	return not is_nan(n) and not is_inf(n) and n >= 0.0 and n <= 1.0
 
-static func is_valid_v2(payload: Variant) -> bool:
+static func is_valid_v2(payload: Variant, allow_retired: bool = false) -> bool:
+	var valid_cars: Array = LEGACY_CAR_IDS if allow_retired else Catalog.car_ids()
 	if not (payload is Dictionary):
 		return false
 	if not _valid_int(payload.get("schema_version"), SCHEMA_VERSION) or int(payload["schema_version"]) != SCHEMA_VERSION:
 		return false
 	if not (payload.get("selected_car") is String):
 		return false
-	if not Catalog.car_ids().has(payload["selected_car"]):
+	if not valid_cars.has(payload["selected_car"]):
 		return false
 	var unlocked: Variant = payload.get("unlocked_cars")
-	if not (unlocked is Array) or unlocked.is_empty() or unlocked.size() > Catalog.CARS.size():
+	if not (unlocked is Array) or unlocked.is_empty() or unlocked.size() > valid_cars.size():
 		return false
 	var unique := {}
 	for id in unlocked:
-		if not (id is String) or not Catalog.car_ids().has(id) or unique.has(id):
+		if not (id is String) or not valid_cars.has(id) or unique.has(id):
 			return false
 		unique[id] = true
-	if not unique.has("vela_gt") or not unique.has(payload["selected_car"]):
+	if not unique.has(payload["selected_car"]):
 		return false
 	if not _valid_int(payload.get("credits"), 1000000000):
 		return false
@@ -159,9 +161,13 @@ static func _decode(text: String):
 	var decoded: Dictionary = value
 	if int(version) == 1:
 		decoded = _migrate_v1(value)
-	if not is_valid_v2(decoded):
+	if not is_valid_v2(decoded, true):
 		return null
-	return decoded.duplicate(true)
+	decoded = decoded.duplicate(true)
+	if not Catalog.car_ids().has(decoded["selected_car"]):
+		decoded["selected_car"] = "aventador_svj"
+	decoded["unlocked_cars"] = Catalog.car_ids()
+	return decoded
 
 func _read_candidate(candidate_path: String):
 	if not FileAccess.file_exists(candidate_path):
@@ -176,8 +182,8 @@ func load() -> Dictionary:
 			data = loaded
 			var recovered := candidate != path
 			var original: Variant = _parse_json(FileAccess.get_file_as_string(candidate))
-			var migrated := original is Dictionary and int(original.get("schema_version", 1)) == 1
-			last_status = "recovered_temp" if candidate.ends_with(".tmp") else ("recovered_backup" if recovered else ("migrated_v1" if migrated else "loaded"))
+			var migrated: bool = original is Dictionary and (int(original.get("schema_version", 1)) == 1 or original.get("selected_car") != loaded["selected_car"] or original.get("unlocked_cars") != loaded["unlocked_cars"])
+			last_status = "recovered_temp" if candidate.ends_with(".tmp") else ("recovered_backup" if recovered else ("migrated_profile" if migrated else "loaded"))
 			## Promote migration or recovery to canonical format, with validated backup.
 			if recovered or migrated:
 				_commit(false)
@@ -254,7 +260,7 @@ func _commit(rotate_backup: bool) -> bool:
 	return true
 
 func selected_car() -> String:
-	return str(data.get("selected_car", "vela_gt"))
+	return str(data.get("selected_car", "aventador_svj"))
 
 func is_unlocked(car_id: String) -> bool:
 	return data.get("unlocked_cars", []).has(car_id)
@@ -297,10 +303,6 @@ func record_race(event_id: String, time_s: float, position: int) -> Dictionary:
 	records[event_id] = rec
 	var reward := 300 + (150 if position == 1 else 0)
 	data["credits"] = mini(1000000000, int(data["credits"]) + reward)
-	if records.size() >= 1 and not is_unlocked("orion_rs"):
-		data["unlocked_cars"].append("orion_rs")
-	if records.size() >= 3 and not is_unlocked("kestrel_xr"):
-		data["unlocked_cars"].append("kestrel_xr")
 	if not save():
 		data = prior
 		return {"ok":false, "new_unlocks":[]}
