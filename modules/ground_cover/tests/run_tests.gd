@@ -106,6 +106,22 @@ func _run() -> void:
 		var idx := cover.candidate_index(Vector2i(-2,3),rank)
 		seen[idx]=true
 	check(seen.size()==4096,"unique permutation")
+	# Generate the same cell at two nested rank limits using the real candidate path.
+	var cell := Vector2i(0,1)
+	cover._start_job({"key":cell,"lod":0,"limit":600})
+	for rank in range(600):
+		cover._candidate(rank)
+	var near_groups: Array = cover._job.groups.duplicate(true)
+	cover._start_job({"key":cell,"lod":2,"limit":150})
+	for rank in range(150):
+		cover._candidate(rank)
+	var far_groups: Array = cover._job.groups
+	var far_count := 0
+	for s in range(5):
+		far_count += far_groups[s].size()
+		check(near_groups[s].slice(0,far_groups[s].size()) == far_groups[s],"nested actual accepted transforms")
+	check(far_count > 0,"nested fixture nonempty")
+	cover._job.clear()
 	cover.update_focus(Vector3(8,2,8))
 	drain(cover)
 	var first := fingerprint(cover)
@@ -126,6 +142,11 @@ func _run() -> void:
 	for preset in ["low","high","medium"]:
 		cover.set_graphics(preset)
 		drain(cover)
+	for x in range(8,45,4):
+		cover.update_focus(Vector3(x,2,12),Vector3(16,0,0))
+		drain(cover)
+	cover.update_focus(Vector3(8,2,8))
+	drain(cover)
 	cover.update_focus(Vector3(500,2,500),Vector3(60,0,0))
 	drain(cover)
 	check(cover.get_stats().active_instances==0,"teleport clears old instances")
