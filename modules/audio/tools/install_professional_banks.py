@@ -91,6 +91,63 @@ def windows(x, cfg):
                                  trend=round(trend,4), rms_dbfs=round(20*math.log10(rms),2),
                                  half_line=round(half_line,2), full_line=round(full_line,2),
                                  agreement=round(agree,3), confidence=round(c,2)))
+    # The broad harmonic tracker can lock to a subharmonic in the upper
+    # range. Independently search for a sustained dominant full firing-order
+    # ridge, corroborated by a second harmonic or the half-order line.
+    rows.extend(high_rpm_windows(x, cfg))
+    return rows
+
+
+def high_rpm_windows(x, cfg):
+    rows = []
+    order = cfg["order"]
+    redline = cfg["redline"]
+    for offset in range(0, len(x), 40*SR):
+        y = x[offset:offset+40*SR]
+        if len(y) < SR:
+            continue
+        f,t,z = signal.stft(y,SR,nperseg=2048,noverlap=1808,nfft=4096,
+                           boundary=None,padded=False)
+        power = abs(z)**2
+        band = np.flatnonzero((f >= .76*redline*order/60) &
+                              (f <= 1.05*redline*order/60))
+        broad = np.flatnonzero((f >= 45) & (f <= 4000))
+        idx = band[np.argmax(power[band],axis=0)]
+        dominant = broad[np.argmax(power[broad],axis=0)]
+        rpm = ndimage.median_filter(f[idx]*60/order,size=7)
+        trend = np.gradient(ndimage.gaussian_filter1d(np.log(rpm),5),t)
+        for center in range(30,len(t)-30,10):
+            for width in (30,23):
+                a,b = center-width,center+width
+                local = rpm[a:b+1]
+                mid = float(np.median(local))
+                spread = float((np.percentile(local,90)-np.percentile(local,10))/mid)
+                if mid < redline*.87 or spread > .14:
+                    continue
+                agreement = float(np.mean(abs(f[dominant[a:b+1]]-f[idx[a:b+1]]) < 20))
+                if agreement < .70:
+                    continue
+                raw = y[round(t[a]*SR):round(t[b]*SR)]
+                rms = float(np.sqrt(np.mean(raw*raw)))
+                if len(raw) < SR*.45 or rms < .002 or np.max(np.abs(raw)) >= .995:
+                    continue
+                freq,p = signal.welch(raw,SR,nperseg=4096,noverlap=2048)
+                def contrast(hz):
+                    near = abs(freq-hz) <= max(12,hz*.06)
+                    bg = (abs(freq-hz) <= max(55,hz*.18)) & ~near
+                    return float(np.max(p[near])/max(float(np.median(p[bg])),1e-15)) if near.any() and bg.any() else 0.
+                fundamental = mid*order/60
+                half,full,second = contrast(fundamental/2),contrast(fundamental),contrast(fundamental*2)
+                if full < 5 or max(half,second) < 3:
+                    continue
+                rows.append(dict(start_s=round(offset/SR+float(t[a]),4),
+                                 end_s=round(offset/SR+float(t[b]),4),
+                                 measured_rpm=round(mid,2),spread=round(spread,4),
+                                 trend=round(float(np.median(trend[a:b+1])),4),
+                                 rms_dbfs=round(20*math.log10(rms),2),
+                                 half_line=round(half,2),full_line=round(full,2),
+                                 agreement=round(agreement,3),confidence=round(10*math.log10(full),2),
+                                 method="dominant full-order ridge with corroborating harmonic"))
     return rows
 
 
@@ -105,11 +162,12 @@ def choose(rows, cfg):
         targets.append(int(redline*.96))
     anchors, misses = [], []
     for layer in ("on", "off"):
-        for target in targets:
+        for target in reversed(targets):
             if layer == "off" and target < 1700:
                 continue
             pool = [row for row in rows
                     if abs(row["measured_rpm"]-target) <= (350 if target < 1500 else 500)
+                    and (target != targets[-1] or row["measured_rpm"] >= redline*.9 + 12.5)
                     and not any(min(row["end_s"], a["end_s"])-max(row["start_s"], a["start_s"]) > .1 for a in anchors)]
             if not pool:
                 misses.append([layer,target,"no credible window"])
@@ -137,7 +195,7 @@ def choose(rows, cfg):
             row = max(pool,key=score)
             rpm = int(round(row["measured_rpm"]/25)*25)
             anchors.append(dict(row, rpm=rpm, layer=layer,
-                                rpm_basis="Half-order harmonic tracker; full-order spectral corroboration; estimated, not tachometer.",
+                                rpm_basis=row.get("method","Half-order harmonic tracker; full-order spectral corroboration") + "; estimated, not tachometer.",
                                 load_basis=("Idle/low RPM reference; actual throttle unknown" if target < 1500 else
                                             "Inferred from RPM direction and relative RMS; actual throttle unknown.")))
     return anchors, misses

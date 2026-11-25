@@ -2,6 +2,8 @@
 
 ## Professional source-native audio audition (PR #41)
 
+Run 45551889284: both original recordings passed pinned SHA-256, both download regression tests passed, and the McLaren 720S bank installed 17 unflattened real windows (9 on/8 off). Lamborghini had 9 on/7 off candidates but insufficient high-end coverage; no Lamborghini bank installed. Live driving was skipped due to combined exit code. Independent per-car matrix jobs now allow real McLaren driving regardless of Lamborghini coverage. Added independent high-RPM full-order ridge search with harmonic corroboration; top anchor must meet the existing coverage threshold, selected first. RPM and load remain inferred, not listening-approved.
+
 Run 45551426278 failed during acquisition: both official ZIP endpoints returned HTTP 200 rather than partial content. Neither bank was generated and real-drive QA was skipped. Corrected the ZIP magic check in the existing bounded full-archive extractor, wired the native installer to the fallback, and added offline HTTP 200 extraction and cleanup regressions. Retry pending; no new playback claim.
 
 Prior revision 735bcb3 passed Godot import, original audio regression/capture suite and local manifest/PCM fixture checks in run 45549857470. Owner approved related supercar models. Added real original-source acquisition and deterministic provisional RPM/load window selection, local installation and dedicated live-drive CI requiring the professional bank to be active. No raw/derived sample files are distributed. Actual original bank coverage and playback results pending; listening approval remains required. See docs/SOURCE_NATIVE_AUDIO.md.

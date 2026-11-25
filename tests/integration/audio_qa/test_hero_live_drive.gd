@@ -33,7 +33,9 @@ func _run() -> void:
 	ground.add_child(collider)
 	root.add_child(ground)
 	for id in ["aventador_svj", "mclaren_senna"]:
-		await _drive(id, capture)
+		var selected := OS.get_environment("ASTER_AUDIO_TEST_PROFILE")
+		if selected.is_empty() or selected == id:
+			await _drive(id, capture)
 	ground.queue_free()
 	await Cleanup.drain(self)
 	for i in range(AudioServer.get_bus_effect_count(bus)):
