@@ -90,6 +90,7 @@ func load_road_graph(data: Dictionary) -> bool:
 
 
 func configure_junctions(definitions: Array) -> bool:
+	_travel_spawn_slots.clear()
 	# An explicit junction overrides implicit merge controls for listed lanes.
 	for raw in definitions:
 		if not (raw is Dictionary) or not (raw.get("id") is String) or not (raw.get("incoming_lane_ids") is Array):

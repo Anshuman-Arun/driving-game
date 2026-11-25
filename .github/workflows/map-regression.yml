@@ -1,6 +1,8 @@
 name: Map and gameplay regressions
 
 on:
+  push:
+    branches: [feat/map-road-width-overhaul]
   pull_request:
     branches: [main]
   workflow_dispatch:
