@@ -138,7 +138,8 @@ func _run() -> void:
 		await _capture(shot["name"])
 
 	# 3. Measure live Forward+ performance with scenery on (180 frames driving)
-	var chase_cam: DrivingChaseCamera = scene.get("camera")
+	var chase_cam: ForzaChaseCamera = scene.get("camera") as ForzaChaseCamera
+	_check(chase_cam != null, "production chase camera restored for live drive")
 	if chase_cam != null:
 		chase_cam.make_current()
 	photo.queue_free()

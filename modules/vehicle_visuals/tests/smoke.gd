@@ -46,7 +46,10 @@ func _run() -> void:
 	vehicle.front_left_wheel.wheel_node.add_child(old_visual)
 	var adapter: Node3D = ADAPTER.new()
 	adapter.name = "VisualQA"
+	# This is a negative fixture, independent of the real shipped LOD assets.
 	adapter.set("hero_path", "res://assets/vehicle_upgrade/definitely_missing_hero.glb")
+	adapter.set("mid_path", "res://assets/vehicle_upgrade/definitely_missing_mid.glb")
+	adapter.set("distant_path", "res://assets/vehicle_upgrade/definitely_missing_distant.glb")
 	vehicle.add_child(adapter)
 	var attached: bool = adapter.connect_chassis(vehicle)
 	check(not attached, "Missing HD model must not be reported attached")
@@ -58,6 +61,8 @@ func _run() -> void:
 	check(adapter.get_camera_mount("Hood") != null, "Hood mount")
 	check(adapter.get_camera_mount("Cockpit") != null, "Cockpit mount")
 	check(not adapter.request_lod(2), "Missing distant/hero models cannot load")
+	check(not adapter.request_lod(1), "Missing mid/hero models cannot load")
+	check(old_visual.visible and not adapter.get_visual_status()["loaded"], "Failed LOD requests preserve original visible wheel")
 	check(vehicle.front_left_wheel.wheel_node == old_visual.get_parent(),
 		"Visual adapter cannot change GEVP's wheel parent")
 	check(adapter.get_parent() == vehicle, "Adapter remains attached as visual child")

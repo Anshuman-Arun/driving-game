@@ -409,12 +409,13 @@ func _seed_trace(seed_value: int) -> Dictionary:
                             safe = false
     return {"ok": safe and peak > 0 and transitions > 0 and longest_wait < 900,
         "trace": fingerprint,
-        "peak": peak, "transitions": transitions}
+        "peak": peak, "transitions": transitions, "safe": safe, "longest_wait_ticks": longest_wait}
 
 
 func _test_seeded_flow() -> void:
     for seed_value in [20261121, 73]:
         var a: Dictionary = _seed_trace(seed_value)
         var b: Dictionary = _seed_trace(seed_value)
+        print("CANONICAL FLOW seed=", seed_value, " first=", a, " replay=", b)
         _check(bool(a["ok"]) and bool(b["ok"]), "45-second canonical flow/cap/conflicts/queues seed %d" % seed_value)
         _check(a["trace"] == b["trace"], "45-second fixed-seed replay identical %d" % seed_value)

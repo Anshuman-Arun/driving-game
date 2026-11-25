@@ -51,6 +51,10 @@ func _run() -> void:
 		quit(1)
 		return
 
+	if not scene.get("camera") is ForzaChaseCamera:
+		_check(false, "root game uses the production Forza chase camera")
+		quit(1)
+		return
 	if "--scenery" in args:
 		_check(scene.get("scenery") != null, "scenery loads for the driving routes")
 	var runtime: Node3D = scene.get("world")
@@ -120,19 +124,25 @@ func _run() -> void:
 	car.global_position.x = 1002.0
 	await _step(100)
 	_check(car.global_position.x < 1000.0 and _contacts() == 4, "leaving map bounds recovers to a valid road")
-	var camera: DrivingChaseCamera = scene.get("camera")
+	var camera: ForzaChaseCamera = scene.get("camera") as ForzaChaseCamera
 	await _tap("drive_camera")
-	_check(camera.mode == 1, "close chase mode responds to C")
+	_check(camera.mode == 1, "far scenic chase mode responds to C")
 	_check_ultrawide_projection()
 	await _tap("drive_camera")
-	_check(camera.mode == 2 and car.to_local(camera.global_position).distance_to(Vector3(0, 0.86, -0.92)) < 0.10,
-		"hood mode stays attached to Vela")
+	_check(camera.mode == 2, "close chase mode responds to C")
+	_check_ultrawide_projection()
+	await _tap("drive_camera")
+	var hood := car.get_node_or_null("CameraMounts/Hood") as Marker3D
+	var hood_position := hood.position if hood != null else ForzaChaseCamera.HOOD_MOUNT
+	_check(camera.mode == 3 and car.to_local(camera.global_position).distance_to(hood_position) < 0.10,
+		"hood mode stays attached to Vela's configured mount")
 	_check_ultrawide_projection()
 	await _capture("05-hood-after-reset")
 	_report_fps()
 	if _expect_ultrawide:
 		await _check_fullscreen_toggle()
 	await _tap("drive_camera")
+	_check(camera.mode == 0, "camera cycles back to standard chase")
 	await _stationary_camera()
 	print("Vehicle/world integration failures: ", failures)
 	quit(0 if failures == 0 else 1)
@@ -153,7 +163,7 @@ func _check_fullscreen_toggle() -> void:
 func _check_ultrawide_projection() -> void:
 	if not _expect_ultrawide:
 		return
-	var camera: DrivingChaseCamera = scene.get("camera")
+	var camera: ForzaChaseCamera = scene.get("camera") as ForzaChaseCamera
 	var size := root.get_visible_rect().size
 	var center := size * 0.5
 	var horizontal_fov := rad_to_deg(camera.project_local_ray_normal(Vector2(0.0, center.y))
@@ -169,7 +179,7 @@ func _check_ultrawide_projection() -> void:
 		camera.get_mode_name() + " preserves vertical FOV and expands horizontal FOV")
 
 func _stationary_camera() -> void:
-	var camera: DrivingChaseCamera = scene.get("camera")
+	var camera: ForzaChaseCamera = scene.get("camera") as ForzaChaseCamera
 	car.set_physics_process(false)
 	car.freeze = true
 	car.reset_physics_interpolation()
@@ -192,7 +202,7 @@ func _drive(path: PackedVector3Array, speed: float, name: String) -> Dictionary:
 		_check(false, "valid starting road pose for " + name)
 		return {}
 	var adapter: VehicleAdapter = scene.get("adapter")
-	var camera: DrivingChaseCamera = scene.get("camera")
+	var camera: ForzaChaseCamera = scene.get("camera") as ForzaChaseCamera
 	adapter.reset_to(pose)
 	camera.snap_to_vehicle()
 	await _step(75)

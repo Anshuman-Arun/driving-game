@@ -1,5 +1,11 @@
 # Project status — single current-state log
 
+## PR #43 merge-readiness review (2026-11-25)
+Run [45562277806](https://github.com/Anshuman-Arun/driving-game/actions/runs/45562277806): import, data, standalone and production audio passed. Root road-width sweep: 1,782 edge rays, zero failures; four spans crossed by the live chassis; world visual regression: 222,579 accepted vegetation placements, 3,482 authored render instances, 1,058 colliders, zero road overlaps; 2,450/2,450 pavement rays; all six cars and all 16 corridors drove; 130 rails accepted vs 124 baseline, 85 relocated, zero unresolved. Headless counts do not prove scenic or guardrail continuity acceptance.
+
+Root job nevertheless failed: the vehicle-world and showcase harnesses still cast the active four-mode Forza camera to the legacy three-mode camera, aborting actual drive checks; the negative vehicle LOD fixture left the shipped distant model configured. Corrected the harnesses to use the actual camera and all four modes (including the authored hood mount), made all negative-fixture paths explicitly absent, and retained the physics/clearance checks. Added diagnostic output for existing traffic flow failures without changing the original safety/queue gate or traffic runtime. Traffic basic 48/48, advanced 83/85 on the preceding revision; rerun required. No visual, Windows, controller-hardware or final merge claim.
+
+
 ## Professional source-native audio audition (PR #41)
 
 Revision 8e8ae40 passed native run 45558086331 and complete regression runs 45558091908/45558086419; owner still hears cruise oscillation and quieter whine. New steady-road candidate: phase-locked recorded cycle crossfade, road/gear RPM reference only under coupled conditions, synthetic asphalt/grass and wind suppressed, severe-slip squeal gate, optional local CSV trace. New sample-periodicity and coupled-flutter gates; validation pending, subjective acceptance not established.
