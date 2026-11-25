@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "species_id": "shrub",
+      "variant_id": "original_v1",
+      "dimensions_m": [
+        1.05,
+        0.65,
+        1.05
+      ],
+      "origin": "ground_center",
+      "source_url": "local://tools/environment_assets/generate.mjs",
+      "author": "Aster Valley project (original procedural geometry)",
+      "license": "CC0-1.0",
+      "license_notice": "res://assets/environment_overhaul/LICENSE.txt",
+      "sha256_by_path": {
+        "res://assets/environment_overhaul/shrub_lod0.gltf": "6e75f2f53892b376dd348bcb80a4b052fb5fc4484f13c8403c8c8b335ca33675",
+        "res://assets/environment_overhaul/shrub_lod1.gltf": "743bfbfee91aa83700222ccf0be4fa9549a9c0855c4c6ade034ef9ee743c1df6"
+      },
+      "status": "candidate",
+      "alpha": "opaque_geometry_no_cards",
+      "material_slots": [
+        "vegetation_vertex_color"
+      ],
+      "budget_by_path": {
+        "res://assets/environment_overhaul/shrub_lod0.gltf": {
+          "triangles": 480,
+          "surfaces": 1,
+          "textures": 0,
+          "bytes": 85718
+        },
+        "res://assets/environment_overhaul/shrub_lod1.gltf": {
+          "triangles": 200,
+          "surfaces": 1,
+          "textures": 0,
+          "bytes": 36429
+        }
+      },
+      "lod0": "res://assets/environment_overhaul/shrub_lod0.gltf",
+      "lod1": "res://assets/environment_overhaul/shrub_lod1.gltf"
+    },
+    {
+      "species_id": "fern",
+      "variant_id": "original_v1",
+      "dimensions_m": [
+        1.05,
+        0.44,
+        1.05
+      ],
+      "origin": "ground_center",
+      "source_url": "local://tools/environment_assets/generate.mjs",
+      "author": "Aster Valley project (original procedural geometry)",
+      "license": "CC0-1.0",
+      "license_notice": "res://assets/environment_overhaul/LICENSE.txt",
+      "sha256_by_path": {
+        "res://assets/environment_overhaul/fern_lod0.gltf": "684c6a553c24633dc848ce52741eeccb008c214a5a5376e5a7133b3a4627a27f",
+        "res://assets/environment_overhaul/fern_lod1.gltf": "9b9460e7a73ae35e4d871e1e5e1d00de86d31be8e94ea65b567292c99136dead"
+      },
+      "status": "candidate",
+      "alpha": "opaque_geometry_no_cards",
+      "material_slots": [
+        "vegetation_vertex_color"
+      ],
+      "budget_by_path": {
+        "res://assets/environment_overhaul/fern_lod0.gltf": {
+          "triangles": 1088,
+          "surfaces": 1,
+          "textures": 0,
+          "bytes": 192726
+        },
+        "res://assets/environment_overhaul/fern_lod1.gltf": {
+          "triangles": 320,
+          "surfaces": 1,
+          "textures": 0,
+          "bytes": 57551
+        }
+      },
+      "lod0": "res://assets/environment_overhaul/fern_lod0.gltf",
+      "lod1": "res://assets/environment_overhaul/fern_lod1.gltf"
+    },
+    {
+      "species_id": "sapling",
+      "variant_id": "original_v1",
+      "dimensions_m": [
+        0.95,
+        1.65,
+        0.95
+      ],
+      "origin": "ground_center",
+      "source_url": "local://tools/environment_assets/generate.mjs",
+      "author": "Aster Valley project (original procedural geometry)",
+      "license": "CC0-1.0",
+      "license_notice": "res://assets/environment_overhaul/LICENSE.txt",
+      "sha256_by_path": {
+        "res://assets/environment_overhaul/sapling_lod0.gltf": "115988025da3ed8bb26af232dfb375d700d0894d8db64940ff4e6d87f40edba8",
+        "res://assets/environment_overhaul/sapling_lod1.gltf": "4a73850e9a83f285659c22c8856f7776049f09d5b72751a277e8fda1da3288c9"
+      },
+      "status": "candidate",
+      "alpha": "opaque_geometry_no_cards",
+      "material_slots": [
+        "vegetation_vertex_color"
+      ],
+      "budget_by_path": {
+        "res://assets/environment_overhaul/sapling_lod0.gltf": {
+          "triangles": 394,
+          "surfaces": 1,
+          "textures": 0,
+          "bytes": 70584
+        },
+        "res://assets/environment_overhaul/sapling_lod1.gltf": {
+          "triangles": 166,
+          "surfaces": 1,
+          "textures": 0,
+          "bytes": 30448
+        }
+      },
+      "lod0": "res://assets/environment_overhaul/sapling_lod0.gltf",
+      "lod1": "res://assets/environment_overhaul/sapling_lod1.gltf"
+    },
+    {
+      "species_id": "reed",
+      "variant_id": "original_v1",
+      "dimensions_m": [
+        0.68,
+        1.15,
+        0.68
+      ],
+      "origin": "ground_center",
+      "source_url": "local://tools/environment_assets/generate.mjs",
+      "author": "Aster Valley project (original procedural geometry)",
+      "license": "CC0-1.0",
+      "license_notice": "res://assets/environment_overhaul/LICENSE.txt",
+      "sha256_by_path": {
+        "res://assets/environment_overhaul/reed_lod0.gltf": "bee5bb561223229d9b2acd63bc8ee994fd086bbdc7179770f35ba08ad733b6dc",
+        "res://assets/environment_overhaul/reed_lod1.gltf": "e84a611af635ae4bf7e3c93fa8b99bee8e973817f23dae72b2bd78cd0483bc79"
+      },
+      "status": "candidate",
+      "alpha": "opaque_geometry_no_cards",
+      "material_slots": [
+        "vegetation_vertex_color"
+      ],
+      "budget_by_path": {
+        "res://assets/environment_overhaul/reed_lod0.gltf": {
+          "triangles": 342,
+          "surfaces": 1,
+          "textures": 0,
+          "bytes": 61426
+        },
+        "res://assets/environment_overhaul/reed_lod1.gltf": {
+          "triangles": 130,
+          "surfaces": 1,
+          "textures": 0,
+          "bytes": 24105
+        }
+      },
+      "lod0": "res://assets/environment_overhaul/reed_lod0.gltf",
+      "lod1": "res://assets/environment_overhaul/reed_lod1.gltf"
+    },
+    {
+      "species_id": "wildflower",
+      "variant_id": "original_v1",
+      "dimensions_m": [
+        0.42,
+        0.52,
+        0.42
+      ],
+      "origin": "ground_center",
+      "source_url": "local://tools/environment_assets/generate.mjs",
+      "author": "Aster Valley project (original procedural geometry)",
+      "license": "CC0-1.0",
+      "license_notice": "res://assets/environment_overhaul/LICENSE.txt",
+      "sha256_by_path": {
+        "res://assets/environment_overhaul/wildflower_lod0.gltf": "d46545eaa86f60dc58b68eb658400adf1b9fb645b9ffaa339578ad6def6dca28",
+        "res://assets/environment_overhaul/wildflower_lod1.gltf": "266bbafd4af916d65f97fca31071d87390babd4ea70b885b7955ecf5667e15dc"
+      },
+      "status": "candidate",
+      "alpha": "opaque_geometry_no_cards",
+      "material_slots": [
+        "vegetation_vertex_color"
+      ],
+      "budget_by_path": {
+        "res://assets/environment_overhaul/wildflower_lod0.gltf": {
+          "triangles": 432,
+          "surfaces": 1,
+          "textures": 0,
+          "bytes": 77284
+        },
+        "res://assets/environment_overhaul/wildflower_lod1.gltf": {
+          "triangles": 180,
+          "surfaces": 1,
+          "textures": 0,
+          "bytes": 32923
+        }
+      },
+      "lod0": "res://assets/environment_overhaul/wildflower_lod0.gltf",
+      "lod1": "res://assets/environment_overhaul/wildflower_lod1.gltf"
+    }
+  ]
+}
