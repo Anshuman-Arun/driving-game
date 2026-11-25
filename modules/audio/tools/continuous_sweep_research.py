@@ -223,7 +223,10 @@ def main():
         if not args.output or args.download:
             parser.error("provide --local FILE --profile ID --output DIR, without --download")
         args.output.mkdir(parents=True, exist_ok=True)
-        cfg = dict(SOURCES[args.profile], url=str(args.local), source_type="local candidate, identity not confirmed")
+        cfg = {key: SOURCES[args.profile][key] for key in ("order", "idle", "redline")}
+        cfg.update(url=str(args.local), source_type="local candidate, identity not confirmed")
+        if args.local.name == "car_engine_512558.mp3":
+            cfg.update(author="modman34", page="https://freesound.org/people/modman34/sounds/512558/", license="CC0")
         inspect(args.local, cfg, args.output)
         return
     if not args.output or not args.download:

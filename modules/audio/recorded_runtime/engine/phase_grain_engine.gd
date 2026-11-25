@@ -37,15 +37,17 @@ var prepared := false
 var generated_frames := 0
 var max_render_usec := 0
 var diagnostics: Array[Dictionary] = []
+var texture_balance := false
 
 
-func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, idle_level: float) -> bool:
+func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, idle_level: float, balance_texture: bool = false) -> bool:
 	rows.clear()
 	on_indices.clear()
 	off_indices.clear()
 	diagnostics.clear()
 	prepared = false
 	order = firing_order
+	texture_balance = balance_texture
 	# Each hop is a complete 720-degree combustion cycle, not an arbitrary
 	# number of firing pulses. V12 and V8 retain their own cadence.
 	hop = maxi(2, roundi(order * 2.0))
@@ -61,6 +63,9 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 		var row := build_grains(wav.data,wav.mix_rate,anchor_rpm*order/60.0, hop)
 		if row.is_empty():
 			return false
+		if texture_balance and anchor_rpm >= 1800.0:
+			var balanced := balance_recorded_texture(row["pcm"], grain_size)
+			row.merge(balanced, true)
 		row["rpm"] = anchor_rpm
 		row["gain"] = float(entry.get("gain",1.0))
 		var idx := rows.size()
@@ -69,9 +74,12 @@ func prepare(loops: Array, wavs: Dictionary, firing_order: float, idle: float, i
 			on_indices.append(idx)
 		else:
 			off_indices.append(idx)
-		diagnostics.append({"file":fname,"rpm":anchor_rpm,"hz":row["hz"],"confidence":row["confidence"]})
+		diagnostics.append({"file":fname,"rpm":anchor_rpm,"hz":row["hz"],"confidence":row["confidence"],"tone_before":row.get("tone_before",0.0),"tone_after":row.get("tone_after",0.0),"trim_db":row.get("trim_db",0.0)})
 	on_indices.sort_custom(func(a: int,b: int) -> bool: return float(rows[a]["rpm"]) < float(rows[b]["rpm"]))
 	off_indices.sort_custom(func(a: int,b: int) -> bool: return float(rows[a]["rpm"]) < float(rows[b]["rpm"]))
+	if texture_balance:
+		_screen_tonal_anchors(on_indices)
+		_screen_tonal_anchors(off_indices)
 	prepared = on_indices.size() >= 2
 	reset(idle)
 	print("Phase-grain engine: %d anchors, preparation %.1f ms" % [rows.size(),float(Time.get_ticks_usec()-started)/1000.0])
@@ -165,6 +173,73 @@ static func build_grains(data: PackedByteArray, rate: int, expected_hz: float, h
 	return {"pcm":atlas,"hz":float(rate)/period,"confidence":fit.y}
 
 
+# Measure the coherent firing component in recorded grains. Attenuate
+# only where it overwhelms the recorded residual, by at most 6 dB.
+# No generated engine oscillator/noise is added to the output.
+static func balance_recorded_texture(atlas: PackedFloat32Array, size: int) -> Dictionary:
+	var period_cos := PackedFloat32Array()
+	var period_sin := PackedFloat32Array()
+	for i in range(SPC):
+		period_cos.append(cos(TAU*float(i)/SPC))
+		period_sin.append(sin(TAU*float(i)/SPC))
+	var fits: Array[Vector2] = []
+	var total_energy := 0.0
+	var tone_energy := 0.0
+	var n := size-1
+	for g in range(VARIANTS):
+		var c := 0.0
+		var s := 0.0
+		for i in range(n):
+			var v := atlas[g*size+i]
+			c += v*period_cos[i%SPC]
+			s += v*period_sin[i%SPC]
+			total_energy += v*v
+		var fit := Vector2(2.0*c/n,2.0*s/n)
+		fits.append(fit)
+		tone_energy += float(n)*fit.length_squared()*0.5
+	var fraction := clampf(tone_energy/maxf(total_energy,0.000000001),0.0,1.0)
+	var trim := 1.0
+	if fraction > 0.66:
+		trim = clampf(sqrt(0.66*(1.0-fraction)/(0.34*fraction)),0.5,1.0)
+	var after_energy := maxf(0.000000001,total_energy-tone_energy*(1.0-trim*trim))
+	var after_fraction := clampf(tone_energy*trim*trim/after_energy,0.0,1.0)
+	if trim < 0.999:
+		var compensation := minf(1.16,sqrt(total_energy/after_energy))
+		for g in range(VARIANTS):
+			var fit := fits[g]
+			for i in range(size):
+				var component := fit.x*period_cos[i%SPC]+fit.y*period_sin[i%SPC]
+				atlas[g*size+i] = (atlas[g*size+i]-(1.0-trim)*component)*compensation
+	return {"pcm":atlas,"tone_before":fraction,"tone_after":after_fraction,"trim_db":20.0*log(trim)/log(10.0)}
+
+
+# Extremely tonal anchors retain at least 35% of their recording and blend
+# with one nearby, less tonal anchor from the same recorded load layer.
+func _screen_tonal_anchors(indices: Array[int]) -> void:
+	for idx in indices:
+		var fraction := float(rows[idx].get("tone_before",0.0))
+		if fraction <= 0.85:
+			continue
+		var best := -1
+		var best_cost := INF
+		for other in indices:
+			if other == idx or float(rows[other]["rpm"]) < 1800.0:
+				continue
+			var other_fraction := float(rows[other].get("tone_before",0.0))
+			var distance := absf(log(float(rows[other]["rpm"])/float(rows[idx]["rpm"])))
+			if other_fraction <= 0.75 and distance <= log(1.5)+0.0001:
+				var cost := distance+other_fraction*0.25
+				if cost < best_cost:
+					best = other
+					best_cost = cost
+		if best >= 0:
+			rows[idx]["texture_neighbor"] = best
+			rows[idx]["texture_share"] = lerpf(0.35,0.65,smoothstep(0.85,0.96,fraction))
+			diagnostics[idx]["texture_neighbor_rpm"] = rows[best]["rpm"]
+			diagnostics[idx]["texture_share"] = rows[idx]["texture_share"]
+		print("Recorded texture anchor %d RPM: tone %.3f -> %.3f, trim %.1f dB, neighbor %s" % [int(rows[idx]["rpm"]),fraction,float(rows[idx].get("tone_after",fraction)),float(rows[idx].get("trim_db",0.0)),str(rows[idx].get("texture_neighbor",-1))])
+
+
 func reset(idle: float) -> void:
 	rpm = idle
 	load_amount = 0.0
@@ -214,6 +289,13 @@ func weights_for(target_rpm: float, target_load: float) -> PackedFloat32Array:
 	var level := lerpf(lerpf(idle_gain,1.0,l),1.0,available)
 	layer_weights(weights,on_indices,target_rpm,(1.0-off)*level)
 	layer_weights(weights,off_indices,target_rpm,off*level)
+	if texture_balance:
+		for i in range(rows.size()):
+			var neighbor := int(rows[i].get("texture_neighbor",-1))
+			if neighbor >= 0 and weights[i] > 0.0:
+				var share := weights[i]*float(rows[i]["texture_share"])
+				weights[i] -= share
+				weights[neighbor] += share
 	return weights
 
 

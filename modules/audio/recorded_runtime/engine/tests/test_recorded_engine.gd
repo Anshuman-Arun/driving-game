@@ -555,5 +555,15 @@ func test_phase_grain_renderer() -> bool:
 	engine.setup("mclaren_senna")
 	assert(engine._grain_engine != null and engine._grain_engine.prepared)
 	assert(engine._grain_engine.diagnostics.size() == 12)
+	var corrected := 0
+	var blended := 0
+	for entry in engine._grain_engine.diagnostics:
+		assert(float(entry["tone_after"]) <= float(entry["tone_before"])+0.00001)
+		assert(float(entry["trim_db"]) >= -6.03)
+		corrected += int(float(entry["trim_db"]) < -0.1)
+		blended += int(entry.has("texture_neighbor_rpm"))
+	assert(corrected > 0, "Tonal Senna source correction must be active")
+	assert(blended > 0, "Near-sine Senna anchor should blend with real same-layer neighbor")
+	print("Senna source texture: %d corrected anchors, %d neighbor blends" % [corrected, blended])
 	engine.free()
 	return true

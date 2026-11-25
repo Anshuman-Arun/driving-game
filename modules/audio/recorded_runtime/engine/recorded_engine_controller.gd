@@ -562,7 +562,7 @@ func _rebuild_loop_players() -> void:
 	if use_phase_grains and cfg.has("firing_order") and _active_bank == car_profile:
 		var renderer := PhaseGrainEngineScript.new()
 		renderer.name = "PhaseGrainEngine"
-		if renderer.prepare(_manifest.loops,_prepared_loops,float(cfg["firing_order"]),_idle_rpm,float(cfg.get("idle_gain",0.58))):
+		if renderer.prepare(_manifest.loops,_prepared_loops,float(cfg["firing_order"]),_idle_rpm,float(cfg.get("idle_gain",0.58)),car_profile == "mclaren_senna"):
 			_grain_engine = renderer
 			add_child(renderer)
 		else:

@@ -2,6 +2,7 @@ extends SceneTree
 ## Real GEVP vehicle/adapter/telemetry integration, not scripted RPM input.
 const Cleanup := preload("res://tests/integration/audio_qa/audio_test_cleanup.gd")
 const BusBuilder := preload("res://modules/audio/recorded_runtime/mix/bus_layout_builder.gd")
+const CaptureRunner := preload("res://modules/audio/recorded_runtime/qa/audio_capture_runner.gd")
 var failures := 0
 
 func _initialize() -> void:
@@ -76,8 +77,12 @@ func _drive(id: String, capture: AudioEffectCapture) -> void:
 	var coast_rpm := INF
 	var out_dir := OS.get_environment("ASTER_AUDIO_CAPTURE_DIR")
 	var trace: FileAccess = null
+	var wav: FileAccess = null
 	if not out_dir.is_empty():
 		DirAccess.make_dir_recursive_absolute(out_dir)
+		wav = FileAccess.open(out_dir.path_join(id + "_live_drive_exhaust.wav"), FileAccess.WRITE)
+		if wav != null:
+			CaptureRunner._write_wav_header(wav, 0)
 		trace = FileAccess.open(out_dir.path_join(id + "_live_drive.csv"), FileAccess.WRITE)
 		if trace != null:
 			trace.store_line("time_s,rpm,target_rpm,smoothed_rpm,render_rpm,throttle,gear,speed_mps,shifting")
@@ -106,6 +111,8 @@ func _drive(id: String, capture: AudioEffectCapture) -> void:
 		if n > 0:
 			var buffer := capture.get_buffer(n)
 			frames += buffer.size()
+			if wav != null:
+				CaptureRunner._store_stereo_pcm(wav, buffer)
 			for sample in buffer:
 				var amplitude := maxf(absf(sample.x), absf(sample.y))
 				peak = maxf(peak, amplitude)
@@ -116,6 +123,10 @@ func _drive(id: String, capture: AudioEffectCapture) -> void:
 					zero_run = 0
 	if trace != null:
 		trace.close()
+	if wav != null:
+		wav.seek(0)
+		CaptureRunner._write_wav_header(wav, frames)
+		wav.close()
 	adapter.set_drive_input(0.0, 0.0, 0.0, false)
 	var skips := renderer.stream_skips() - initial_skips
 	var gap_ms := 1000.0 * longest_zero / AudioServer.get_mix_rate()
