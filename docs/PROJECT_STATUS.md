@@ -105,6 +105,10 @@ Resolved root silence issues across the game (isolated nested subproject configu
 - **Chassis & Environment (Track D)**: `ChassisAudioController` featuring exponential wind noise onset at ~22 m/s, mountain wind bed on Ambience bus, spring compression delta / dt landing thumps with 0.16s cooldown, collision impacts with velocity scaling and 0.12s cooldown, and 3-way acoustic raycasts mapping wall distance to 15-120ms delay and wet reflection gain.
 - **Root Integration & QA (Track E & Root)**: Wired directly into `PlayerCarFactory.create()`, `aster_valley_drive.gd`, `driving_test.gd`, and `project.godot`. Headless AudioEffectCapture runner passed all 42 asset validations and 3/3 car profiles across 11 driving regimes with 0 clipped samples, 0 hard flats, and -9.83 dBFS overall peak (9.83 dB minimum headroom). All unit and integration suites pass 100%.
 
+## Premium garage and architecture source pack (`feat/premium-garage-world-assets`)
+
+Added independent CC0 car, traffic, architecture and infrastructure candidate catalog, isolated acquisition and validation workflow, and import guidance. No extracted Forza models or runtime changes. Actual publication and Godot visual/rigging QA remain pending; inspect `assets/premium_garage_world/payload/LICENSES_AND_HASHES.json` after successful CI.
+
 ## Water crossings, roadside detail and instruments (`feat/local-showroom-dashboard`)
 
 Eastwater Viaduct, Alder Creek Bridge and Needle Pass Trestle carry existing routes over new water at lake, valley and mountain elevations. Five corridors have wider pavement with tapered approaches. The bridge decks, rails and shoulder surfaces participate in driving collision. The root game loads a separate roadworks heightfield while the standalone runtime can still load the canonical world. The scenery layer accounts for 12 placements displaced by the new banks.
