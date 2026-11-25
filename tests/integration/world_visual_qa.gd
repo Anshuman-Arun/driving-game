@@ -3,6 +3,7 @@ extends SceneTree
 ## Optional -- --rebake=absolute_path writes the accepted deterministic vegetation cache.
 
 const GAME := preload("res://scenes/bootstrap/game.tscn")
+const WorldRuntime := preload("res://modules/world_runtime/src/world_runtime.gd")
 const Curated := preload("res://scripts/integration/curated_car_visual.gd")
 const PremiumMesh := preload("res://scripts/integration/premium_mesh.gd")
 var failures := 0
@@ -31,6 +32,7 @@ func run() -> void:
 	check(index.triangle_count > 18000, "%d road, shoulder and junction triangles indexed" % index.triangle_count)
 	audit_vegetation(drive, index)
 	audit_authored(drive, index)
+	audit_guardrail_preservation(drive)
 	for node: MeshInstance3D in drive.find_children("*", "MeshInstance3D", true, false):
 		audit_mesh(node.mesh, node.material_override)
 	for id in PlayerCarFactory.PRESETS:
@@ -97,6 +99,52 @@ func audit_authored(drive: Node, index: RefCounted) -> void:
 			if index.overlaps(node.global_transform * box, 0.0, not bool(node.get_parent().get_meta("roadside_barrier", false))):
 				overlaps += 1
 	check(overlaps == 0, "%d authored collision shapes have %d overlaps" % [count, overlaps])
+
+func audit_guardrail_preservation(drive: Node) -> void:
+	# Compare to the exact prior road geometry, not a guessed placement count.
+	# No colliders in this temporary baseline; it cannot affect live driving.
+	var baseline := WorldRuntime.new()
+	baseline.build_on_ready = false
+	baseline.build_full_world = true
+	baseline.generate_colliders = false
+	baseline.roadworks = drive.world.roadworks.duplicate(true)
+	baseline.roadworks.erase("network_upgrade")
+	for profile: Dictionary in baseline.roadworks["roads"].values():
+		profile.erase("support_start")
+		profile.erase("support_end")
+	root.add_child(baseline)
+	if not baseline.build_world():
+		check(false, "pre-widening comparison world builds")
+		baseline.free()
+		return
+	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/scenery/manifest.json"))
+	var expected := 0
+	for entry: Dictionary in manifest["region_packs"]:
+		var pack: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://" + str(entry["path"])))
+		for raw: Dictionary in pack["placements"]:
+			if raw["asset"] != "guardrail" or not drive.scenery._quality_keeps(raw):
+				continue
+			var p: Array = raw["position"]
+			var height := baseline.get_surface_height_at(float(p[0]), float(p[2]))
+			var original := baseline.get_authored_surface_height_at(float(p[0]), float(p[2]))
+			if absf(height - original) > 0.33:
+				continue
+			var item := raw.duplicate()
+			item["position"] = [p[0], height + float(raw.get("terrain_offset_m", 0.0)), p[2]]
+			var frame: Transform3D = drive.scenery._placement_frame(item)
+			var bounds: AABB = frame * drive.scenery._model_bounds(manifest["assets"]["guardrail"])
+			if drive.scenery.generate_selective_colliders:
+				bounds = bounds.merge(frame * drive.scenery._local_collider_bounds("guardrail"))
+			if not baseline.road_clearance.overlaps(bounds, 0.16, false):
+				expected += 1
+	baseline.free()
+	var report: Dictionary = drive.scenery.report
+	var retained := int(report.get("guardrails_accepted", 0))
+	var relocated := int(report.get("guardrails_relocated", 0))
+	check(expected > 0 and retained >= expected and relocated > 0,
+		"guardrails retained %d vs pre-widening %d; %d safely relocated; unresolved %s" %
+		[retained, expected, relocated, str(report.get("unresolved_guardrails", []))])
+
 
 func audit_routes(drive: Node) -> int:
 	var space: PhysicsDirectSpaceState3D = drive.get_world_3d().direct_space_state

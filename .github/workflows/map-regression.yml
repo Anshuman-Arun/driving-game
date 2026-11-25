@@ -149,6 +149,8 @@ jobs:
           cp data/world/road_graph_v1.json data/world/world_metadata_v1.json data/world/terrain_height_r16le.bin modules/scenery/.world_source/ || exit 1
           cp -a assets/curated/. modules/scenery/staged_art/ || exit 1
           cp -a content/scenery/models/. modules/scenery/staged_models/ || exit 1
+          mkdir -p modules/scenery/assets/premium_runtime
+          cp assets/premium_runtime/alder_fuel_station.glb assets/premium_runtime/alder_fuel_station_low_color.png assets/premium_runtime/alder_fuel_station_low_rough.png modules/scenery/assets/premium_runtime/ || exit 1
           for module in world_runtime racing game_shell scenery; do
             run godot --headless --path "modules/$module" --editor --import
           done

@@ -142,6 +142,15 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 	var skipped_by_quality: int = 0
 	var displaced_by_roadworks: int = 0
 	var rejected_for_clearance: Dictionary = {}
+	var relocated_guardrails := 0
+	var accepted_guardrails := 0
+	var unresolved_guardrails: Array[String] = []
+	var rail_corridors: Dictionary = {}
+	if _world != null and _world.has_method("get_physical_road_centerlines"):
+		var works: Dictionary = _world.get("roadworks")
+		if not works.get("network_upgrade", {}).is_empty():
+			for corridor: Dictionary in _world.get_physical_road_centerlines():
+				rail_corridors[str(corridor["id"])] = corridor["points"]
 	var height_mismatches: int = 0
 	var assets: Dictionary = manifest.get("assets", {})
 	for entry in manifest.get("region_packs", []):
@@ -190,8 +199,20 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 				var roadside_barrier := asset_id in ["guardrail", "barrier"]
 				var margin := 0.16 if roadside_barrier else (1.6 if bounds.size.y > 2.0 else 0.38)
 				if _world.road_clearance.overlaps(bounds, margin, not roadside_barrier):
-					rejected_for_clearance[asset_id] = int(rejected_for_clearance.get(asset_id, 0)) + 1
-					continue
+					var relocated: Dictionary = {}
+					if asset_id == "guardrail" and not rail_corridors.is_empty():
+						relocated = _relocate_guardrail(adjusted, bounds, margin, surveyed_y, rail_corridors)
+					if relocated.is_empty():
+						rejected_for_clearance[asset_id] = int(rejected_for_clearance.get(asset_id, 0)) + 1
+						if asset_id == "guardrail":
+							unresolved_guardrails.append(str(item["id"]))
+						continue
+					adjusted = relocated
+					x = float(adjusted["position"][0])
+					z = float(adjusted["position"][2])
+					relocated_guardrails += 1
+			if asset_id == "guardrail":
+				accepted_guardrails += 1
 			var cell_x: int = int(floor(x / 128.0))
 			var cell_z: int = int(floor(z / 128.0))
 			var cell_key: String = "%d:%d:%s" % [cell_x, cell_z, asset_id]
@@ -238,6 +259,8 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 		"placements": placements, "skipped_quality": skipped_by_quality,
 		"displaced_by_roadworks": displaced_by_roadworks,
 		"rejected_for_clearance": rejected_for_clearance,
+		"guardrails_accepted": accepted_guardrails, "guardrails_relocated": relocated_guardrails,
+		"unresolved_guardrails": unresolved_guardrails,
 		"height_mismatches": height_mismatches, "selective_colliders": colliders,
 		"chunk_asset_groups": _cells.size(), "mesh_component_batches": batches,
 		"water_triangles": water_triangles, "missing_assets": missing.keys(),
@@ -247,6 +270,64 @@ func build_scenery(world_runtime: Node = null, content_override: String = "", wo
 	_update_culling(true)
 	scenery_built.emit(report)
 	return true
+
+func _relocate_guardrail(item: Dictionary, bounds: AABB, margin: float,
+		ground: float, corridors: Dictionary) -> Dictionary:
+	# These tags are the three authored North Ridge runs in generate.mjs.
+	# Preserve each segment's bearing, scale, and side of its original road.
+	var route_by_tag := {"ridge_guardrail": "ridge_valley",
+		"ridge_lookout_rail": "ridge_overlook", "needle_pass_rail": "cedar_ridge"}
+	var route: String = str(route_by_tag.get(str(item.get("tag", "")), ""))
+	var points: PackedVector3Array = corridors.get(route, PackedVector3Array())
+	if points.size() < 2:
+		return {}
+	var frame := _placement_frame(item)
+	var origin := Vector2(frame.origin.x, frame.origin.z)
+	var closest := origin
+	var best := INF
+	for i in range(1, points.size()):
+		var a := Vector2(points[i - 1].x, points[i - 1].z)
+		var edge := Vector2(points[i].x, points[i].z) - a
+		if edge.length_squared() < 0.00001:
+			continue
+		var at := a + edge * clampf((origin - a).dot(edge) / edge.length_squared(), 0.0, 1.0)
+		var distance := origin.distance_squared_to(at)
+		if distance < best:
+			best = distance
+			closest = at
+	if best > 225.0:
+		return {}
+	var lateral := Vector2(frame.basis.z.x, frame.basis.z.z).normalized()
+	var side := lateral.dot(origin - closest)
+	if absf(side) < 0.5:
+		return {}
+	lateral *= signf(side)
+	# Check the two end-post locations to avoid worsening support on steep ground.
+	var post := Vector2(frame.basis.x.x, frame.basis.x.z) * 1.74
+	var old_grade := maxf(absf(_surface_height(origin.x + post.x, origin.y + post.y) - ground),
+		absf(_surface_height(origin.x - post.x, origin.y - post.y) - ground))
+	for step in range(1, 13):
+		var at := origin + lateral * (float(step) * 0.25)
+		if absf(at.x) >= 1000.0 or absf(at.y) >= 1000.0:
+			continue
+		var height := _surface_height(at.x, at.y)
+		if not is_finite(height) or absf(height - ground) > 1.0:
+			continue
+		var grade := maxf(absf(_surface_height(at.x + post.x, at.y + post.y) - height),
+			absf(_surface_height(at.x - post.x, at.y - post.y) - height))
+		if not is_finite(grade) or grade > maxf(0.75, old_grade + 0.25):
+			continue
+		# Unchanged orientation and size means the true transformed render and
+		# collider union can be translated exactly; use main's triangle index.
+		var shifted := bounds
+		shifted.position += Vector3(at.x - origin.x, height - ground, at.y - origin.y)
+		if _world.road_clearance.overlaps(shifted, margin, false):
+			continue
+		var result := item.duplicate()
+		result["position"] = [at.x, height + float(item.get("terrain_offset_m", 0.0)), at.y]
+		return result
+	return {}
+
 
 func _quality_keeps(item: Dictionary) -> bool:
 	if quality >= 2 or item.get("tag") == "landmark" or item.get("tag") == "streetwall" or str(item.get("asset", "")) in ["guardrail", "barrier", "warning", "lamp"]:
