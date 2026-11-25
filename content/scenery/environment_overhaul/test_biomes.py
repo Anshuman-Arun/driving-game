@@ -57,7 +57,9 @@ class UnitTests(unittest.TestCase):
             Path(tmp,"pointer").write_text("version https://git-lfs.github.com/spec/v1")
             with self.assertRaises(ValueError):
                 source.read("pointer")
-        meta=json.loads((ROOT/"data/world/world_metadata_v1.json").read_text())
+        meta=dict(heightfield=dict(sample_width=501,sample_height=501,spacing_m=4,
+            origin_x=-1000,origin_z=-1000,row_order="z_ascending_x_ascending",
+            format="uint16_le",scale_m_per_unit=.01,offset_m=0))
         with self.assertRaises(ValueError):
             b.decode_height(b"bad",meta)
         raw=bytes(4000000)
@@ -67,6 +69,73 @@ class UnitTests(unittest.TestCase):
         for corrupted in (raw[:-1],b"x"+raw[1:]):
             with self.assertRaises(ValueError):
                 b.validate_mask(corrupted,manifest)
+
+
+class FixtureTests(unittest.TestCase):
+    def test_full_bake(self):
+        # Entire pipeline with small source records and real-sized synthetic raster.
+        # Not a replacement for the canonical acceptance test.
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            def write(name,value):
+                path=root/name
+                path.parent.mkdir(parents=True,exist_ok=True)
+                path.write_bytes(value if isinstance(value,bytes) else b.json_bytes(value))
+            regions=[dict(id=k,center=c,radius_m=400) for k,c in (
+                ("alder_town",[-620,560]),("cedar_woods",[-700,-320]),
+                ("north_ridge",[230,-650]),("green_valley",[45,170]),
+                ("eastwater_lake",[700,450]))]
+            heightfield=dict(sample_width=501,sample_height=501,spacing_m=4,
+                origin_x=-1000,origin_z=-1000,row_order="z_ascending_x_ascending",
+                format="uint16_le",scale_m_per_unit=.01,offset_m=0)
+            meta=dict(schema_version=1,bounds=b.BOUNDS,coordinate_system="godot_y_up",
+                heightfield=heightfield,regions=regions)
+            write("data/world/world_metadata_v1.json",meta)
+            raw=np.full((501,501),5000,dtype="<u2").tobytes()
+            write("data/world/terrain_height_r16le.bin",raw)
+            write("data/world/terrain_roadworks_r16le.bin",raw)
+            lanes=[dict(id="lane_test_ab",road_id="test",surface="asphalt",width_m=3.4,
+                points=[[-100,50,-2],[100,50,-2]]),
+                dict(id="lane_test_ba",road_id="test",surface="asphalt",width_m=3.4,
+                points=[[100,50,2],[-100,50,2]])]
+            write("data/world/road_graph_v1.json",dict(schema_version=1,bounds=b.BOUNDS,
+                coordinate_system="godot_y_up",units="meters",lanes=lanes))
+            write("data/world/roadworks.json",dict(roads={"test":{"width_m":12,
+                "bridge_start":50,"bridge_end":100}},waters=[dict(cells=[[250,255]])],
+                network_upgrade=dict(widths_m={"test":14},asphalt_shoulder_m=2)))
+            write("content/scenery/lake/water_cells_v1.json",dict(origin_x=-1000,
+                origin_z=-1000,spacing_m=4,cells=[[250,260]]))
+            write("content/scenery/avoidance/race_gate_reservations_v1.json",
+                dict(zones=[dict(x=100,z=100,radius_m=10)]))
+            write("content/scenery/manifest.json",dict(assets={"house":dict(r=7,kind="architecture"),
+                "pine":dict(r=3,kind="natural")},region_packs=[dict(path="content/scenery/packs/test.json")]))
+            write("content/scenery/packs/test.json",dict(placements=[
+                dict(asset="house",position=[40,50,40],scale=1),
+                dict(asset="pine",position=[60,50,60],scale=1)]))
+            for name in ("vegetation.bin","premium_foliage.bin"):
+                write("data/world/"+name,np.array([[80,50,80,0,1,0,.5]],dtype="<f4").tobytes())
+            tuning=dict(spacing_m=24,max_placements=400)
+            result=b.bake(root,123,tuning)
+            self.assertEqual(result,b.bake(root,123,tuning))
+            raw,manifest,understory,stats=result
+            mask=b.validate_mask(raw,manifest)
+            self.assertEqual(mask[500,500,0],0)
+            self.assertEqual(mask[504,500,0],0) # widened deck + shoulder buffer
+            self.assertEqual(mask[520,500,2],255)
+            self.assertEqual(mask[550,550,0],0) # gate reservation
+            self.assertEqual(mask[520,520,0],0) # building
+            self.assertGreater(mask[580,520,0],100)
+            self.assertGreater(len(understory["placements"]),0)
+            self.assertLessEqual(len(understory["placements"]),400)
+            self.assertEqual(stats["lane_alignment_max_m"],0)
+            b.publish(root/"output",*result)
+            self.assertEqual((root/"output/biome_rgba8.bin").stat().st_size,4000000)
+            self.assertEqual(b.sha((root/"output/understory.json").read_bytes()),
+                             manifest["understory_sha256"])
+            # Required real-world inputs fail closed before publication.
+            (root/"data/world/vegetation.bin").unlink()
+            with self.assertRaises(FileNotFoundError):
+                b.bake(root,123,tuning)
 
 
 class CanonicalTests(unittest.TestCase):
