@@ -478,6 +478,20 @@ func _calculate_command(a: Dictionary, dt: float) -> Dictionary:
 
 
 func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> bool:
+	# The mandatory stop and conflict clearance are independent conditions.
+	# Time actually stopped at the line counts even while another turn owns
+	# the junction. Never make the vehicle stop a second time after yielding.
+	var mode: String = j["mode"]
+	if mode == "stop" and not a["stop_done"]:
+		var offset: float = float(inbound_stop_offsets.get(a["lane_id"], STOP_OFFSET_M))
+		if graph.lane_length(a["lane_id"]) - a["s"] < offset + 0.9 and a["speed_mps"] < 0.45:
+			a["wait_s"] += FIXED_STEP
+			if a["wait_s"] >= j["stop_s"]:
+				a["stop_done"] = true
+		else:
+			a["wait_s"] = 0.0
+		if not a["stop_done"]:
+			return true
 	var movement: String = a["next_lane"]
 	if movement_junction.get(movement, "") == junction_id:
 		# Compare active turning movements; opposite-direction travel lanes
@@ -505,19 +519,10 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 					return true
 	elif reservations.has(junction_id) and reservations[junction_id] != a["id"]:
 		return true
-	var mode: String = j["mode"]
 	if mode == "signal":
 		var phase: float = fposmod(elapsed_s + j["phase_s"], j["period_s"])
 		if phase >= j["green_s"]:
 			return true
-	if mode == "stop" and not a["stop_done"]:
-		# Stop signs require full stop and a finite dwell, no instantaneous rolling stop.
-		var offset: float = float(inbound_stop_offsets.get(a["lane_id"], STOP_OFFSET_M))
-		if graph.lane_length(a["lane_id"]) - a["s"] < offset + 0.9 and a["speed_mps"] < 0.45:
-			a["wait_s"] += FIXED_STEP
-			if a["wait_s"] >= j["stop_s"]:
-				a["stop_done"] = true
-		return not a["stop_done"]
 	return false
 
 

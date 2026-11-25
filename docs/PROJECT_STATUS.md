@@ -1,5 +1,10 @@
 # Project status — single current-state log
 
+## Scoped traffic dwell correction (2026-11-25)
+
+Run 45690637844 confirmed the unchanged runtime meets both seeded safety and replay checks and reaches 20 agents, but queue waits are 990/984 ticks vs the original <900 gate. Code inspection found a concrete ordering bug: a conflicting reservation returned before the all-way-stop dwell timer could advance. A car already stopped while yielding therefore had to perform its mandatory stop dwell again after the previous reservation cleared. Count actual stopped time independently of conflict ownership; reset incomplete dwell when moving, and retain all conflict and queue thresholds. Added a targeted canonical conflicting-turn regression and richer queue diagnostics. This narrow inherited traffic fix is included for merge readiness; no old branch traffic experiments copied, no map/art/audio changes. Validation of this revision is pending.
+
+
 ## PR #43 merge-readiness review (2026-11-25)
 Run [45562277806](https://github.com/Anshuman-Arun/driving-game/actions/runs/45562277806): import, data, standalone and production audio passed. Root road-width sweep: 1,782 edge rays, zero failures; four spans crossed by the live chassis; world visual regression: 222,579 accepted vegetation placements, 3,482 authored render instances, 1,058 colliders, zero road overlaps; 2,450/2,450 pavement rays; all six cars and all 16 corridors drove; 130 rails accepted vs 124 baseline, 85 relocated, zero unresolved. Headless counts do not prove scenic or guardrail continuity acceptance.
 

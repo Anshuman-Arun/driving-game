@@ -76,6 +76,7 @@ func _run() -> void:
     _test_nonconflicting_turns()
     _test_opposing_flow()
     _test_cleanup()
+    _test_stop_dwell_during_conflict()
     for jid in COMPLEX:
         _test_conflicting_movements(str(jid))
     _test_seeded_flow()
@@ -343,6 +344,47 @@ func _test_cleanup() -> void:
     _check(sim.reservations.is_empty() and sim.agents.is_empty(), "reset removes all reservation ownership")
 
 
+func _test_stop_dwell_during_conflict() -> void:
+    var sim = _simulation(18)
+    if sim == null:
+        _check(false, "stop dwell fixture setup")
+        return
+    var jid := "junction_alder"
+    var pair: Array[String] = _pick_conflicting_pair(sim, jid)
+    if pair.size() != 2:
+        _check(false, "stop dwell fixture uses conflicting turns")
+        return
+    var first: int = _spawn_routed(sim, jid, pair[0])
+    var second: int = _spawn_routed(sim, jid, pair[1])
+    if first <= 0 or second <= 0:
+        _check(false, "stop dwell fixture spawns both approaches")
+        return
+    var owner: Dictionary = sim.agents[first]
+    var waiting: Dictionary = sim.agents[second]
+    var key := "%s@%d" % [jid, first]
+    owner["reservation_zone"] = jid
+    owner["reservation_movement"] = pair[0]
+    owner["reserved_junction"] = key
+    sim.reservations[key] = first
+    var lane: String = waiting["lane_id"]
+    waiting["s"] = sim.graph.lane_length(lane) - float(sim.inbound_stop_offsets[lane])
+    waiting["speed_mps"] = 0.0
+    var control: Dictionary = sim.junctions[jid]
+    var blocked := true
+    for i in range(ceili(float(control["stop_s"]) / DT) + 2):
+        blocked = sim._junction_blocked(waiting, jid, control) and blocked
+    _check(blocked, "stopped car cannot enter while a conflicting reservation is held")
+    _check(bool(waiting["stop_done"]), "mandatory stop dwell accrues while yielding")
+    sim.despawn_agent(first)
+    _check(not sim._junction_blocked(waiting, jid, control),
+        "completed dwell permits immediate grant only after conflict release")
+    waiting["stop_done"] = false
+    waiting["wait_s"] = float(control["stop_s"]) - DT * 0.5
+    waiting["speed_mps"] = 1.0
+    _check(sim._junction_blocked(waiting, jid, control) and float(waiting["wait_s"]) == 0.0,
+        "rolling before completing dwell resets the stop timer")
+
+
 func _seed_trace(seed_value: int) -> Dictionary:
     var sim = _simulation(seed_value)
     if sim == null:
@@ -356,6 +398,7 @@ func _seed_trace(seed_value: int) -> Dictionary:
     var safe := true
     var wait_ticks: Dictionary = {}
     var longest_wait := 0
+    var longest_wait_context: Dictionary = {}
     for _tick in range(1350):
         sim.step(DT, viewer)
         var states: Array = sim.get_states()
@@ -374,7 +417,12 @@ func _seed_trace(seed_value: int) -> Dictionary:
             fingerprint = posmod(fingerprint * 131 + int(snap.hash()), 2147483647)
             if a["state"] == "WAIT_AT_JUNCTION":
                 wait_ticks[aid] = int(wait_ticks.get(aid, 0)) + 1
-                longest_wait = maxi(longest_wait, int(wait_ticks[aid]))
+                if int(wait_ticks[aid]) > longest_wait:
+                    longest_wait = int(wait_ticks[aid])
+                    longest_wait_context = {"agent": aid, "lane": a["lane_id"],
+                        "s": a["s"], "speed": a["speed_mps"], "next": a["next_lane"],
+                        "stop_done": sim.agents[aid]["stop_done"], "tick": _tick,
+                        "owners": sim.reservations.duplicate()}
             else:
                 wait_ticks.erase(aid)
         previous = now
@@ -409,7 +457,7 @@ func _seed_trace(seed_value: int) -> Dictionary:
                             safe = false
     return {"ok": safe and peak > 0 and transitions > 0 and longest_wait < 900,
         "trace": fingerprint,
-        "peak": peak, "transitions": transitions, "safe": safe, "longest_wait_ticks": longest_wait}
+        "peak": peak, "transitions": transitions, "safe": safe, "longest_wait_ticks": longest_wait, "longest_wait_context": longest_wait_context}
 
 
 func _test_seeded_flow() -> void:
