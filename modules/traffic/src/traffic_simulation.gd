@@ -306,7 +306,7 @@ func spawn_agent(lane_id: String, s: float, initial_speed_mps: float = 0.0, spee
 		"target_speed_mps": 0.0, "speed_factor": multiplier, "vehicle_type": vehicle_type,
 		"density_managed": false,
 		"position": pos, "tangent": pose["tangent"], "state": "FOLLOW_LANE",
-		"wait_s": 0.0, "stop_done": false, "reserved_junction": "",
+		"wait_s": 0.0, "stop_done": false, "stop_ready_tick": -1, "reserved_junction": "",
 		"entered_lane": "", "clearance_m": 0.0,
 		"reservation_zone": "", "reservation_movement": "",
 		"last_acceleration_mps2": 0.0, "dead_end_seconds": 0.0})
@@ -479,7 +479,13 @@ func _calculate_command(a: Dictionary, dt: float) -> Dictionary:
 
 func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> bool:
 	var movement: String = a["next_lane"]
-	if movement_junction.get(movement, "") == junction_id:
+	var authored_movement: bool = movement_junction.get(movement, "") == junction_id
+	# A mandatory full stop can be completed while a conflicting vehicle
+	# clears the intersection. Do not add another dwell after clearance.
+	# Legacy fixtures retain their original admission behavior.
+	if authored_movement and j["mode"] == "stop" and not a["stop_done"]:
+		_update_stop_dwell(a, j)
+	if authored_movement:
 		# Compare active turning movements; opposite-direction travel lanes
 		# are not automatically treated as occupying the same conflict zone.
 		for key in reservations:
@@ -511,14 +517,39 @@ func _junction_blocked(a: Dictionary, junction_id: String, j: Dictionary) -> boo
 		if phase >= j["green_s"]:
 			return true
 	if mode == "stop" and not a["stop_done"]:
-		# Stop signs require full stop and a finite dwell, no instantaneous rolling stop.
-		var offset: float = float(inbound_stop_offsets.get(a["lane_id"], STOP_OFFSET_M))
-		if graph.lane_length(a["lane_id"]) - a["s"] < offset + 0.9 and a["speed_mps"] < 0.45:
-			a["wait_s"] += FIXED_STEP
-			if a["wait_s"] >= j["stop_s"]:
-				a["stop_done"] = true
+		if not authored_movement:
+			_update_stop_dwell(a, j)
 		return not a["stop_done"]
+	if authored_movement and mode == "stop" and a["stop_done"]:
+		# Do not admit another conflicting movement ahead of a driver who
+		# completed their stop earlier, even if that driver is still blocked
+		# by a clearing reservation. Same-direction platoons must not starve
+		# another approach. Legacy junctions retain original scheduling.
+		var ready: int = int(a.get("stop_ready_tick", -1))
+		if ready >= 0:
+			for other_id in agents:
+				if other_id == a["id"]:
+					continue
+				var other: Dictionary = agents[other_id]
+				if other["reserved_junction"] != "" or not other["stop_done"] or inbound_junction.get(other["lane_id"], "") != junction_id:
+					continue
+				var earlier: int = int(other.get("stop_ready_tick", -1))
+				if earlier < 0 or earlier > ready or (earlier == ready and int(other_id) > int(a["id"])):
+					continue
+				var other_movement: String = other["next_lane"]
+				if other_movement != movement and movement_conflicts[movement].has(other_movement):
+					return true
 	return false
+
+
+func _update_stop_dwell(a: Dictionary, j: Dictionary) -> void:
+	# Stop signs require a stationary dwell near the actual stop line.
+	var offset: float = float(inbound_stop_offsets.get(a["lane_id"], STOP_OFFSET_M))
+	if graph.lane_length(a["lane_id"]) - a["s"] < offset + 0.9 and a["speed_mps"] < 0.45:
+		a["wait_s"] += FIXED_STEP
+		if a["wait_s"] >= j["stop_s"]:
+			a["stop_done"] = true
+			a["stop_ready_tick"] = tick
 
 
 func _find_leader(a: Dictionary) -> Dictionary:
@@ -608,6 +639,7 @@ func _integrate(a: Dictionary, command: Dictionary, dt: float) -> void:
 		else:
 			a["next_lane"] = _choose_next(graph.lanes[next_lane]["next_lane_ids"])
 		a["stop_done"] = false
+		a["stop_ready_tick"] = -1
 		a["wait_s"] = 0.0
 		transitions += 1
 	if a["reserved_junction"] != "" and a["lane_id"] == a["entered_lane"] and a["s"] >= a["clearance_m"]:

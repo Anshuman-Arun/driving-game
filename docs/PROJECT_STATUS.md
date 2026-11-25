@@ -1,6 +1,6 @@
 # Project status — single current-state log
 
-Last updated: 2026-11-23
+Last updated: 2026-11-24
 
 ## Water crossings, roadside detail and instruments (`feat/local-showroom-dashboard`)
 
@@ -62,3 +62,35 @@ Known blockers:
 Next task:
 
 Do not mark a phase complete on the basis of code generation alone.
+
+## Network-wide road envelope (feat/map-road-width-overhaul; pending runtime QA)
+
+The root game uses explicit target pavement widths on all sixteen existing corridors: 10–11.2 m asphalt, 8.4–9 m gravel, with 2.0/1.6 m shoulders. Smooth tapers retain existing junction seams and three bridge decks. Junction hull buffers expand by 1 m. The canonical graph and existing roadworks heightfield remain unchanged; the authored corridor grading is reused. The runtime generates a conservative road/shoulder clearance raster to filter existing vegetation and relocate nearby roadside furniture where terrain permits. The vegetation bake uses the same profile for future verge placement. The standalone runtime without roadworks retains the original geometry. A separate 105 m elevated section of Meadow Causeway now gets bridge structure, level shoulders and solid rails above an existing deep depression, without changing water or terrain. Asphalt markings use metric width so painted stripes and texture scale stay consistent. Connector-side data check: 11,720 m of physical centerline, 9.86 m length-weighted mean pavement width versus the 6.8 m canonical baseline; 2,972 full-width edge height samples showed no terrain more than 0.15 m above the centerline (maximum 0.02 m). This is not a physics or render test. Godot import, collision regression, render and driving verification are still required; no new performance measurements are claimed.
+
+### Regression audit, 2026-11-24
+
+GitHub Actions run [45554634525](https://github.com/Anshuman-Arun/driving-game/actions/runs/45554634525) completed the data job and Godot 4.7.2 root import successfully. World regeneration, turn geometry, world-data preflight, race authoring, seven traffic fixture cases, three 90-second deterministic traffic simulations, two WAV asset tests and Python bake syntax checks passed. Independent connector-side audit performed 10,568 assertions with zero failures: 104 lanes, 144 exact directed links, four connected race routes, 3,338 pavement-edge samples (maximum terrain protrusion 0.085 m), and 3,250 non-elevated shoulder samples (maximum terrain drop 0.56 m). This is data analysis, not physics. Root regression group reported failure; detailed engine logs pending at time of writing. No visual, controller or FPS certification. The CI workflow is split into independent root and standalone jobs, stages scenery models before importing the standalone module, and continues testing after individual failures.
+
+### CI rerun 2 (run 45554913247)
+
+Root import, core smoke/steering/drift, all three existing live bridge crossings, garage-world, and headless showcase passed. Standalone world passed 642/642 road rays and 72/72 junction mid-rays. Traffic passed 48 checks; racing passed 156 + 66 + 483 checks, shell 53 checks, scenery 2,791 placements. Failures: two of 594 exact-station road-edge rays, stale fixed collider count and grass-route crossing the new elevated span, vehicle visual test configured a missing hero but real distant model, four audio type-inference errors, and missing canonical traffic controls in standalone context. Follow-up retains road coverage by checking both sides of each shared section edge, tests grass transitions on a dry widened corridor, derives expected collider counts including bridges, explicitly configures all absent visual LODs in the fallback test, types audio loop keys, and stages the pinned traffic-controls PR dependency only in CI. These changes require a new run; isolated seam misses, if any, are reported separately. No graphical or physical controller validation.
+
+### CI rerun 3 (run 45556573201)
+
+Data and complete root Godot suites passed: 1,782 widened-edge rays, zero isolated seam misses, all three legacy bridges, zero failures in vehicle/world, core, cameras, drift, garage, visuals (10/10) and headless showcase. Three live driving routes each recorded 100% ticks with at least three wheel contacts. Standalone world, racing, traffic fixture, shell, scenery and both audio assertions passed. Advanced traffic safety failed two 45-second combined flow checks (83/85); the traffic implementation and canonical graph are byte-identical to main, so this is not caused by the widened pavement. Added explicit failure diagnostics to the test without weakening its assertions. Also guard audio telemetry on detached vehicles, allow audio test teardown to complete, and add a direct live chassis and two-sided rail check for the new elevated span. These follow-ups require rerun; no new GPU or physical controller results.
+
+### CI rerun 4 (run 45557180082)
+
+All data and root-game suites passed again, including 1,782 edge rays and direct live-car crossing of the new 105 m elevated span with rails verified on both sides. Traffic diagnostics identify the sole failing assertions: 990 and 984 consecutive WAIT_AT_JUNCTION ticks (33.0/32.8 s; required <30 s) on Alder's market approach. Both seeds reached 20 cars, performed lane transitions and reported zero reservation-ownership, conflict or capacity violations. Traffic change: full stop dwell now progresses while existing reservations block entry; eligible conflicting all-way-stop arrivals use oldest-first priority with stable ID tie-breaking while independent movements remain eligible. Added explicit higher-ID older-arrival checks; existing 85 assertions remain. Audio smoke passed but leaked 15 resource references at exit, so stop and detach streams during teardown and allow audio processing to finish. Pending verification in subsequent CI run.
+
+### CI rerun 5 (run 45557429329)
+
+The experimental oldest-first scheduling change did not reduce canonical queue waits (1,002/984 ticks) and introduced an overlap failure in the ordinary traffic fixture (47/48). Reverted the behavioral experiment and its new priority fixture to the previous traffic implementation; retained all original safety tests and expanded diagnostics to identify the blocking reservations and downstream leaders. A separate traffic CI job now exposes those results independently. Audio smoke teardown passed cleanly, while regression teardown still reported leaked references; allow the same 0.10 s cleanup interval in both tests. No failed test is waived.
+
+### CI rerun 6 (run 45557610817)
+
+Root game, data and standalone jobs passed; basic traffic restored to 48/48. Advanced traffic remains 83/85: 990/984 consecutive WAIT_AT_JUNCTION ticks at Alder, no reservation/capacity violations. Diagnostics show waiting drivers' stop dwell remains incomplete while conflicting owners are moving through long connectors. A narrower follow-up completes mandatory stop dwell during conflict occupancy only for authored movements (no changes to legacy fixture admission or reservation conflict checks). Added three focused assertions and retained the original 30-second threshold. Both audio functional suites pass, though regression teardown still reports 20 resource references; this is not a clean engine exit. Pending verification.
+
+### CI rerun 7 (run 45558759924)
+
+Data, root and standalone jobs passed; traffic fixtures 48/48 and authored stop-dwell checks passed. Advanced canonical waits fell from 990 to 902 ticks for seed 20261121, remained 984 for seed 73; no reservation/capacity violations. Add oldest-completed-stop priority only between different conflicting authored movements, preserving legacy scheduling and same-movement headway. New priority fixture, unchanged 30-second limit. Pending CI.

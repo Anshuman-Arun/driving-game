@@ -74,6 +74,8 @@ func _run() -> void:
     _test_geometry(sim)
     _test_short_connector(sim)
     _test_nonconflicting_turns()
+    _test_stop_dwell_during_conflict()
+    _test_authored_arrival_order()
     _test_opposing_flow()
     _test_cleanup()
     for jid in COMPLEX:
@@ -283,6 +285,55 @@ func _test_nonconflicting_turns() -> void:
     _check(sim.reservations.is_empty(), "independent movement ownership cleans up")
 
 
+func _test_stop_dwell_during_conflict() -> void:
+    var sim = _simulation(51)
+    if sim == null:
+        _check(false, "stop dwell setup")
+        return
+    var pair: Array[String] = _pick_conflicting_pair(sim, "junction_alder")
+    var first: int = _spawn_routed(sim, "junction_alder", pair[0])
+    var second: int = _spawn_routed(sim, "junction_alder", pair[1])
+    _check(first > 0 and second > 0, "stop dwell conflicting agents spawn")
+    if first <= 0 or second <= 0:
+        return
+    var owner: Dictionary = sim.agents[first]
+    var waiting: Dictionary = sim.agents[second]
+    owner["reservation_zone"] = "junction_alder"
+    owner["reservation_movement"] = pair[0]
+    owner["reserved_junction"] = "junction_alder@%d" % first
+    sim.reservations[owner["reserved_junction"]] = first
+    waiting["s"] = sim.graph.lane_length(waiting["lane_id"]) - float(sim.inbound_stop_offsets[waiting["lane_id"]])
+    waiting["speed_mps"] = 0.0
+    var blocked := true
+    for _tick in range(40):
+        blocked = sim._junction_blocked(waiting, "junction_alder", sim.junctions["junction_alder"]) and blocked
+    _check(blocked and bool(waiting["stop_done"]), "completed dwell does not permit conflicting entry")
+    sim.despawn_agent(first)
+    _check(not sim._junction_blocked(waiting, "junction_alder", sim.junctions["junction_alder"]),
+        "completed dwell allows immediate admission after conflict clears")
+
+
+func _test_authored_arrival_order() -> void:
+    var sim = _simulation(51)
+    if sim == null:
+        _check(false, "arrival order setup")
+        return
+    var pair: Array[String] = _pick_conflicting_pair(sim, "junction_alder")
+    var later: int = _spawn_routed(sim, "junction_alder", pair[0])
+    var earlier: int = _spawn_routed(sim, "junction_alder", pair[1])
+    _check(later > 0 and earlier > 0, "arrival order conflicting agents spawn")
+    if later <= 0 or earlier <= 0:
+        return
+    sim.agents[later]["stop_done"] = true
+    sim.agents[later]["stop_ready_tick"] = 50
+    sim.agents[earlier]["stop_done"] = true
+    sim.agents[earlier]["stop_ready_tick"] = 20
+    _check(sim._junction_blocked(sim.agents[later], "junction_alder", sim.junctions["junction_alder"]),
+        "later conflicting driver yields to older completed stop")
+    _check(not sim._junction_blocked(sim.agents[earlier], "junction_alder", sim.junctions["junction_alder"]),
+        "older completed stop can proceed despite higher agent ID")
+
+
 func _test_opposing_flow() -> void:
     var sim = _simulation(21)
     if sim == null:
@@ -356,12 +407,15 @@ func _seed_trace(seed_value: int) -> Dictionary:
     var safe := true
     var wait_ticks: Dictionary = {}
     var longest_wait := 0
+    var longest_wait_state: Dictionary = {}
+    var violations: Dictionary = {}
     for _tick in range(1350):
         sim.step(DT, viewer)
         var states: Array = sim.get_states()
         peak = maxi(peak, states.size())
         if states.size() > 20:
             safe = false
+            violations["density_cap"] = int(violations.get("density_cap", 0)) + 1
         var now: Dictionary = {}
         for a in states:
             var aid: int = int(a["id"])
@@ -370,11 +424,29 @@ func _seed_trace(seed_value: int) -> Dictionary:
                 transitions += 1
             if a["reserved_junction"] != "" and int(sim.reservations.get(a["reserved_junction"], -1)) != aid:
                 safe = false
+                violations["missing_owner"] = int(violations.get("missing_owner", 0)) + 1
             var snap: String = "%s:%s:%.3f:%s" % [aid, a["lane_id"], float(a["s"]), a["reserved_junction"]]
             fingerprint = posmod(fingerprint * 131 + int(snap.hash()), 2147483647)
             if a["state"] == "WAIT_AT_JUNCTION":
                 wait_ticks[aid] = int(wait_ticks.get(aid, 0)) + 1
-                longest_wait = maxi(longest_wait, int(wait_ticks[aid]))
+                if int(wait_ticks[aid]) > longest_wait:
+                    longest_wait = int(wait_ticks[aid])
+                    longest_wait_state = {"id": aid, "lane": a["lane_id"], "s": a["s"], "next": a["next_lane"], "speed": a["speed_mps"], "tick": _tick,
+                        "stop_done": a["stop_done"], "wait_s": a["wait_s"], "leader": sim._find_leader(a), "owners": []}
+                    if longest_wait >= 880:
+                        var jid: String = sim.inbound_junction.get(a["lane_id"], "")
+                        for key in sim.reservations:
+                            var owner: Dictionary = sim.agents[sim.reservations[key]]
+                            if owner["reservation_zone"] != jid:
+                                continue
+                            var movement: String = owner["reservation_movement"]
+                            longest_wait_state["owners"].append({"id": owner["id"], "lane": owner["lane_id"], "s": owner["s"], "speed": owner["speed_mps"], "state": owner["state"], "next": owner["next_lane"], "movement": movement,
+                                "progress": sim._movement_progress(owner, movement) if sim.movement_junction.has(movement) else -1.0,
+                                "release_lane": owner["entered_lane"], "release_s": owner["clearance_m"], "leader": sim._find_leader(owner)})
+                        longest_wait_state["approaches"] = []
+                        for other in states:
+                            if sim.inbound_junction.get(other["lane_id"], "") == jid and other["id"] != aid:
+                                longest_wait_state["approaches"].append({"id": other["id"], "lane": other["lane_id"], "s": other["s"], "speed": other["speed_mps"], "next": other["next_lane"], "stop_done": other["stop_done"], "state": other["state"]})
             else:
                 wait_ticks.erase(aid)
         previous = now
@@ -383,12 +455,14 @@ func _seed_trace(seed_value: int) -> Dictionary:
             var first_owner: int = int(sim.reservations[keys[i]])
             if not sim.agents.has(first_owner):
                 safe = false
+                violations["stale_first_owner"] = int(violations.get("stale_first_owner", 0)) + 1
                 continue
             var first: Dictionary = sim.agents[first_owner]
             for j in range(i + 1, keys.size()):
                 var second_owner: int = int(sim.reservations[keys[j]])
                 if not sim.agents.has(second_owner):
                     safe = false
+                    violations["stale_second_owner"] = int(violations.get("stale_second_owner", 0)) + 1
                     continue
                 var second: Dictionary = sim.agents[second_owner]
                 if first["reservation_zone"] == second["reservation_zone"] and first["reservation_zone"] != "":
@@ -400,6 +474,7 @@ func _seed_trace(seed_value: int) -> Dictionary:
                         if first["lane_id"] == second["lane_id"] and (
                                 absf(float(first["s"]) - float(second["s"])) < sim.MIN_GAP_M - 0.05):
                             safe = false
+                            violations["same_lane_gap"] = int(violations.get("same_lane_gap", 0)) + 1
                     elif sim.movement_conflicts.has(movement) and (
                             sim.movement_conflicts[movement].has(other_movement)):
                         if sim._movement_progress(first, movement) < float(
@@ -407,6 +482,8 @@ func _seed_trace(seed_value: int) -> Dictionary:
                                 sim._movement_progress(second, other_movement) < float(
                                 sim.movement_pair_release[other_movement][movement])):
                             safe = false
+                            violations["conflicting_owners"] = int(violations.get("conflicting_owners", 0)) + 1
+    print("CANONICAL FLOW seed=", seed_value, " peak=", peak, " transitions=", transitions, " longest_wait_ticks=", longest_wait, " wait_state=", longest_wait_state, " violations=", violations)
     return {"ok": safe and peak > 0 and transitions > 0 and longest_wait < 900,
         "trace": fingerprint,
         "peak": peak, "transitions": transitions}

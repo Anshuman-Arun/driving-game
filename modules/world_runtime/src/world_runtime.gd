@@ -22,6 +22,7 @@ signal world_failed(reason: String)
 var roadworks: Dictionary = {}
 var crossing_water_material: Material
 var _canonical_heights := PackedFloat32Array()
+var _road_clearance: RefCounted
 var data = null
 var report: Dictionary = {}
 var error_message: String = ""
@@ -58,6 +59,7 @@ func _local_dir() -> String:
 func build_world(directory_override: String = "") -> bool:
 	error_message = ""
 	report = {}
+	_road_clearance = null
 	if generated_root != null and is_instance_valid(generated_root):
 		remove_child(generated_root)
 		generated_root.free()
@@ -102,6 +104,7 @@ func build_world(directory_override: String = "") -> bool:
 	var builder = load(_local_dir().path_join("mesh_builder.gd")).new()
 	report = builder.build(root, data, full, preview_center_xz,
 		preview_radius_m, terrain_chunk_cells, generate_colliders, overrides)
+	_road_clearance = builder.clearance
 	report["source_directory"] = directory
 	report["graph_lane_count"] = data.lanes.size()
 	report["graph_road_count"] = data.roads.size()
@@ -128,6 +131,10 @@ func get_authored_surface_height_at(x: float, z: float) -> float:
 func get_surface_height_at(x: float, z: float) -> float:
 	return data.sample_surface_height(x, z) if data != null else NAN
 
+func get_roadside_clearance(x: float, z: float) -> float:
+	## Signed, conservative distance from the outer road/shoulder footprint.
+	return float(_road_clearance.call("at", x, z)) if _road_clearance != null else INF
+
 func get_physical_road_centerlines() -> Array[Dictionary]:
 	## Adapter for Godot Road Generator 0.9.5; one record per physical corridor.
 	var corridors: Array[Dictionary] = []
@@ -144,6 +151,7 @@ func get_physical_road_centerlines() -> Array[Dictionary]:
 			"id": road["id"], "name": road.get("name", road["id"]),
 			"region": road.get("region", ""), "points": line,
 			"width_m": 2.0 * float(lane["width_m"]), "surface": lane["surface"],
+			"target_pavement_width_m": float(roadworks.get("network_upgrade", {}).get("widths_m", {}).get(road["id"], 2.0 * float(lane["width_m"]))),
 			"speed_limit_kph": lane["speed_limit_kph"]
 		})
 	return corridors

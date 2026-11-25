@@ -84,7 +84,7 @@ func set_profile(profile: String) -> void:
 	else:
 		# Keep the old bank alive while the incoming bank fades up.
 		for band in ENGINE_BANDS:
-			var key := "engine_" + band
+			var key: String = "engine_" + str(band)
 			_outgoing_gains[key] = float(_gains.get(key, 0.0))
 			var previous: AudioStreamPlayer = _players[key]
 			var incoming: AudioStreamPlayer = _alternate_engines[band]
@@ -124,6 +124,13 @@ func _exit_tree() -> void:
 	_disconnect_vehicle()
 	_bound_vehicle = null
 	_tracking_vehicle = false
+	# Stop both banks, including an in-progress crossfade, and release
+	# playback/stream references before the audio nodes are destroyed.
+	for player: AudioStreamPlayer in _players.values() + _alternate_engines.values() + _event_players:
+		if is_instance_valid(player):
+			player.stop()
+			player.stream = null
+	_event_streams.clear()
 
 
 func _disconnect_vehicle() -> void:
@@ -202,7 +209,7 @@ func _process(delta: float) -> void:
 	_compute_targets_into(_telemetry, car_profile, _mix_targets)
 	var alpha := 1.0 - exp(-step * 12.0)
 	for band in ENGINE_BANDS:
-		var name := "engine_" + band
+		var name: String = "engine_" + str(band)
 		_smooth_gain(name, float(_mix_targets[name]) * (0.36 if _shift_timer > 0.0 else 1.0), alpha)
 		var engine: AudioStreamPlayer = _players[name]
 		engine.pitch_scale = lerpf(engine.pitch_scale, float(_mix_targets["pitch_" + band]) * (0.85 if _shift_timer > 0.0 else 1.0), alpha)
@@ -218,7 +225,7 @@ func _process(delta: float) -> void:
 	# Crossfading banks uses complementary fades and never doubles this budget.
 	var peak_sum := 0.0
 	for band in ENGINE_BANDS:
-		var key := "engine_" + band
+		var key: String = "engine_" + str(band)
 		var engine_gain := float(_gains.get(key, 0.0))
 		if _profile_fading:
 			engine_gain = maxf(engine_gain, float(_outgoing_gains.get(key, 0.0)))
@@ -227,7 +234,7 @@ func _process(delta: float) -> void:
 		peak_sum += float(_gains.get(name, 0.0)) * 0.60
 	var limiter := minf(1.0, LOOP_PEAK_BUDGET / maxf(peak_sum, 0.0001))
 	for band in ENGINE_BANDS:
-		var key := "engine_" + band
+		var key: String = "engine_" + str(band)
 		_apply_volume(_players[key], float(_gains[key]) * _profile_fade, limiter)
 		if _profile_fading:
 			_apply_volume(_alternate_engines[band], float(_outgoing_gains.get(key, 0.0)) * (1.0 - _profile_fade), limiter)
