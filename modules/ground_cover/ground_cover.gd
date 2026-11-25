@@ -22,6 +22,7 @@ var _options: Dictionary = {}
 var _profile: Dictionary = {}
 var _seed := 20261125
 var _state := "disabled"
+var _geometry_bytes := 0
 var _reason := ""
 var _material: ShaderMaterial
 var _meshes: Array = []
@@ -72,7 +73,10 @@ func build(world: Node, preset: String, mask_dir: String, options: Dictionary = 
 	for s in range(SPECIES):
 		var variants: Array[Mesh] = []
 		for lod in range(3):
-			variants.append(Grass.make_mesh(s, lod, _material))
+			var mesh := Grass.make_mesh(s, lod, _material)
+			variants.append(mesh)
+			var arrays := mesh.surface_get_arrays(0)
+			_geometry_bytes += arrays[Mesh.ARRAY_VERTEX].size() * 48 + arrays[Mesh.ARRAY_INDEX].size() * 4
 		_meshes.append(variants)
 	_state = "ready"
 	_reason = ""
@@ -145,9 +149,18 @@ func _process(delta: float) -> void:
 		return
 	if not _has_focus:
 		return
+	# This module consumes world coordinates: reject a non-identity parent transform.
+	if not global_transform.is_equal_approx(Transform3D.IDENTITY):
+		_flush_active()
+		_fail("ground cover requires identity global transform")
+		return
 	_clock += delta
 	var current := Vector2(_focus.x, _focus.z)
 	var predicted := current + Vector2(_velocity.x, _velocity.z) * 0.65
+	if not WORLD.grow(300.0).has_point(current):
+		_flush_active()
+		_dirty = true
+		return
 	var cell := _cell(current)
 	var predict_cell := _cell(predicted)
 	if _dirty or cell != _last_cell or predict_cell != _last_predict or (_clock >= 0.15 and (current.distance_to(_last_plan) >= 4.0 or predicted.distance_to(_last_plan_predict) >= 4.0)):
@@ -212,7 +225,8 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 		reserved += estimate
 		wanted[entry.key] = entry
 	for key: Vector2i in _active.keys():
-		if not wanted.has(key):
+		if not wanted.has(key) or int(_active[key].lod) < int(wanted[key].lod):
+			# Free excess high-detail allocation before upgrades, so old LODs cannot starve jobs.
 			_release(key)
 	_queue.clear()
 	if not _job.is_empty():
@@ -227,10 +241,16 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 			continue
 		_queue.append(entry)
 
-# Affine permutation of 4096 indices (odd multiplier), hence exact nested subsets.
+# Four-round 6+6 bit Feistel permutation: decorrelated spatial rank, exact nested subsets.
 func candidate_index(key: Vector2i, rank: int) -> int:
-	var h := hash(Vector3i(key.x, key.y, _seed))
-	return (rank * 2027 + (h & 4095)) & 4095
+	var left := (rank >> 6) & 63
+	var right := rank & 63
+	for round_index in range(4):
+		var mix := hash(Vector4i(key.x,key.y,right,_seed ^ (round_index * 7919))) & 63
+		var next := left ^ mix
+		left = right
+		right = next
+	return (left << 6) | right
 
 func _random(key: Vector2i, index: int, salt: int) -> float:
 	return float(hash(Vector4i(key.x, key.y, index, _seed ^ salt)) & 0xFFFFFF) / 16777216.0
@@ -246,7 +266,8 @@ func _sample_mask(x: float, z: float) -> Vector4:
 	if _fixture.is_valid():
 		var value: Variant = _fixture.call(x,z)
 		if value is Vector4 and value.is_finite():
-			return value.clamp(Vector4.ZERO, Vector4.ONE)
+			var rgba: Vector4 = value
+			return Vector4(clampf(rgba.x,0,1),clampf(rgba.y,0,1),clampf(rgba.z,0,1),clampf(rgba.w,0,1))
 		return Vector4.ZERO
 	return _mask.sample(x,z)
 
@@ -298,6 +319,9 @@ func _candidate(rank: int) -> void:
 	var swept := Grass.swept_bounds(_meshes[species][0],frame)
 	for lod in range(1,3):
 		swept = swept.merge(Grass.swept_bounds(_meshes[species][lod],frame))
+	if not _bounds.encloses(Rect2(Vector2(swept.position.x,swept.position.z),Vector2(swept.size.x,swept.size.z))):
+		_rejected.bounds += 1
+		return
 	if bool(_clearance.call("overlaps",swept,0.12,true)):
 		_rejected.road += 1
 		return
@@ -400,7 +424,7 @@ func _flush_active() -> void:
 
 func get_stats() -> Dictionary:
 	var total := int(_counts[0]+_counts[1]+_counts[2])
-	return {"state":_state,"fallback":_reason,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"instance_buffer_estimated_bytes":total*64,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
+	return {"state":_state,"fallback":_reason,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
 
 func shutdown() -> void:
 	set_process(false)
@@ -409,6 +433,7 @@ func shutdown() -> void:
 		node.free()
 	_pool.clear()
 	_meshes.clear()
+	_geometry_bytes = 0
 	_material = null
 	_mask.bytes.clear()
 	_fixture = Callable()
