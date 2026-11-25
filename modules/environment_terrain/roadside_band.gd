@@ -30,6 +30,7 @@ func build_image(world: Node, region: Rect2) -> Image:
 	var height := ceili(region.size.y / CELL_M)
 	var step := region.size / Vector2(width, height)
 	var image := Image.create_empty(width, height, false, Image.FORMAT_R8)
+	image.fill(Color(0.0, 0.0, 0.0))
 	var active := 0
 	var excluded := 0
 	var queries := 0
