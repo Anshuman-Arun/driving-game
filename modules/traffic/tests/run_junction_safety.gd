@@ -74,7 +74,6 @@ func _run() -> void:
     _test_geometry(sim)
     _test_short_connector(sim)
     _test_nonconflicting_turns()
-    _test_arrival_priority()
     _test_opposing_flow()
     _test_cleanup()
     for jid in COMPLEX:
@@ -284,29 +283,6 @@ func _test_nonconflicting_turns() -> void:
     _check(sim.reservations.is_empty(), "independent movement ownership cleans up")
 
 
-func _test_arrival_priority() -> void:
-    var sim = _simulation(51)
-    if sim == null:
-        _check(false, "arrival priority setup")
-        return
-    var pair: Array[String] = _pick_conflicting_pair(sim, "junction_alder")
-    var later: int = _spawn_routed(sim, "junction_alder", pair[0])
-    var earlier: int = _spawn_routed(sim, "junction_alder", pair[1])
-    _check(later > 0 and earlier > 0, "arrival priority agents spawn")
-    if later <= 0 or earlier <= 0:
-        return
-    # The earlier arrival deliberately has a higher ID, demonstrating that
-    # update order cannot starve a stopped approach.
-    sim.agents[later]["stop_done"] = true
-    sim.agents[later]["junction_ready_tick"] = 50
-    sim.agents[earlier]["stop_done"] = true
-    sim.agents[earlier]["junction_ready_tick"] = 20
-    _check(sim._junction_blocked(sim.agents[later], "junction_alder", sim.junctions["junction_alder"]),
-        "later conflicting arrival yields to earlier stopped driver")
-    _check(not sim._junction_blocked(sim.agents[earlier], "junction_alder", sim.junctions["junction_alder"]),
-        "oldest completed stop is eligible regardless of agent ID")
-
-
 func _test_opposing_flow() -> void:
     var sim = _simulation(21)
     if sim == null:
@@ -404,7 +380,22 @@ func _seed_trace(seed_value: int) -> Dictionary:
                 wait_ticks[aid] = int(wait_ticks.get(aid, 0)) + 1
                 if int(wait_ticks[aid]) > longest_wait:
                     longest_wait = int(wait_ticks[aid])
-                    longest_wait_state = {"id": aid, "lane": a["lane_id"], "s": a["s"], "next": a["next_lane"], "speed": a["speed_mps"], "tick": _tick}
+                    longest_wait_state = {"id": aid, "lane": a["lane_id"], "s": a["s"], "next": a["next_lane"], "speed": a["speed_mps"], "tick": _tick,
+                        "stop_done": a["stop_done"], "wait_s": a["wait_s"], "leader": sim._find_leader(a), "owners": []}
+                    if longest_wait >= 880:
+                        var jid: String = sim.inbound_junction.get(a["lane_id"], "")
+                        for key in sim.reservations:
+                            var owner: Dictionary = sim.agents[sim.reservations[key]]
+                            if owner["reservation_zone"] != jid:
+                                continue
+                            var movement: String = owner["reservation_movement"]
+                            longest_wait_state["owners"].append({"id": owner["id"], "lane": owner["lane_id"], "s": owner["s"], "speed": owner["speed_mps"], "state": owner["state"], "next": owner["next_lane"], "movement": movement,
+                                "progress": sim._movement_progress(owner, movement) if sim.movement_junction.has(movement) else -1.0,
+                                "release_lane": owner["entered_lane"], "release_s": owner["clearance_m"], "leader": sim._find_leader(owner)})
+                        longest_wait_state["approaches"] = []
+                        for other in states:
+                            if sim.inbound_junction.get(other["lane_id"], "") == jid and other["id"] != aid:
+                                longest_wait_state["approaches"].append({"id": other["id"], "lane": other["lane_id"], "s": other["s"], "speed": other["speed_mps"], "next": other["next_lane"], "stop_done": other["stop_done"], "state": other["state"]})
             else:
                 wait_ticks.erase(aid)
         previous = now

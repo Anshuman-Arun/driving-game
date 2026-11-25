@@ -103,17 +103,10 @@ jobs:
           cp data/world/road_graph_v1.json data/world/world_metadata_v1.json data/world/terrain_height_r16le.bin modules/scenery/.world_source/ || exit 1
           cp -a assets/curated/. modules/scenery/staged_art/ || exit 1
           cp -a content/scenery/models/. modules/scenery/staged_models/ || exit 1
-          for module in world_runtime traffic racing audio game_shell scenery; do
+          for module in world_runtime racing audio game_shell scenery; do
             run godot --headless --path "modules/$module" --editor --import
           done
           run godot --headless --path modules/world_runtime --script res://tests/smoke.gd -- --full-world
-          run godot --headless --path modules/traffic --script res://tests/run_tests.gd
-          # The canonical traffic controls are not merged into main. Stage the
-          # exact read-only content PR commit only for this integration test.
-          git fetch --depth=1 origin 02ff87ee726cc44dd8360d7a6043d178b1a1693f || exit 1
-          mkdir -p content/traffic
-          git show FETCH_HEAD:content/traffic/controls_v1.json > content/traffic/controls_v1.json || exit 1
-          run godot --headless --path . --script res://modules/traffic/tests/run_junction_safety.gd
           run godot --headless --path modules/racing --script res://tests/run_tests.gd
           run godot --headless --path modules/racing --script res://tests/run_grid_tests.gd
           run godot --headless --path modules/racing --script res://tests/run_production_tests.gd -- --graph="$PWD/data/world/road_graph_v1.json" --events="$PWD/content/races/events_v1.json"
@@ -121,4 +114,45 @@ jobs:
           run godot --headless --path modules/audio --script res://tests/godot_regression.gd
           run godot --headless --path modules/game_shell --script res://tests/run_tests.gd
           run godot --headless --path modules/scenery --script res://tests/smoke.gd
+          exit "$failed"
+  traffic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Install pinned Godot
+        shell: bash
+        run: |
+          curl -fL --retry 3 https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip -o /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp
+          chmod +x /tmp/Godot_v4.7.2-stable_linux.x86_64
+          sudo ln -s /tmp/Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+          godot --version
+      - name: Traffic regressions
+        shell: bash
+        run: |
+          set +e
+          failed=0
+          run() {
+            echo "::group::$*"
+            timeout 240 "$@" 2>&1 | tee /tmp/test.log
+            status=${PIPESTATUS[0]}
+            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|FAIL ' /tmp/test.log; then
+              failed=1
+              echo "FAIL: $* (exit $status)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "PASS: $*" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "::endgroup::"
+          }
+          run godot --headless --path modules/traffic --editor --import
+          run godot --headless --path modules/traffic --script res://tests/run_tests.gd
+          # The canonical traffic controls are not merged into main. Stage the
+          # exact read-only content PR commit only for this integration test.
+          git fetch --depth=1 origin 02ff87ee726cc44dd8360d7a6043d178b1a1693f || exit 1
+          mkdir -p content/traffic
+          git show FETCH_HEAD:content/traffic/controls_v1.json > content/traffic/controls_v1.json || exit 1
+          run godot --headless --path . --script res://modules/traffic/tests/run_junction_safety.gd
           exit "$failed"
