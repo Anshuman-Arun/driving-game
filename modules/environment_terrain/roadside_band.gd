@@ -7,6 +7,10 @@ var status := "disabled"
 var stats: Dictionary = {}
 
 func build(world: Node, region: Rect2) -> Texture2D:
+	var image := build_image(world, region)
+	return ImageTexture.create_from_image(image) if image != null else null
+
+func build_image(world: Node, region: Rect2) -> Image:
 	status = "invalid roadside region or clearance"
 	stats = {}
 	if not is_instance_valid(world) or not world.is_inside_tree():
@@ -53,4 +57,4 @@ func build(world: Node, region: Rect2) -> Texture2D:
 				image.set_pixel(x, z, Color(weight, 0.0, 0.0))
 	stats = {"width": width, "height": height, "active_cells": active, "excluded_cells": excluded, "clearance_queries": queries}
 	status = "ready"
-	return ImageTexture.create_from_image(image)
+	return image
