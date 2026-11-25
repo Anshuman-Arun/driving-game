@@ -4,8 +4,6 @@ const Candidate := preload("terrain_candidate.gdshader")
 const BiomeMask := preload("biome_mask.gd")
 const RoadsideBand := preload("roadside_band.gd")
 const PRIMARY := "res://shaders/terrain_triplanar.gdshader"
-const FALLBACK := "res://assets/forza_env/shaders/terrain_forza.gdshader"
-const PRIMARY_MATERIAL := "res://assets/forza_env/materials/terrain_triplanar_pbr.tres"
 const TEXTURES := ["rock_albedo", "rock_normal", "rock_arm", "rock_roughness", "rock_ao",
 	"grass_albedo", "grass_normal", "grass_roughness", "grass_ao",
 	"dirt_albedo", "dirt_normal", "dirt_roughness", "dirt_ao",
@@ -93,7 +91,7 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 		return _fail("world must be built and in tree")
 	if not world.has_method("get_world_metadata"):
 		return _fail("unsupported world")
-	var metadata: Dictionary = world.get_world_metadata()
+	var metadata: Dictionary = world.call("get_world_metadata")
 	var bounds: Dictionary = metadata.get("bounds", {})
 	if bounds.get("min_x") != -1000 or bounds.get("max_x") != 1000 or bounds.get("min_z") != -1000 or bounds.get("max_z") != 1000:
 		return _fail("unsupported world coordinate bounds")
@@ -144,7 +142,7 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 			return _fail("unsupported terrain material")
 		var id := original.get_instance_id()
 		if not candidates.has(id):
-			var candidate := _make_candidate(original, tuning, pilot, biome, roadside, roadside_region)
+			var candidate := _make_candidate(original as ShaderMaterial, tuning, pilot, biome, roadside, roadside_region)
 			if candidate == null:
 				return _fail("unsupported shader or missing/invalid PBR bindings; original retained")
 			candidates[id] = candidate
