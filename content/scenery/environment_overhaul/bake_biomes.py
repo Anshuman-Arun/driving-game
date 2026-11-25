@@ -17,7 +17,9 @@ CHANNELS = ["grass_suitability", "woodland_weight", "moisture", "exposed_rock_we
 BOUNDS = dict(min_x=-1000, max_x=1000, min_z=-1000, max_z=1000)
 SPECIES = ("fern", "shrub", "sapling", "reed", "wildflower")
 DEFAULTS = dict(road_margin_m=2.0, sightline_m=12.0, water_margin_m=2.0,
-                spacing_m=8.0, max_placements=12000, density=0.45)
+                spacing_m=8.0, max_placements=12000, density=0.45,
+                rock_slope_start=.28, rock_slope_full=.9, alpine_start_m=135.0,
+                alpine_full_m=205.0, canopy_grass_penalty=.45, max_understory_slope=.63)
 
 
 def require(condition, message):
@@ -198,6 +200,8 @@ def bake(root, seed, tuning=None):
     t = dict(DEFAULTS,**(tuning or {}))
     require(set(t)==set(DEFAULTS) and all(np.isfinite(v) and v>=0 for v in t.values()),"Invalid tuning")
     require(t["spacing_m"]>=4 and t["density"]<=1 and int(t["max_placements"])==t["max_placements"],"Invalid placement budget")
+    require(t["rock_slope_full"]>t["rock_slope_start"] and t["alpine_full_m"]>t["alpine_start_m"]
+            and t["canopy_grass_penalty"]<=1, "Invalid ecology thresholds")
     src = Sources(root)
     meta = src.json("data/world/world_metadata_v1.json")
     graph = src.json("data/world/road_graph_v1.json")
@@ -234,12 +238,12 @@ def bake(root, seed, tuning=None):
         weights[reg["id"]] = np.exp(-((x-cx)**2+(z-cz)**2)/reg["radius_m"]**2)
     town,cedar,ridge,meadow,east = (weights[k] for k in
         ("alder_town","cedar_woods","north_ridge","green_valley","eastwater_lake"))
-    alpine = smooth(135,205,heights)
-    rock = np.clip(.70*smooth(.28,.9,slope)+.38*alpine+.16*ridge*n,0,1)
+    alpine = smooth(t["alpine_start_m"],t["alpine_full_m"],heights)
+    rock = np.clip(.70*smooth(t["rock_slope_start"],t["rock_slope_full"],slope)+.38*alpine+.16*ridge*n,0,1)
     woodland = np.clip((.12+.82*cedar+.24*ridge+.16*east-.25*meadow-.32*town)
                        *(1-.8*alpine)*(1-.8*rock)*(.7+.55*n)+.45*canopy,0,1)
     moisture = np.clip(.2+.55*np.exp(-water_dist/35)+.14*cedar+.10*n-.24*alpine,0,1)
-    grass = np.clip((.84+.14*meadow+.12*town-.20*woodland-.45*canopy)
+    grass = np.clip((.84+.14*meadow+.12*town-.20*woodland-t["canopy_grass_penalty"]*canopy)
                     *(1-.86*rock)*(1-.5*alpine)*(.8+.3*n),0,1)
     # No exponential road proximity bias. Hard exclusions only for unsafe surfaces.
     excluded = road|protected|wet|(water_dist<=t["water_margin_m"])
@@ -254,36 +258,37 @@ def bake(root, seed, tuning=None):
     q = np.arange(-980+step/2,980,step)
     placements, buckets = [], {}
     rejected = dict(exclusion=0,probability=0,spacing=0,budget=0)
-    for pz in q:
-        for px in q:
-            a,b = np.array([px,pz])+rng.uniform(-.35,.35,2)*step
-            i,j = cell_index(a,b)
-            if excluded[j,i] or props[j,i] or road_dist[j,i]<t["sightline_m"] or slope[j,i]>.63:
-                rejected["exclusion"]+=1
-                continue
-            g,w,m,k = grass[j,i],woodland[j,i],moisture[j,i],rock[j,i]
-            probabilities = np.array([w*m, w*.65, w*.22*(1-town[j,i]),
-                                     float(4<=water_dist[j,i]<=18)*m*(1-k),
-                                     g*meadow[j,i]*(1-w)])
-            total = probabilities.sum()
-            if total<=0 or rng.random()>=t["density"]*min(1,total)*(.45+.8*n[j,i]):
-                rejected["probability"]+=1
-                continue
-            key = (int(np.floor(a/step)),int(np.floor(b/step)))
-            if any((a-u)**2+(b-v)**2 < (step*.65)**2
-                   for di in (-1,0,1) for dj in (-1,0,1)
-                   for u,v in buckets.get((key[0]+di,key[1]+dj),[])):
-                rejected["spacing"]+=1
-                continue
-            if len(placements)>=t["max_placements"]:
-                rejected["budget"]+=1
-                continue
-            kind = SPECIES[rng.choice(len(SPECIES),p=probabilities/total)]
-            buckets.setdefault(key,[]).append((a,b))
-            placements.append(dict(species_id=kind,x=round(float(a),5),z=round(float(b),5),
-                                   yaw_rad=round(float(rng.uniform(0,2*np.pi)),6),
-                                   scale=round(float(rng.uniform(.75,1.25)),5),
-                                   seed=int(rng.integers(0,2**31))))
+    for idx in rng.permutation(len(q)**2):
+        pz,px = q[idx//len(q)],q[idx%len(q)]
+        a,b = np.array([px,pz])+rng.uniform(-.35,.35,2)*step
+        i,j = cell_index(a,b)
+        if excluded[j,i] or props[j,i] or road_dist[j,i]<t["sightline_m"] or slope[j,i]>t["max_understory_slope"]:
+            rejected["exclusion"]+=1
+            continue
+        g,w,m,k = grass[j,i],woodland[j,i],moisture[j,i],rock[j,i]
+        probabilities = np.array([w*m, w*.65, w*.22*(1-town[j,i]),
+                                 float(4<=water_dist[j,i]<=18)*m*(1-k),
+                                 g*meadow[j,i]*(1-w)])
+        total = probabilities.sum()
+        if total<=0 or rng.random()>=t["density"]*min(1,total)*(.45+.8*n[j,i]):
+            rejected["probability"]+=1
+            continue
+        key = (int(np.floor(a/step)),int(np.floor(b/step)))
+        if any((a-u)**2+(b-v)**2 < (step*.65)**2
+               for di in (-1,0,1) for dj in (-1,0,1)
+               for u,v in buckets.get((key[0]+di,key[1]+dj),[])):
+            rejected["spacing"]+=1
+            continue
+        if len(placements)>=t["max_placements"]:
+            rejected["budget"]+=1
+            continue
+        kind = SPECIES[rng.choice(len(SPECIES),p=probabilities/total)]
+        buckets.setdefault(key,[]).append((a,b))
+        placements.append(dict(species_id=kind,x=round(float(a),5),z=round(float(b),5),
+                               yaw_rad=round(float(rng.uniform(0,2*np.pi)),6),
+                               scale=round(float(rng.uniform(.75,1.25)),5),
+                               seed=int(rng.integers(0,2**31))))
+    placements.sort(key=lambda p:(p["z"],p["x"]))
     raw = mask.tobytes(order="C")
     stats = dict(lane_alignment_max_m=lane_error, exclusions={k:int(v.sum()) for k,v in
                  dict(road=road,water=wet,protected=protected,combined=excluded,props=props).items()},
@@ -304,6 +309,13 @@ def bake(root, seed, tuning=None):
                     channels=CHANNELS,byte_order="RGBA",sha256=sha(raw),source_hashes=src.hashes,seed=seed,
                     tuning=t, row_order="z_ascending_x_ascending")
     understory = dict(schema_version=1,source_hashes=src.hashes,seed=seed,placements=placements)
+    manifest["understory_sha256"] = sha(json_bytes(understory))
+    # Runtime cross-check points include corners, triangle interiors, diagonals and chunk seams.
+    probes = [(-1000,-1000), (1000,1000), (-1000,1000), (1000,-1000),
+              (-999,-999),(-997,-997),(-998,-998),(0,0),(-872,-872),
+              (-871,-873),(-700,-320),(45,170),(700,450)]
+    probes.extend((float(a),float(b)) for a,b in rng.uniform(-999,999,(64,2)))
+    manifest["surface_probes"] = [dict(x=a,z=b,height_m=float(surface(h,a,b))) for a,b in probes]
     return raw,manifest,understory,stats
 
 
@@ -318,6 +330,7 @@ def publish(output, raw, manifest, understory, stats):
     # Publish the manifest last as the commit marker. A concurrent reader must
     # verify hash and fail closed if reading a partially replaced generation.
     validate_mask(raw,manifest)
+    require(sha(json_bytes(understory)) == manifest.get("understory_sha256"), "Invalid understory hash")
     output = Path(output)
     output.mkdir(parents=True,exist_ok=True)
     with tempfile.TemporaryDirectory(dir=output) as temp:
