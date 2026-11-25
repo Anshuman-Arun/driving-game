@@ -636,27 +636,7 @@ func _integrate(a: Dictionary, command: Dictionary, dt: float) -> void:
 func _choose_next(options: Array) -> String:
 	if options.is_empty():
 		return ""
-	# Preserve legacy/demo selection. On real authored junctions, spontaneous
-	# civilian routing favors shorter travel time instead of treating a
-	# 65 m circulating connector and a 13 m direct turn as equally costly.
-	# All legal movements remain reachable; explicit routes bypass this choice.
-	if options.size() > 1:
-		var weights: Array[float] = []
-		var total := 0.0
-		for option in options:
-			var lid: String = str(option)
-			if not movement_junction.has(lid):
-				return str(options[_rng.randi_range(0, options.size() - 1)])
-			var weight := maxf(float(graph.lanes[lid]["speed_limit_mps"]), 0.1) / maxf(graph.lane_length(lid), 1.0)
-			weights.append(weight)
-			total += weight
-		var draw := _rng.randf() * total
-		for i in range(weights.size()):
-			draw -= weights[i]
-			if draw <= 0.0:
-				return str(options[i])
-		return str(options.back())
-	# Keep the same RNG consumption for single successors and legacy fixtures.
+	# Keep authored next_lane_ids order; seed provides reproducible junction choice.
 	return str(options[_rng.randi_range(0, options.size() - 1)])
 
 

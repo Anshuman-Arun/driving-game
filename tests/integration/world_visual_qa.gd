@@ -6,6 +6,7 @@ const GAME := preload("res://scenes/bootstrap/game.tscn")
 const WorldRuntime := preload("res://modules/world_runtime/src/world_runtime.gd")
 const Curated := preload("res://scripts/integration/curated_car_visual.gd")
 const PremiumMesh := preload("res://scripts/integration/premium_mesh.gd")
+const Vegetation := preload("res://scripts/integration/valley_vegetation.gd")
 var failures := 0
 var seen: Dictionary = {}
 var materials_checked := 0
@@ -137,6 +138,7 @@ func audit_guardrail_preservation(drive: Node) -> void:
 				bounds = bounds.merge(frame * drive.scenery._local_collider_bounds("guardrail"))
 			if not baseline.road_clearance.overlaps(bounds, 0.16, false):
 				expected += 1
+	audit_vegetation_preservation(drive, baseline)
 	baseline.free()
 	var report: Dictionary = drive.scenery.report
 	var retained := int(report.get("guardrails_accepted", 0))
@@ -144,6 +146,62 @@ func audit_guardrail_preservation(drive: Node) -> void:
 	check(expected > 0 and retained >= expected and relocated > 0,
 		"guardrails retained %d vs pre-widening %d; %d safely relocated; unresolved %s" %
 		[retained, expected, relocated, str(report.get("unresolved_guardrails", []))])
+
+
+func audit_vegetation_preservation(drive: Node, baseline: Node) -> void:
+	# Re-run the identical production vegetation filter against pre-widening
+	# geometry and the exact same baked source. No alternate art or seed.
+	var plant = drive.vegetation
+	var file := FileAccess.open(Vegetation.DATA_PATH, FileAccess.READ)
+	if file == null:
+		check(false, "original vegetation source available")
+		return
+	var probe := Vegetation.new()
+	probe._world = baseline
+	probe._meshes.assign(plant._meshes)
+	probe._distant_trees.assign(plant._distant_trees)
+	probe._placements = file.get_buffer(file.get_length()).to_float32_array()
+	probe._filter_placements()
+	var prior: PackedFloat32Array = probe._placements
+	var current: PackedFloat32Array = plant._placements
+	var lookup: Dictionary = {}
+	var duplicates := 0
+	for offset in range(0, current.size(), Vegetation.STRIDE):
+		var key := Vector3(current[offset], current[offset + 2], current[offset + 6])
+		if lookup.has(key):
+			duplicates += 1
+		lookup[key] = offset
+	var lost := [0, 0, 0, 0, 0, 0]
+	var retained := 0
+	var unexplained := 0
+	var changed := 0
+	for offset in range(0, prior.size(), Vegetation.STRIDE):
+		var key := Vector3(prior[offset], prior[offset + 2], prior[offset + 6])
+		if lookup.has(key):
+			retained += 1
+			var new_offset: int = lookup[key]
+			for field in Vegetation.STRIDE:
+				if not is_equal_approx(prior[offset + field], current[new_offset + field]):
+					changed += 1
+					break
+			continue
+		var kind := int(prior[offset + 5])
+		lost[kind] += 1
+		var footprint: AABB = plant._meshes[kind].get_aabb()
+		if kind < plant._distant_trees.size():
+			footprint = footprint.merge(plant._distant_trees[kind].get_aabb())
+		var origin := Vector3(prior[offset], prior[offset + 1] - (0.18 if kind < 2 else 0.04), prior[offset + 2])
+		var frame: Transform3D = plant._instance_frame(origin, prior[offset + 3], prior[offset + 4], prior[offset + 6])
+		var margin := 1.8 if kind < 2 or kind == 4 else 0.34
+		if not drive.world.road_clearance.overlaps(frame * footprint, margin):
+			unexplained += 1
+	var before := int(prior.size() / Vegetation.STRIDE)
+	var after := int(current.size() / Vegetation.STRIDE)
+	print("VEGETATION BASELINE before=", before, " after=", after, " retained=", retained,
+		" newly_accepted=", after - retained, " lost_by_kind=", lost, " unexplained=", unexplained)
+	check(before > 0 and after > 0 and duplicates == 0 and unexplained == 0 and changed == 0,
+		"all removed baseline vegetation is explained by wider road clearance; retained poses unchanged")
+	probe.free()
 
 
 func audit_routes(drive: Node) -> int:

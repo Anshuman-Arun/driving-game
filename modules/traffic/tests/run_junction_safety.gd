@@ -77,7 +77,6 @@ func _run() -> void:
     _test_opposing_flow()
     _test_cleanup()
     _test_stop_dwell_during_conflict()
-    _test_cost_weighted_turn_choice()
     for jid in COMPLEX:
         _test_conflicting_movements(str(jid))
     _test_seeded_flow()
@@ -384,26 +383,6 @@ func _test_stop_dwell_during_conflict() -> void:
     waiting["speed_mps"] = 1.0
     _check(sim._junction_blocked(waiting, jid, control) and float(waiting["wait_s"]) == 0.0,
         "rolling before completing dwell resets the stop timer")
-
-
-func _test_cost_weighted_turn_choice() -> void:
-    var sim = _simulation(81)
-    if sim == null:
-        _check(false, "cost-weighted turn fixture setup")
-        return
-    var options: Array = sim.graph.lanes["lane_alder_market_ba"]["next_lane_ids"]
-    var counts: Dictionary = {}
-    for i in range(1600):
-        var chosen: String = sim._choose_next(options)
-        counts[chosen] = int(counts.get(chosen, 0)) + 1
-    _check(counts.size() == options.size(), "all legal authored turns remain selectable")
-    var short := "turn_alder_alder_market_ba__alder_cedar_ab"
-    var long := "turn_alder_alder_market_ba__chapel_alder_ba"
-    _check(int(counts.get(short, 0)) > 2 * int(counts.get(long, 0)),
-        "spontaneous route selection favors lower traversal cost")
-    var id: int = _spawn_routed(sim, "junction_alder", long)
-    _check(id > 0 and sim.get_state(id).get("next_lane", "") == long,
-        "explicit routing can still select long connector")
 
 
 func _seed_trace(seed_value: int) -> Dictionary:
