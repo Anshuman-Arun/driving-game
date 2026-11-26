@@ -61,7 +61,8 @@ static func uses_canonical_graded_sources(world: Node) -> bool:
 	return works is Dictionary and not works.is_empty() and works == parser.data
 
 static func has_complete_clearance(world: Node) -> bool:
-	if clearance_for(world) == null or not has_property(world, "report"):
+	var clearance := clearance_for(world)
+	if clearance == null or not has_property(world, "report"):
 		return false
 	var report: Variant = world.get("report")
-	return report is Dictionary and report.get("full_world") == true
+	return report is Dictionary and report.get("full_world") == true and report.get("clearance_triangles") == clearance.triangle_count
