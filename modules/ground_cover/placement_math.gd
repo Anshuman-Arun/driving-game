@@ -12,7 +12,7 @@ static func mix31(value: int) -> int:
 	return (x ^ (x >> 16)) & MASK31
 
 static func word(x: int, z: int, index: int, seed: int, salt: int) -> int:
-	var a: int = mix31(seed ^ salt)
+	var a: int = mix31((seed & MASK31) ^ (((seed >> 31) & 1) * 1489267) ^ salt)
 	a = mix31(a ^ (x & MASK31))
 	a = mix31(a ^ (z & MASK31))
 	return mix31(a ^ index)
