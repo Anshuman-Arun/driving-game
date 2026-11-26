@@ -9,7 +9,7 @@ static func has_property(object: Object, key: String) -> bool:
 	return false
 
 static func generated_root(world: Node) -> Node3D:
-	if not is_instance_valid(world) or not world is Node3D or not world.is_inside_tree():
+	if not is_instance_valid(world) or not world is Node3D or not world.is_inside_tree() or world.is_queued_for_deletion():
 		return null
 	if not world.has_method("get_world_metadata") or not has_property(world, "generated_root"):
 		return null
@@ -22,7 +22,7 @@ static func generated_root(world: Node) -> Node3D:
 	if bounds.get("min_x") != -1000 or bounds.get("max_x") != 1000 or bounds.get("min_z") != -1000 or bounds.get("max_z") != 1000:
 		return null
 	var generated: Variant = world.get("generated_root")
-	if not generated is Node3D or not is_instance_valid(generated) or not generated.is_inside_tree() or not world.is_ancestor_of(generated):
+	if not generated is Node3D or not is_instance_valid(generated) or not generated.is_inside_tree() or generated.is_queued_for_deletion() or not world.is_ancestor_of(generated):
 		return null
 	if not generated.global_transform.is_equal_approx(Transform3D.IDENTITY):
 		return null
