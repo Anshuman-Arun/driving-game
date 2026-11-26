@@ -5,6 +5,8 @@ const MATERIAL := preload("res://assets/forza_env/materials/terrain_triplanar_pb
 var generated_root: Node3D
 var road_clearance: Clearance
 var metadata_override: Variant = null
+# Mock build report for this isolated fixture, not a real full-map claim.
+var report := {"source_directory": "res://data/world", "full_world": true}
 var roadworks := {"waters": [{"height": 30.0, "cells": [[253, 253]]}]}
 var ground: MeshInstance3D
 var road: MeshInstance3D
@@ -14,6 +16,9 @@ func get_world_metadata() -> Variant:
 	if metadata_override != null:
 		return metadata_override
 	return {"coordinate_system": "godot_y_up", "bounds": {"min_x": -1000, "max_x": 1000, "min_z": -1000, "max_z": 1000}}
+
+func get_surface_height_at(x: float, z: float) -> float:
+	return 30.0 if absf(x) <= 50.0 and absf(z) <= 50.0 else NAN
 
 func build_fixture() -> void:
 	if is_instance_valid(generated_root):
