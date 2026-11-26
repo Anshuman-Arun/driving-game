@@ -1,7 +1,7 @@
 extends Node3D
 # Actual production triangle index, with a cross-junction, shoulders and elevated deck.
 const Clearance = preload("res://modules/world_runtime/src/road_clearance.gd")
-var road_clearance: RefCounted = Clearance.new()
+var road_clearance: Clearance = Clearance.new()
 var bad_height := false
 var steep := false
 
