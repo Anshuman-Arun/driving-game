@@ -3,6 +3,7 @@ extends RefCounted
 const Candidate := preload("terrain_candidate.gdshader")
 const BiomeMask := preload("biome_mask.gd")
 const RoadsideBand := preload("roadside_band.gd")
+const Contract := preload("world_contract.gd")
 const PRIMARY := "res://shaders/terrain_triplanar.gdshader"
 const TEXTURES := ["rock_albedo", "rock_normal", "rock_arm", "rock_roughness", "rock_ao",
 	"grass_albedo", "grass_normal", "grass_roughness", "grass_ao",
@@ -43,12 +44,6 @@ func get_stats() -> Dictionary:
 func _prune_destroyed_transaction() -> void:
 	if _world_root != null and not is_instance_valid(_world_root.get_ref()):
 		restore()
-
-func _has_property(object: Object, property_name: String) -> bool:
-	for property in object.get_property_list():
-		if str(property.name) == property_name:
-			return true
-	return false
 
 func _fail(reason: String) -> bool:
 	_stats = {"state": "rejected", "reason": reason}
@@ -139,28 +134,15 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 	_prune_destroyed_transaction()
 	if not _entries.is_empty():
 		return false # Explicit restore before reapplying; preserve the active transaction.
-	if not is_instance_valid(world) or not world.is_inside_tree():
-		return _fail("world must be built and in tree")
-	if not world is Node3D or not world.has_method("get_world_metadata") or not _has_property(world, "generated_root"):
-		return _fail("unsupported world")
-	if not (world as Node3D).global_transform.is_equal_approx(Transform3D.IDENTITY):
-		return _fail("transformed world is unsupported")
-	var metadata: Variant = world.call("get_world_metadata")
-	if not metadata is Dictionary:
-		return _fail("invalid world metadata")
-	var bounds: Variant = metadata.get("bounds")
-	if not bounds is Dictionary:
-		return _fail("invalid world bounds")
-	if bounds.get("min_x") != -1000 or bounds.get("max_x") != 1000 or bounds.get("min_z") != -1000 or bounds.get("max_z") != 1000:
-		return _fail("unsupported world coordinate bounds")
-	var generated: Variant = world.get("generated_root")
-	if not generated is Node3D or not is_instance_valid(generated) or not generated.is_inside_tree() or not world.is_ancestor_of(generated):
-		return _fail("missing or foreign generated root")
-	if not generated.global_transform.is_equal_approx(Transform3D.IDENTITY):
-		return _fail("transformed generated world is unsupported")
+	var generated := Contract.generated_root(world)
+	if generated == null:
+		return _fail("unsupported, unbuilt or transformed world")
 	var terrain: Node = generated.get_node_or_null("TerrainChunks")
 	if not terrain is Node3D or not (terrain as Node3D).global_transform.is_equal_approx(Transform3D.IDENTITY):
 		return _fail("missing or transformed terrain chunks")
+	for key in options:
+		if not key in ["pilot_bounds", "roadside_bounds", "mask_dir", "tuning"]:
+			return _fail("unknown option: " + str(key))
 	var pilot: Variant = options.get("pilot_bounds")
 	if pilot != null and (not pilot is Rect2 or not _valid_rect(pilot)):
 		return _fail("invalid pilot bounds")
@@ -197,6 +179,8 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 		if not child is MeshInstance3D:
 			continue
 		var mesh_instance: MeshInstance3D = child
+		if mesh_instance.is_queued_for_deletion():
+			return _fail("terrain chunk queued for deletion")
 		if mesh_instance.mesh == null or mesh_instance.mesh.get_surface_count() != 1:
 			return _fail("unexpected terrain mesh layout")
 		var original: Material = mesh_instance.get_active_material(0)
@@ -234,7 +218,7 @@ func restore() -> void:
 		if entry.global:
 			if instance.material_override == entry.candidate:
 				instance.material_override = entry.prior
-		elif instance.get_surface_override_material(0) == entry.candidate:
+		elif instance.mesh != null and instance.mesh.get_surface_count() > 0 and instance.get_surface_override_material(0) == entry.candidate:
 			instance.set_surface_override_material(0, entry.prior)
 	_entries.clear()
 	_world_root = null
