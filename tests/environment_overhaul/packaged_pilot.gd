@@ -19,6 +19,15 @@ func run() -> void:
 	for path: String in ["manifest.json", "biome_rgba8.bin", "understory.json", "statistics.json"]:
 		check(FileAccess.file_exists(MASK + path), "packed mask " + path)
 	check(FileAccess.file_exists(ASSETS + "manifest.json"), "packed vegetation manifest")
+	var inventory: Variant = JSON.parse_string(FileAccess.get_file_as_string(ASSETS + "manifest.json"))
+	if inventory is Dictionary:
+		for asset: Dictionary in inventory.get("assets", []):
+			for lod: String in ["lod0", "lod1"]:
+				var path: String = asset[lod]
+				var source := ASSETS + "source_bytes/" + path.get_file() + ".json"
+				check(FileAccess.file_exists(source) and FileAccess.get_sha256(source) == asset.sha256_by_path[path], "packed exact source " + path.get_file())
+	else:
+		check(false, "packed vegetation inventory readable")
 	var scene := load("res://scenes/bootstrap/game.tscn") as PackedScene
 	if scene == null:
 		quit(1)

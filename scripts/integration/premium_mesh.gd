@@ -51,9 +51,39 @@ static func fit(asset: String, limit: Vector3, largest_part_only := false) -> Ar
 		var tool: SurfaceTool = entry.tool
 		tool.set_material(entry.material)
 		tool.index()
-		tool.commit(result)
+		if asset == "fir" and entry.material is StandardMaterial3D and entry.material.normal_enabled:
+			# Repair only nonorthogonal tangent frames on this existing scan;
+			# leave vertex positions, UVs, indices, normals, signs and material intact.
+			var arrays := tool.commit_to_arrays()
+			_orthogonalize_tangents(arrays)
+			result.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+			result.surface_set_material(result.get_surface_count() - 1, entry.material)
+		else:
+			tool.commit(result)
 	model.free()
 	return result if result.get_surface_count() > 0 else null
+
+static func _orthogonalize_tangents(arrays: Array) -> void:
+	if not arrays[Mesh.ARRAY_NORMAL] is PackedVector3Array or not arrays[Mesh.ARRAY_TANGENT] is PackedFloat32Array:
+		return
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	var tangents: PackedFloat32Array = arrays[Mesh.ARRAY_TANGENT]
+	if tangents.size() != normals.size() * 4:
+		return
+	for i in normals.size():
+		var n := normals[i].normalized()
+		var t := Vector3(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2])
+		if not n.is_finite() or not t.is_finite() or n.is_zero_approx() or absf(t.dot(n)) < 0.025:
+			continue
+		var projected := t - n * t.dot(n)
+		if projected.length_squared() < 0.00000001:
+			# Use a stable perpendicular only for a truly degenerate source frame.
+			projected = n.cross(Vector3.RIGHT if absf(n.x) < 0.9 else Vector3.UP)
+		projected = projected.normalized()
+		tangents[i * 4] = projected.x
+		tangents[i * 4 + 1] = projected.y
+		tangents[i * 4 + 2] = projected.z
+	arrays[Mesh.ARRAY_TANGENT] = tangents
 
 static func _collect(node: Node, frame: Transform3D, parts: Array[Dictionary]) -> void:
 	if node is Node3D:

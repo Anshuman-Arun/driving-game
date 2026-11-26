@@ -41,9 +41,12 @@ func _load_species(entry: Dictionary) -> Dictionary:
 		var path := str(entry.get(lod, ""))
 		if not path.begins_with(ASSETS) or path.contains("..") or not path.ends_with(".gltf"):
 			return {}
-		if not FileAccess.file_exists(path) or FileAccess.get_sha256(path) != str(entry.sha256_by_path.get(path, "")):
+		var source_path := path
+		if not FileAccess.file_exists(source_path):
+			source_path = ASSETS + "source_bytes/" + path.get_file() + ".json"
+		if not FileAccess.file_exists(source_path) or FileAccess.get_sha256(source_path) != str(entry.sha256_by_path.get(path, "")):
 			return {}
-		if not MaterialAdapter.source_valid(path):
+		if not MaterialAdapter.source_valid(source_path):
 			return {}
 		var packed := ResourceLoader.load(path, "PackedScene") as PackedScene
 		if packed == null:
