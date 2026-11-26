@@ -53,6 +53,7 @@ jobs:
         shell: powershell
         run: .\tests\environment_overhaul\capture.ps1 -SelfTest
       - name: PowerShell 7 launcher contract (no Godot or GPU)
+        if: ${{ !cancelled() }}
         shell: pwsh
         run: .\tests\environment_overhaul\capture.ps1 -SelfTest
   data:

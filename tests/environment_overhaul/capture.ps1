@@ -85,17 +85,15 @@ if ($SelfTest) {
         }
         $python = (Get-Command python -ErrorAction Stop).Source
         $echoScript = Join-Path $scratch "echo args.py"
-        [IO.File]::WriteAllText($echoScript,'import json,sys; print(json.dumps(sys.argv[1:]))')
+        [IO.File]::WriteAllText($echoScript,'import json,sys; expected=json.load(open(sys.argv[1],encoding="utf-8")); actual=sys.argv[2:]; print(json.dumps(actual)); sys.exit(0 if actual==expected else 9)')
         $expected = @("", "two words", "C:\folder with space\", "--features=", "a,d,e", "--out=$scratch")
+        $expectedPath = Join-Path $scratch "expected args.json"
+        [IO.File]::WriteAllText($expectedPath,(ConvertTo-Json -InputObject $expected -Compress),[Text.UTF8Encoding]::new($false))
         $stdout = Join-Path $scratch "stdout.log"
         $stderr = Join-Path $scratch "stderr.log"
-        $status = Invoke-BoundedNative $python (@($echoScript)+$expected) $stdout $stderr 15
-        if ($status -ne 0) { throw "Native echo fixture failed: $status; $(Get-Content -LiteralPath $stderr -Raw)" }
-        $actual = @(Get-Content -LiteralPath $stdout -Raw | ConvertFrom-Json)
-        if ($actual.Count -ne $expected.Count) { throw "Native argument count mismatch" }
-        for ($i=0; $i -lt $actual.Count; $i++) {
-            if ($actual[$i] -cne $expected[$i]) { throw "Native argument $i mismatch" }
-        }
+        $status = Invoke-BoundedNative $python (@($echoScript,$expectedPath)+$expected) $stdout $stderr 15
+        if ($status -ne 0) { throw "Native argv fixture failed: $status; $(Get-Content -LiteralPath $stderr -Raw)" }
+        Write-Host "Native argv verified: $(Get-Content -LiteralPath $stdout -Raw)"
         $sleepScript=Join-Path $scratch "sleep.py"
         [IO.File]::WriteAllText($sleepScript,'import time; time.sleep(30)')
         $timedOut=$false
