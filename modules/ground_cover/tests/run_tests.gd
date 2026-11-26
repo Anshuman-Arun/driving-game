@@ -14,7 +14,7 @@ class WrongArityClearance extends RefCounted:
 		return false
 
 class InvalidWorld extends Node3D:
-	var road_clearance: Object = InvalidClearance.new()
+	var road_clearance: Object
 	func get_surface_height_at(_x: float,_z: float) -> float:
 		return 0.0
 	func sample_mask(_x: float,_z: float) -> Vector4:
