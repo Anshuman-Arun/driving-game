@@ -67,6 +67,7 @@ func build_fixture() -> void:
 	bridge.position.y = 38.0
 	generated_root.add_child(bridge)
 	road_clearance.add_surface(bridge_mesh, 0, bridge.global_transform)
+	report["clearance_triangles"] = road_clearance.triangle_count
 	# A steep synthetic bank makes the isolated shader A/B meaningful for rock too.
 	# This is fixture-only art, not a modification to the actual world.
 	var bank := MeshInstance3D.new()
