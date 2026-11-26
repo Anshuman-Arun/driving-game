@@ -15,7 +15,7 @@ func check(ok: bool, message: String) -> void:
 		failures += 1
 		printerr("FAIL ",message)
 
-func drain(cover: Node, max_frames: int = 1200) -> void:
+func drain(cover: Cover, max_frames: int = 1200) -> void:
 	for i in range(max_frames):
 		cover._process(0.016)
 		var stats: Dictionary = cover.get_stats()
@@ -40,7 +40,7 @@ func drain(cover: Node, max_frames: int = 1200) -> void:
 			return
 	check(false,"queue drained before timeout")
 
-func fingerprint(cover: Node) -> int:
+func fingerprint(cover: Cover) -> int:
 	var entries: Array = []
 	var keys: Array = cover._active.keys()
 	keys.sort_custom(func(a: Vector2i,b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
