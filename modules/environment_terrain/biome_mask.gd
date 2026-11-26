@@ -2,21 +2,47 @@ extends RefCounted
 ## Raw Agent C mask reader. No imported-resource or C module dependency.
 const DEFAULT_DIR := "res://content/scenery/environment_overhaul/masks"
 const SIZE := 1000
+const MAX_MANIFEST_BYTES := 65536
 const CHANNELS := ["grass_suitability", "woodland_weight", "moisture", "exposed_rock_weight"]
 var status := "not loaded"
 
 func load_mask(directory: String = DEFAULT_DIR) -> Texture2D:
 	var image := load_image(directory)
-	return ImageTexture.create_from_image(image) if image != null else null
+	if image == null:
+		return null
+	var texture := ImageTexture.create_from_image(image)
+	if texture == null or texture.get_width() != SIZE or texture.get_height() != SIZE:
+		status = "mask texture creation failed"
+		return null
+	return texture
+
+func _is_sha256(value: Variant) -> bool:
+	if not value is String or value.length() != 64:
+		return false
+	for i in range(64):
+		if not value[i].to_lower() in "0123456789abcdef":
+			return false
+	return true
 
 func load_image(directory: String = DEFAULT_DIR) -> Image:
+	status = "disabled"
+	if directory.strip_edges().is_empty():
+		return null
 	status = "missing mask"
 	var manifest_path := directory.path_join("manifest.json")
 	var data_path := directory.path_join("biome_rgba8.bin")
 	if not FileAccess.file_exists(manifest_path) or not FileAccess.file_exists(data_path):
 		return null
 	status = "invalid mask manifest"
-	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
+	var manifest_file := FileAccess.open(manifest_path, FileAccess.READ)
+	if manifest_file == null or manifest_file.get_length() <= 0 or manifest_file.get_length() > MAX_MANIFEST_BYTES:
+		return null
+	var parser := JSON.new()
+	var parsed := parser.parse(manifest_file.get_as_text())
+	manifest_file.close()
+	if parsed != OK:
+		return null
+	var manifest: Variant = parser.data
 	if not manifest is Dictionary:
 		return null
 	for key in ["schema_version", "width", "height", "cell_size_m", "origin_x", "origin_z"]:
@@ -46,13 +72,23 @@ func load_image(directory: String = DEFAULT_DIR) -> Image:
 		if not name in aliases:
 			return null
 	var hash_value: Variant = manifest.get("sha256")
-	if not hash_value is String or hash_value.length() != 64:
+	if not _is_sha256(hash_value):
 		return null
+	var seed: Variant = manifest.get("seed")
+	if not (seed is int or seed is float) or not is_finite(float(seed)) or float(seed) != floorf(float(seed)):
+		return null
+	var sources: Variant = manifest.get("source_hashes")
+	if not sources is Dictionary or sources.is_empty():
+		return null
+	for key in sources:
+		if not key is String or key.is_empty() or not _is_sha256(sources[key]):
+			return null
 	status = "invalid mask byte length"
 	var file := FileAccess.open(data_path, FileAccess.READ)
 	if file == null or file.get_length() != SIZE * SIZE * 4:
 		return null
 	var bytes := file.get_buffer(SIZE * SIZE * 4)
+	file.close()
 	if bytes.size() != SIZE * SIZE * 4:
 		return null
 	status = "mask checksum mismatch"
