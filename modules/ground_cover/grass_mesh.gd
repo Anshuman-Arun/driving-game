@@ -1,14 +1,14 @@
 extends RefCounted
 ## Original opaque curved ribbons; local root plane y=0, UV.y is flex.
 const HEIGHTS := [0.24, 0.38, 0.58, 0.42, 0.32]
-const WIDTHS := [0.034, 0.042, 0.050, 0.032, 0.046]
+const WIDTHS := [0.038, 0.046, 0.054, 0.036, 0.050]
 const TINTS := [Color("566e2c"), Color("667b35"), Color("4d642a"), Color("96894b"), Color("3e5728")]
 const MAX_BEND := 0.24
 
 static func make_geometry(species: int, lod: int) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 67123 + species * 197
-	var blades: int = [12, 5, 3][lod]
+	var blades: int = [8, 5, 3][lod]
 	var segments: int = [4, 2, 1][lod]
 	var verts := PackedVector3Array()
 	var normals := PackedVector3Array()

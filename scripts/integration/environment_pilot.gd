@@ -74,8 +74,8 @@ func _grass_tuning(preset: String) -> Dictionary:
 	if preset == "low":
 		return {"radii": [22.0, 50.0, 90.0], "density": [0.55, 0.22, 0.06], "cap": 30000, "checks": 1800, "uploads": 3, "upload_instances": 2400, "wind_strength": 0.10}
 	if preset == "high":
-		return {"radii": [38.0, 88.0, 154.0], "density": [1.0, 0.58, 0.22], "cap": 90000, "checks": 3600, "uploads": 4, "upload_instances": 4200, "work_usec": 3000, "wind_strength": 0.11}
-	return {"radii": [34.0, 82.0, 148.0], "density": [0.95, 0.52, 0.18], "cap": 80000, "checks": 3400, "uploads": 4, "upload_instances": 3800, "work_usec": 2600, "wind_strength": 0.11}
+		return {"radii": [36.0, 84.0, 152.0], "density": [1.0, 0.48, 0.16], "cap": 90000, "checks": 3600, "uploads": 4, "upload_instances": 4200, "work_usec": 3000, "wind_strength": 0.11}
+	return {"radii": [32.0, 76.0, 142.0], "density": [0.95, 0.42, 0.14], "cap": 80000, "checks": 3200, "uploads": 4, "upload_instances": 3800, "work_usec": 2600, "wind_strength": 0.11}
 
 func _terrain_tuning() -> Dictionary:
 	return {
