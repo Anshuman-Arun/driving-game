@@ -33,7 +33,7 @@ static func make_geometry(species: int, lod: int) -> Dictionary:
 			for k in range(2):
 				verts.append(mid + side * half * (-1.0 if k == 0 else 1.0))
 				normals.append(normal)
-				uvs.append(Vector2(k, t))
+				uvs.append(Vector2(blade, t))
 				colors.append(tint)
 			if j > 0:
 				var a := start + (j - 1) * 2
@@ -41,7 +41,7 @@ static func make_geometry(species: int, lod: int) -> Dictionary:
 		var tip := verts.size()
 		verts.append(root + Vector3.UP * height + along * lean)
 		normals.append(along.lerp(Vector3.UP, 0.65).normalized())
-		uvs.append(Vector2(0.5, 1))
+		uvs.append(Vector2(blade, 1))
 		colors.append(tint)
 		indices.append_array(PackedInt32Array([tip-2, tip-1, tip]))
 	var arrays := []
@@ -51,7 +51,7 @@ static func make_geometry(species: int, lod: int) -> Dictionary:
 	arrays[Mesh.ARRAY_TEX_UV] = uvs
 	arrays[Mesh.ARRAY_COLOR] = colors
 	arrays[Mesh.ARRAY_INDEX] = indices
-	var bounds := AABB(verts[0], Vector3.ZERO)
+	var bounds := AABB(Vector3.ZERO, Vector3.ZERO)
 	for vertex: Vector3 in verts:
 		bounds = bounds.expand(vertex)
 	return {"arrays":arrays,"bounds":bounds,"estimated_bytes":verts.size()*48+indices.size()*4,"triangles":indices.size()/3}
@@ -83,8 +83,8 @@ static func write_instance(buffer: PackedFloat32Array, offset: int, frame: Trans
 	buffer[offset+10] = b.z.z
 	buffer[offset+11] = p.z
 	buffer[offset+12] = seed
-	buffer[offset+13] = 0.0
-	buffer[offset+14] = 0.0
+	buffer[offset+13] = clampf(0.5 - p.x / 16.0, 0.0, 1.0)
+	buffer[offset+14] = clampf(0.5 - p.z / 16.0, 0.0, 1.0)
 	buffer[offset+15] = 1.0
 
 static func sweep_aabb(bounds: AABB, frame: Transform3D) -> AABB:
