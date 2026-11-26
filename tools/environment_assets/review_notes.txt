@@ -1,0 +1,1 @@
+Temporary development marker: shared-scaffold revision prepared in memory; not a release gate.
