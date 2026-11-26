@@ -413,4 +413,5 @@ func _test_production() -> void:
 	preview.restore()
 	for child in originals:
 		check(child.get_active_material(0) == originals[child], "real terrain original restored " + str(child.name))
+	print("[EnvironmentTerrain] production pilot completed: %d changed, %d unchanged" % [changed, unchanged])
 	world.free()
