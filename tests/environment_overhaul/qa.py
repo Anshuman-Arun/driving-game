@@ -252,7 +252,7 @@ def main():
         require(not untracked.strip(), "untracked canonical paths: "+untracked.strip())
         for path in ("data/world/road_graph_v1.json","data/world/terrain_height_r16le.bin",
                      "data/world/world_metadata_v1.json","data/world/roadworks.json","data/world/terrain_roadworks_r16le.bin",
-                     "content/scenery/vegetation.bin"):
+                     "data/world/vegetation.bin"):
             require(bool(payload(ROOT / path)), f"missing canonical payload {path}")
     check("canonical", canonical)
     if args.mode=="integrated" and args.suite!="all":

@@ -1,10 +1,11 @@
 import json
+import math
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
 import tempfile
 import unittest
-from qa import verify_mask, verify_assets, verify_understory, sample, digest, ERROR, payload
+from qa import read_json, verify_mask, verify_assets, verify_understory, sample, digest, ERROR, payload
 from report import percentile, summarize, compare, MATCH, load, png_matches, main as report_main
 from qa import run_command
 import sys
@@ -30,7 +31,22 @@ class QA(unittest.TestCase):
             self.assertEqual(sample(verified, -999, -999), (1,2,3,4))
             self.assertEqual(sample(verified, -999, -997), (5,6,7,8))
             self.assertEqual(sample(verified, 999, 999), (9,10,11,12))
+            self.assertEqual(sample(verified, math.nextafter(1000.0,-math.inf), math.nextafter(1000.0,-math.inf)), (9,10,11,12))
             self.assertIsNone(sample(verified, 1000, 0))
+            self.assertIsNone(sample(verified, -1000.0001, 0))
+            with self.assertRaises(ValueError):
+                sample(b"short",0,0)
+            manifest["channels"][0]="not_grass"
+            (path/"manifest.json").write_text(json.dumps(manifest))
+            with self.assertRaises(ValueError):
+                verify_mask(path)
+            manifest["channels"][0]="grass"
+            manifest["row_order"]="x_ascending_z_ascending"
+            (path/"manifest.json").write_text(json.dumps(manifest))
+            with self.assertRaises(ValueError):
+                verify_mask(path)
+            manifest.pop("row_order")
+            (path/"manifest.json").write_text(json.dumps(manifest))
             self.assertIsNone(sample(verified, float("nan"), 0))
             data[0] ^= 1
             raw.write_bytes(data)
@@ -59,6 +75,13 @@ class QA(unittest.TestCase):
                      x=i*interval/1000*22 if moving else 0,y=0,z=0,fov=58,gear="2" if moving else "N",
                      grass_instances=20,draws=100,triangles=200,gpu_ms=8,cpu_ms=4,vram_mib=1000)
                 for i in range(round(duration*1000/interval))]
+
+    def test_duplicate_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/"duplicate.json"
+            path.write_text('{"schema_version":1,"schema_version":2}')
+            with self.assertRaises(ValueError):
+                read_json(path)
 
     def test_report(self):
         self.assertEqual(percentile([10,20],.5),15)
