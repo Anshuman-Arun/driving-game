@@ -4,6 +4,10 @@ const DEFAULT_DIR := "res://content/scenery/environment_overhaul/masks"
 const SIZE := 1000
 const MAX_MANIFEST_BYTES := 65536
 const CHANNELS := ["grass_suitability", "woodland_weight", "moisture", "exposed_rock_weight"]
+# Fixed allowlist only: never open arbitrary paths supplied by a manifest.
+const CRITICAL_SOURCES := ["data/world/world_metadata_v1.json", "data/world/road_graph_v1.json",
+	"data/world/terrain_height_r16le.bin", "data/world/terrain_roadworks_r16le.bin",
+	"data/world/roadworks.json", "content/scenery/lake/water_cells_v1.json"]
 var status := "not loaded"
 
 func load_mask(directory: String = DEFAULT_DIR) -> Texture2D:
@@ -52,7 +56,7 @@ func load_image(directory: String = DEFAULT_DIR) -> Image:
 		return null
 	if manifest.cell_size_m != 2 or manifest.origin_x != -1000 or manifest.origin_z != -1000:
 		return null
-	if manifest.get("byte_order") != "RGBA":
+	if manifest.get("byte_order") != "RGBA" or manifest.get("row_order", "z_ascending_x_ascending") != "z_ascending_x_ascending":
 		return null
 	# Accept ordered names or explicit R/G/B/A mapping. The byte order is fixed by v1.
 	var channels: Variant = manifest.get("channels", manifest.get("channel_names"))
@@ -75,13 +79,21 @@ func load_image(directory: String = DEFAULT_DIR) -> Image:
 	if not _is_sha256(hash_value):
 		return null
 	var seed: Variant = manifest.get("seed")
-	if not (seed is int or seed is float) or not is_finite(float(seed)) or float(seed) != floorf(float(seed)):
+	if not (seed is int or seed is float) or not is_finite(float(seed)) or float(seed) < 0.0 or float(seed) != floorf(float(seed)):
 		return null
 	var sources: Variant = manifest.get("source_hashes")
 	if not sources is Dictionary or sources.is_empty():
 		return null
 	for key in sources:
 		if not key is String or key.is_empty() or not _is_sha256(sources[key]):
+			return null
+	status = "mask source mismatch"
+	for path in CRITICAL_SOURCES:
+		var expected: Variant = sources.get(path)
+		if not _is_sha256(expected):
+			return null
+		var local_path: String = "res://" + path
+		if not FileAccess.file_exists(local_path) or FileAccess.get_sha256(local_path) != expected.to_lower():
 			return null
 	status = "invalid mask byte length"
 	var file := FileAccess.open(data_path, FileAccess.READ)
