@@ -14,6 +14,10 @@ var _clearance: WeakRef
 var _waters_snapshot: Array = []
 var _triangle_count := 0
 var status := "unprepared"
+var _source_directory := ""
+
+func _canonical_source_ok(world: Node) -> bool:
+	return Contract.uses_canonical_graded_sources(world)
 
 func prepare(world: Node) -> bool:
 	_world = null
@@ -21,18 +25,27 @@ func prepare(world: Node) -> bool:
 	_clearance = null
 	_waters_snapshot.clear()
 	_triangle_count = 0
+	_source_directory = ""
 	_water.clear()
 	status = "water or road clearance unavailable"
 	var built := Contract.generated_root(world)
 	var clearance := Contract.clearance_for(world)
 	if built == null or clearance == null or not Contract.has_property(world, "roadworks"):
 		return false
+	if not Contract.has_complete_clearance(world) or not _canonical_source_ok(world):
+		status = "complete canonical graded clearance required"
+		return false
+	if not world.has_method("get_surface_height_at"):
+		return false
 	var roadworks: Variant = world.get("roadworks")
 	if not roadworks is Dictionary or not roadworks.get("waters") is Array:
 		return false
 	if not FileAccess.file_exists(LAKE):
 		return false
-	var lake: Variant = JSON.parse_string(FileAccess.get_file_as_string(LAKE))
+	var parser := JSON.new()
+	if parser.parse(FileAccess.get_file_as_string(LAKE)) != OK:
+		return false
+	var lake: Variant = parser.data
 	if not lake is Dictionary or lake.get("schema_version") != 1 or lake.get("origin_x") != ORIGIN or lake.get("origin_z") != ORIGIN or lake.get("spacing_m") != GRID or not (lake.get("water_height_m") is float or lake.get("water_height_m") is int) or not is_finite(float(lake.water_height_m)):
 		return false
 	if not _add_cells(lake.get("cells")):
@@ -45,6 +58,7 @@ func prepare(world: Node) -> bool:
 	_built_root = weakref(built)
 	_clearance = weakref(clearance)
 	_triangle_count = clearance.triangle_count
+	_source_directory = str(world.get("report").get("source_directory", ""))
 	_waters_snapshot = roadworks.waters.duplicate(true)
 	status = "ready"
 	return true
@@ -77,15 +91,23 @@ func accepts(frame: Transform3D, local_bounds: AABB) -> bool:
 		return false
 	var world: Node = _world.get_ref()
 	var clearance := Contract.clearance_for(world)
-	if clearance == null or _clearance == null or clearance != _clearance.get_ref() or clearance.triangle_count != _triangle_count or _built_root == null or Contract.generated_root(world) != _built_root.get_ref():
+	if clearance == null or _clearance == null or clearance != _clearance.get_ref() or clearance.triangle_count != _triangle_count or _built_root == null or Contract.generated_root(world) != _built_root.get_ref() or not Contract.has_complete_clearance(world):
 		status = "stale world; prepare again"
 		return false
-	if not Contract.has_property(world, "roadworks"):
+	if str(world.get("report").get("source_directory", "")) != _source_directory or not Contract.has_property(world, "roadworks"):
+		status = "stale source; prepare again"
 		return false
 	var works: Variant = world.get("roadworks")
 	if not works is Dictionary or works.get("waters") != _waters_snapshot:
 		status = "stale water; prepare again"
 		return false
+	# Require finite terrain samples at all corners and center of the expanded footprint.
+	var low := Vector2(bounds.position.x - MARGIN, bounds.position.z - MARGIN)
+	var high := Vector2(bounds.end.x + MARGIN, bounds.end.z + MARGIN)
+	for point in [low, Vector2(low.x, high.y), Vector2(high.x, low.y), high, (low + high) * 0.5]:
+		var height: Variant = world.call("get_surface_height_at", point.x, point.y)
+		if not (height is float or height is int) or not is_finite(float(height)):
+			return false
 	# Reject all deck columns rather than only the vehicle-height clearance slab.
 	var column := AABB(Vector3(bounds.position.x, -10000.0, bounds.position.z), Vector3(bounds.size.x, 20000.0, bounds.size.z))
 	if clearance.call("overlaps", column, MARGIN, true):
