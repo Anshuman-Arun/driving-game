@@ -29,6 +29,11 @@ class UnitTests(unittest.TestCase):
         self.assertAlmostEqual(float(b.surface(h,-997,-997)),28)
         self.assertAlmostEqual(float(b.surface(h,-998,-998)),16)
         self.assertEqual(float(b.surface(h,-996,-996)),40)
+        slopes=b.triangle_slope(h)
+        self.assertAlmostEqual(slopes[0,0],np.hypot(4,8)/4)
+        self.assertAlmostEqual(slopes[1,1],np.hypot(22,26)/4)
+        self.assertEqual(slopes[0,1],slopes[1,1])
+        self.assertEqual(slopes[1,0],slopes[1,1])
         with self.assertRaises(ValueError):
             b.surface(h,1001,0)
 
@@ -39,6 +44,10 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(a[500,500])
         self.assertFalse(a[510,500])
         self.assertTrue(a[500,450])
+        b.capsule(a,x,z,[-10000,0],[-9000,0],2) # fully outside
+        self.assertEqual(b.window(-2000,-2000,-1500,-1500),(slice(0,0),slice(0,0)))
+        with self.assertRaises(ValueError):
+            b.capsule(a,x,z,[0,0],[0,0],-1)
 
     def test_water(self):
         lake=dict(origin_x=-1000,origin_z=-1000,spacing_m=4,cells=[[1,2]])
@@ -46,6 +55,8 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(int(w.sum()),8)
         self.assertTrue(w[4:6,2:4].all())
         self.assertFalse(w[2,4])
+        self.assertEqual(b.clearance_lower_bound(w)[4,4],0) # touching edges
+        self.assertLess(b.clearance_lower_bound(w)[4,5],b.distance(w)[4,5])
         with self.assertRaises(ValueError):
             b.water_mask(dict(lake,cells=[[500,1]]),dict(waters=[]))
 
@@ -127,11 +138,28 @@ class FixtureTests(unittest.TestCase):
             self.assertGreater(mask[580,520,0],100)
             self.assertGreater(len(understory["placements"]),0)
             self.assertLessEqual(len(understory["placements"]),400)
-            self.assertEqual(stats["lane_alignment_max_m"],0)
+            self.assertAlmostEqual(stats["lane_alignment_max_m"],0)
+            for p in understory["placements"]:
+                self.assertTrue(-980<=p["x"]<=980 and -980<=p["z"]<=980)
+            self.assertEqual(sum(stats["species"].values()),len(understory["placements"]))
             b.publish(root/"output",*result)
             self.assertEqual((root/"output/biome_rgba8.bin").stat().st_size,4000000)
             self.assertEqual(b.sha((root/"output/understory.json").read_bytes()),
                              manifest["understory_sha256"])
+            # Malformed lane pairs fail before generating a partial result.
+            graph_path=root/"data/world/road_graph_v1.json"
+            graph=json.loads(graph_path.read_text())
+            original=graph_path.read_bytes()
+            graph["lanes"].pop()
+            graph_path.write_bytes(b.json_bytes(graph))
+            with self.assertRaises(ValueError):
+                b.bake(root,123,tuning)
+            graph_path.write_bytes(original)
+            # Optional legacy premium cache can be absent; live vegetation cannot.
+            (root/"data/world/premium_foliage.bin").unlink()
+            optional=b.bake(root,123,dict(tuning,max_placements=0))
+            self.assertFalse(optional[1]["optional_premium_cache_used"])
+            self.assertEqual(optional[2]["placements"],[])
             # Required real-world inputs fail closed before publication.
             (root/"data/world/vegetation.bin").unlink()
             with self.assertRaises(FileNotFoundError):
@@ -172,8 +200,7 @@ class CanonicalTests(unittest.TestCase):
                 self.assertEqual(mask[j,i,0],0)
         h=b.decode_height(src.read("data/world/terrain_roadworks_r16le.bin"),
                           src.json("data/world/world_metadata_v1.json"))
-        dz,dx=np.gradient(b.surface(h,x,z),2)
-        slope=np.hypot(dx,dz)
+        slope=b.triangle_slope(h)
         grass=mask[:,:,0].astype(float)/255
         far=((x-45)**2+(z-170)**2<250**2)&(b.distance(road)>80)&(slope<.25)&~protected&~wet
         rocky=(slope>.7)&~road&~wet&~protected
@@ -182,19 +209,26 @@ class CanonicalTests(unittest.TestCase):
         self.assertGreater(grass[far].mean(),grass[rocky].mean()+.15)
         # Interior smoothness, excluding hard safety boundaries.
         valid=(b.distance(road|wet|protected)>8)
-        diff=np.abs(np.diff(mask.astype(float),axis=1))
-        self.assertLess(np.quantile(diff[valid[:,1:]&valid[:,:-1]],.99),65)
+        for axis in (0,1):
+            diff=np.abs(np.diff(mask.astype(float),axis=axis))
+            adjacent=(valid[:,1:]&valid[:,:-1]) if axis==1 else (valid[1:,:]&valid[:-1,:])
+            self.assertLess(np.quantile(diff[adjacent],.99),65)
         self.assertLess(s["lane_alignment_max_m"],.015)
         self.assertGreater(len(u["placements"]),0)
         coords=np.array([[p["x"],p["z"]] for p in u["placements"]])
         self.assertEqual(len(cKDTree(coords).query_pairs(b.DEFAULTS["spacing_m"]*.65-.00002)),0)
-        rd,wd=b.distance(road),b.distance(wet)
+        rd,wd=b.clearance_lower_bound(road),b.clearance_lower_bound(wet)
+        pd=b.clearance_lower_bound(props|protected)
         for p in u["placements"]:
             i,j=b.cell_index(p["x"],p["z"])
             self.assertIn(p["species_id"],b.SPECIES)
             self.assertFalse(props[j,i] or protected[j,i] or wet[j,i] or road[j,i])
-            self.assertGreaterEqual(rd[j,i],b.DEFAULTS["sightline_m"])
-            self.assertGreater(wd[j,i],b.DEFAULTS["water_margin_m"])
+            self.assertGreaterEqual(rd[j,i],b.DEFAULTS["sightline_m"]+b.UNDERSTORY_RADIUS_M)
+            self.assertGreater(wd[j,i],b.DEFAULTS["water_margin_m"]+b.UNDERSTORY_RADIUS_M)
+            self.assertGreater(pd[j,i],b.UNDERSTORY_RADIUS_M)
+            self.assertLessEqual(slope[j,i],b.DEFAULTS["max_understory_slope"])
+            if p["species_id"]=="reed":
+                self.assertLessEqual(wd[j,i],18)
 
 
 if __name__=="__main__":
