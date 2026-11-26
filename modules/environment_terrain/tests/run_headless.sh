@@ -15,13 +15,14 @@ version="$("$engine" --headless --version)"
 run_checked() {
   local label="$1"; shift
   timeout 420 "$engine" "$@" 2>&1 | tee "$log_dir/$label.log"
-  if grep -E 'SCRIPT ERROR|Parse Error|Shader compilation failed|Shader error|Failed to load script|(^|[[:space:]])FAIL([ :]|$)' "$log_dir/$label.log"; then
+  if grep -E 'SCRIPT ERROR|Parse Error|Parser Error|Shader compilation failed|Shader error|Failed to load script|ERROR:.*(Failed (loading|to load)|Cannot open|Can.t open|Invalid shader|Shader compilation)|(^|[[:space:]])FAIL([ :]|$)' "$log_dir/$label.log"; then
     return 1
   fi
 }
 run_checked import --headless --path . --editor --import
 run_checked terrain --headless --path . --script res://modules/environment_terrain/tests/run_tests.gd -- --production
 grep -Eq '^\[EnvironmentTerrain\] [1-9][0-9]* checks, 0 failures$' "$log_dir/terrain.log" || { echo "Missing successful terrain test summary" >&2; exit 1; }
+grep -Eq '^\[EnvironmentTerrain\] production pilot completed: [1-9][0-9]* changed, [1-9][0-9]* unchanged$' "$log_dir/terrain.log" || { echo "Missing full-production pilot test evidence" >&2; exit 1; }
 if [[ "${1:-}" == "--baseline" ]]; then
   for path in tests/integration/map_width_check.gd tests/integration/roadworks_check.gd tests/integration/world_visual_qa.gd tests/integration/garage_world.gd tests/integration/vehicle_world.gd; do
     [[ -f "$path" ]] || { echo "Missing expected base test: $path" >&2; exit 1; }
