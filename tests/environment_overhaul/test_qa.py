@@ -80,6 +80,41 @@ class QA(unittest.TestCase):
                      grass_instances=20,draws=100,triangles=200,gpu_ms=8,cpu_ms=4,vram_mib=1000)
                 for i in range(round(duration*1000/interval))]
 
+    def test_strict_source_and_package_hashes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            mask=root/"mask"
+            mask.mkdir()
+            canonical=("data/world/road_graph_v1.json","data/world/world_metadata_v1.json",
+                       "data/world/terrain_height_r16le.bin","data/world/roadworks.json",
+                       "data/world/terrain_roadworks_r16le.bin")
+            sources={}
+            for name in canonical:
+                p=root/name
+                p.parent.mkdir(parents=True,exist_ok=True)
+                p.write_bytes(name.encode())
+                sources[name]=digest(p.read_bytes())
+            raw=bytes(4_000_000)
+            (mask/"biome_rgba8.bin").write_bytes(raw)
+            understory=dict(schema_version=1,seed=5,source_hashes=sources,placements=[])
+            u=json.dumps(understory).encode()
+            (mask/"understory.json").write_bytes(u)
+            manifest=dict(schema_version=1,width=1000,height=1000,cell_size_m=2,origin_x=-1000,
+                origin_z=-1000,byte_order="RGBA",channels=["grass_suitability","woodland_weight","moisture","exposed_rock_weight"],
+                source_hashes=sources,seed=5,sha256=digest(raw),understory_sha256=digest(u))
+            (mask/"manifest.json").write_text(json.dumps(manifest))
+            verify_mask(mask,root,strict_sources=True)
+            (mask/"understory.json").write_bytes(u+b" ")
+            with self.assertRaises(ValueError):
+                verify_mask(mask,root,strict_sources=True)
+            (mask/"understory.json").write_bytes(u)
+            (root/canonical[0]).write_bytes(b"changed")
+            with self.assertRaises(ValueError):
+                verify_mask(mask,root,strict_sources=True)
+            (root/canonical[0]).unlink()
+            with self.assertRaises(ValueError):
+                verify_mask(mask,root,strict_sources=True)
+
     def test_duplicate_json(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/"duplicate.json"

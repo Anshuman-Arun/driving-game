@@ -302,6 +302,14 @@ func cover_test(world: Node) -> void:
 		await frames(30)
 		inspect_cover(cover, world, bend_margin)
 		cover.call("set_vehicle_interaction", FOCUS[3], Vector3.ZERO, false)
+		cover.call("update_focus",Vector3(NAN,0,0),Vector3.ZERO)
+		await frames(5)
+		var invalid_focus:=inspect_cover(cover,world,bend_margin)
+		check(invalid_focus.active==0 and invalid_focus.count==0,"nonfinite camera focus clears active geometry")
+		cover.call("update_focus",Vector3(5000,0,5000),Vector3.ZERO)
+		await frames(5)
+		var outside:=inspect_cover(cover,world,bend_margin)
+		check(outside.active==0 and outside.count==0,"out-of-map camera focus remains empty")
 		cover.call("shutdown")
 		expected_ready=false
 		await frames(10)
@@ -341,7 +349,7 @@ func cover_test(world: Node) -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(corrupt_dir))
 	var corrupt_file := FileAccess.open(corrupt_dir+"/manifest.json",FileAccess.WRITE)
 	if corrupt_file!=null:
-		corrupt_file.store_string('{"schema_version":1,"width":1000,"height":1000,"sha256":"invalid"}')
+		corrupt_file.store_string(FileAccess.get_file_as_string(MASK+"/manifest.json"))
 		corrupt_file.close()
 	var raw := FileAccess.open(corrupt_dir+"/biome_rgba8.bin",FileAccess.WRITE)
 	if raw!=null:
@@ -358,6 +366,28 @@ func cover_test(world: Node) -> void:
 		check(rejected.active==0 and rejected.count==0 and rejected.visible==0,"missing/corrupt mask fails closed")
 		bad.call("shutdown")
 		bad.free()
+	# Same valid manifest, exact byte length, wrong digest: independent of
+	# the wrong-length case above.
+	var wrong_bytes:=FileAccess.get_file_as_bytes(MASK+"/biome_rgba8.bin")
+	if wrong_bytes.size()==4000000:
+		wrong_bytes[0]=wrong_bytes[0]^1
+		var wrong_file:=FileAccess.open(corrupt_dir+"/biome_rgba8.bin",FileAccess.WRITE)
+		if wrong_file!=null:
+			wrong_file.store_buffer(wrong_bytes)
+			wrong_file.close()
+			var wrong_cover:=script.new() as Node3D
+			root.add_child(wrong_cover)
+			check(not bool(wrong_cover.call("build",world,"medium",corrupt_dir,{})),"wrong SHA with correct byte length refuses")
+			wrong_cover.call("update_focus",FOCUS[0],Vector3.ZERO)
+			await frames(10)
+			var wrong_stats:=inspect_cover(wrong_cover,world,0.0)
+			check(wrong_stats.active==0 and wrong_stats.count==0,"wrong checksum remains empty")
+			wrong_cover.call("shutdown")
+			wrong_cover.free()
+		else:
+			check(false,"checksum fixture file creation")
+	else:
+		check(false,"source mask size for checksum fixture")
 	for filename in ["manifest.json","biome_rgba8.bin"]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(corrupt_dir+"/"+filename))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(corrupt_dir))
@@ -426,7 +456,8 @@ func understory_test(world: Node) -> void:
 					check(false,"nonfinite imported understory bounds")
 					continue
 				if species_bounds.has(species):
-					species_bounds[species]=(species_bounds[species] as AABB).merge(part)
+					var existing: AABB=species_bounds[species]
+					species_bounds[species]=existing.merge(part)
 				else:
 					species_bounds[species]=part
 	var accepted:=0
