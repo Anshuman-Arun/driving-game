@@ -71,6 +71,9 @@ func run() -> void:
 	world.report.full_world = false
 	check(not gate.prepare(world), "partial world clearance is never sufficient for rock placement")
 	world.report.full_world = true
+	world.report.clearance_triangles += 1
+	check(not gate.prepare(world), "incomplete clearance count rejects rock gate")
+	world.report.clearance_triangles -= 1
 	check(gate.prepare(world), "synthetic water and road rock gate prepares")
 	check(not gate.accepts(Transform3D(Basis.IDENTITY, Vector3(80, 30, -18)), local_box), "rock outside represented terrain rejected")
 	check(not gate.accepts(Transform3D(Basis.IDENTITY, Vector3(0, 30, 0)), local_box), "rock over pavement rejected")
