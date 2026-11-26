@@ -181,9 +181,78 @@ function verify(read, exists = null) {
     }
   }
   check(positivePixels>0 && protectedSamples>10000,"non-vacuous raster coverage");
+  // Compare tile rejection with brute-force cell rasterization, using the actual
+  // spatial bucket rule and float32 rounding to stress boundary behavior.
+  check(files.band.includes("const TILE_CELLS := 8") && files.band.includes("const BROADPHASE_PAD_M := 0.01") && files.band.includes("const MAX_MARGIN_M := 4.0"), "tile broadphase reference constants");
+  check(files.rock.includes("CONTACT_TOLERANCE_M := 0.05") && files.rock.includes("status != \"ready\""), "rock contact and stale-state guard");
+  const indexed = ts => {
+    const buckets = new Map();
+    for(const t of ts) {
+      const lo=[Math.min(...t.map(v=>v[0])), Math.min(...t.map(v=>v[1]))];
+      const hi=[Math.max(...t.map(v=>v[0])), Math.max(...t.map(v=>v[1]))];
+      for(let z=Math.floor(lo[1]/8);z<=Math.floor(hi[1]/8);z++)
+        for(let x=Math.floor(lo[0]/8);x<=Math.floor(hi[0]/8);x++){
+          const k=x+","+z;
+          if(!buckets.has(k)) buckets.set(k,[]);
+          buckets.get(k).push(t);
+        }
+    }
+    return (c,e,m) => {
+      const ext=e.map(v=>v+m), low=c.map((v,i)=>v-ext[i]), high=c.map((v,i)=>v+ext[i]);
+      for(let z=Math.floor(low[1]/8);z<=Math.floor(high[1]/8);z++)
+        for(let x=Math.floor(low[0]/8);x<=Math.floor(high[0]/8);x++)
+          if((buckets.get(x+","+z)||[]).some(t=>sat(t,c,ext))) return true;
+      return false;
+    };
+  };
+  let referenceCalls=0, optimizedCalls=0, comparedCells=0;
+  const f=Math.fround;
+  for(let trial=0;trial<48;trial++){
+    // Translated synthetic geometry including near-map-edge positive and negative coordinates.
+    const ox=trial%3===0?-980:trial%3===1?920:-24;
+    const oz=trial%4===0?920:trial%4===1?-980:-24;
+    const ts=triangles.map(t=>t.map(p=>[f(p[0]+ox+24),f(p[1]+oz+24)]));
+    const hit=indexed(ts);
+    const w=trial===0?1:f(7+random()*43),h=trial===0?1:f(7+random()*43);
+    const x0=f(ox+random()*0.4),z0=f(oz+random()*0.4);
+    const nx=Math.ceil(w),nz=Math.ceil(h),sx=f(w/nx),sz=f(h/nz);
+    const center=(x,z)=>[f(x0+f((x+0.5)*sx)),f(z0+f((z+0.5)*sz))];
+    const half=[f(sx*1.5),f(sz*1.5)];
+    const calculate=opt=>{
+      const out=new Uint8Array(nx*nz);
+      let queries=0;
+      const query=(c,e,m)=>{queries++;return hit(c,e,m);};
+      for(let tz=0;tz<nz;tz+=8)for(let tx=0;tx<nx;tx+=8){
+        const ex=Math.min(nx,tx+8),ez=Math.min(nz,tz+8);
+        if(opt){
+          const a=center(tx,tz), b=center(ex-1,ez-1);
+          const c=a.map((v,i)=>f(f(v+b[i])*0.5));
+          const e=a.map((v,i)=>f(f(f(b[i]-v)*0.5)+half[i]+0.01));
+          if(!query(c,e,4))continue;
+        }
+        for(let z=tz;z<ez;z++)for(let x=tx;x<ex;x++){
+          const c=center(x,z);
+          if(query(c,half,0))continue;
+          let weight=0;
+          for(let i=1;i<=4;i++)if(query(c,half,i)){weight=1-(i-1)/4;break;}
+          const edge=Math.min(c[0]-x0,x0+w-c[0],c[1]-z0,z0+h-c[1]);
+          out[z*nx+x]=Math.round(255*weight*Math.min(1,Math.max(0,(edge-1)/5)));
+        }
+      }
+      return {out,queries};
+    };
+    const a=calculate(false),b=calculate(true);
+    referenceCalls+=a.queries; optimizedCalls+=b.queries; comparedCells+=a.out.length;
+    check(a.out.every((v,i)=>v===b.out[i]),"optimized tile raster differs from reference");
+    for(let i=0;i<20;i++){
+      const c=[f(x0+random()*w),f(z0+random()*h)],e=[random()*3,random()*3],m=random()*4;
+      check(hit(c,e,m)===ts.some(t=>oracle(t,c,e.map(v=>v+m))),"spatial bucket boundary disagrees with exhaustive oracle");
+    }
+  }
+  check(optimizedCalls<referenceCalls,"modeled tile rejection reduces aggregate query count");
   const waterIndex = (x)=>Math.floor((x+1000)/4-0.000001);
   check(waterIndex(16)===253 && waterIndex(16.001)===254,"water cell inclusive contact vs separated bounds");
-  return {checks,protectedSamples,positivePixels,waterCells:waterCells.length,sourceUniforms:Object.keys(old).length,candidateSamplers:18,assetPaths:exists?new Set(resourcePaths).size:0,modeledPilotChunks:{full:chunks.length,cedar,meadow},kind:"source checks and independent geometry model; not engine execution"};
+  return {checks,protectedSamples,positivePixels,waterCells:waterCells.length,sourceUniforms:Object.keys(old).length,candidateSamplers:18,assetPaths:exists?new Set(resourcePaths).size:0,modeledPilotChunks:{full:chunks.length,cedar,meadow},tileReference:{cases:48,comparedCells,referenceCalls,optimizedCalls},kind:"source checks and independent geometry model; not engine execution"};
 }
 module.exports={verify,paths};
 if(require.main===module){
