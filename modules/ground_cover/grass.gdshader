@@ -8,6 +8,9 @@ uniform vec3 vehicle_position = vec3(0.0);
 uniform vec3 vehicle_velocity = vec3(0.0);
 uniform bool fade_enabled = true;
 uniform bool lod_blade_fade_enabled = true;
+uniform bool lod_density_fade_enabled = true;
+uniform float mid_rank_limit = 4096.0;
+uniform float far_rank_limit = 4096.0;
 uniform float near_radius = 25.0;
 uniform float mid_radius = 65.0;
 uniform float fade_start = 105.0;
@@ -15,6 +18,7 @@ uniform float fade_end = 130.0;
 varying flat vec3 tuft_root;
 varying float flex;
 varying flat float tuft_seed;
+varying flat float density_keep;
 
 void vertex() {
 	vec3 root = MODEL_MATRIX[3].xyz;
@@ -38,21 +42,36 @@ void vertex() {
 	bend *= min(1.0, 0.24 / max(length(bend), 0.001));
 	// No second batch: extra blades shrink before a chunk can switch LOD.
 	float blade_weight = 1.0;
+	vec2 chunk_center = root.xz + (INSTANCE_CUSTOM.gb - vec2(0.5)) * 16.0;
+	float chunk_distance = length(chunk_center - CAMERA_POSITION_WORLD.xz);
+	density_keep = 1.0;
+	if (lod_density_fade_enabled) {
+		float rank = INSTANCE_CUSTOM.a * 4096.0;
+		float near_end = max(1.0, near_radius - 5.0);
+		float mid_end = max(1.0, mid_radius - 5.0);
+		if (rank >= mid_rank_limit) {
+			density_keep *= 1.0 - smoothstep(max(0.0, near_end - 8.0), near_end, chunk_distance);
+		}
+		if (rank >= far_rank_limit) {
+			density_keep *= 1.0 - smoothstep(max(0.0, mid_end - 8.0), mid_end, chunk_distance);
+		}
+	}
 	if (lod_blade_fade_enabled && UV.x >= 3.0) {
-		vec2 chunk_center = root.xz + (INSTANCE_CUSTOM.gb - vec2(0.5)) * 16.0;
-		float chunk_distance = length(chunk_center - CAMERA_POSITION_WORLD.xz);
 		float boundary = UV.x >= 5.0 ? near_radius : mid_radius;
 		float fade_to = max(1.0, boundary - 5.0);
 		float fade_from = max(0.0, fade_to - 6.0);
 		blade_weight = 1.0 - smoothstep(fade_from, fade_to, chunk_distance);
 	}
-	VERTEX = root + (VERTEX - root) * blade_weight;
+	vec3 blade_root = (MODEL_MATRIX * vec4(UV2.x, 0.0, UV2.y, 1.0)).xyz;
+	VERTEX = blade_root + (VERTEX - blade_root) * blade_weight;
 	VERTEX.xz += bend * flex * flex * blade_weight;
 	tuft_root = root;
 	NORMAL = normalize(mix(NORMAL, vec3(0.0, 1.0, 0.0), 0.55));
 }
 
 void fragment() {
+	// Stable whole-tuft density fade, with no second buffer or blending.
+	if (density_keep <= 0.0 || (density_keep < 1.0 && tuft_seed >= density_keep)) { discard; }
 	// Stable spatial cutout at outer range, no alpha-blended overdraw.
 	if (fade_enabled) {
 		float d = length(tuft_root.xz - CAMERA_POSITION_WORLD.xz);
