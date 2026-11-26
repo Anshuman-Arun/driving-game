@@ -6,6 +6,7 @@ on:
       - '.github/workflows/environment-mask-publish.yml'
       - 'content/scenery/environment_overhaul/bake_biomes.py'
       - 'content/scenery/environment_overhaul/requirements.txt'
+      - 'modules/ground_cover/ground_cover.gd'
 permissions:
   contents: read
 concurrency:

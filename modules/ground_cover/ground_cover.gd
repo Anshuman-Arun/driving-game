@@ -443,7 +443,7 @@ func _candidate(rank: int) -> void:
 	if not gradient.is_finite() or gradient.length() > MAX_SLOPE or steepness > MAX_SLOPE:
 		_rejected.slope += 1
 		return
-	var plane_error := maxf(maxf(absf(xp+xm-2.0*y),absf(zp+zm-2.0*y)))*0.5
+	var plane_error := maxf(absf(xp+xm-2.0*y),absf(zp+zm-2.0*y))*0.5
 	if plane_error > 0.055:
 		_rejected.slope += 1
 		return
