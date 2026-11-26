@@ -182,6 +182,7 @@ func set_graphics(preset: String) -> void:
 	if previous_profile == _profile:
 		return
 	if _material != null:
+		_material.set_shader_parameter("lod_density_fade_enabled", bool(tuning.get("lod_density_fade_enabled", true)))
 		_material.set_shader_parameter("lod_blade_fade_enabled", bool(tuning.get("lod_blade_fade_enabled", true)))
 		_material.set_shader_parameter("near_radius", float(radii[0]))
 		_material.set_shader_parameter("mid_radius", float(radii[1]))
@@ -318,6 +319,11 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 	var plan := Placement.allocate(tier_counts, density, int(_profile.cap), int(_profile.chunks), int(_profile.upload_instances))
 	_last_planned_chunks = plan[0]
 	_last_planned_limits = plan[1]
+	if _material != null:
+		# When a tier is absent, do not suppress the preceding tier merely
+		# because the current pilot contains no chunks at that distance.
+		_material.set_shader_parameter("mid_rank_limit", float(plan[1][1]) if int(plan[0][1]) > 0 else 4096.0)
+		_material.set_shader_parameter("far_rank_limit", float(plan[1][2]) if int(plan[0][2]) > 0 else 4096.0)
 	for lod in range(3):
 		for i in range(int(_last_planned_chunks[lod])):
 			var entry: Dictionary = tiers[lod][i]
@@ -516,7 +522,7 @@ func _publish() -> bool:
 		for i in range(group.size()):
 			var frame: Transform3D = group[i].frame
 			frame.origin -= origin
-			Grass.write_instance(buffer,i*16,frame,float(group[i].seed))
+			Grass.write_instance(buffer,i*16,frame,float(group[i].seed),int(group[i].rank))
 			var swept := Grass.sweep_aabb(_mesh_bounds[species][lod],frame)
 			bounds = swept if i == 0 else bounds.merge(swept)
 		mesh.buffer = buffer
