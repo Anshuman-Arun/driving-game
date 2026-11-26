@@ -28,7 +28,7 @@ ROOT_SUITES = (
 )
 
 
-def run(logdir, name, args, seconds=600, inspect_errors=False, cwd=ROOT):
+def run(logdir, name, args, seconds=600, inspect_errors=False, cwd=ROOT, expected=()):
     path = logdir/(name+".log")
     print(f"RUN {name}: {path}", flush=True)
     try:
@@ -36,7 +36,8 @@ def run(logdir, name, args, seconds=600, inspect_errors=False, cwd=ROOT):
             result = subprocess.run(args, cwd=cwd, stdout=f, stderr=subprocess.STDOUT,
                                     timeout=seconds, check=False)
         output = path.read_text(encoding="utf-8", errors="replace")
-        ok = result.returncode == 0 and not (inspect_errors and ERRORS.search(output))
+        ok = (result.returncode == 0 and not (inspect_errors and ERRORS.search(output))
+              and all(marker in output for marker in expected))
     except (OSError, subprocess.TimeoutExpired) as error:
         print(f"ERROR {name}: {error}", file=sys.stderr)
         ok = False
@@ -95,7 +96,8 @@ def main():
             print(f"FAIL missing required suite: {script}",file=sys.stderr)
             ok = False
             continue
-        ok = run(logdir,Path(script).stem,[args.godot,"--headless","--path",".","--fixed-fps","60","--script","res://"+script],420,True) and ok
+        expected = ("PASS: 9 RGBA probes", "PASS: 77 biome surface probes") if script==suites[0] else ()
+        ok = run(logdir,Path(script).stem,[args.godot,"--headless","--path",".","--fixed-fps","60","--script","res://"+script],420,True,expected=expected) and ok
     print("Full headless acceptance passed; graphical acceptance remains local" if ok else "Headless acceptance failed")
     return 0 if ok else 1
 
