@@ -48,6 +48,8 @@ var _generation_us := 0
 var _upload_us := 0
 var _last_checks := 0
 var _last_uploads := 0
+var _last_planned_limits := [0, 0, 0]
+var _last_planned_chunks := [0, 0, 0]
 
 func build(world: Node, preset: String, mask_dir: String, options: Dictionary = {}) -> bool:
 	shutdown()
@@ -223,27 +225,65 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 			return a.key.y < b.key.y or (a.key.y == b.key.y and a.key.x < b.key.x)
 		return a.priority < b.priority)
 	var wanted: Dictionary = {}
-	var reserved := 0
+	# Keep a spatially distributed prefix of each tier, rather than consuming the
+	# entire cap near the camera and leaving an abrupt empty outer ring.
+	var tiers: Array = [[], [], []]
+	var chunk_budget := int(_profile.chunks)
 	for entry: Dictionary in candidates:
-		var estimate := ceili(GRID * GRID * float(_profile.density[entry.lod]))
-		# Guaranteed upper bound uses a fixed nested candidate index subset.
-		if wanted.size() >= int(_profile.chunks) or reserved + estimate > int(_profile.cap):
+		tiers[int(entry.lod)].append(entry)
+	var selected: Array = [[], [], []]
+	# Reserve some chunk slots for mid/far even with a small experimental cap.
+	var shares := [0.50, 0.32, 0.18]
+	var remaining := chunk_budget
+	for lod in range(3):
+		var take := mini(tiers[lod].size(), maxi(1, floori(chunk_budget * float(shares[lod]))))
+		take = mini(take, remaining)
+		selected[lod] = tiers[lod].slice(0, take)
+		remaining -= take
+	# Fill unused slots in near-to-far order.
+	for lod in range(3):
+		var extra := mini(remaining, tiers[lod].size() - selected[lod].size())
+		selected[lod].append_array(tiers[lod].slice(selected[lod].size(), selected[lod].size() + extra))
+		remaining -= extra
+	var cap := int(_profile.cap)
+	var desired := [0, 0, 0]
+	var allocation := [0, 0, 0]
+	remaining = cap
+	for lod in range(3):
+		desired[lod] = selected[lod].size() * ceili(GRID * GRID * float(_profile.density[lod]))
+		allocation[lod] = mini(int(desired[lod]), mini(remaining, floori(cap * float(shares[lod]))))
+		remaining -= int(allocation[lod])
+	for lod in range(3):
+		var extra := mini(remaining, int(desired[lod]) - int(allocation[lod]))
+		allocation[lod] += extra
+		remaining -= extra
+	# Quantization reduces rebuild churn as neighboring chunk counts change.
+	# Prefixes of the same deterministic rank permutation preserve tuft identity.
+	_last_planned_limits = [0, 0, 0]
+	_last_planned_chunks = [0, 0, 0]
+	for lod in range(3):
+		if selected[lod].is_empty():
 			continue
-		entry["limit"] = estimate
-		reserved += estimate
-		wanted[entry.key] = entry
+		var per_chunk := floori(float(allocation[lod]) / selected[lod].size())
+		if per_chunk >= 64:
+			per_chunk = (per_chunk >> 5) << 5
+		_last_planned_limits[lod] = per_chunk
+		_last_planned_chunks[lod] = selected[lod].size()
+		for entry: Dictionary in selected[lod]:
+			entry["limit"] = per_chunk
+			wanted[entry.key] = entry
 	for key: Vector2i in _active.keys():
-		if not wanted.has(key) or int(_active[key].lod) < int(wanted[key].lod):
-			# Free excess high-detail allocation before upgrades, so old LODs cannot starve jobs.
+		if not wanted.has(key) or int(_active[key].lod) < int(wanted[key].lod) or int(_active[key].limit) > int(wanted[key].limit):
+			# Free excess allocation before upgrades, so old batches cannot starve jobs.
 			_release(key)
 	_queue.clear()
 	if not _job.is_empty():
 		var job_key: Vector2i = _job.key
-		if not wanted.has(job_key) or int(wanted[job_key].lod) != int(_job.lod):
+		if not wanted.has(job_key) or (int(wanted[job_key].lod) != int(_job.lod) or int(wanted[job_key].limit) != int(_job.limit)):
 			_job.clear()
 	for key: Vector2i in wanted:
 		var entry: Dictionary = wanted[key]
-		if _active.has(key) and int(_active[key].lod) == int(entry.lod):
+		if _active.has(key) and int(_active[key].lod) == int(entry.lod) and int(_active[key].limit) == int(entry.limit):
 			continue
 		if not _job.is_empty() and _job.key == key:
 			continue
@@ -406,7 +446,7 @@ func _publish() -> void:
 		node.multimesh = mesh
 		node.visible = true
 		nodes.append(node)
-	_active[key] = {"nodes":nodes,"lod":lod,"count":count}
+	_active[key] = {"nodes":nodes,"lod":lod,"count":count,"limit":int(_job.limit)}
 	_counts[lod] += count
 	_uploaded += count
 
@@ -429,10 +469,12 @@ func _flush_active() -> void:
 		_release(key)
 	_queue.clear()
 	_job.clear()
+	_last_planned_limits = [0, 0, 0]
+	_last_planned_chunks = [0, 0, 0]
 
 func get_stats() -> Dictionary:
 	var total := int(_counts[0]+_counts[1]+_counts[2])
-	return {"state":_state,"fallback":_reason,"plain_material":_plain_material != null,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
+	return {"state":_state,"fallback":_reason,"plain_material":_plain_material != null,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"planned_chunks_per_lod":_last_planned_chunks.duplicate(),"planned_candidate_limit_per_chunk":_last_planned_limits.duplicate(),"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
 
 func shutdown() -> void:
 	set_process(false)
