@@ -1,6 +1,7 @@
 extends RefCounted
-## Opt-in, main-thread preview. One instance per active drive root; restore before
-## external quality changes, scene/car replacement or releasing this instance.
+## Opt-in, main-thread preview. One active lease per World3D; restore before
+## external quality changes or scene/car replacement. A lease survives losing the
+## caller handle until restore_for_root() or the first watched target exits.
 ## Only direct named nodes or explicit descendants are accepted.
 
 const PAINT_SHADER := "res://shaders/car_paint.gdshader"
@@ -37,7 +38,7 @@ const SUN_PROPERTIES := [
 ]
 static var _world_owners: Dictionary = {}
 var _world_id := 0
-var _owner_id := 0
+var _preview_root: Node
 var _watched_nodes: Array[Node] = []
 var _world_env: WorldEnvironment
 var _original_env: Environment
@@ -97,20 +98,33 @@ static func _live_object(value: Variant) -> bool:
 	return typeof(value) == TYPE_OBJECT and is_instance_valid(value)
 
 func _owned_by_other(world_id: int) -> bool:
-	var owner: int = _world_owners.get(world_id, 0)
-	return owner != 0 and owner != get_instance_id() and is_instance_id_valid(owner)
+	var owner: Variant = _world_owners.get(world_id)
+	return owner != null and owner != self
+
+## Recovery if the integration loses its handle. Only the exact owning root can
+## release the lease; a sibling root sharing the World3D cannot do so.
+static func restore_for_root(root: Node) -> bool:
+	if not is_instance_valid(root) or not root.is_inside_tree():
+		return false
+	var world: World3D = root.get_viewport().find_world_3d()
+	if world == null:
+		return false
+	var owner: Variant = _world_owners.get(world.get_instance_id())
+	if owner == null or owner._preview_root != root:
+		return false
+	owner.restore()
+	return true
 
 func _on_target_exiting() -> void:
+	# Keep the script alive through callback/restore even if the caller dropped
+	# its handle and the world lease is the final strong reference.
+	var _keep_alive: RefCounted = self
 	restore()
 
 func _watch(node: Node) -> void:
 	if not _watched_nodes.has(node):
 		_watched_nodes.append(node)
 		node.tree_exiting.connect(_on_target_exiting)
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_PREDELETE and _world_id != 0:
-		restore()
 
 func _reject(reason: String) -> bool:
 	# Failed reconfiguration leaves the currently active preview unchanged.
@@ -232,8 +246,10 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	# Commit only after all preflight checks have succeeded.
 	restore()
 	_world_id = world_id
-	_owner_id = get_instance_id()
-	_world_owners[_world_id] = _owner_id
+	_preview_root = root
+	# Keep the lease alive until explicit restore or tree exit. Calling instance
+	# methods from RefCounted PREDELETE is unsafe (Godot issue #80834).
+	_world_owners[_world_id] = self
 	_watch(root)
 	_watch(world_env)
 	_watch(sun)
@@ -284,6 +300,7 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	return true
 
 func restore() -> void:
+	var _keep_alive: RefCounted = self
 	for node in _watched_nodes:
 		if is_instance_valid(node) and node.tree_exiting.is_connected(_on_target_exiting):
 			node.tree_exiting.disconnect(_on_target_exiting)
@@ -305,10 +322,10 @@ func restore() -> void:
 				_sun.set(property, _sun_before[property])
 	_sun_applied.clear()
 	_sun_before.clear()
-	if _world_id != 0 and _world_owners.get(_world_id, 0) == _owner_id:
+	if _world_id != 0 and _world_owners.get(_world_id) == self:
 		_world_owners.erase(_world_id)
 	_world_id = 0
-	_owner_id = 0
+	_preview_root = null
 	_world_env = null
 	_original_env = null
 	_candidate_env = null
