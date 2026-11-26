@@ -232,7 +232,8 @@ void fragment() {
 	float ecological_w = 0.0;
 	vec2 biome_uv = (xz + vec2(1000.0)) / 2000.0;
 	if (use_biome_mask && candidate_w > 0.0 && biome_uv.x >= 0.0 && biome_uv.y >= 0.0 && biome_uv.x < 1.0 && biome_uv.y < 1.0) {
-		biome = texture(biome_mask, biome_uv);
+		// Raw, non-mipmapped raster: explicit LOD avoids implicit derivatives in a divergent branch.
+		biome = textureLod(biome_mask, biome_uv, 0.0);
 		// C deliberately zeros grass/woodland/rock in hard-excluded cells.
 		// Do not read those zeros as a different terrain biome along coarse road
 		// or reserved-area edges. Exact roadside data controls the soil band.
@@ -243,7 +244,7 @@ void fragment() {
 	// Distance from camera for LOD / anti-shimmering
 	float cam_dist = length(VERTEX);
 	float eff_normal_str = normal_strength * mix(1.0, 0.35, smoothstep(20.0, 150.0, cam_dist));
-	eff_normal_str *= mix(1.0, pilot_normal_multiplier, candidate_w);
+	eff_normal_str = min(2.0, eff_normal_str * mix(1.0, pilot_normal_multiplier, candidate_w));
 
 	// Multi-octave stochastic noise
 	float anti_tile_w = smoothstep(0.25, 0.75, fbm3(xz * 0.02));
@@ -295,7 +296,7 @@ void fragment() {
 	if (use_roadside && candidate_w > 0.0) {
 		vec2 ruv = (xz - roadside_rect.xy) / roadside_rect.zw;
 		if (ruv.x >= 0.0 && ruv.y >= 0.0 && ruv.x < 1.0 && ruv.y < 1.0) {
-			float band = texture(roadside_mask, ruv).r * roadside_strength * candidate_w;
+			float band = textureLod(roadside_mask, ruv, 0.0).r * roadside_strength * candidate_w;
 			ground_forest = mix(ground_forest, 1.0, band * (0.7 + 0.3 * detail_noise));
 		}
 	}
@@ -353,7 +354,7 @@ void fragment() {
 	// Stochastic macro luminance variation eliminating tiling on distant hills
 	float macro_lum = 1.0 + (macro_noise - 0.5) * (macro_luminance_mod * 2.0);
 	ALBEDO = flat_col * macro_lum;
-	ROUGHNESS = clamp(flat_rgh * 0.85 + 0.12 + roughness_bias * candidate_w, 0.22, 0.98);
+	ROUGHNESS = clamp(flat_rgh * 0.85 + 0.12 + roughness_bias * candidate_w * (1.0 - wet_w * shore_w), 0.22, 0.98);
 	METALLIC = 0.0;
 	SPECULAR = mix(0.35, 0.55, wet_w * shore_w);
 	AO = clamp(flat_ao, 0.3, 1.0);
