@@ -616,6 +616,15 @@ func _flush_active() -> void:
 	_last_road_checks = 0
 	_last_height_samples = 0
 
+# Published chunks (including ecologically empty cells) own coverage.
+# Snapshot contains no meshes, transforms or mutable internal references.
+func get_coverage_chunks() -> Dictionary:
+	var result: Dictionary = {}
+	if _state == "ready":
+		for key: Vector2i in _active:
+			result[key] = true
+	return result
+
 func get_stats() -> Dictionary:
 	var total := int(_counts[0]+_counts[1]+_counts[2])
 	return {"state":_state,"fallback":_reason,"plain_material":_plain_material != null,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"planned_chunks_per_lod":_last_planned_chunks.duplicate(),"planned_candidate_limit_per_chunk":_last_planned_limits.duplicate(),"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"road_checks":_road_checks,"height_samples":_height_samples,"last_frame_road_checks":_last_road_checks,"last_frame_height_samples":_last_height_samples,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"planning_usec":_plan_usec,"retargeted_jobs":_jobs_retargeted,"cancelled_jobs":_jobs_cancelled,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"last_frame_upload_instances":_last_upload_instances,"last_frame_work_usec":_last_work_usec,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}

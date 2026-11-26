@@ -11,6 +11,11 @@ on:
       - 'content/scenery/environment_overhaul/**'
       - 'assets/environment_overhaul/**'
       - 'tools/environment_assets/**'
+      - 'scripts/integration/environment_pilot.gd'
+      - 'scripts/integration/environment_understory.gd'
+      - 'scripts/integration/aster_valley_drive.gd'
+      - 'scripts/integration/valley_vegetation.gd'
+      - 'export_presets.cfg'
   workflow_dispatch:
     inputs:
       integrated:
@@ -131,6 +136,16 @@ jobs:
           args=(--mode "$QA_MODE" --out "$RUNNER_TEMP/environment-qa")
           if [[ "$QA_MODE" == integrated ]]; then args+=(--prepare-mask); fi
           python3 tests/environment_overhaul/qa.py "${args[@]}"
+      - name: Retain generated canonical mask package and QA logs
+        if: ${{ always() && (inputs.integrated || github.head_ref == 'feat/env-integration') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-integrated-evidence
+          path: |
+            content/scenery/environment_overhaul/masks/
+            ${{ runner.temp }}/environment-qa/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Summarize QA without uploading large artifacts
         if: always()
         run: |

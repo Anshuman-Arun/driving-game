@@ -11,6 +11,7 @@ const CuratedCar = preload("curated_car_visual.gd")
 const ValleyEnvironment = preload("aster_valley_environment.gd")
 const PremiumMesh = preload("premium_mesh.gd")
 const ValleyHorizon = preload("valley_horizon.gd")
+const EnvironmentPilot = preload("environment_pilot.gd")
 const ALDER_START := Vector3(-575.0, 0.0, 545.0)
 const JUNCTION_CLEARANCE_M := 26.0
 const SPAWN_HEIGHT_M := 0.58
@@ -30,13 +31,18 @@ var shell_managed := false
 @export var scenery_enabled := true
 var scenery: SceneryRuntime
 var vegetation: Vegetation
+var environment_pilot: EnvironmentPilot
 var graphics_preset := "medium":
 	set(value):
+		if is_instance_valid(environment_pilot):
+			environment_pilot.before_quality_change()
 		graphics_preset = value
 		if is_node_ready():
 			ValleyEnvironment.apply_live_quality(self, value)
 		if is_instance_valid(vegetation):
 			vegetation.set_graphics(value)
+		if is_instance_valid(environment_pilot):
+			environment_pilot.set_graphics(value)
 var _pending_vehicle_id := ""
 
 var _controls := DriveInput.new()
@@ -107,6 +113,7 @@ func _ready() -> void:
 func set_scenery_enabled(enabled: bool) -> bool:
 	scenery_enabled = enabled
 	if not enabled:
+		stop_environment_pilot()
 		if vegetation != null:
 			remove_child(vegetation)
 			vegetation.queue_free()
@@ -147,7 +154,30 @@ func set_scenery_enabled(enabled: bool) -> bool:
 		vegetation = null
 		return false
 	scenery = layer
+	configure_environment_pilot(OS.get_environment("ASTER_ENV_PILOT"))
 	return true
+
+# Session-only development switch; never stored in a save file.
+func configure_environment_pilot(region: String) -> bool:
+	stop_environment_pilot()
+	if region.strip_edges().is_empty() or region == "off":
+		return true
+	if not is_instance_valid(vegetation) or not is_instance_valid(scenery):
+		return false
+	environment_pilot = EnvironmentPilot.new()
+	environment_pilot.name = "EnvironmentPilot"
+	add_child(environment_pilot)
+	if not environment_pilot.start(self, region):
+		stop_environment_pilot()
+		return false
+	return true
+
+func stop_environment_pilot() -> void:
+	if is_instance_valid(environment_pilot):
+		environment_pilot.stop()
+		remove_child(environment_pilot)
+		environment_pilot.queue_free()
+		environment_pilot = null
 
 func _add_adopted_scenery(overrides: Dictionary) -> void:
 	var houses: Array = overrides["content/scenery/models/town_house.gltf"]
