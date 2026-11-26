@@ -176,6 +176,10 @@ class FixtureTests(unittest.TestCase):
                              manifest["understory_sha256"])
             self.assertEqual(b.sha((root/"output/statistics.json").read_bytes()),manifest["statistics_sha256"])
             self.assertEqual(manifest["generator_sha256"],b.sha(Path(b.__file__).read_bytes()))
+            self.assertEqual(len(manifest["mask_probes"]),9)
+            for probe in manifest["mask_probes"]:
+                i,j=b.cell_index(probe["x"],probe["z"])
+                self.assertEqual(list(raw[4*(1000*j+i):4*(1000*j+i)+4]),probe["rgba"])
             for invalid in (dict(spacing_m=0),dict(density=2),dict(road_margin_m=-1),
                             dict(max_placements=12001),dict(spacing_m=True)):
                 with self.assertRaises(ValueError):
