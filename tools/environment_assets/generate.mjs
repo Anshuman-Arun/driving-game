@@ -16,12 +16,26 @@ function makePair(spec){
  const groups=[], wood=[.16,.105,.049],green=[.095,.25,.049],fresh=[.19,.39,.075],dark=[.055,.15,.034],straw=[.45,.32,.10],flower=[.84,.72,.29];let state=spec.seed;
  function rnd(){state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;}
  function triangle(a,b,c,color,uv=[[0,0],[1,0],[.5,1]]){return {p:[a,b,c],color,uv};}
- function tube(a,b,r0,r1,col,capStart=true,capEnd=true){
-  const d=norm(sub(b,a)),u=norm(cross(d,Math.abs(d[1])>.9?[1,0,0]:[0,1,0])),v=cross(d,u);
-  const ring=(center,r,k)=>add(center,add(mul(u,r*Math.cos(k*Math.PI/3)),mul(v,r*Math.sin(k*Math.PI/3))));
-  const build=step=>{const out=[];for(let k=0;k<6;k+=step){const q=(k+step)%6,A=ring(a,r0,k),B=ring(a,r0,q),C=ring(b,r1,k),D=ring(b,r1,q);out.push(triangle(A,B,C,col),triangle(B,D,C,col));if(capStart)out.push(triangle(a,B,A,col));if(capEnd)out.push(triangle(b,C,D,col));}return out;};
+ function sweep(points,radii,col){
+  // Shared rings at every joint; a continuous tapered tube rather than separate frusta.
+  const axes=[];
+  const rings=points.map((center,i)=>{
+   const before=points[Math.max(i-1,0)],after=points[Math.min(i+1,points.length-1)],d=norm(sub(after,before));
+   const ref=Math.abs(d[1])>.95?[1,0,0]:[0,1,0];
+   // Transport the previous axis by projection onto the next tangent plane.
+   const prior=i>0?axes[i-1]:norm(cross(d,ref));
+   let axis=sub(prior,mul(d,dot(prior,d)));
+   if(dot(axis,axis)<1e-10)axis=cross(d,ref);
+   const u=norm(axis),v=cross(d,u);axes.push(u);
+   return Array.from({length:6},(_,k)=>add(center,add(mul(u,radii[i]*Math.cos(k*Math.PI/3)),mul(v,radii[i]*Math.sin(k*Math.PI/3)))));
+  });
+  const build=step=>{const out=[];for(let k=0;k<6;k+=step){const q=(k+step)%6;
+   for(let i=0;i<rings.length-1;i++){const A=rings[i][k],B=rings[i][q],C=rings[i+1][k],D=rings[i+1][q];out.push(triangle(A,B,C,col),triangle(B,D,C,col));}
+   const last=rings.length-1;out.push(triangle(points[0],rings[0][q],rings[0][k],col),triangle(points[last],rings[last][k],rings[last][q],col));
+  }return out;};
   groups.push({near:build(1),far:build(2)});
  }
+ function tube(a,b,r0,r1,col){sweep([a,b],[r0,r1],col);}
  function leaf(a,b,width,col,roll=0,retain=true){
   const d=norm(sub(b,a)),side=norm(cross(d,Math.abs(d[1])>.93?[1,0,0]:[0,1,0])),up=norm(cross(side,d));
   const s=add(mul(side,Math.cos(roll)),mul(up,Math.sin(roll))),ridge=add(lerp(a,b,.49),mul(up,width*.19)),l=add(lerp(a,b,.43),mul(s,width)),r=add(lerp(a,b,.43),mul(s,-width));
@@ -29,27 +43,36 @@ function makePair(spec){
   const far=retain?[triangle(a,l,b,col,[[.5,0],[0,.43],[.5,1]]),triangle(a,b,r,col,[[.5,0],[.5,1],[1,.43]])]:[];
   groups.push({near,far});
  }
- function branch(a,b,r,col=wood,capStart=true,capEnd=true){tube(a,b,r,r*.4,col,capStart,capEnd);}
+ function blade(a,m,b,width,col){
+  // One continuous pointed blade, with an actual shared edge at its bend.
+  const direction=norm(sub(b,a)),side=norm(cross(direction,[0,1,0]));
+  const left=add(m,mul(side,width)),right=add(m,mul(side,-width)),ridge=add(m,[0,width*.04,0]);
+  const near=[triangle(a,left,ridge,col),triangle(a,ridge,right,col),triangle(left,b,ridge,col),triangle(ridge,b,right,col)];
+  const far=[triangle(a,left,right,col),triangle(left,b,right,col)];groups.push({near,far});
+ }
+ function branch(a,b,r,col=wood){tube(a,b,r,r*.4,col);}
  const tau=2*Math.PI;
  if(spec.id==="shrub"||spec.id==="sapling"){
   const tall=spec.id==="sapling",n=tall?8:10;
   if(tall)tube([0,0,0],[.04,1.55,0],.034,.009,wood);
-  for(let i=0;i<n;i++){const t=i*2.39996+.12*rnd(),base=tall?[0,.18+i*.13,0]:[0,0,0],tip=polar((tall?.36:.47)*(0.8+.2*rnd()),tall?.66+i*.125:.32+.24*rnd(),t);const mid=lerp(base,tip,.55);branch(base,mid,tall?.018:.012,wood,true,false);branch(mid,tip,.009,wood,false,true);for(let j=0;j<6;j++){const f=.20+j*.145,root=lerp(mid,tip,f),angle=t+(j%2?1:-1)*(.55+.16*(j%3)),length=tall?.19:.17;leaf(root,add(root,polar(length,.055,angle)),length*.35,j%3===0?fresh:green,.3*(j%3-1),j%2===0||j===5);}leaf(tip,add(tip,polar(.12,.075,t)),.055,fresh);}
+  for(let i=0;i<n;i++){const t=i*2.39996+.12*rnd(),base=tall?[0,.18+i*.13,0]:[0,0,0],tip=polar((tall?.36:.47)*(0.8+.2*rnd()),tall?.66+i*.125:.32+.24*rnd(),t);const mid=lerp(base,tip,.55);sweep([base,mid,tip],[tall?.018:.012,.009,.0036],wood);for(let j=0;j<6;j++){const f=.20+j*.145,root=lerp(mid,tip,f),angle=t+(j%2?1:-1)*(.55+.16*(j%3)),length=tall?.19:.17;leaf(root,add(root,polar(length,.055,angle)),length*.35,j%3===0?fresh:green,.3*(j%3-1),true);}leaf(tip,add(tip,polar(.12,.075,t)),.055,fresh);}
  }else if(spec.id==="fern"){
   for(let i=0;i<8;i++){const angle=i*tau/8+.10*rnd(),r=.48+.09*rnd(),h=.27+.11*rnd(),point=t=>polar(r*t,h*Math.sin(t*2.15)+.025*t,angle);
-   for(let k=0;k<6;k++){const n=6;branch(point(k/n),point((k+1)/n),.0055*(1-.65*k/n),fresh,k===0,k===5);}
-   const count=9;for(let j=0;j<count;j++){let f=.14+.80*j/count,root=point(f),len=.145*Math.sin(Math.PI*f)*(.9+.1*rnd());for(let sign of [-1,1])leaf(root,add(root,polar(len,.015,angle+sign*.95)),len*.23,j%3?green:fresh,sign*.15,j%2===0);}
-   leaf(point(.88),point(1),.024,fresh);
+   const points=Array.from({length:7},(_,k)=>point(k/6));
+   sweep(points,points.map((_,k)=>.0055*(1-.75*k/6)),fresh);
+   const onStem=t=>{const f=t*6,k=Math.min(5,Math.floor(f));return lerp(points[k],points[k+1],f-k);};
+   const count=9;for(let j=0;j<count;j++){let f=.14+.80*j/count,root=onStem(f),len=.145*Math.sin(Math.PI*f)*(.9+.1*rnd());for(let sign of [-1,1])leaf(root,add(root,polar(len,.015,angle+sign*.95)),len*.23,j%3?green:fresh,sign*.15,true);}
+   leaf(onStem(.88),onStem(1),.024,fresh);
   }
  }else if(spec.id==="reed"){
   for(let i=0;i<7;i++){const angle=i*2.39996,base=polar(.075,0,angle),tip=add(base,polar(.12+.02*rnd(),.8+.28*rnd(),angle));branch(base,tip,.009,green);
    if(i%2===0){tube(lerp(base,tip,.76),lerp(base,tip,.97),.022,.018,wood);}
-   for(let j=0;j<4;j++){const root=lerp(base,tip,.09+j*.14),end=add(root,polar(.34-.034*j,.38+.045*j,angle+(j%2?-.72:.72))),mid=add(lerp(root,end,.55),[0,.10,0]);leaf(root,mid,.031,green,0,j%2===0||j===3);leaf(mid,end,.021,fresh,0,j%2===0||j===3);}
+   for(let j=0;j<4;j++){const root=lerp(base,tip,.09+j*.14),end=add(root,polar(.34-.034*j,.38+.045*j,angle+(j%2?-.72:.72))),mid=add(lerp(root,end,.55),[0,.10,0]);blade(root,mid,end,.031,green);}
   }
  }else if(spec.id==="wildflower"){
   for(let i=0;i<6;i++){const angle=i*2.39996,base=polar(.045,0,angle),tip=polar(.12+.07*rnd(),.34+.16*rnd(),angle);branch(base,tip,.0055,green);
-   for(let j=0;j<4;j++){const root=lerp(base,tip,.14+j*.14);leaf(root,add(root,polar(.085,.025,angle+j*2.1)),.024,dark,0,j%2===0);}
-   tube(add(tip,[0,-.012,0]),add(tip,[0,.006,0]),.017,.013,straw);for(let k=0;k<9;k++){const a=k*tau/9;leaf(tip,add(tip,polar(.052,.012,a)),.016,i%2?flower:[.72,.76,.65],0,k%2===0);}
+   for(let j=0;j<4;j++){const root=lerp(base,tip,.14+j*.14);leaf(root,add(root,polar(.085,.025,angle+j*2.1)),.024,dark,0,true);}
+   tube(add(tip,[0,-.012,0]),add(tip,[0,.006,0]),.017,.013,straw);for(let k=0;k<9;k++){const a=k*tau/9;leaf(tip,add(tip,polar(.052,.012,a)),.016,i%2?flower:[.72,.76,.65],0,true);}
   }
  }else throw Error("unknown species");
  // Shared scaffold and normalization. Retain extreme groups if necessary.
