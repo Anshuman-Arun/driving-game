@@ -11,7 +11,7 @@ if [[ $# -gt 1 || ( "$mode" != --owned && "$mode" != --full ) ]]; then
   exit 2
 fi
 version="$(timeout --kill-after=5s 15 "$GODOT_BIN" --headless --version)"
-[[ "$version" == 4.7.2.stable* ]] || { echo "Unexpected Godot: $version" >&2; exit 2; }
+[[ "$version" == 4.7.2.stable || "$version" == 4.7.2.stable.* ]] || { echo "Unexpected Godot: $version" >&2; exit 2; }
 logdir="${RENDER_PROFILE_LOG_DIR:-$(mktemp -d)}"
 mkdir -p "$logdir"
 logdir="$(realpath "$logdir")"
@@ -35,7 +35,7 @@ run() {
   shift 4
   local status=0 log="$logdir/$name.log"
   timeout --kill-after=10s "$limit" "$GODOT_BIN" --headless --path "$project" "$@" 2>&1 | tee "$log" || status=$?
-  if [[ "$status" != 0 ]] || grep -Eq 'SCRIPT ERROR|Parse Error|Failed to load script|SHADER ERROR|Shader compilation failed|[Ee]rror compiling shader|^FAIL([ :]|$)' "$log"; then
+  if [[ "$status" != 0 ]] || grep -Eq 'SCRIPT ERROR|Parse Error|Failed to load script|SHADER ERROR|Shader compilation failed|[Ee]rror compiling shader|(^|[[:space:]])FAIL([ :]|$)' "$log"; then
     echo "FAIL $name (exit $status)" >&2
     failed=1
     return 1
@@ -49,6 +49,15 @@ run() {
     echo "FAIL $name (missing or invalid completion marker)" >&2
     failed=1
     return 1
+  fi
+  # Existing pinned regression scripts have different terminal messages.
+  # Do not accept exit 0 if a suite quit before reaching its final check.
+  if [[ "$marker" != none && "$marker" != owned && "$marker" != live ]]; then
+    if [[ "$(grep -Ec "$marker" "$log" || true)" != 1 ]]; then
+      echo "FAIL $name (missing or duplicate regression completion marker)" >&2
+      failed=1
+      return 1
+    fi
   fi
   echo "PASS $name"
 }
@@ -64,8 +73,26 @@ if [[ "$mode" == --full ]]; then
   fi
   run root-import 600 "$repo" none --editor --import || exit 1
   run live-root 420 "$repo" live --fixed-fps 60 --script res://modules/environment_rendering/tests/live_root_test.gd || true
-  for suite in roadworks_check world_visual_qa garage_world vehicle_world; do
-    run "$suite" 420 "$repo" none --fixed-fps 60 --script "res://tests/integration/$suite.gd" || true
-  done
+  # The pinned base contains the network_upgrade map-width data and test.
+  run map_width_check 420 "$repo" '^Map width: [1-9][0-9]* edge rays, [0-9]+ isolated seam rechecks, 0 failures
+fi
+exit "$failed"
+ --fixed-fps 60 --script res://tests/integration/map_width_check.gd || true
+  run roadworks_check 420 "$repo" '^PASS Verified five widened approaches, three water crossings and one new elevated span
+fi
+exit "$failed"
+ --fixed-fps 60 --script res://tests/integration/roadworks_check.gd || true
+  run world_visual_qa 420 "$repo" '^PASS Live car moved on all 16 corridors, including [1-9][0-9]* gravel
+fi
+exit "$failed"
+ --fixed-fps 60 --script res://tests/integration/world_visual_qa.gd || true
+  run garage_world 420 "$repo" '^GARAGE WORLD failures: 0
+fi
+exit "$failed"
+ --fixed-fps 60 --script res://tests/integration/garage_world.gd || true
+  run vehicle_world 420 "$repo" '^Vehicle/world integration failures: 0
+fi
+exit "$failed"
+ --fixed-fps 60 --script res://tests/integration/vehicle_world.gd || true
 fi
 exit "$failed"
