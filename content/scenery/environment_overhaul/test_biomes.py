@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 from scipy.spatial import cKDTree
 import bake_biomes as b
+import verify_road_envelope as geometry
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -48,6 +49,28 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(b.window(-2000,-2000,-1500,-1500),(slice(0,0),slice(0,0)))
         with self.assertRaises(ValueError):
             b.capsule(a,x,z,[0,0],[0,0],-1)
+
+    def test_independent_geometry(self):
+        lanes=[dict(id="lane_test_ab",road_id="test",surface="asphalt",width_m=3.4,
+                    points=[[-100,50,-2],[0,50,-2],[100,50,-2]]),
+               dict(id="lane_test_ba",road_id="test",surface="asphalt",width_m=3.4,
+                    points=[[100,50,2],[0,50,2],[-100,50,2]]),
+               dict(id="turn_test_corner",road_id="junction_test_corner",surface="asphalt",
+                    width_m=3.4,points=[[100,50,0],[110,50,5],[112,50,15]])]
+        graph=dict(lanes=lanes)
+        works=dict(roads={"test":dict(center=100,width_m=12,wide_radius=80,
+                    support_start=0,support_end=100)},network_upgrade=dict(
+                    widths_m={"test":14},asphalt_shoulder_m=2,junction_extra_m=1))
+        x,z=b.coords()
+        excluded=b.road_mask(graph,works,x,z,2)
+        result=geometry.audit(graph,works,excluded)
+        self.assertEqual(result["misses"],0)
+        self.assertEqual(result["outside"],0)
+        self.assertGreater(result["bridge_samples"],0)
+        self.assertGreater(result["junction_samples"],0)
+        # Independent verifier must catch a damaged road cell.
+        excluded[500,500]=False
+        self.assertGreater(geometry.audit(graph,works,excluded)["misses"],0)
 
     def test_water(self):
         lake=dict(origin_x=-1000,origin_z=-1000,spacing_m=4,cells=[[1,2]])
@@ -205,6 +228,11 @@ class CanonicalTests(unittest.TestCase):
         protected,props,_=b.scenery_masks(src,x,z)
         self.assertTrue(np.all(mask[:,:,0][road|wet|protected]==0))
         self.assertTrue(np.all(mask[:,:,2][wet]==255))
+        audit=geometry.audit(graph,works,mask[:,:,0]==0)
+        self.assertEqual(audit["misses"]+audit["outside"],0)
+        self.assertEqual(audit["corridors"],16)
+        self.assertEqual(audit["junctions"],11)
+        self.assertGreater(audit["bridge_samples"],0)
         for lane in graph["lanes"]:
             for px,_,pz in lane["points"]:
                 i,j=b.cell_index(px,pz)
