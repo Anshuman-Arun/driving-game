@@ -220,12 +220,13 @@ void fragment() {
 	float candidate_w = 1.0;
 	if (limit_pilot) {
 		vec2 edge = min(xz - pilot_rect.xy, pilot_rect.xy + pilot_rect.zw - xz);
-		candidate_w = smoothstep(0.0, 8.0, min(edge.x, edge.y));
+		float fade_m = min(8.0, 0.5 * min(pilot_rect.z, pilot_rect.w));
+		candidate_w = smoothstep(0.0, fade_m, min(edge.x, edge.y));
 	}
 	vec4 biome = vec4(0.0);
 	float ecological_w = 0.0;
 	vec2 biome_uv = (xz + vec2(1000.0)) / 2000.0;
-	if (use_biome_mask && candidate_w > 0.0 && all(greaterThanEqual(biome_uv, vec2(0.0))) && all(lessThan(biome_uv, vec2(1.0)))) {
+	if (use_biome_mask && candidate_w > 0.0 && biome_uv.x >= 0.0 && biome_uv.y >= 0.0 && biome_uv.x < 1.0 && biome_uv.y < 1.0) {
 		biome = texture(biome_mask, biome_uv);
 		ecological_w = biome_strength * candidate_w;
 	}
@@ -270,8 +271,10 @@ void fragment() {
 	float meadow_break = smoothstep(0.26, 0.73, 0.63 * detail_noise + 0.37 * macro_noise);
 	float dry_bank = meadow_break * max(pasture * 0.86, smoothstep(118.0, 185.0, h));
 	col_grass *= mix(vec3(0.83, 1.025, 0.79), vec3(1.26, 1.07, 0.70), dry_bank);
-	float micro = value_noise(xz * 0.72);
-	col_grass *= 1.0 + (micro - 0.5) * meadow_micro_strength * candidate_w * (1.0 - smoothstep(25.0, 110.0, cam_dist));
+	if (candidate_w > 0.0 && cam_dist < 110.0) {
+		float micro = value_noise(xz * 0.72);
+		col_grass *= 1.0 + (micro - 0.5) * meadow_micro_strength * candidate_w * (1.0 - smoothstep(25.0, 110.0, cam_dist));
+	}
 	col_grass *= mix(vec3(1.0), mix(vec3(1.07, 0.96, 0.82), vec3(0.94, 1.04, 0.94), biome.r), ecological_w);
 	vec3 col_dirt = sample_stochastic_albedo(dirt_albedo, xz, dirt_scale, dist_blend) * dirt_tint;
 	col_dirt *= mix(vec3(1.0), vec3(0.77, 0.90, 0.78), cedar);
@@ -279,7 +282,7 @@ void fragment() {
 	float ground_forest = forest_w * 0.65;
 	if (use_roadside && candidate_w > 0.0) {
 		vec2 ruv = (xz - roadside_rect.xy) / roadside_rect.zw;
-		if (all(greaterThanEqual(ruv, vec2(0.0))) && all(lessThan(ruv, vec2(1.0)))) {
+		if (ruv.x >= 0.0 && ruv.y >= 0.0 && ruv.x < 1.0 && ruv.y < 1.0) {
 			float band = texture(roadside_mask, ruv).r * roadside_strength * candidate_w;
 			ground_forest = mix(ground_forest, 1.0, band * (0.7 + 0.3 * detail_noise));
 		}
