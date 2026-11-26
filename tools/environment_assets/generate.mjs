@@ -170,27 +170,17 @@ function selfTest(files){
  reject("nonfinite attribute","nonfinite vertex",(f,m)=>edit(f,m,g=>{const b=un64(g.buffers[0].uri.split(",")[1]);new DataView(b.buffer).setFloat32(0,NaN,true);g.buffers[0].uri="data:application/octet-stream;base64,"+b64(b);}));
  return {report,negative_fixtures:rejected.length,rejected,determinism:true,sha256_vectors:2,lod_shared_scaffold:true};
 }
-import fs from "node:fs";
-import path from "node:path";
 import {fileURLToPath} from "node:url";
 import crypto from "node:crypto";
+import {stageFiles, readFiles} from "./staging.mjs";
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const mode = process.argv[2] || "--verify";
-if (!["--stage","--verify","--self-test"].includes(mode)) throw Error("Use --stage, --verify or --self-test");
+if (process.argv.length > 3 || !["--stage","--verify","--self-test"].includes(mode)) throw Error("Use --stage, --verify or --self-test");
 const expected = generate();
 const result = selfTest(expected);
 for (const [p,s] of Object.entries(expected)) {
   if (sha256(s) !== crypto.createHash("sha256").update(s).digest("hex")) throw Error("SHA256 mismatch: "+p);
 }
-if(mode==="--stage"){
-  for(const [p,s] of Object.entries(expected)){
-    const dest=path.join(root,p);fs.mkdirSync(path.dirname(dest),{recursive:true});
-    if(!fs.existsSync(dest)||fs.readFileSync(dest,"utf8")!==s){const tmp=dest+".tmp-"+process.pid;fs.writeFileSync(tmp,s,{flag:"wx"});fs.renameSync(tmp,dest);}
-  }
-}
-if(mode!=="--self-test"){
-  const disk=Object.fromEntries(Object.keys(expected).map(p=>[p,fs.readFileSync(path.join(root,p),"utf8")]));
-  validate(disk);
-  for(const p of Object.keys(expected)) if(disk[p]!==expected[p]) throw Error("stale or modified staging output: "+p);
-}
+if(mode==="--stage") result.changed_files=stageFiles(root,expected);
+if(mode!=="--self-test") validate(readFiles(root,expected));
 console.log(JSON.stringify(result,null,2));
