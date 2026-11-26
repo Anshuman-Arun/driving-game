@@ -10,6 +10,11 @@
 # Acquisition ledgers hash these upstream text files byte-for-byte.
 /assets/premium_world/payload/**/*.gltf -text
 /assets/premium_garage_world/payload/**/*.gltf -text
+# Biome mask manifest hashes these JSON and generator files byte-for-byte (LF).
+/data/world/*.json text eol=lf
+/content/scenery/**/*.json text eol=lf
+/content/scenery/environment_overhaul/bake_biomes.py text eol=lf
+*.import text eol=lf
 
 # Small, preprocessed hero audition WAVs (26 files, under 4 MB total).
 # Git data API cannot upload LFS objects; store these specific files as normal binary blobs.
