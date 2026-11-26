@@ -1,0 +1,4 @@
+# Preserve hashed source bytes on Windows and Unix.
+*.gltf text eol=lf
+manifest.json text eol=lf
+LICENSE.txt text eol=lf

@@ -1,0 +1,323 @@
+name: Environment overhaul QA
+
+on:
+  pull_request:
+    paths:
+      - 'tests/environment_overhaul/**'
+      - '.github/workflows/environment-overhaul-qa.yml'
+      - 'modules/ground_cover/**'
+      - 'modules/environment_terrain/**'
+      - 'modules/environment_rendering/**'
+      - 'content/scenery/environment_overhaul/**'
+      - 'assets/environment_overhaul/**'
+      - 'tools/environment_assets/**'
+  workflow_dispatch:
+    inputs:
+      integrated:
+        description: 'Require all candidate packages and run integrated checks'
+        type: boolean
+        default: false
+      canonical_traffic:
+        description: 'Run separate known-baseline canonical traffic diagnostics'
+        type: boolean
+        default: false
+
+concurrency:
+  group: environment-qa-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Standard library fixture and report tests
+        run: python3 -m unittest discover -s tests/environment_overhaul -p 'test_*.py' -v
+  windows-contract:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          lfs: false
+        env:
+          GIT_LFS_SKIP_SMUDGE: '1'
+      - name: Windows PowerShell 5.1 launcher contract (no Godot or GPU)
+        shell: powershell
+        run: .\tests\environment_overhaul\capture.ps1 -SelfTest
+      - name: PowerShell 7 launcher contract (no Godot or GPU)
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: .\tests\environment_overhaul\capture.ps1 -SelfTest
+  data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: World data and race authoring
+        run: |
+          node worldgen/tests/test_world.js
+          node worldgen/tests/test_turns.js
+          node modules/world_runtime/tests/verify_world_data.mjs data/world
+          node content/races/tests/test_author.js
+          python -m py_compile content/scenery/tools/bake_roadworks.py content/scenery/tools/bake_vegetation.py
+      - name: Traffic and audio data regressions
+        run: |
+          python modules/traffic/tests/fixture_checks.py
+          python modules/traffic/tests/reference_flow_sim.py
+          python modules/audio/tests/test_assets.py
+          python3 -m unittest discover -s modules/audio/tests -p test_verified_banks.py -v
+          python3 -m unittest discover -s modules/audio/tests -p test_professional_download.py -v
+  godot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install checksum-pinned Godot 4.7.2
+        shell: bash
+        run: |
+          #!/usr/bin/env bash
+          # Official Godot 4.7.2 stable standard Linux x86_64 editor; integrity-pinned.
+          set -Eeuo pipefail
+          install_dir="$RUNNER_TEMP/godot/bin"
+          version="4.7.2-stable"
+          archive="Godot_v${version}_linux.x86_64.zip"
+          digest="cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4"
+          url="https://github.com/godotengine/godot-builds/releases/download/${version}/${archive}"
+          mkdir -p "$install_dir"
+          zip_path="${RUNNER_TEMP:-/tmp}/$archive"
+          curl --fail --location --show-error --silent --retry 3 --retry-delay 3 --connect-timeout 20 --max-time 300 "$url" -o "$zip_path"
+          printf '%s  %s\n' "$digest" "$zip_path" | sha256sum --check --status || {
+            echo "::error::Godot download SHA-256 mismatch (official godotengine/godot-builds release)" >&2
+            exit 1
+          }
+          unzip -oq "$zip_path" -d "$install_dir"
+          engine="$install_dir/Godot_v${version}_linux.x86_64"
+          test -f "$engine" || { echo "::error::Godot executable missing from verified archive" >&2; exit 1; }
+          chmod +x "$engine"
+          ln -sfn "$engine" "$install_dir/godot"
+          actual="$("$install_dir/godot" --headless --version)"
+          printf 'Godot engine: %s\n' "$actual"
+          [[ "$actual" == 4.7.2.stable* ]] || {
+            echo "::error::Unexpected Godot version: $actual" >&2
+            exit 1
+          }
+          if [[ -n "${GITHUB_PATH:-}" ]]; then printf '%s\n' "$install_dir" >> "$GITHUB_PATH"; fi
+      - name: Configure candidate generator Python
+        if: ${{ inputs.integrated || github.head_ref == 'feat/env-integration' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned offline generator dependencies
+        if: ${{ inputs.integrated || github.head_ref == 'feat/env-integration' }}
+        run: python -m pip install -r content/scenery/environment_overhaul/requirements.txt
+      - name: Run strict environment and root regression harness
+        env:
+          QA_MODE: ${{ (inputs.integrated || github.head_ref == 'feat/env-integration') && 'integrated' || 'baseline' }}
+        run: |
+          args=(--mode "$QA_MODE" --out "$RUNNER_TEMP/environment-qa")
+          if [[ "$QA_MODE" == integrated ]]; then args+=(--prepare-mask); fi
+          python3 tests/environment_overhaul/qa.py "${args[@]}"
+      - name: Summarize QA without uploading large artifacts
+        if: always()
+        run: |
+          if test -f "$RUNNER_TEMP/environment-qa/results.json"; then
+            cat "$RUNNER_TEMP/environment-qa/results.json" >> "$GITHUB_STEP_SUMMARY"
+          fi
+  standalone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Install checksum-pinned Godot 4.7.2
+        shell: bash
+        run: |
+          #!/usr/bin/env bash
+          # Official Godot 4.7.2 stable standard Linux x86_64 editor; integrity-pinned.
+          set -Eeuo pipefail
+          install_dir="$RUNNER_TEMP/godot/bin"
+          version="4.7.2-stable"
+          archive="Godot_v${version}_linux.x86_64.zip"
+          digest="cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4"
+          url="https://github.com/godotengine/godot-builds/releases/download/${version}/${archive}"
+          mkdir -p "$install_dir"
+          zip_path="${RUNNER_TEMP:-/tmp}/$archive"
+          curl --fail --location --show-error --silent --retry 3 --retry-delay 3 --connect-timeout 20 --max-time 300 "$url" -o "$zip_path"
+          printf '%s  %s\n' "$digest" "$zip_path" | sha256sum --check --status || {
+            echo "::error::Godot download SHA-256 mismatch (official godotengine/godot-builds release)" >&2
+            exit 1
+          }
+          unzip -oq "$zip_path" -d "$install_dir"
+          engine="$install_dir/Godot_v${version}_linux.x86_64"
+          test -f "$engine" || { echo "::error::Godot executable missing from verified archive" >&2; exit 1; }
+          chmod +x "$engine"
+          ln -sfn "$engine" "$install_dir/godot"
+          actual="$("$install_dir/godot" --headless --version)"
+          printf 'Godot engine: %s\n' "$actual"
+          [[ "$actual" == 4.7.2.stable* ]] || {
+            echo "::error::Unexpected Godot version: $actual" >&2
+            exit 1
+          }
+          if [[ -n "${GITHUB_PATH:-}" ]]; then printf '%s\n' "$install_dir" >> "$GITHUB_PATH"; fi
+      - name: Standalone regression suites
+        shell: bash
+        run: |
+          set +e
+          failed=0
+          run() {
+            echo "::group::$*"
+            timeout 240 "$@" 2>&1 | tee /tmp/test.log
+            status=${PIPESTATUS[0]}
+            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error|FAIL ' /tmp/test.log; then
+              failed=1
+              echo "FAIL: $* (exit $status)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "PASS: $*" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "::endgroup::"
+          }
+          mkdir -p modules/scenery/.world_source modules/scenery/staged_art modules/scenery/staged_models
+          cp data/world/road_graph_v1.json data/world/world_metadata_v1.json data/world/terrain_height_r16le.bin modules/scenery/.world_source/ || exit 1
+          cp -a assets/curated/. modules/scenery/staged_art/ || exit 1
+          cp -a content/scenery/models/. modules/scenery/staged_models/ || exit 1
+          mkdir -p modules/scenery/assets/premium_runtime
+          cp assets/premium_runtime/alder_fuel_station.glb assets/premium_runtime/alder_fuel_station_low_color.png assets/premium_runtime/alder_fuel_station_low_rough.png modules/scenery/assets/premium_runtime/ || exit 1
+          for module in world_runtime racing game_shell scenery; do
+            run godot --headless --path "modules/$module" --editor --import
+          done
+          run godot --headless --path modules/world_runtime --script res://tests/smoke.gd -- --full-world
+          run godot --headless --path modules/racing --script res://tests/run_tests.gd
+          run godot --headless --path modules/racing --script res://tests/run_grid_tests.gd
+          run godot --headless --path modules/racing --script res://tests/run_production_tests.gd -- --graph="$PWD/data/world/road_graph_v1.json" --events="$PWD/content/races/events_v1.json"
+          run godot --headless --path modules/game_shell --script res://tests/run_tests.gd
+          run godot --headless --path modules/scenery --script res://tests/smoke.gd
+          exit "$failed"
+  traffic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+        env:
+          GIT_LFS_SKIP_SMUDGE: '1'
+      - name: Fetch only traffic fixture LFS objects
+        run: git lfs pull --include='modules/traffic/**' --exclude=''
+      - name: Install checksum-pinned Godot 4.7.2
+        shell: bash
+        run: |
+          #!/usr/bin/env bash
+          # Official Godot 4.7.2 stable standard Linux x86_64 editor; integrity-pinned.
+          set -Eeuo pipefail
+          install_dir="$RUNNER_TEMP/godot/bin"
+          version="4.7.2-stable"
+          archive="Godot_v${version}_linux.x86_64.zip"
+          digest="cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4"
+          url="https://github.com/godotengine/godot-builds/releases/download/${version}/${archive}"
+          mkdir -p "$install_dir"
+          zip_path="${RUNNER_TEMP:-/tmp}/$archive"
+          curl --fail --location --show-error --silent --retry 3 --retry-delay 3 --connect-timeout 20 --max-time 300 "$url" -o "$zip_path"
+          printf '%s  %s\n' "$digest" "$zip_path" | sha256sum --check --status || {
+            echo "::error::Godot download SHA-256 mismatch (official godotengine/godot-builds release)" >&2
+            exit 1
+          }
+          unzip -oq "$zip_path" -d "$install_dir"
+          engine="$install_dir/Godot_v${version}_linux.x86_64"
+          test -f "$engine" || { echo "::error::Godot executable missing from verified archive" >&2; exit 1; }
+          chmod +x "$engine"
+          ln -sfn "$engine" "$install_dir/godot"
+          actual="$("$install_dir/godot" --headless --version)"
+          printf 'Godot engine: %s\n' "$actual"
+          [[ "$actual" == 4.7.2.stable* ]] || {
+            echo "::error::Unexpected Godot version: $actual" >&2
+            exit 1
+          }
+          if [[ -n "${GITHUB_PATH:-}" ]]; then printf '%s\n' "$install_dir" >> "$GITHUB_PATH"; fi
+      - name: Baseline traffic fixtures (unchanged)
+        shell: bash
+        run: |
+          set +e
+          failed=0
+          run() {
+            echo "::group::$*"
+            timeout 240 "$@" 2>&1 | tee /tmp/test.log
+            status=${PIPESTATUS[0]}
+            if [ "$status" != 0 ] || grep -E 'SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error|FAIL ' /tmp/test.log; then
+              failed=1
+              echo "FAIL: $* (exit $status)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "PASS: $*" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "::endgroup::"
+          }
+          run godot --headless --path modules/traffic --editor --import
+          run godot --headless --path modules/traffic --script res://tests/run_tests.gd
+          exit "$failed"
+      - name: Independent canonical traffic diagnostics (manual opt-in)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.canonical_traffic }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Controls are not on main; stage the pinned traffic-content PR only
+          # for the separately requested diagnostic. Preserve all original gates.
+          git lfs pull --include='data/world/**' --exclude=''
+          git fetch --depth=1 origin 02ff87ee726cc44dd8360d7a6043d178b1a1693f
+          mkdir -p content/traffic
+          git show FETCH_HEAD:content/traffic/controls_v1.json > content/traffic/controls_v1.json
+          timeout 240 godot --headless --path . --script res://modules/traffic/tests/run_junction_safety.gd 2>&1 | tee /tmp/canonical-traffic.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error|FAIL ' /tmp/canonical-traffic.log; then exit 1; fi
+  audio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          lfs: true
+          persist-credentials: false
+      - name: Install checksum-pinned Godot 4.7.2
+        shell: bash
+        run: |
+          #!/usr/bin/env bash
+          # Official Godot 4.7.2 stable standard Linux x86_64 editor; integrity-pinned.
+          set -Eeuo pipefail
+          install_dir="$RUNNER_TEMP/godot/bin"
+          version="4.7.2-stable"
+          archive="Godot_v${version}_linux.x86_64.zip"
+          digest="cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4"
+          url="https://github.com/godotengine/godot-builds/releases/download/${version}/${archive}"
+          mkdir -p "$install_dir"
+          zip_path="${RUNNER_TEMP:-/tmp}/$archive"
+          curl --fail --location --show-error --silent --retry 3 --retry-delay 3 --connect-timeout 20 --max-time 300 "$url" -o "$zip_path"
+          printf '%s  %s\n' "$digest" "$zip_path" | sha256sum --check --status || {
+            echo "::error::Godot download SHA-256 mismatch (official godotengine/godot-builds release)" >&2
+            exit 1
+          }
+          unzip -oq "$zip_path" -d "$install_dir"
+          engine="$install_dir/Godot_v${version}_linux.x86_64"
+          test -f "$engine" || { echo "::error::Godot executable missing from verified archive" >&2; exit 1; }
+          chmod +x "$engine"
+          ln -sfn "$engine" "$install_dir/godot"
+          actual="$("$install_dir/godot" --headless --version)"
+          printf 'Godot engine: %s\n' "$actual"
+          [[ "$actual" == 4.7.2.stable* ]] || {
+            echo "::error::Unexpected Godot version: $actual" >&2
+            exit 1
+          }
+          if [[ -n "${GITHUB_PATH:-}" ]]; then printf '%s\n' "$install_dir" >> "$GITHUB_PATH"; fi
+      - name: Production audio regression
+        run: bash tests/integration/audio_qa/run_all.sh
