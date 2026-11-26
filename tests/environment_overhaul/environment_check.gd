@@ -79,7 +79,7 @@ func read_nonnegative(value: Variant, label: String) -> bool:
 		check(false, "numeric " + label)
 		return false
 	var number := float(value)
-	var ok := is_finite(number) and number >= 0.0 and floor(number)==number
+	var ok: bool = is_finite(number) and number >= 0.0 and floorf(number)==number
 	check(ok, "finite nonnegative integral " + label)
 	return ok
 
