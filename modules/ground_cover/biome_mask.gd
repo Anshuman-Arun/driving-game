@@ -3,43 +3,90 @@ extends RefCounted
 const SIZE := 1000
 const ORIGIN := -1000.0
 const CELL := 2.0
+const CHANNELS := ["grass_suitability", "woodland_weight", "moisture", "exposed_rock_weight"]
+const WORLD_FILES := ["world_metadata_v1.json", "road_graph_v1.json", "terrain_height_r16le.bin", "terrain_roadworks_r16le.bin", "roadworks.json"]
 var bytes := PackedByteArray()
+var source_hashes: Dictionary = {}
 var error := ""
 
-func load_package(dir: String) -> bool:
+func clear() -> void:
 	bytes.clear()
+	source_hashes.clear()
+
+func _fail(message: String) -> bool:
+	clear()
+	error = message
+	return false
+
+func _digest_valid(value: Variant) -> bool:
+	if not value is String or value.length() != 64:
+		return false
+	for character in value.to_lower():
+		if not "0123456789abcdef".contains(character):
+			return false
+	return true
+
+func load_package(dir: String) -> bool:
+	clear()
 	error = ""
+	if dir.is_empty():
+		return _fail("empty mask directory")
 	var manifest := FileAccess.open(dir.path_join("manifest.json"), FileAccess.READ)
 	if manifest == null or manifest.get_length() > 65536:
-		error = "missing or oversized manifest"
-		return false
+		return _fail("missing or oversized manifest")
 	var parsed: Variant = JSON.parse_string(manifest.get_as_text())
 	if not parsed is Dictionary:
-		error = "invalid manifest JSON"
-		return false
+		return _fail("invalid manifest JSON")
 	var m: Dictionary = parsed
 	if m.get("schema_version") != 1 or m.get("width") != SIZE or m.get("height") != SIZE or m.get("cell_size_m") != CELL or m.get("origin_x") != ORIGIN or m.get("origin_z") != ORIGIN or m.get("byte_order") != "RGBA":
-		error = "incompatible mask grid"
-		return false
+		return _fail("incompatible mask grid")
+	if m.get("channels") != CHANNELS or m.get("row_order", "z_ascending_x_ascending") != "z_ascending_x_ascending":
+		return _fail("incompatible mask channels or row order")
+	if not m.get("source_hashes") is Dictionary or not _digest_valid(m.get("sha256")):
+		return _fail("missing or malformed mask provenance")
+	var seed: Variant = m.get("seed")
+	if not (seed is int or seed is float) or not is_finite(float(seed)) or floorf(float(seed)) != float(seed):
+		return _fail("invalid mask seed")
+	for key: Variant in m.source_hashes:
+		if not key is String or not _digest_valid(m.source_hashes[key]):
+			return _fail("invalid source hash")
 	var data := FileAccess.open(dir.path_join("biome_rgba8.bin"), FileAccess.READ)
 	if data == null or data.get_length() != SIZE * SIZE * 4:
-		error = "missing or wrong-sized RGBA mask"
-		return false
+		return _fail("missing or wrong-sized RGBA mask")
 	var payload := data.get_buffer(SIZE * SIZE * 4)
+	if payload.size() != SIZE * SIZE * 4:
+		return _fail("truncated mask read")
 	var hash_context := HashingContext.new()
-	hash_context.start(HashingContext.HASH_SHA256)
-	hash_context.update(payload)
+	if hash_context.start(HashingContext.HASH_SHA256) != OK or hash_context.update(payload) != OK:
+		return _fail("mask checksum calculation failed")
 	var digest := hash_context.finish().hex_encode()
-	if digest != str(m.get("sha256", "")).to_lower():
-		error = "mask checksum mismatch"
-		return false
+	if digest != str(m.sha256).to_lower():
+		return _fail("mask checksum mismatch")
 	bytes = payload
+	source_hashes = m.source_hashes.duplicate()
+	return true
+
+# Validate only fixed, trusted world filenames, never a path supplied by the manifest.
+# Called once at build for the canonical production runtime; not per frame.
+func verify_world_sources(directory: String) -> bool:
+	if bytes.size() != SIZE * SIZE * 4 or directory.is_empty():
+		return _fail("missing source directory or mask")
+	for filename: String in WORLD_FILES:
+		var expected: Variant = source_hashes.get("data/world/" + filename)
+		var path := directory.path_join(filename)
+		if not _digest_valid(expected) or not FileAccess.file_exists(path):
+			return _fail("missing mask world source: " + filename)
+		if FileAccess.get_sha256(path) != str(expected).to_lower():
+			return _fail("stale mask world source: " + filename)
 	return true
 
 func sample(x: float, z: float) -> Vector4:
-	if bytes.is_empty() or not is_finite(x) or not is_finite(z) or x < ORIGIN or z < ORIGIN or x >= 1000.0 or z >= 1000.0:
+	if bytes.size() != SIZE * SIZE * 4 or not is_finite(x) or not is_finite(z) or x < ORIGIN or z < ORIGIN or x >= 1000.0 or z >= 1000.0:
 		return Vector4.ZERO
 	var ix := floori((x - ORIGIN) / CELL)
 	var iz := floori((z - ORIGIN) / CELL)
+	# Float division near the positive edge may round to SIZE.
+	if ix < 0 or iz < 0 or ix >= SIZE or iz >= SIZE:
+		return Vector4.ZERO
 	var i := (iz * SIZE + ix) * 4
 	return Vector4(bytes[i], bytes[i+1], bytes[i+2], bytes[i+3]) / 255.0
