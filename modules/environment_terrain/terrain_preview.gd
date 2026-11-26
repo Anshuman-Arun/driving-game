@@ -133,7 +133,8 @@ func _make_candidate(original: ShaderMaterial, tuning: Dictionary, pilot: Varian
 func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 	_prune_destroyed_transaction()
 	if not _entries.is_empty():
-		return false # Explicit restore before reapplying; preserve the active transaction.
+		_stats["last_rejection"] = "restore active transaction before reapplying"
+		return false
 	var generated := Contract.generated_root(world)
 	if generated == null:
 		return _fail("unsupported, unbuilt or transformed world")
@@ -179,7 +180,7 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 		if not child is MeshInstance3D:
 			continue
 		var mesh_instance: MeshInstance3D = child
-		if mesh_instance.is_queued_for_deletion():
+		if mesh_instance.is_queued_for_deletion() or not mesh_instance.global_transform.is_finite():
 			return _fail("terrain chunk queued for deletion")
 		if mesh_instance.mesh == null or mesh_instance.mesh.get_surface_count() != 1:
 			return _fail("unexpected terrain mesh layout")
