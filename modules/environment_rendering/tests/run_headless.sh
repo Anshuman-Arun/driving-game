@@ -40,12 +40,20 @@ run() {
     failed=1
     return 1
   fi
-  if [[ "$marker" == owned ]] && ! awk '/^RENDER_PROFILE_RESULT passed=[0-9]+ total=[0-9]+ failures=0$/ {n++; split($2,p,"="); split($3,t,"="); if (p[2]+0 == t[2]+0 && t[2]+0 > 0) ok++} END {exit !(n==1 && ok==1)}' "$log"; then
+  # The owned suites and fixture import must not accept an engine error even
+  # when the process exits zero. Existing baseline suites retain their pinned
+  # error policy (known engine cleanup diagnostics may be inherited).
+  if [[ "$name" == fixture-import || "$marker" == owned || "$marker" == live ]] && grep -Eq '^ERROR:' "$log"; then
+    echo "FAIL $name (engine error)" >&2
+    failed=1
+    return 1
+  fi
+  if [[ "$marker" == owned ]] && ! awk '/^RENDER_PROFILE_RESULT([[:space:]]|$)/ {n++; if ($0 ~ /^RENDER_PROFILE_RESULT passed=[0-9]+ total=[0-9]+ failures=0$/) {split($2,p,"="); split($3,t,"="); if (p[2]+0 == t[2]+0 && t[2]+0 > 0) ok++}} END {exit !(n==1 && ok==1)}' "$log"; then
     echo "FAIL $name (missing or invalid completion marker)" >&2
     failed=1
     return 1
   fi
-  if [[ "$marker" == live ]] && [[ "$(grep -Ec '^LIVE_RENDER_PROFILE_RESULT failures=0 paint_surfaces=[1-9][0-9]*$' "$log" || true)" != 1 ]]; then
+  if [[ "$marker" == live ]] && { [[ "$(grep -Ec '^LIVE_RENDER_PROFILE_RESULT([[:space:]]|$)' "$log" || true)" != 1 ]] || [[ "$(grep -Ec '^LIVE_RENDER_PROFILE_RESULT failures=0 paint_surfaces=[1-9][0-9]*$' "$log" || true)" != 1 ]]; }; then
     echo "FAIL $name (missing or invalid completion marker)" >&2
     failed=1
     return 1
@@ -53,7 +61,13 @@ run() {
   # Existing pinned regression scripts have different terminal messages.
   # Do not accept exit 0 if a suite quit before reaching its final check.
   if [[ "$marker" != none && "$marker" != owned && "$marker" != live ]]; then
-    if [[ "$(grep -Ec "$marker" "$log" || true)" != 1 ]]; then
+    local family="$marker"
+    case "$name" in
+      map_width_check) family='^Map width:' ;;
+      garage_world) family='^GARAGE WORLD failures:' ;;
+      vehicle_world) family='^Vehicle/world integration failures:' ;;
+    esac
+    if [[ "$(grep -Ec "$family" "$log" || true)" != 1 || "$(grep -Ec "$marker" "$log" || true)" != 1 ]]; then
       echo "FAIL $name (missing or duplicate regression completion marker)" >&2
       failed=1
       return 1
