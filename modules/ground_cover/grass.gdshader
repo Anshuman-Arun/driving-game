@@ -26,12 +26,12 @@ void vertex() {
 	flex = clamp(UV.y, 0.0, 1.0);
 	tuft_seed = INSTANCE_CUSTOM.r;
 	vec2 dir = wind_direction / max(length(wind_direction), 0.001);
-	float phase = dot(root.xz, dir) * 0.23;
-	float gust = 0.55 + 0.28 * sin(TIME * 1.7 - phase) + 0.17 * sin(TIME * 0.83 - phase * 0.43);
+	float phase = dot(root.xz, dir) * 0.16;
+	float gust = 0.55 + 0.30 * sin(TIME * 1.55 - phase) + 0.15 * sin(TIME * 0.78 - phase * 0.41);
 	vec2 bend = vec2(0.0);
 	if (wind_enabled) {
 		bend += dir * gust * clamp(wind_strength, 0.0, 0.16);
-		bend += vec2(-dir.y, dir.x) * sin(TIME * 5.2 + tuft_seed * 6.283) * 0.025;
+		bend += vec2(-dir.y, dir.x) * sin(TIME * 3.8 + tuft_seed * 6.283 + dot(root.xz, vec2(0.31, -0.27))) * 0.032;
 	}
 	if (vehicle_enabled) {
 		vec2 away = root.xz - vehicle_position.xz;
@@ -65,9 +65,11 @@ void vertex() {
 	}
 	vec3 blade_root = (MODEL_MATRIX * vec4(UV2.x, 0.0, UV2.y, 1.0)).xyz;
 	VERTEX = blade_root + (VERTEX - blade_root) * blade_weight;
-	VERTEX.xz += bend * flex * flex * blade_weight;
+	vec2 horiz_disp = bend * flex * flex * blade_weight;
+	VERTEX.xz += horiz_disp;
+	VERTEX.y -= dot(horiz_disp, horiz_disp) * 0.22;
 	tuft_root = root;
-	NORMAL = normalize(mix(NORMAL, vec3(0.0, 1.0, 0.0), 0.55));
+	NORMAL = normalize(mix(NORMAL, vec3(0.0, 1.0, 0.0), 0.58));
 }
 
 void fragment() {
@@ -81,8 +83,16 @@ void fragment() {
 	}
 	vec3 up = (VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
 	NORMAL = normalize(mix(NORMAL, up, 0.72));
-	ALBEDO = COLOR.rgb * mix(0.56, 1.12, flex);
-	ROUGHNESS = 0.96;
-	SPECULAR = 0.08;
-	BACKLIGHT = ALBEDO * 0.13;
+	// Per-tuft natural meadow warmth variation + mossy root grounding + sunlit golden tips.
+	vec3 meadow_var = mix(vec3(0.88, 1.04, 0.90), vec3(1.16, 1.02, 0.78), tuft_seed);
+	vec3 blade_col = COLOR.rgb * meadow_var;
+	blade_col *= mix(vec3(1.0), vec3(1.20, 1.15, 0.85), smoothstep(0.45, 1.0, flex));
+	vec3 root_ground = vec3(0.15, 0.22, 0.10);
+	float root_t = smoothstep(0.0, 0.34, flex);
+	vec3 col = mix(root_ground, blade_col, root_t);
+	float root_ao = mix(0.50, 1.0, smoothstep(0.0, 0.44, flex));
+	ALBEDO = col * root_ao;
+	ROUGHNESS = mix(0.94, 0.76, flex);
+	SPECULAR = mix(0.06, 0.16, flex);
+	BACKLIGHT = ALBEDO * 0.28 * (0.25 + 0.75 * flex);
 }

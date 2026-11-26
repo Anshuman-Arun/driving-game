@@ -41,16 +41,21 @@ void fragment() {
 	vec2 uv_det = UV * 1.6;
 	vec2 uv_mac = UV * 0.65 + vec2(0.41, 0.29);
 
-	float macro_var = value_noise(world_pos.xz * 0.06);
-	float tuft_mask = smoothstep(0.42, 0.78, value_noise(world_pos.xz * 0.38));
+	float macro_var = value_noise(world_pos.xz * 0.055);
+	float med_var = value_noise(world_pos.xz * 0.24 + vec2(7.3, 13.1));
+	float tuft_mask = smoothstep(0.24, 0.72, value_noise(world_pos.xz * 0.48) * 0.65 + med_var * 0.35);
 
 	vec3 dirt_col = mix(
 		texture(shoulder_albedo, uv_det).rgb,
 		texture(shoulder_albedo, uv_mac).rgb,
-		0.32
-	) * shoulder_tint;
+		0.35
+	) * shoulder_tint * vec3(0.86, 0.88, 0.84);
 
-	vec3 grass_col = texture(grass_albedo, world_pos.xz * 0.14).rgb * grass_tint;
+	vec3 grass_col = mix(
+		texture(grass_albedo, world_pos.xz * 0.16).rgb,
+		texture(grass_albedo, world_pos.xz * 0.065 + vec2(0.31, 0.67)).rgb,
+		0.38
+	) * grass_tint * vec3(1.06, 1.02, 0.92);
 
 	float base_rgh = mix(
 		texture(shoulder_roughness, uv_det).r,
@@ -60,8 +65,10 @@ void fragment() {
 	float base_ao = texture(shoulder_ao, uv_det).r;
 	vec3 tex_n = texture(shoulder_normal, uv_det).rgb;
 
-	vec3 col = mix(dirt_col, grass_col, tuft_mask * 0.42);
-	col *= mix(0.88, 1.10, macro_var);
+	// Blend organic grassy verge encroachment across the shoulder to eliminate harsh brown stripes.
+	float grass_mix = clamp(0.54 + tuft_mask * 0.38, 0.0, 0.92);
+	vec3 col = mix(dirt_col, grass_col, grass_mix);
+	col *= mix(0.88, 1.08, macro_var);
 
 	float cam_dist = length(VERTEX);
 	float dist_n = mix(1.0, 0.22, smoothstep(16.0, 90.0, cam_dist));
