@@ -7,6 +7,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 import bake_biomes as b
 import verify_road_envelope as geometry
+import verify_package as package
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -83,6 +84,23 @@ class UnitTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             b.water_mask(dict(lake,cells=[[500,1]]),dict(waters=[]))
 
+    def test_strict_json_and_source_replacement(self):
+        for bad in ('{"a":1,"a":2}','{"a":NaN}','{"a":Infinity}'):
+            with self.assertRaises(ValueError):
+                b.strict_json(bad)
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp,"source")
+            p.write_bytes(b"first")
+            src=b.Sources(tmp)
+            self.assertEqual(src.read("source"),b"first")
+            p.write_bytes(b"second")
+            with self.assertRaisesRegex(ValueError,"Source changed"):
+                src.read("source")
+        with self.assertRaises(ValueError):
+            b.bake(".",2**53)
+        with self.assertRaises(ValueError):
+            b.bake(".",1,[])
+
     def test_missing_corrupt(self):
         with tempfile.TemporaryDirectory() as tmp:
             source=b.Sources(tmp)
@@ -98,8 +116,10 @@ class UnitTests(unittest.TestCase):
             b.decode_height(b"bad",meta)
         raw=bytes(4000000)
         manifest=dict(schema_version=1,width=1000,height=1000,cell_size_m=2,
-            origin_x=-1000,origin_z=-1000,byte_order="RGBA",channels=b.CHANNELS,sha256=b.sha(raw))
+            origin_x=-1000,origin_z=-1000,byte_order="RGBA",channels=b.CHANNELS,row_order="z_ascending_x_ascending",sha256=b.sha(raw))
         self.assertEqual(b.validate_mask(raw,manifest).shape,(1000,1000,4))
+        with self.assertRaises(ValueError):
+            b.validate_mask(raw,dict(manifest,row_order="x_ascending_z_ascending"))
         for corrupted in (raw[:-1],b"x"+raw[1:]):
             with self.assertRaises(ValueError):
                 b.validate_mask(corrupted,manifest)
@@ -134,7 +154,7 @@ class FixtureTests(unittest.TestCase):
                 points=[[100,50,2],[-100,50,2]])]
             write("data/world/road_graph_v1.json",dict(schema_version=1,bounds=b.BOUNDS,
                 coordinate_system="godot_y_up",units="meters",lanes=lanes))
-            write("data/world/roadworks.json",dict(roads={"test":{"width_m":12,
+            write("data/world/roadworks.json",dict(roads={"test":{"width_m":12,"center":100,"wide_radius":80,
                 "bridge_start":50,"bridge_end":100}},waters=[dict(cells=[[250,255]])],
                 network_upgrade=dict(widths_m={"test":14},asphalt_shoulder_m=2)))
             write("content/scenery/lake/water_cells_v1.json",dict(origin_x=-1000,
@@ -166,10 +186,37 @@ class FixtureTests(unittest.TestCase):
                 self.assertTrue(-980<=p["x"]<=980 and -980<=p["z"]<=980)
             self.assertEqual(sum(stats["species"].values()),len(understory["placements"]))
             b.publish(root/"output",*result)
+            report=package.verify(root,root/"output")
+            self.assertEqual(report["placements"],len(understory["placements"]))
+            self.assertEqual(report["geometry"]["misses"],0)
+            # An updated hash alone must not legitimize an unsafe placement.
+            corrupt=b.strict_json(b.json_bytes(understory))
+            corrupt["placements"][0]["x"]=0
+            corrupt["placements"][0]["z"]=0
+            bad_manifest=dict(manifest,understory_sha256=b.sha(b.json_bytes(corrupt)))
+            b.publish(root/"output",raw,bad_manifest,corrupt,stats)
+            with self.assertRaisesRegex(ValueError,"Unsafe placement|overlapping placements"):
+                package.verify(root,root/"output")
+            b.publish(root/"output",*result)
+            # Corrupt mask with matching hash must still fail geometric checks.
+            damaged=bytearray(raw)
+            damaged[4*(500*1000+500)]=255
+            b.publish(root/"output",bytes(damaged),dict(manifest,sha256=b.sha(damaged)),understory,stats)
+            with self.assertRaisesRegex(ValueError,"Grass on excluded cells"):
+                package.verify(root,root/"output")
+            b.publish(root/"output",*result)
+            path=root/"data/world/vegetation.bin"
+            previous=path.read_bytes()
+            path.write_bytes(previous+b"x")
+            with self.assertRaisesRegex(ValueError,"Stale source"):
+                package.verify(root,root/"output")
+            path.write_bytes(previous)
             lock=root/"output/.bake.lock"
             lock.mkdir()
             with self.assertRaises(FileExistsError):
                 b.publish(root/"output",*result)
+            with self.assertRaisesRegex(ValueError,"Publication"):
+                package.verify(root,root/"output")
             lock.rmdir()
             self.assertEqual((root/"output/biome_rgba8.bin").stat().st_size,4000000)
             self.assertEqual(b.sha((root/"output/understory.json").read_bytes()),
@@ -198,6 +245,9 @@ class FixtureTests(unittest.TestCase):
             optional=b.bake(root,123,dict(tuning,max_placements=0))
             self.assertFalse(optional[1]["optional_premium_cache_used"])
             self.assertEqual(optional[2]["placements"],[])
+            self.assertEqual(optional[1]["surface_probes"],manifest["surface_probes"])
+            b.publish(root/"output",*optional)
+            self.assertEqual(package.verify(root,root/"output")["placements"],0)
             # Required real-world inputs fail closed before publication.
             (root/"data/world/vegetation.bin").unlink()
             with self.assertRaises(FileNotFoundError):
