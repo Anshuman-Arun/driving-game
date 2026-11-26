@@ -93,8 +93,8 @@
       "license": "CC0-1.0",
       "license_notice": "res://assets/environment_overhaul/LICENSE.txt",
       "sha256_by_path": {
-        "res://assets/environment_overhaul/sapling_lod0.gltf": "b1a1583966ab5c2a9233c905f419538f0dfb6ab1c4ebd55d5602bc13ce7786b1",
-        "res://assets/environment_overhaul/sapling_lod1.gltf": "b36195595cf748f92d5723aa7bb39933c829e9e6bb6b34b800b7ca339d465839"
+        "res://assets/environment_overhaul/sapling_lod0.gltf": "9080d964b871ea1aa0cfb72a0c3f5ef458a07bf072da04bc9a65d7405ae83ab4",
+        "res://assets/environment_overhaul/sapling_lod1.gltf": "a395948cf46558ab3714a1dee28e7ad7829439137803e9393c05291660d459f7"
       },
       "status": "candidate",
       "alpha": "opaque_geometry_no_cards",

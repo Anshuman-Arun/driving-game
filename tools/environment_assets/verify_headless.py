@@ -64,9 +64,11 @@ def main():
     run([args.node, "tools/environment_assets/test_staging.mjs"], 60, r"Staging filesystem checks passed: [1-9]\d*")
     validate_report(run([args.node, "tools/environment_assets/generate.mjs", "--verify"], 120))
     run([sys.executable, "tools/environment_assets/test_audit_existing.py"], 60)
+    run([sys.executable, "tools/environment_assets/test_audit_alpha.py"], 60)
     run([sys.executable, "tools/environment_assets/test_projection.py"], 120,
         r"Vegetation CPU silhouette checks passed: 120/120")
     if args.existing:
+        run([sys.executable, "tools/environment_assets/audit_alpha.py"], 60)
         run([sys.executable, "tools/environment_assets/audit_existing.py"], 60)
     print("Agent B requested CPU/data gates passed", flush=True)
     if args.data_only:

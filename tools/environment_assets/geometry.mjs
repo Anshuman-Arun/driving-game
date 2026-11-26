@@ -45,7 +45,7 @@ function makePair(spec){
  if(spec.id==="shrub"||spec.id==="sapling"){
   const tall=spec.id==="sapling",n=tall?8:10;
   if(tall)tube([0,0,0],[.04,1.55,0],.034,.009,wood);
-  for(let i=0;i<n;i++){const t=i*2.39996+.12*rnd(),base=tall?[0,.18+i*.13,0]:[0,0,0],tip=polar((tall?.36:.47)*(0.8+.2*rnd()),tall?.66+i*.125:.32+.24*rnd(),t);const mid=lerp(base,tip,.55);sweep([base,mid,tip],[tall?.018:.012,.009,.0036],wood);for(let j=0;j<6;j++){const f=.20+j*.145,root=lerp(mid,tip,f),angle=t+(j%2?1:-1)*(.55+.16*(j%3)),length=tall?.19:.17;leaf(root,add(root,polar(length,.055,angle)),length*.35,j%3===0?fresh:green,.3*(j%3-1),true);}leaf(tip,add(tip,polar(.12,.075,t)),.055,fresh);}
+  for(let i=0;i<n;i++){const t=i*2.39996+.12*rnd(),base=tall?lerp([0,0,0],[.04,1.55,0],(.18+i*.13)/1.55):[0,0,0],tip=polar((tall?.36:.47)*(0.8+.2*rnd()),tall?.66+i*.125:.32+.24*rnd(),t);const mid=lerp(base,tip,.55);sweep([base,mid,tip],[tall?.018:.012,.009,.0036],wood);for(let j=0;j<6;j++){const f=.20+j*.145,root=lerp(mid,tip,f),angle=t+(j%2?1:-1)*(.55+.16*(j%3)),length=tall?.19:.17;leaf(root,add(root,polar(length,.055,angle)),length*.35,j%3===0?fresh:green,.3*(j%3-1),true);}leaf(tip,add(tip,polar(.12,.075,t)),.055,fresh);}
  }else if(spec.id==="fern"){
   for(let i=0;i<8;i++){const angle=i*tau/8+.10*rnd(),r=.48+.09*rnd(),h=.27+.11*rnd(),point=t=>polar(r*t,h*Math.sin(t*2.15)+.025*t,angle);
    const points=Array.from({length:7},(_,k)=>point(k/6));
