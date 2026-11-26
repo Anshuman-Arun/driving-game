@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Run from repository root with Godot 4.7.2 installed and LFS payloads fetched.
 set -euo pipefail
+node modules/ground_cover/tests/reference_budget.mjs
 engine="${GODOT:-godot}"
 [[ "$("$engine" --headless --version)" == 4.7.2.stable* ]]
 logdir="$(mktemp -d)"
