@@ -9,10 +9,14 @@ import tempfile
 import numpy as np
 from scipy.ndimage import distance_transform_edt, gaussian_filter
 from scipy.spatial import ConvexHull
+from numbers import Real
 
 N = 1000
 ORIGIN = -1000
 CELL = 2
+CELL_RADIUS = np.sqrt(2.0)
+# Provisional footprint envelope; the coordinator must still validate actual asset AABBs.
+UNDERSTORY_RADIUS_M = 2.0
 CHANNELS = ["grass_suitability", "woodland_weight", "moisture", "exposed_rock_weight"]
 BOUNDS = dict(min_x=-1000, max_x=1000, min_z=-1000, max_z=1000)
 SPECIES = ("fern", "shrub", "sapling", "reed", "wildflower")
@@ -90,14 +94,18 @@ def coords():
 
 
 def window(x0,z0,x1,z1):
-    i0,j0 = max(0,int(np.floor((x0+1000)/2))),max(0,int(np.floor((z0+1000)/2)))
-    i1,j1 = min(N,int(np.ceil((x1+1000)/2))+1),min(N,int(np.ceil((z1+1000)/2))+1)
+    def clamp(v):
+        return min(N,max(0,v))
+    i0,j0 = clamp(int(np.floor((x0+1000)/2))),clamp(int(np.floor((z0+1000)/2)))
+    i1,j1 = clamp(int(np.ceil((x1+1000)/2))+1),clamp(int(np.ceil((z1+1000)/2))+1)
     return slice(j0,max(j0,j1)),slice(i0,max(i0,i1))
 
 
 def capsule(mask, x, z, a, b, radius):
     a,b = np.asarray(a),np.asarray(b)
-    radius = float(radius)+np.sqrt(2)  # include any cell touched by the buffer
+    require(a.shape==b.shape==(2,) and np.isfinite(a).all() and np.isfinite(b).all()
+            and np.isfinite(radius) and radius>=0, "Invalid capsule geometry")
+    radius = float(radius)+CELL_RADIUS  # include any cell touched by the buffer
     s = window(*(np.minimum(a,b)-radius), *(np.maximum(a,b)+radius))
     xx,zz = x[s]-a[0],z[s]-a[1]
     delta = b-a
@@ -105,38 +113,73 @@ def capsule(mask, x, z, a, b, radius):
     mask[s] |= (xx-t*delta[0])**2+(zz-t*delta[1])**2 <= radius**2
 
 
+def checked_number(value, label, minimum=0):
+    require(isinstance(value,Real) and not isinstance(value,(bool,np.bool_))
+            and np.isfinite(value) and value>=minimum, "Invalid "+label)
+    return float(value)
+
+
 def road_mask(graph, works, x,z, margin):
     mask = np.zeros(x.shape,bool)
     lanes = {l["id"]: l for l in graph["lanes"]}
+    require(len(lanes)==len(graph["lanes"]) and lanes,"Duplicate or empty lanes")
     network = works.get("network_upgrade",{})
     designs = works["roads"]
     groups = {}
+    physical = set()
     for lane in lanes.values():
-        points = np.asarray(lane["points"],float)[:,[0,2]]
-        require(len(points)>=2 and np.isfinite(points).all(), "Invalid lane geometry")
-        if lane["id"].startswith("turn_"):
-            reach = lane["width_m"]/2 + 3 + network.get("junction_extra_m",0) + margin
-            groups.setdefault(lane["id"].split("_")[1],[]).extend(
-                points[:,None,:] + np.array([[reach,0],[-reach,0],[0,reach],[0,-reach],
-                                             [reach,reach],[reach,-reach],[-reach,reach],[-reach,-reach]])[None,:,:])
-        elif lane["id"].endswith("_ab"):
-            other = np.asarray(lanes[lane["id"][:-3]+"_ba"]["points"],float)[::-1, [0,2]]
-            require(points.shape==other.shape,"Unpaired corridor")
-            center = (points+other)/2
+        lid = lane["id"]
+        xyz = np.asarray(lane["points"],float)
+        require(xyz.ndim==2 and xyz.shape[1]==3 and len(xyz)>=2 and
+                np.isfinite(xyz).all() and np.all(np.abs(xyz[:,[0,2]])<=1000),"Invalid lane geometry")
+        points = xyz[:,[0,2]]
+        require(np.all(np.linalg.norm(np.diff(points,axis=0),axis=1)>1e-6),"Degenerate lane")
+        width = checked_number(lane["width_m"],"lane width",.01)
+        require(lane["surface"] in ("asphalt","gravel"),"Unknown lane surface")
+        if lid.startswith("turn_"):
+            # Match runtime group by junction pseudo-road, not a truncated lane ID.
+            reach = width/2 + 3 + checked_number(network.get("junction_extra_m",0),"junction extra") + margin
+            offsets = np.array([[a,b] for a in (-reach,reach) for b in (-reach,reach)])
+            groups.setdefault(lane["road_id"],[]).extend(points[:,None,:]+offsets[None,:,:])
+        else:
+            require(lid == "lane_"+lane["road_id"]+"_ab" or lid == "lane_"+lane["road_id"]+"_ba",
+                    "Unknown physical lane convention")
+            opposite_id = lid[:-3]+("_ba" if lid.endswith("_ab") else "_ab")
+            require(opposite_id in lanes,"Missing opposite lane")
+            opposite = lanes[opposite_id]
+            require(opposite["surface"]==lane["surface"] and opposite["road_id"]==lane["road_id"],
+                    "Inconsistent lane pair")
+            other = np.asarray(opposite["points"],float)
+            require(other.shape==xyz.shape and np.isfinite(other).all(),"Unpaired corridor")
+            if lid.endswith("_ba"):
+                continue
+            center = (points+other[::-1][:,[0,2]])/2
+            require(np.all(np.linalg.norm(np.diff(center,axis=0),axis=1)>1e-6),"Degenerate corridor")
             design = designs.get(lane["road_id"],{})
-            # Conservative maximum width throughout corridor, including every span and taper.
-            half = max(lane["width_m"], design.get("width_m",0)/2,
-                       network.get("widths_m",{}).get(lane["road_id"],0)/2)
-            shoulder = max(1.35,network.get(lane["surface"]+"_shoulder_m",1.35))
+            physical.add(lane["road_id"])
+            # A capsule around each chord contains every interpolated road triangle
+            # whose section vertices lie within the maximum offset of each endpoint.
+            half = max(width, checked_number(opposite["width_m"],"opposite width",.01),
+                       checked_number(design.get("width_m",0),"roadworks width")/2,
+                       checked_number(network.get("widths_m",{}).get(lane["road_id"],0),"network width")/2)
+            shoulder = max(1.35,checked_number(network.get(lane["surface"]+"_shoulder_m",1.35),"shoulder"))
             for a,b in zip(center[:-1],center[1:]):
                 capsule(mask,x,z,a,b,half+shoulder+margin)
+    require(physical and set(designs)<=physical and set(network.get("widths_m",{}))<=physical,
+            "Roadworks references unknown physical corridor")
+    if "roads" in graph:
+        records = {r["id"]:r for r in graph["roads"]}
+        require(len(records)==len(graph["roads"]) and set(records)==physical|set(groups),"Missing road records")
+        for rid,road in records.items():
+            require(set(road["lane_ids"])=={lid for lid,l in lanes.items() if l["road_id"]==rid},
+                    "Road/lane membership mismatch")
     for parts in groups.values():
         points = np.asarray(parts).reshape(-1,2)
         hull = ConvexHull(points)
         s = window(*(points.min(axis=0)-2),*(points.max(axis=0)+2))
         inside = np.ones(x[s].shape,bool)
         for a,b,c in hull.equations:
-            inside &= a*x[s]+b*z[s]+c <= np.sqrt(2)
+            inside &= a*x[s]+b*z[s]+c <= CELL_RADIUS
         mask[s] |= inside
     return mask
 
@@ -158,20 +201,43 @@ def distance(mask):
     return distance_transform_edt(~mask)*CELL
 
 
+def clearance_lower_bound(mask):
+    # EDT measures center to center, not surface distance. Both the query cell
+    # and the occupied cell may extend sqrt(2) m toward each other.
+    return np.maximum(0,distance(mask)-2*CELL_RADIUS)
+
+
+def triangle_slope(h):
+    # Four 2 m cells per 4 m terrain quad. NW and SE are fully on one
+    # triangle; NE/SW cross the diagonal and take the steeper gradient.
+    a,b,c,d = h[:-1,:-1],h[:-1,1:],h[1:,:-1],h[1:,1:]
+    nw = np.hypot(b-a,c-a)/4
+    se = np.hypot(d-c,d-b)/4
+    result = np.empty((N,N),float)
+    result[0::2,0::2] = nw
+    result[1::2,1::2] = se
+    result[0::2,1::2] = result[1::2,0::2] = np.maximum(nw,se)
+    return result
+
+
 def scenery_masks(src,x,z):
     protected, props, trees = (np.zeros(x.shape,bool) for _ in range(3))
     manifest = src.json("content/scenery/manifest.json")
     zones = src.json("content/scenery/avoidance/race_gate_reservations_v1.json")["zones"]
     for zone in zones:
         p = [zone["x"],zone["z"]]
-        capsule(protected,x,z,p,p,zone["radius_m"]+3)
+        capsule(protected,x,z,p,p,checked_number(zone["radius_m"],"reservation radius")+3)
     for pack in manifest["region_packs"]:
-        for item in src.json(pack["path"])["placements"]:
+        placements = src.json(pack["path"])["placements"]
+        require(pack.get("count",len(placements))==len(placements),"Scenery pack count mismatch")
+        for item in placements:
             p = np.asarray(item["position"])[[0,2]]
             asset = manifest["assets"][item["asset"]]
             radius = float(asset["r"])*float(item.get("scale",1))
             require(np.isfinite(p).all() and np.isfinite(radius) and radius>0,"Invalid scenery footprint")
-            capsule(props,x,z,p,p,radius+2)
+            capsule(props,x,z,p,p,radius+UNDERSTORY_RADIUS_M)
+            if item["asset"] in ("boulder","rock","hay"):
+                capsule(protected,x,z,p,p,radius)
             if asset["kind"]=="architecture" or item["asset"] in ("arch","overlook","pier","quarry"):
                 capsule(protected,x,z,p,p,max(11,radius+4))
             if item["asset"] in ("pine","broadleaf"):
@@ -179,27 +245,37 @@ def scenery_masks(src,x,z):
     # Existing live vegetation and optional legacy premium cache are read-only.
     for filename in ("vegetation.bin","premium_foliage.bin"):
         rel = "data/world/"+filename
-        raw = src.read(rel)
+        try:
+            raw = src.read(rel)
+        except FileNotFoundError:
+            if filename=="premium_foliage.bin":
+                continue  # optional, non-live legacy cache; recorded by absent source hash
+            raise
         require(len(raw)%28==0,"Invalid vegetation stride")
         rows = np.frombuffer(raw,dtype="<f4").reshape(-1,7)
         require(np.isfinite(rows).all() and (rows[:,4]>0).all(),"Invalid vegetation record")
         kinds = rows[:,5]
-        require(np.all(kinds==np.floor(kinds)),"Invalid vegetation kind")
+        require(np.all((kinds==np.floor(kinds)) & (kinds>=0) & (kinds<=5)),"Invalid vegetation kind")
+        require(np.all(np.abs(rows[:,[0,2]])<=1000) and np.all((rows[:,6]>=0)&(rows[:,6]<=1)),
+                "Invalid vegetation bounds or seed")
         for row in rows[(kinds!=2) if filename=="vegetation.bin" else np.ones(len(rows),bool)]:
             px,_,pz,_,scale,kind,_ = row
             p = [px,pz]
             # Skip dense legacy grass (class 2) but avoid retained trees, rocks and flowers.
-            radius = max(1.5,float(scale)*(1.8 if kind in (0,1) else 1.0))
-            capsule(props,x,z,p,p,radius)
+            radius = max(1.5,float(scale)*(3.5 if kind in (0,1) else 1.5))
+            capsule(props,x,z,p,p,radius+UNDERSTORY_RADIUS_M)
             if kind in (0,1) and filename=="vegetation.bin":
-                capsule(trees,x,z,p,p,radius+1)
+                capsule(trees,x,z,p,p,radius)
     return protected,props,trees
 
 
 def bake(root, seed, tuning=None):
     t = dict(DEFAULTS,**(tuning or {}))
-    require(set(t)==set(DEFAULTS) and all(np.isfinite(v) and v>=0 for v in t.values()),"Invalid tuning")
-    require(t["spacing_m"]>=4 and t["density"]<=1 and int(t["max_placements"])==t["max_placements"],"Invalid placement budget")
+    require(set(t)==set(DEFAULTS),"Unknown tuning key")
+    for k,v in t.items():
+        checked_number(v,k)
+    require(isinstance(seed,int) and not isinstance(seed,bool) and 0<=seed<2**64,"Invalid seed")
+    require(4<=t["spacing_m"]<=1960 and t["density"]<=1 and 0<=t["max_placements"]<=12000 and int(t["max_placements"])==t["max_placements"],"Invalid placement budget")
     require(t["rock_slope_full"]>t["rock_slope_start"] and t["alpine_full_m"]>t["alpine_start_m"]
             and t["canopy_grass_penalty"]<=1, "Invalid ecology thresholds")
     src = Sources(root)
@@ -219,12 +295,12 @@ def bake(root, seed, tuning=None):
     points = np.concatenate([np.asarray(l["points"],float) for l in graph["lanes"]])
     lane_error = float(np.max(np.abs(surface(canonical,points[:,0],points[:,2],False)-points[:,1])))
     require(lane_error < .015,"Canonical lane/height alignment failed")
-    dz,dx = np.gradient(heights,CELL)
-    slope = np.hypot(dx,dz)
+    slope = triangle_slope(h)
     road = road_mask(graph,works,x,z,t["road_margin_m"])
     wet = water_mask(lake,works)
     protected,props,trees = scenery_masks(src,x,z)
-    road_dist,water_dist = distance(road),distance(wet)
+    road_dist,water_dist = clearance_lower_bound(road),clearance_lower_bound(wet)
+    prop_dist = clearance_lower_bound(props|protected)
     canopy = gaussian_filter(trees.astype(float),sigma=4)
     rng = np.random.default_rng(seed)
     # Smooth multi-scale noise, deterministic with pinned NumPy/SciPy.
@@ -235,7 +311,11 @@ def bake(root, seed, tuning=None):
     weights = {}
     for reg in meta["regions"]:
         cx,cz = reg["center"]
-        weights[reg["id"]] = np.exp(-((x-cx)**2+(z-cz)**2)/reg["radius_m"]**2)
+        require(reg["id"] not in weights and np.isfinite([cx,cz]).all(),"Invalid region")
+        radius = checked_number(reg["radius_m"],"region radius",.01)
+        weights[reg["id"]] = np.exp(-((x-cx)**2+(z-cz)**2)/radius**2)
+    require(set(weights)=={"alder_town","cedar_woods","north_ridge","green_valley","eastwater_lake"},
+            "Region contract changed")
     town,cedar,ridge,meadow,east = (weights[k] for k in
         ("alder_town","cedar_woods","north_ridge","green_valley","eastwater_lake"))
     alpine = smooth(t["alpine_start_m"],t["alpine_full_m"],heights)
@@ -247,6 +327,7 @@ def bake(root, seed, tuning=None):
                     *(1-.86*rock)*(1-.5*alpine)*(.8+.3*n),0,1)
     # No exponential road proximity bias. Hard exclusions only for unsafe surfaces.
     excluded = road|protected|wet|(water_dist<=t["water_margin_m"])
+    grass *= 1-smooth(.75,1.4,slope)  # cliff faces are not meadow
     grass[excluded] = 0
     woodland[road|protected|wet] = 0
     rock[wet|road|protected] = 0
@@ -255,14 +336,19 @@ def bake(root, seed, tuning=None):
     # At most one jittered candidate per coarse cell; explicit nearest-neighbor
     # spacing across coarse-cell boundaries using deterministic spatial buckets.
     step = float(t["spacing_m"])
-    q = np.arange(-980+step/2,980,step)
+    q = -980+(np.arange(int(1960//step))+.5)*step
     placements, buckets = [], {}
     rejected = dict(exclusion=0,probability=0,spacing=0,budget=0)
     for idx in rng.permutation(len(q)**2):
         pz,px = q[idx//len(q)],q[idx%len(q)]
         a,b = np.array([px,pz])+rng.uniform(-.35,.35,2)*step
+        # Round before validation, so serialized coordinates cannot cross a boundary.
+        a,b = round(float(a),5),round(float(b),5)
         i,j = cell_index(a,b)
-        if excluded[j,i] or props[j,i] or road_dist[j,i]<t["sightline_m"] or slope[j,i]>t["max_understory_slope"]:
+        if (excluded[j,i] or prop_dist[j,i]<=UNDERSTORY_RADIUS_M
+                or water_dist[j,i]<=t["water_margin_m"]+UNDERSTORY_RADIUS_M
+                or road_dist[j,i]<t["sightline_m"]+UNDERSTORY_RADIUS_M
+                or slope[j,i]>t["max_understory_slope"]):
             rejected["exclusion"]+=1
             continue
         g,w,m,k = grass[j,i],woodland[j,i],moisture[j,i],rock[j,i]
@@ -270,11 +356,11 @@ def bake(root, seed, tuning=None):
                                  float(4<=water_dist[j,i]<=18)*m*(1-k),
                                  g*meadow[j,i]*(1-w)])
         total = probabilities.sum()
-        if total<=0 or rng.random()>=t["density"]*min(1,total)*(.45+.8*n[j,i]):
+        if total<=0 or rng.random()>=min(1,t["density"]*min(1,total)*(.45+.8*n[j,i])):
             rejected["probability"]+=1
             continue
         key = (int(np.floor(a/step)),int(np.floor(b/step)))
-        if any((a-u)**2+(b-v)**2 < (step*.65)**2
+        if any((a-u)**2+(b-v)**2 < max(step*.65,2*UNDERSTORY_RADIUS_M)**2
                for di in (-1,0,1) for dj in (-1,0,1)
                for u,v in buckets.get((key[0]+di,key[1]+dj),[])):
             rejected["spacing"]+=1
@@ -310,6 +396,8 @@ def bake(root, seed, tuning=None):
                     tuning=t, row_order="z_ascending_x_ascending")
     understory = dict(schema_version=1,source_hashes=src.hashes,seed=seed,placements=placements)
     manifest["understory_sha256"] = sha(json_bytes(understory))
+    manifest["statistics_sha256"] = sha(json_bytes(stats))
+    manifest["optional_premium_cache_used"] = "data/world/premium_foliage.bin" in src.hashes
     # Runtime cross-check points include corners, triangle interiors, diagonals and chunk seams.
     probes = [(-1000,-1000), (1000,1000), (-1000,1000), (1000,-1000),
               (-999,-999),(-997,-997),(-998,-998),(0,0),(-872,-872),
@@ -331,8 +419,11 @@ def publish(output, raw, manifest, understory, stats):
     # verify hash and fail closed if reading a partially replaced generation.
     validate_mask(raw,manifest)
     require(sha(json_bytes(understory)) == manifest.get("understory_sha256"), "Invalid understory hash")
+    require(sha(json_bytes(stats)) == manifest.get("statistics_sha256"), "Invalid statistics hash")
     output = Path(output)
     output.mkdir(parents=True,exist_ok=True)
+    require(not any((output/name).is_symlink() for name in ("manifest.json","biome_rgba8.bin","understory.json","statistics.json")),
+            "Refusing symlink output")
     with tempfile.TemporaryDirectory(dir=output) as temp:
         for name,data in (("biome_rgba8.bin",raw),("understory.json",json_bytes(understory)),
                           ("statistics.json",json_bytes(stats)),("manifest.json",json_bytes(manifest))):
