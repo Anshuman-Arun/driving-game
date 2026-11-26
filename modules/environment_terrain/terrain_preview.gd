@@ -42,8 +42,10 @@ func get_stats() -> Dictionary:
 	return _stats.duplicate(true)
 
 func _prune_destroyed_transaction() -> void:
-	if _world_root != null and not is_instance_valid(_world_root.get_ref()):
-		restore()
+	if _world_root != null:
+		var built: Node = _world_root.get_ref()
+		if not is_instance_valid(built) or not built.is_inside_tree() or built.is_queued_for_deletion():
+			restore()
 
 func _fail(reason: String) -> bool:
 	_stats = {"state": "rejected", "reason": reason}
@@ -53,7 +55,7 @@ func _rect_vector(rect: Rect2) -> Vector4:
 	return Vector4(rect.position.x, rect.position.y, rect.size.x, rect.size.y)
 
 func _valid_rect(rect: Rect2) -> bool:
-	return rect.position.is_finite() and rect.size.is_finite() and rect.size.x > 0.0 and rect.size.y > 0.0 and rect.position.x >= -1000.0 and rect.position.y >= -1000.0 and rect.end.x <= 1000.0 and rect.end.y <= 1000.0
+	return rect.position.is_finite() and rect.size.is_finite() and rect.size.x >= 1.0 and rect.size.y >= 1.0 and rect.position.x >= -1000.0 and rect.position.y >= -1000.0 and rect.end.x <= 1000.0 and rect.end.y <= 1000.0
 
 func _finite(value: Variant) -> bool:
 	if value is float or value is int:
