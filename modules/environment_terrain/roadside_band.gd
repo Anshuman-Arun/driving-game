@@ -9,7 +9,7 @@ var stats: Dictionary = {}
 
 func build(world: Node, region: Rect2) -> Texture2D:
 	var image := build_image(world, region)
-	if image == null:
+	if image == null or int(stats.get("active_cells", 0)) == 0:
 		return null
 	var texture := ImageTexture.create_from_image(image)
 	if texture == null or texture.get_width() != image.get_width() or texture.get_height() != image.get_height():
@@ -60,5 +60,5 @@ func build_image(world: Node, region: Rect2) -> Image:
 				active += 1
 				image.set_pixel(x, z, Color(weight, 0.0, 0.0))
 	stats = {"width": width, "height": height, "active_cells": active, "excluded_cells": excluded, "clearance_queries": queries}
-	status = "ready"
+	status = "ready" if active > 0 else "no roadside transition in region"
 	return image
