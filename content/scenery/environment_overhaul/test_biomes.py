@@ -143,9 +143,20 @@ class FixtureTests(unittest.TestCase):
                 self.assertTrue(-980<=p["x"]<=980 and -980<=p["z"]<=980)
             self.assertEqual(sum(stats["species"].values()),len(understory["placements"]))
             b.publish(root/"output",*result)
+            lock=root/"output/.bake.lock"
+            lock.mkdir()
+            with self.assertRaises(FileExistsError):
+                b.publish(root/"output",*result)
+            lock.rmdir()
             self.assertEqual((root/"output/biome_rgba8.bin").stat().st_size,4000000)
             self.assertEqual(b.sha((root/"output/understory.json").read_bytes()),
                              manifest["understory_sha256"])
+            self.assertEqual(b.sha((root/"output/statistics.json").read_bytes()),manifest["statistics_sha256"])
+            self.assertEqual(manifest["generator_sha256"],b.sha(Path(b.__file__).read_bytes()))
+            for invalid in (dict(spacing_m=0),dict(density=2),dict(road_margin_m=-1),
+                            dict(max_placements=12001),dict(spacing_m=True)):
+                with self.assertRaises(ValueError):
+                    b.bake(root,123,invalid)
             # Malformed lane pairs fail before generating a partial result.
             graph_path=root/"data/world/road_graph_v1.json"
             graph=json.loads(graph_path.read_text())
@@ -219,6 +230,7 @@ class CanonicalTests(unittest.TestCase):
         self.assertEqual(len(cKDTree(coords).query_pairs(b.DEFAULTS["spacing_m"]*.65-.00002)),0)
         rd,wd=b.clearance_lower_bound(road),b.clearance_lower_bound(wet)
         pd=b.clearance_lower_bound(props|protected)
+        wc=b.distance(wet)
         for p in u["placements"]:
             i,j=b.cell_index(p["x"],p["z"])
             self.assertIn(p["species_id"],b.SPECIES)
@@ -228,7 +240,7 @@ class CanonicalTests(unittest.TestCase):
             self.assertGreater(pd[j,i],b.UNDERSTORY_RADIUS_M)
             self.assertLessEqual(slope[j,i],b.DEFAULTS["max_understory_slope"])
             if p["species_id"]=="reed":
-                self.assertLessEqual(wd[j,i],18)
+                self.assertLessEqual(wc[j,i]+b.CELL_RADIUS,18)
 
 
 if __name__=="__main__":
