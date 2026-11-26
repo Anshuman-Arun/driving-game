@@ -15,10 +15,13 @@ func check(ok: bool, message: String) -> void:
 		failures += 1
 		printerr("FAIL ",message)
 
-func drain(cover: Node, max_frames: int = 400) -> void:
+func drain(cover: Node, max_frames: int = 1200) -> void:
 	for i in range(max_frames):
 		cover._process(0.016)
 		var stats: Dictionary = cover.get_stats()
+		if stats.state != "ready":
+			check(false,"stream unexpectedly disabled: "+str(stats.fallback))
+			return
 		check(stats.active_instances <= stats.cap,"instance cap")
 		check(stats.last_frame_checks <= int(cover._profile.checks),"candidate budget")
 		check(stats.last_frame_chunk_uploads <= int(cover._profile.uploads),"upload budget")
@@ -30,6 +33,9 @@ func drain(cover: Node, max_frames: int = 400) -> void:
 		check(stats.pooled_batches <= 75,"pool cap")
 		check(stats.active_chunks <= int(cover._profile.chunks),"chunk cap")
 		check(stats.queued_chunks <= int(cover._profile.chunks),"queue cap")
+		check(cover.get_child_count() <= stats.active_chunks * 5 + stats.pooled_batches,"node cap")
+		for lod in range(3):
+			check((int(stats.planned_chunks_per_lod[lod]) == 0) == (int(stats.planned_candidate_limit_per_chunk[lod]) == 0),"no zero-quota jobs")
 		if stats.queued_chunks == 0:
 			return
 	check(false,"queue drained before timeout")
@@ -51,8 +57,9 @@ func fingerprint(cover: Node) -> int:
 func _run() -> void:
 	for s in range(5):
 		for lod in range(3):
-			var mesh := Grass.make_mesh(s,lod,null)
-			var arrays := mesh.surface_get_arrays(0)
+			var geometry := Grass.make_geometry(s,lod)
+			var mesh := Grass.mesh_from_geometry(geometry,null)
+			var arrays: Array = geometry.arrays
 			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 			var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
 			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
@@ -62,15 +69,27 @@ func _run() -> void:
 				if uv[i].y == 0:
 					roots += 1
 					check(is_zero_approx(vertices[i].y),"root anchored")
-			check(roots > 0 and mesh.get_aabb().size.y > 0,"mesh dimensions")
+			check(roots > 0 and geometry.bounds.size.y > 0 and mesh.get_surface_count()==1,"mesh dimensions and upload")
 			for i in indices:
 				check(i >= 0 and i < vertices.size(),"valid index")
-			var swept := Grass.swept_bounds(mesh,Transform3D.IDENTITY)
-			check(swept.encloses(mesh.get_aabb().grow(0.239)),"wind bounds")
+			var bound: AABB = geometry.bounds
+			var swept := Grass.sweep_aabb(bound,Transform3D.IDENTITY)
+			check(swept.encloses(bound.grow(0.239)),"wind bounds")
+			var frame := Transform3D(Basis(Vector3.UP,0.7).scaled(Vector3.ONE*1.2),Vector3(-8,12,6))
+			var world_bounds := Grass.sweep_aabb(bound,frame)
+			for vertex: Vector3 in vertices:
+				for bend: Vector3 in [Vector3(0.239,0,0),Vector3(-0.239,0,0),Vector3(0,0,0.239),Vector3(0,0,-0.239)]:
+					check(world_bounds.has_point(frame*vertex+bend),"rotated swept bounds contain displaced vertex")
+	var packed := PackedFloat32Array()
+	packed.resize(32)
+	var basis := Basis(Vector3(1,2,3),Vector3(4,5,6),Vector3(7,8,9))
+	Grass.write_instance(packed,16,Transform3D(basis,Vector3(10,11,12)),0.5)
+	check(packed.slice(16,32)==PackedFloat32Array([1,4,7,10,2,5,8,11,3,6,9,12,0.5,0,0,1]),"bulk buffer row-major layout")
+	check(packed.slice(0,16)==PackedFloat32Array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),"bulk buffer offset isolation")
 	var mask := Mask.new()
 	check(not mask.load_package("user://not-a-mask"),"missing mask rejected")
 	check(mask.sample(0,0) == Vector4.ZERO,"missing mask fail closed")
-	var path := "user://ground_cover_fixture_mask"
+	var path := "user://ground_cover_fixture_mask_"+str(Time.get_ticks_usec())
 	DirAccess.make_dir_recursive_absolute(path)
 	var payload := PackedByteArray()
 	payload.resize(4000000)
@@ -82,7 +101,17 @@ func _run() -> void:
 	hash_context.start(HashingContext.HASH_SHA256)
 	hash_context.update(payload)
 	var digest := hash_context.finish().hex_encode()
-	var manifest := {"schema_version":1,"width":1000,"height":1000,"cell_size_m":2,"origin_x":-1000,"origin_z":-1000,"byte_order":"RGBA","sha256":digest}
+	var hashes: Dictionary = {}
+	for filename: String in Mask.WORLD_FILES:
+		var source := FileAccess.open(path.path_join(filename),FileAccess.WRITE)
+		if source == null:
+			printerr("FAIL fixture source creation")
+			quit(1)
+			return
+		source.store_string("fixture "+filename)
+		source.close()
+		hashes["data/world/"+filename] = FileAccess.get_sha256(path.path_join(filename))
+	var manifest := {"schema_version":1,"width":1000,"height":1000,"cell_size_m":2,"origin_x":-1000,"origin_z":-1000,"byte_order":"RGBA","channels":Mask.CHANNELS,"row_order":"z_ascending_x_ascending","source_hashes":hashes,"seed":17,"sha256":digest}
 	var f := FileAccess.open(path.path_join("manifest.json"),FileAccess.WRITE)
 	f.store_string(JSON.stringify(manifest))
 	f.close()
@@ -90,8 +119,23 @@ func _run() -> void:
 	f.store_buffer(payload)
 	f.close()
 	check(mask.load_package(path),"valid mask")
+	check(mask.verify_world_sources(path),"valid source fingerprints")
 	check(mask.sample(-999,-999).is_equal_approx(Vector4(255,64,128,32)/255.0),"RGBA mapping")
-	check(mask.sample(1000,0)==Vector4.ZERO and mask.sample(-1000.1,0)==Vector4.ZERO,"mask outside")
+	check(mask.sample(1000,0)==Vector4.ZERO and mask.sample(-1000.1,0)==Vector4.ZERO and mask.sample(NAN,0)==Vector4.ZERO,"mask outside or nonfinite")
+	manifest["channels"] = ["moisture","woodland_weight","grass_suitability","exposed_rock_weight"]
+	f = FileAccess.open(path.path_join("manifest.json"),FileAccess.WRITE)
+	f.store_string(JSON.stringify(manifest))
+	f.close()
+	check(not mask.load_package(path),"wrong channel ordering rejected")
+	manifest["channels"] = Mask.CHANNELS
+	f = FileAccess.open(path.path_join("manifest.json"),FileAccess.WRITE)
+	f.store_string(JSON.stringify(manifest))
+	f.close()
+	check(mask.load_package(path),"restored manifest")
+	f = FileAccess.open(path.path_join("roadworks.json"),FileAccess.WRITE)
+	f.store_string("changed source")
+	f.close()
+	check(not mask.verify_world_sources(path) and mask.sample(-999,-999)==Vector4.ZERO,"stale source clears mask")
 	payload[0]=0
 	f = FileAccess.open(path.path_join("biome_rgba8.bin"),FileAccess.WRITE)
 	f.store_buffer(payload)
@@ -99,6 +143,8 @@ func _run() -> void:
 	check(not mask.load_package(path),"corrupt payload")
 	DirAccess.remove_absolute(path.path_join("manifest.json"))
 	DirAccess.remove_absolute(path.path_join("biome_rgba8.bin"))
+	for filename: String in Mask.WORLD_FILES:
+		DirAccess.remove_absolute(path.path_join(filename))
 	DirAccess.remove_absolute(path)
 	var world := Fixture.new()
 	root.add_child(world)
@@ -106,7 +152,11 @@ func _run() -> void:
 	root.add_child(cover)
 	var options := {"test_fixture":true,"capture_fixture":true,"fixture_sampler":Callable(world,"sample_mask"),"pilot_bounds":Rect2(-48,-48,96,96),"tuning":{"radii":[16.0,26.0,44.0],"density":[0.18,0.09,0.04],"cap":10000,"checks":500,"uploads":2,"chunks":48}}
 	check(not cover.build(world,"medium","user://missing"),"missing production mask")
-	check(cover.build(world,"medium","",options),"fixture build")
+	if not cover.build(world,"medium","",options):
+		printerr("FAIL fixture build: ",cover.get_stats())
+		quit(1)
+		return
+	check(true,"fixture build")
 	cover.set_process(false)
 	var seen := {}
 	for rank in range(4096):
@@ -156,7 +206,7 @@ func _run() -> void:
 			for pose: Dictionary in entry.fixture_groups[s]:
 				var frame: Transform3D = pose.frame
 				for lod in range(3):
-					check(not world.road_clearance.overlaps(Grass.swept_bounds(cover._meshes[s][lod],frame),0.12,true),"exact swept road exclusion, every LOD")
+					check(not world.road_clearance.overlaps(Grass.sweep_aabb(cover._mesh_bounds[s][lod],frame),0.12,true),"exact swept road exclusion, every LOD")
 	check(world.road_clearance.overlaps(AABB(Vector3(3.5,0,7),Vector3(0.2,0.3,0.2)),0,true),"shoulder fixture")
 	check(not world.road_clearance.overlaps(AABB(Vector3(17,0,7),Vector3(0.2,0.3,0.2)),0,true),"under bridge allowed")
 	check(world.road_clearance.overlaps(AABB(Vector3(17,8,7),Vector3(0.2,0.3,0.2)),0,true),"deck excluded")
@@ -195,14 +245,23 @@ func _run() -> void:
 	world.add_strip(Rect2(27,-60,2,120),0.0,false)
 	cover._process(0.016)
 	check(cover.get_stats().state=="disabled","mutated triangle index disables")
+	if not cover.build(world,"medium","",options):
+		printerr("FAIL rebuild after mutation: ",cover.get_stats())
+		quit(1)
+		return
+	cover.set_process(false)
 	world.road_clearance=null
 	cover._process(0.016)
-	check(cover.get_stats().state=="disabled","lost clearance disables")
+	check(cover.get_stats().state=="disabled" and cover.get_stats().active_instances==0,"lost clearance independently disables")
 	check(not cover.build(world,"medium","",options),"invalid clearance build")
 	# Full pilot planning under cap pressure: check all tiers without spawning.
 	world.road_clearance = Fixture.Clearance.new()
 	world.add_strip(Rect2(-3,-60,6,120),0.0,false)
-	check(cover.build(world,"high","",{"test_fixture":true,"fixture_sampler":Callable(world,"sample_mask"),"tuning":{"cap":12000}}),"tight cap fixture")
+	check(not cover.build(world,"medium","",{"pilot_bounds":Rect2(0,0,-1,10)}),"negative pilot bounds")
+	if not cover.build(world,"high","",{"test_fixture":true,"fixture_sampler":Callable(world,"sample_mask"),"tuning":{"cap":12000}}):
+		printerr("FAIL tight cap fixture: ",cover.get_stats())
+		quit(1)
+		return
 	cover.set_process(false)
 	for p in [Vector2(0,0),Vector2(7,7),Vector2(-19,3),Vector2(70,-50)]:
 		cover._plan(p,p+Vector2(48,0))
@@ -212,6 +271,25 @@ func _run() -> void:
 			check(plan.planned_chunks_per_lod[lod] > 0 and plan.planned_candidate_limit_per_chunk[lod] > 0,"tight cap preserves all distance tiers")
 			reserved += int(plan.planned_chunks_per_lod[lod])*int(plan.planned_candidate_limit_per_chunk[lod])
 		check(reserved <= plan.cap,"tight cap exact reservation")
+	# Tiny cap and zero density cannot silently queue empty work.
+	var tiny_options := {"test_fixture":true,"fixture_sampler":Callable(world,"sample_mask"),"tuning":{"cap":1,"chunks":360,"density":[1.0,0.0,0.0]}}
+	if not cover.build(world,"high","",tiny_options):
+		printerr("FAIL tiny cap fixture")
+		quit(1)
+		return
+	cover.set_process(false)
+	cover.update_focus(Vector3(8,2,8))
+	drain(cover)
+	check(cover.get_stats().active_chunks==1 and cover.get_stats().active_instances<=1,"cap one creates one actual candidate chunk")
+	tiny_options.tuning.density=[0.0,0.0,0.0]
+	if not cover.build(world,"high","",tiny_options):
+		printerr("FAIL zero density fixture")
+		quit(1)
+		return
+	cover.set_process(false)
+	cover.update_focus(Vector3(8,2,8))
+	drain(cover)
+	check(cover.get_stats().active_chunks==0 and cover.get_stats().candidates_processed==0,"zero density does not enqueue empty chunks")
 	cover.shutdown()
 	check(cover.get_child_count()==0 and cover.get_stats().active_instances==0,"shutdown releases nodes")
 	cover.free()
