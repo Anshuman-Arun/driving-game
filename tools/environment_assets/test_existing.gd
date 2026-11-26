@@ -84,7 +84,7 @@ func _audit(species: String, alpha_path: String, limit: Vector3) -> void:
 					var tangent := Vector3(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2])
 					_check(tangent.is_finite() and absf(tangent.length() - 1.0) < 0.05 and absf(absf(tangents[i * 4 + 3]) - 1.0) < 0.05, "Invalid tangent: " + species)
 					if i < normals.size():
-						_check(absf(tangent.dot(normals[i])) < 0.1, "Tangent is not orthogonal to normal: " + species)
+						_check(absf(tangent.dot(normals[i])) < 0.1, "Tangent is not orthogonal to normal: %s surface=%d vertex=%d dot=%f normal=%s tangent=%s" % [species, surface, i, tangent.dot(normals[i]), str(normals[i]), str(tangent)])
 	_check(alpha_surfaces > 0, "No runtime alpha-scissor surface: " + species)
 	print(species, " fitted bounds ", bounds, ", triangles=", triangles, ", surfaces=", mesh.get_surface_count(), ", scissor surfaces=", alpha_surfaces)
 
