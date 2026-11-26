@@ -164,6 +164,7 @@ func _fail(reason: String) -> bool:
 
 func set_graphics(preset: String) -> void:
 	var key := preset.to_lower()
+	var previous_profile := _profile
 	_profile = PROFILES.get(key, PROFILES.medium).duplicate(true)
 	# Numeric overrides are bounded even in experimental density sweeps.
 	var tuning: Dictionary = _options.get("tuning", {}) if _options.get("tuning") is Dictionary else {}
@@ -178,7 +179,12 @@ func set_graphics(preset: String) -> void:
 	for k in ["cap", "checks", "uploads", "chunks", "upload_instances", "work_usec"]:
 		if tuning.has(k):
 			_profile[k] = int(clampf(_finite_number(tuning[k], float(_profile[k])), 1.0, float(PROFILES.high[k])))
+	if previous_profile == _profile:
+		return
 	if _material != null:
+		_material.set_shader_parameter("lod_blade_fade_enabled", bool(tuning.get("lod_blade_fade_enabled", true)))
+		_material.set_shader_parameter("near_radius", float(radii[0]))
+		_material.set_shader_parameter("mid_radius", float(radii[1]))
 		_material.set_shader_parameter("wind_enabled", bool(tuning.get("wind_enabled", true)))
 		_material.set_shader_parameter("wind_strength", clampf(_finite_number(tuning.get("wind_strength", 0.08), 0.08), 0.0, 0.16))
 		_material.set_shader_parameter("fade_enabled", bool(tuning.get("fade_enabled", true)))
@@ -550,6 +556,10 @@ func _flush_active() -> void:
 	_job.clear()
 	_last_planned_limits = [0, 0, 0]
 	_last_planned_chunks = [0, 0, 0]
+	_last_checks = 0
+	_last_uploads = 0
+	_last_upload_instances = 0
+	_last_work_usec = 0
 
 func get_stats() -> Dictionary:
 	var total := int(_counts[0]+_counts[1]+_counts[2])
