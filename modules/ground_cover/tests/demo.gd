@@ -1,7 +1,7 @@
 extends Node3D
 const Cover = preload("../ground_cover.gd")
 const Fixture = preload("fixture_world.gd")
-var cover: Node3D
+var cover: Cover
 var camera: Camera3D
 var quality := 1
 var vehicle_bend := false
@@ -56,6 +56,8 @@ func _ready() -> void:
 		options["fixture_sampler"]=Callable(world,"sample_mask")
 	if not cover.build(world,"medium",mask_path,options):
 		push_error(str(cover.get_stats()))
+		set_process(false)
+		set_process_unhandled_key_input(false)
 
 func _process(delta: float) -> void:
 	var direction := Vector3(float(Input.is_physical_key_pressed(KEY_D))-float(Input.is_physical_key_pressed(KEY_A)),0,float(Input.is_physical_key_pressed(KEY_S))-float(Input.is_physical_key_pressed(KEY_W)))
