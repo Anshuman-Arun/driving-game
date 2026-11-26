@@ -83,8 +83,8 @@ func _run() -> void:
 	var packed := PackedFloat32Array()
 	packed.resize(32)
 	var basis := Basis(Vector3(1,2,3),Vector3(4,5,6),Vector3(7,8,9))
-	Grass.write_instance(packed,16,Transform3D(basis,Vector3(10,11,12)),0.5)
-	check(packed.slice(16,32)==PackedFloat32Array([1,4,7,10,2,5,8,11,3,6,9,12,0.5,0,0,1]),"bulk buffer row-major layout")
+	Grass.write_instance(packed,16,Transform3D(basis,Vector3(-4,11,4)),0.5)
+	check(packed.slice(16,32)==PackedFloat32Array([1,4,7,-4,2,5,8,11,3,6,9,4,0.5,0.75,0.25,1]),"bulk buffer row-major layout")
 	check(packed.slice(0,16)==PackedFloat32Array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),"bulk buffer offset isolation")
 	var mask := Mask.new()
 	check(not mask.load_package("user://not-a-mask"),"missing mask rejected")
@@ -210,7 +210,12 @@ func _run() -> void:
 	check(world.road_clearance.overlaps(AABB(Vector3(3.5,0,7),Vector3(0.2,0.3,0.2)),0,true),"shoulder fixture")
 	check(not world.road_clearance.overlaps(AABB(Vector3(17,0,7),Vector3(0.2,0.3,0.2)),0,true),"under bridge allowed")
 	check(world.road_clearance.overlaps(AABB(Vector3(17,8,7),Vector3(0.2,0.3,0.2)),0,true),"deck excluded")
+	var uploaded_before := int(cover.get_stats().instances_uploaded)
 	cover.set_graphics("medium")
+	drain(cover)
+	check(first==fingerprint(cover) and int(cover.get_stats().instances_uploaded)==uploaded_before,"same preset is idempotent")
+	cover._flush_active()
+	cover._dirty=true
 	drain(cover)
 	check(first==fingerprint(cover),"deterministic rebuild")
 	for preset in ["low","high","medium"]:
@@ -233,12 +238,14 @@ func _run() -> void:
 	drain(cover)
 	check(first==fingerprint(cover),"valid focus recovers deterministically")
 	world.bad_height=true
-	cover.set_graphics("medium")
+	cover._flush_active()
+	cover._dirty=true
 	drain(cover)
 	check(cover.get_stats().active_instances==0 and cover.get_stats().rejected_candidates.height>0,"invalid height rejected")
 	world.bad_height=false
 	world.steep=true
-	cover.set_graphics("medium")
+	cover._flush_active()
+	cover._dirty=true
 	drain(cover)
 	check(cover.get_stats().active_instances==0 and cover.get_stats().rejected_candidates.slope>0,"steep slope rejected")
 	world.steep=false
