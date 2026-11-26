@@ -12,6 +12,7 @@ const PRESETS := {
 }
 const DEFAULTS := {
 	"sun_energy": 1.75, "ambient_energy": 0.60, "exposure": 1.0,
+	"sun_color": Color(1.0, 0.96, 0.89), "ambient_color": Color(0.68, 0.78, 0.94),
 	"shadow_bias": 0.027, "shadow_normal_bias": 0.64, "shadow_blur": 1.0,
 	"split_1": 0.08, "split_2": 0.23, "split_3": 0.52,
 	"ao_radius": 1.0, "ao_intensity": 0.65, "fog_density": 0.00029,
@@ -36,6 +37,15 @@ const SUN_PROPERTIES := [
 	"directional_shadow_split_1", "directional_shadow_split_2", "directional_shadow_split_3",
 	"shadow_bias", "shadow_normal_bias", "shadow_blur",
 ]
+const ENV_PROPERTIES := [
+	"ambient_light_source", "ambient_light_color", "ambient_light_energy",
+	"ambient_light_sky_contribution", "tonemap_exposure", "fog_density",
+	"adjustment_enabled", "adjustment_contrast", "adjustment_saturation",
+	"glow_enabled", "glow_intensity", "glow_bloom", "ssao_enabled",
+	"ssao_radius", "ssao_intensity", "ssr_enabled", "ssr_max_steps",
+	"ssr_depth_tolerance", "ssil_enabled", "sdfgi_enabled", "volumetric_fog_enabled",
+	"sky", "sky_rotation", "reflected_light_source", "fog_enabled",
+]
 static var _world_owners: Dictionary = {}
 var _world_id := 0
 var _preview_root: Node
@@ -43,6 +53,7 @@ var _watched_nodes: Array[Node] = []
 var _world_env: WorldEnvironment
 var _original_env: Environment
 var _candidate_env: Environment
+var _env_applied: Dictionary = {}
 var _sun: DirectionalLight3D
 var _sun_before: Dictionary = {}
 var _sun_applied: Dictionary = {}
@@ -64,7 +75,13 @@ static func validate_profile(preset: String, options: Dictionary = {}) -> Dictio
 		if not p.has(key):
 			return {"ok": false, "error": "Unknown option: " + str(key)}
 		var value: Variant = options[raw_key]
-		if key in ["ssao", "ssr", "glow"]:
+		if key in ["sun_color", "ambient_color"]:
+			if typeof(value) != TYPE_COLOR:
+				return {"ok": false, "error": "Expected Color: " + key}
+			var color: Color = value
+			if not is_finite(color.r) or not is_finite(color.g) or not is_finite(color.b) or not is_finite(color.a) or color.r < 0.0 or color.r > 1.0 or color.g < 0.0 or color.g > 1.0 or color.b < 0.0 or color.b > 1.0 or color.a != 1.0:
+				return {"ok": false, "error": "Color must have finite RGB in [0,1] and alpha 1: " + key}
+		elif key in ["ssao", "ssr", "glow"]:
 			if typeof(value) != TYPE_BOOL:
 				return {"ok": false, "error": "Expected bool: " + str(key)}
 		else:
@@ -148,6 +165,8 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	var world: World3D = root.get_viewport().find_world_3d()
 	if world == null or _owned_by_other(world.get_instance_id()):
 		return _reject("World3D missing or already has an active render preview")
+	if world.environment != world_env.environment:
+		return _reject("Supplied WorldEnvironment is not active in this World3D")
 	var world_id := world.get_instance_id()
 	var p: Dictionary = validated["values"]
 	var requested: Variant = options.get("paint_surfaces", [])
@@ -223,7 +242,7 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	var headless := DisplayServer.get_name() == "headless"
 	var forward := renderer == "forward_plus" and not headless
 	candidate.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	candidate.ambient_light_color = Color(0.68, 0.78, 0.94)
+	candidate.ambient_light_color = p["ambient_color"]
 	candidate.ambient_light_energy = p["ambient_energy"]
 	candidate.ambient_light_sky_contribution = 0.68
 	candidate.tonemap_exposure = p["exposure"]
@@ -260,7 +279,9 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	for property in SUN_PROPERTIES:
 		_sun_before[property] = sun.get(property)
 	world_env.environment = candidate
-	sun.light_color = Color(1.0, 0.96, 0.89)
+	for property in ENV_PROPERTIES:
+		_env_applied[property] = candidate.get(property)
+	sun.light_color = p["sun_color"]
 	sun.light_energy = p["sun_energy"]
 	sun.light_specular = 0.78
 	# Never enable shadows or change cascade count/atlas. Tune existing shadows only.
@@ -292,6 +313,9 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 		unavailable.append("Existing sun shadows disabled; not activated")
 	if candidate.sky == null:
 		unavailable.append("No existing sky resource; no HDRI fabricated")
+	var camera := root.get_viewport().get_camera_3d()
+	if camera != null and camera.environment != null:
+		unavailable.append("Current camera has an environment override; world preview may not be visible")
 	_status = {"active": true, "preset": preset.to_lower(), "renderer": renderer,
 		"headless": headless, "values": p.duplicate(), "unavailable": unavailable,
 		"ssao_enabled": candidate.ssao_enabled, "ssr_enabled": candidate.ssr_enabled,
@@ -322,6 +346,7 @@ func restore() -> void:
 				_sun.set(property, _sun_before[property])
 	_sun_applied.clear()
 	_sun_before.clear()
+	_env_applied.clear()
 	if _world_id != 0 and _world_owners.get(_world_id) == self:
 		_world_owners.erase(_world_id)
 	_world_id = 0
@@ -336,6 +361,16 @@ func get_status() -> Dictionary:
 	var status := _status.duplicate(true)
 	if status["active"]:
 		status["environment_attached"] = is_instance_valid(_world_env) and _world_env.environment == _candidate_env
+		var environment_changed := false
+		if status["environment_attached"]:
+			var world: World3D = _world_env.get_viewport().find_world_3d()
+			status["environment_attached"] = world != null and world.environment == _candidate_env
+			for property in _env_applied:
+				if _candidate_env.get(property) != _env_applied[property]:
+					environment_changed = true
+			status["ssao_enabled"] = _candidate_env.ssao_enabled
+			status["ssr_enabled"] = _candidate_env.ssr_enabled
+			status["glow_enabled"] = _candidate_env.glow_enabled
 		var attached := 0
 		for entry in _paint_before:
 			var mesh: Variant = entry["mesh"]
@@ -343,12 +378,14 @@ func get_status() -> Dictionary:
 				if mesh.get_surface_override_material(entry["surface"]) == entry["candidate"]:
 					attached += 1
 		status["paint_surfaces_attached"] = attached
-		var sun_changed := false
+		var sun_changed := not is_instance_valid(_sun)
 		if is_instance_valid(_sun):
+			sun_changed = _sun.shadow_enabled != status["shadow_enabled"]
+			status["shadow_enabled"] = _sun.shadow_enabled
 			for property in _sun_applied:
 				if _sun.get(property) != _sun_applied[property]:
 					sun_changed = true
-		status["drifted"] = not status["environment_attached"] or attached != _paint_before.size() or sun_changed
+		status["drifted"] = not status["environment_attached"] or attached != _paint_before.size() or sun_changed or environment_changed
 	return status
 
 ## Data only: no camera controls or blur shader changes.
