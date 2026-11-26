@@ -52,6 +52,9 @@ var _last_checks := 0
 var _last_uploads := 0
 var _last_upload_instances := 0
 var _last_work_usec := 0
+var _plan_usec := 0
+var _jobs_retargeted := 0
+var _jobs_cancelled := 0
 var _last_planned_limits := [0, 0, 0]
 var _last_planned_chunks := [0, 0, 0]
 
@@ -209,7 +212,9 @@ func _process(delta: float) -> void:
 		_last_plan = current
 		_last_plan_predict = predicted
 		_dirty = false
+		var plan_start := Time.get_ticks_usec()
 		_plan(current, predicted)
+		_plan_usec += Time.get_ticks_usec() - plan_start
 	_work()
 
 func _cell(p: Vector2) -> Vector2i:
@@ -302,14 +307,28 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 			entry["limit"] = per_chunk
 			wanted[entry.key] = entry
 	for key: Vector2i in _active.keys():
-		if not wanted.has(key) or int(_active[key].lod) < int(wanted[key].lod) or int(_active[key].limit) > int(wanted[key].limit):
+		if not wanted.has(key) or int(_active[key].count) > int(wanted[key].limit):
 			# Free excess allocation before upgrades, so old batches cannot starve jobs.
 			_release(key)
 	_queue.clear()
 	if not _job.is_empty():
 		var job_key: Vector2i = _job.key
-		if not wanted.has(job_key) or (int(wanted[job_key].lod) != int(_job.lod) or int(wanted[job_key].limit) != int(_job.limit)):
+		if not wanted.has(job_key):
 			_job.clear()
+			_jobs_cancelled += 1
+		else:
+			var target: Dictionary = wanted[job_key]
+			var new_limit := int(target.limit)
+			if new_limit != int(_job.limit) or int(target.lod) != int(_job.lod):
+				# Candidate acceptance is LOD-independent. Keep accepted rank prefixes
+				# when the moving camera changes the desired detail or quota.
+				for group: Array in _job.groups:
+					while not group.is_empty() and int(group.back().rank) >= new_limit:
+						group.pop_back()
+				_job.cursor = mini(int(_job.cursor), new_limit)
+				_job.limit = new_limit
+				_job.lod = target.lod
+				_jobs_retargeted += 1
 	for key: Vector2i in wanted:
 		var entry: Dictionary = wanted[key]
 		if _active.has(key) and int(_active[key].lod) == int(entry.lod) and int(_active[key].limit) == int(entry.limit):
@@ -403,7 +422,7 @@ func _candidate(rank: int) -> void:
 	if not overlap is bool or overlap:
 		_rejected.road += 1
 		return
-	_job.groups[species].append({"frame":frame,"seed":_random(key,idx,53)})
+	_job.groups[species].append({"frame":frame,"seed":_random(key,idx,53),"rank":rank})
 
 func _work() -> void:
 	_last_checks = 0
@@ -524,7 +543,7 @@ func _flush_active() -> void:
 
 func get_stats() -> Dictionary:
 	var total := int(_counts[0]+_counts[1]+_counts[2])
-	return {"state":_state,"fallback":_reason,"plain_material":_plain_material != null,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"planned_chunks_per_lod":_last_planned_chunks.duplicate(),"planned_candidate_limit_per_chunk":_last_planned_limits.duplicate(),"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"last_frame_upload_instances":_last_upload_instances,"last_frame_work_usec":_last_work_usec,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
+	return {"state":_state,"fallback":_reason,"plain_material":_plain_material != null,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"planned_chunks_per_lod":_last_planned_chunks.duplicate(),"planned_candidate_limit_per_chunk":_last_planned_limits.duplicate(),"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"planning_usec":_plan_usec,"retargeted_jobs":_jobs_retargeted,"cancelled_jobs":_jobs_cancelled,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"last_frame_upload_instances":_last_upload_instances,"last_frame_work_usec":_last_work_usec,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
 
 func shutdown() -> void:
 	set_process(false)
@@ -554,5 +573,8 @@ func shutdown() -> void:
 	_last_uploads = 0
 	_last_upload_instances = 0
 	_last_work_usec = 0
+	_plan_usec = 0
+	_jobs_retargeted = 0
+	_jobs_cancelled = 0
 	for k in _rejected:
 		_rejected[k] = 0
