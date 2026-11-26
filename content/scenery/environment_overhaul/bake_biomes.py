@@ -2,12 +2,13 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import tempfile
 
 import numpy as np
-from scipy.ndimage import distance_transform_edt, gaussian_filter
+from scipy.ndimage import distance_transform_edt, gaussian_filter, maximum_filter
 from scipy.spatial import ConvexHull
 from numbers import Real
 
@@ -48,7 +49,11 @@ def strict_json(data):
         return result
     def constant(value):
         raise ValueError("Invalid JSON constant: "+value)
-    return json.loads(data,object_pairs_hook=pairs,parse_constant=constant)
+    def finite_float(value):
+        number = float(value)
+        require(math.isfinite(number),"Nonfinite JSON number: "+value)
+        return number
+    return json.loads(data,object_pairs_hook=pairs,parse_constant=constant,parse_float=finite_float)
 
 
 def json_bytes(value):
@@ -62,7 +67,9 @@ def smooth(a, b, v):
 
 def cell_index(x, z):
     require(-1000 <= x < 1000 and -1000 <= z < 1000, "Outside mask")
-    return int((x+1000)//2), int((z+1000)//2)
+    # Add the origin offset after integer floor division: adding 1000 to a
+    # float first can round a point just inside the boundary onto the next cell.
+    return math.floor(x)//2+500, math.floor(z)//2+500
 
 
 def surface(h, x, z, triangular=True):
@@ -132,9 +139,13 @@ def capsule(mask, x, z, a, b, radius):
 
 
 def checked_number(value, label, minimum=0):
-    require(isinstance(value,Real) and not isinstance(value,(bool,np.bool_))
-            and np.isfinite(value) and value>=minimum, "Invalid "+label)
-    return float(value)
+    require(isinstance(value,Real) and not isinstance(value,(bool,np.bool_)), "Invalid "+label)
+    try:
+        number = float(value)
+    except OverflowError as error:
+        raise ValueError("Invalid "+label) from error
+    require(math.isfinite(number) and number>=minimum, "Invalid "+label)
+    return number
 
 
 def road_mask(graph, works, x,z, margin):
@@ -238,6 +249,13 @@ def triangle_slope(h):
     return result
 
 
+def footprint_slope(slope):
+    # A 2 m radius footprint from any point in a 2 m cell can reach the
+    # immediately adjacent cells, and the far boundary of a second cell.
+    # Include the full conservative 5 x 5 neighborhood.
+    return maximum_filter(slope,size=5,mode="nearest")
+
+
 def scenery_masks(src,x,z):
     protected, props, trees = (np.zeros(x.shape,bool) for _ in range(3))
     manifest = src.json("content/scenery/manifest.json")
@@ -261,6 +279,7 @@ def scenery_masks(src,x,z):
                 # understory beneath crowns but not saplings or trunk overlaps.
                 capsule(trees,x,z,p,p,radius)
                 capsule(props,x,z,p,p,.85*scale)
+                capsule(protected,x,z,p,p,.45*scale)
             else:
                 # Roadworks may relocate guardrails by up to 3 m.
                 capsule(props,x,z,p,p,radius+(3 if kind=="guardrail" else 0))
@@ -291,10 +310,13 @@ def scenery_masks(src,x,z):
                 radius = float(scale)*(4.2 if kind==0 else 5.5)
                 capsule(trees,x,z,p,p,radius)
                 capsule(props,x,z,p,p,.85*float(scale))
+                capsule(protected,x,z,p,p,.45*float(scale))
             else:
                 # Non-live premium cache remains a conservative duplicate guard.
                 radius = max(1.5,float(scale)*(3.5 if kind in (0,1) else 1.5))
                 capsule(props,x,z,p,p,radius)
+                if filename=="vegetation.bin" and kind==4:
+                    capsule(protected,x,z,p,p,radius)
     return protected,props,trees
 
 
@@ -326,6 +348,7 @@ def bake(root, seed, tuning=None):
     lane_error = float(np.max(np.abs(surface(canonical,points[:,0],points[:,2],False)-points[:,1])))
     require(lane_error < .015,"Canonical lane/height alignment failed")
     slope = triangle_slope(h)
+    plant_slope = footprint_slope(slope)
     road = road_mask(graph,works,x,z,t["road_margin_m"])
     wet = water_mask(lake,works)
     protected,props,trees = scenery_masks(src,x,z)
@@ -374,13 +397,14 @@ def bake(root, seed, tuning=None):
     for idx in rng.permutation(len(q)**2):
         pz,px = q[idx//len(q)],q[idx%len(q)]
         a,b = np.array([px,pz])+rng.uniform(-.35,.35,2)*step
-        # Round before validation, so serialized coordinates cannot cross a boundary.
-        a,b = round(float(a),5),round(float(b),5)
+        # Quantize to the actual Godot Vector3 precision before cell and spacing
+        # checks; emit exact float32 values rather than decimal rounding.
+        a,b = float(np.float32(a)),float(np.float32(b))
         i,j = cell_index(a,b)
         if (excluded[j,i] or prop_dist[j,i]<=UNDERSTORY_RADIUS_M
                 or water_dist[j,i]<=t["water_margin_m"]+UNDERSTORY_RADIUS_M
                 or road_dist[j,i]<t["sightline_m"]+UNDERSTORY_RADIUS_M
-                or slope[j,i]>t["max_understory_slope"]):
+                or plant_slope[j,i]>t["max_understory_slope"]):
             rejected["exclusion"]+=1
             continue
         g,w,m,k = grass[j,i],woodland[j,i],moisture[j,i],rock[j,i]
@@ -403,7 +427,7 @@ def bake(root, seed, tuning=None):
             continue
         kind = SPECIES[rng.choice(len(SPECIES),p=probabilities/total)]
         buckets.setdefault(key,[]).append((a,b))
-        placements.append(dict(species_id=kind,x=round(float(a),5),z=round(float(b),5),
+        placements.append(dict(species_id=kind,x=a,z=b,
                                yaw_rad=round(float(rng.uniform(0,2*np.pi)),6),
                                scale=round(float(rng.uniform(.75,1.25)),5),
                                seed=int(rng.integers(0,2**31))))
