@@ -15,6 +15,7 @@ const PROFILES := {
 }
 var _world: Node
 var _clearance: Object
+var _capture_fixture := false
 var _mask = Mask.new()
 var _fixture: Callable
 var _bounds := WORLD
@@ -63,18 +64,23 @@ func build(world: Node, preset: String, mask_dir: String, options: Dictionary = 
 	if not is_instance_valid(world) or not world.has_method("get_surface_height_at"):
 		return _fail("world height API unavailable")
 	_world = world
-	_clearance = world.get("road_clearance")
+	var clearance: Variant = world.get("road_clearance")
+	if not clearance is Object:
+		return _fail("road clearance unavailable")
+	_clearance = clearance
 	if not _valid_clearance():
 		return _fail("road clearance unavailable")
 	_fixture = Callable()
 	if options.get("fixture_sampler") is Callable and OS.is_debug_build() and bool(options.get("test_fixture", false)):
 		_fixture = options.fixture_sampler
+	_capture_fixture = _fixture.is_valid() and bool(options.get("capture_fixture", false))
 	if not _fixture.is_valid() and not _mask.load_package(mask_dir):
 		return _fail(_mask.error)
 	_material = ShaderMaterial.new()
 	_material.shader = SHADER
 	var draw_material: Material = _material
-	if bool(options.get("tuning", {}).get("plain_material", false)):
+	var tuning: Dictionary = options.get("tuning", {}) if options.get("tuning") is Dictionary else {}
+	if bool(tuning.get("plain_material", false)):
 		_plain_material = StandardMaterial3D.new()
 		_plain_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 		_plain_material.vertex_color_use_as_albedo = true
@@ -110,29 +116,39 @@ func set_graphics(preset: String) -> void:
 	var key := preset.to_lower()
 	_profile = PROFILES.get(key, PROFILES.medium).duplicate(true)
 	# Numeric overrides are bounded even in experimental density sweeps.
-	var tuning: Dictionary = _options.get("tuning", {})
+	var tuning: Dictionary = _options.get("tuning", {}) if _options.get("tuning") is Dictionary else {}
 	var densities: Array = _profile.density
 	var radii: Array = _profile.radii
 	if tuning.get("density") is Array and tuning.density.size() == 3:
 		for i in range(3):
-			densities[i] = clampf(float(tuning.density[i]), 0.0, 1.0 if i == 0 else float(densities[i-1]))
+			densities[i] = clampf(_finite_number(tuning.density[i], float(densities[i])), 0.0, 1.0 if i == 0 else float(densities[i-1]))
 	if tuning.get("radii") is Array and tuning.radii.size() == 3:
 		for i in range(3):
-			radii[i] = clampf(float(tuning.radii[i]), 8.0 if i == 0 else float(radii[i-1]) + 4.0, 152.0 + i * 4.0)
+			radii[i] = clampf(_finite_number(tuning.radii[i], float(radii[i])), 8.0 if i == 0 else float(radii[i-1]) + 4.0, 152.0 + i * 4.0)
 	for k in ["cap", "checks", "uploads", "chunks"]:
 		if tuning.has(k):
-			_profile[k] = clampi(int(tuning[k]), 1, int(PROFILES.high[k]))
+			_profile[k] = int(clampf(_finite_number(tuning[k], float(_profile[k])), 1.0, float(PROFILES.high[k])))
 	if _material != null:
 		_material.set_shader_parameter("wind_enabled", bool(tuning.get("wind_enabled", true)))
-		_material.set_shader_parameter("wind_strength", clampf(float(tuning.get("wind_strength", 0.08)), 0.0, 0.16))
+		_material.set_shader_parameter("wind_strength", clampf(_finite_number(tuning.get("wind_strength", 0.08), 0.08), 0.0, 0.16))
 		_material.set_shader_parameter("fade_enabled", bool(tuning.get("fade_enabled", true)))
 		_material.set_shader_parameter("fade_start", float(radii[2]) * 0.84)
 		_material.set_shader_parameter("fade_end", float(radii[2]))
 	_flush_active()
 	_dirty = true
 
+func _finite_number(value: Variant, fallback: float) -> float:
+	if (value is int or value is float) and is_finite(float(value)):
+		return float(value)
+	return fallback
+
 func update_focus(camera_position: Vector3, velocity: Vector3 = Vector3.ZERO) -> void:
-	if _state != "ready" or not camera_position.is_finite():
+	if _state != "ready":
+		return
+	if not camera_position.is_finite():
+		_flush_active()
+		_has_focus = false
+		_dirty = true
 		return
 	if _has_focus and _focus.distance_to(camera_position) > 80.0:
 		_flush_active()
@@ -370,7 +386,8 @@ func _candidate(rank: int) -> void:
 	if not _bounds.encloses(Rect2(Vector2(swept.position.x,swept.position.z),Vector2(swept.size.x,swept.size.z))):
 		_rejected.bounds += 1
 		return
-	if bool(_clearance.call("overlaps",swept,0.12,true)):
+	var overlap: Variant = _clearance.call("overlaps",swept,0.12,true)
+	if not overlap is bool or overlap:
 		_rejected.road += 1
 		return
 	_job.groups[species].append({"frame":frame,"seed":_random(key,idx,53)})
@@ -447,6 +464,10 @@ func _publish() -> void:
 		node.visible = true
 		nodes.append(node)
 	_active[key] = {"nodes":nodes,"lod":lod,"count":count,"limit":int(_job.limit)}
+	# Dummy rendering backends may not retain GPU-side instance transforms.
+	# Preserve a CPU diagnostic snapshot only for explicit debug fixtures.
+	if _capture_fixture:
+		_active[key]["fixture_groups"] = _job.groups.duplicate(true)
 	_counts[lod] += count
 	_uploaded += count
 
@@ -488,6 +509,7 @@ func shutdown() -> void:
 	_plain_material = null
 	_mask.bytes.clear()
 	_fixture = Callable()
+	_capture_fixture = false
 	_world = null
 	_clearance = null
 	_has_focus = false
