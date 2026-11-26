@@ -18,6 +18,7 @@ var _world: Node
 var _clearance: Object
 var _clearance_triangles := 0
 var _capture_fixture := false
+var _fixture_mode := false
 var _mask = Mask.new()
 var _fixture: Callable
 var _bounds := WORLD
@@ -61,14 +62,21 @@ var _last_planned_chunks := [0, 0, 0]
 
 func build(world: Node, preset: String, mask_dir: String, options: Dictionary = {}) -> bool:
 	shutdown()
-	_options = options.duplicate()
-	_seed = int(options.get("seed", 20261125))
+	_options = options.duplicate(true)
+	_seed = int(clampf(_finite_number(options.get("seed", 20261125), 20261125.0), -2147483648.0, 2147483647.0))
 	_bounds = WORLD
-	if options.get("pilot_bounds") is Rect2:
-		_bounds = WORLD.intersection(options.pilot_bounds)
+	if options.has("pilot_bounds"):
+		if not options.pilot_bounds is Rect2:
+			return _fail("pilot bounds must be Rect2")
+		var requested: Rect2 = options.pilot_bounds
+		if not requested.position.is_finite() or not requested.end.is_finite() or not requested.has_area():
+			return _fail("invalid pilot bounds")
+		_bounds = WORLD.intersection(requested)
 	if not _bounds.has_area():
 		return _fail("empty pilot bounds")
-	if not is_instance_valid(world) or not world.has_method("get_surface_height_at"):
+	if is_inside_tree() and not global_transform.is_equal_approx(Transform3D.IDENTITY):
+		return _fail("ground cover requires identity global transform")
+	if not is_instance_valid(world) or not world.has_method("get_surface_height_at") or not _has_property(world,"road_clearance"):
 		return _fail("world height API unavailable")
 	_world = world
 	var clearance: Variant = world.get("road_clearance")
@@ -81,18 +89,27 @@ func build(world: Node, preset: String, mask_dir: String, options: Dictionary = 
 	_fixture = Callable()
 	if options.get("fixture_sampler") is Callable and OS.is_debug_build() and bool(options.get("test_fixture", false)):
 		_fixture = options.fixture_sampler
-	_capture_fixture = _fixture.is_valid() and bool(options.get("capture_fixture", false))
-	# A preview runtime indexes only the rendered subset of roads. Never treat
-	# its incomplete index as authoritative for production mask placement.
-	if not _fixture.is_valid():
-		for property: Dictionary in world.get_property_list():
-			if str(property.get("name")) == "report":
-				var report: Variant = world.get("report")
-				if report is Dictionary and report.has("full_world") and not bool(report.full_world):
-					return _fail("production cover requires a full-world clearance index")
-				break
-	if not _fixture.is_valid() and not _mask.load_package(mask_dir):
-		return _fail(_mask.error)
+	_fixture_mode = _fixture.is_valid()
+	_capture_fixture = _fixture_mode and bool(options.get("capture_fixture", false))
+	var source_directory := ""
+	# A preview runtime indexes only rendered roads; never use it as a
+	# production clearance source. Canonical masks are baked with roadworks.
+	if not _fixture_mode and _has_property(world,"report"):
+		var report: Variant = world.get("report")
+		if not report is Dictionary or not bool(report.get("full_world",false)):
+			return _fail("production cover requires a full-world clearance index")
+		if _has_property(world,"roadworks"):
+			var works: Variant = world.get("roadworks")
+			if not works is Dictionary or works.is_empty():
+				return _fail("production mask requires roadworks terrain")
+			source_directory = str(report.get("source_directory",""))
+			if source_directory.is_empty():
+				return _fail("production world source directory unavailable")
+	if not _fixture_mode:
+		if not _mask.load_package(mask_dir):
+			return _fail(_mask.error)
+		if not source_directory.is_empty() and not _mask.verify_world_sources(source_directory):
+			return _fail(_mask.error)
 	_material = ShaderMaterial.new()
 	_material.shader = SHADER
 	var draw_material: Material = _material
@@ -117,16 +134,21 @@ func build(world: Node, preset: String, mask_dir: String, options: Dictionary = 
 	set_process(true)
 	return true
 
+func _has_property(object: Object, property_name: String) -> bool:
+	for property: Dictionary in object.get_property_list():
+		if str(property.get("name")) == property_name:
+			return true
+	return false
+
 func _valid_clearance() -> bool:
 	if not is_instance_valid(_clearance) or not _clearance.has_method("overlaps"):
 		return false
 	var count: Variant = _clearance.get("triangle_count")
-	return (count is int or count is float) and int(count) > 0
+	return count is int and count > 0
 
 func _fail(reason: String) -> bool:
-	_state = "disabled"
+	shutdown()
 	_reason = reason
-	set_process(false)
 	return false
 
 func set_graphics(preset: String) -> void:
@@ -171,8 +193,13 @@ func update_focus(camera_position: Vector3, velocity: Vector3 = Vector3.ZERO) ->
 		_flush_active()
 		_dirty = true
 	_focus = camera_position
-	_velocity = velocity.limit_length(80.0) if velocity.is_finite() else Vector3.ZERO
+	_velocity = _safe_velocity(velocity)
 	_has_focus = true
+
+func _safe_velocity(velocity: Vector3) -> Vector3:
+	if not velocity.is_finite():
+		return Vector3.ZERO
+	return velocity.clamp(Vector3.ONE * -80.0, Vector3.ONE * 80.0).limit_length(80.0)
 
 func set_vehicle_interaction(position: Vector3, velocity: Vector3, enabled: bool) -> void:
 	if _material == null:
@@ -181,20 +208,18 @@ func set_vehicle_interaction(position: Vector3, velocity: Vector3, enabled: bool
 	_material.set_shader_parameter("vehicle_enabled", valid)
 	if valid:
 		_material.set_shader_parameter("vehicle_position", position)
-		_material.set_shader_parameter("vehicle_velocity", velocity.limit_length(80.0))
+		_material.set_shader_parameter("vehicle_velocity", _safe_velocity(velocity))
 
 func _process(delta: float) -> void:
 	if _state != "ready":
 		return
-	if not is_instance_valid(_world) or not _valid_clearance() or _world.get("road_clearance") != _clearance or int(_clearance.get("triangle_count")) != _clearance_triangles:
-		_flush_active()
-		_fail("world or road clearance changed")
+	if (_fixture_mode and not _fixture.is_valid()) or not is_instance_valid(_world) or not _valid_clearance() or _world.get("road_clearance") != _clearance or int(_clearance.get("triangle_count")) != _clearance_triangles:
+		_fail("world, fixture or road clearance changed")
 		return
 	if not _has_focus:
 		return
 	# This module consumes world coordinates: reject a non-identity parent transform.
 	if not global_transform.is_equal_approx(Transform3D.IDENTITY):
-		_flush_active()
 		_fail("ground cover requires identity global transform")
 		return
 	_clock += delta
@@ -340,7 +365,7 @@ func _sample_mask(x: float, z: float) -> Vector4:
 
 func _height(x: float, z: float) -> float:
 	var value: Variant = _world.call("get_surface_height_at", x, z)
-	if value is float or value is int:
+	if (value is float or value is int) and is_finite(float(value)) and absf(float(value)) <= 10000.0:
 		return float(value)
 	return NAN
 
@@ -363,7 +388,7 @@ func _candidate(rank: int) -> void:
 		_rejected.height += 1
 		return
 	var gradient := Vector2(hx-y,hz-y) * 4.0
-	if gradient.length() > 0.8:
+	if not gradient.is_finite() or gradient.length() > 0.8:
 		_rejected.slope += 1
 		return
 	var selector := _random(key,idx,31)
@@ -526,14 +551,19 @@ func shutdown() -> void:
 	_geometry_bytes = 0
 	_material = null
 	_plain_material = null
-	_mask.bytes.clear()
+	_mask.clear()
 	_fixture = Callable()
 	_capture_fixture = false
+	_fixture_mode = false
 	_world = null
 	_clearance = null
 	_clearance_triangles = 0
 	_has_focus = false
 	_dirty = true
+	_profile.clear()
+	_options.clear()
+	_counts = [0,0,0]
+	_clock = 0.0
 	_state = "disabled"
 	_reason = "shutdown"
 	_generated = 0
