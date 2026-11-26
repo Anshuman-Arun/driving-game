@@ -75,6 +75,8 @@ func _base_value_valid(key: String, value: Variant) -> bool:
 		return value is Color or value is Vector3
 	if not (value is float or value is int):
 		return false
+	if key in ["water_level_m", "shore_height_m"]:
+		return absf(float(value)) <= 1000.0
 	var limits: Array = LIMITS.get(key, EXTRA_BASE_LIMITS.get(key, []))
 	if not limits.is_empty():
 		# Existing shader values may have float32 endpoint rounding.
@@ -96,11 +98,15 @@ func _make_candidate(original: ShaderMaterial, tuning: Dictionary, pilot: Varian
 	var base_values: Dictionary = {}
 	for key in BASE_VALUES:
 		var value: Variant = original.get_shader_parameter(key)
-		if value == null:
+		var explicitly_bound := value != null
+		if not explicitly_bound:
 			value = BASE_DEFAULTS[key]
 		if not _base_value_valid(key, value):
 			return null
 		base_values[key] = value
+		# Preserve the shader-authored source_color default exactly when unbound.
+		if not explicitly_bound and key.ends_with("_tint"):
+			continue
 		if value is int:
 			value = float(value)
 		result.set_shader_parameter(key, value)
