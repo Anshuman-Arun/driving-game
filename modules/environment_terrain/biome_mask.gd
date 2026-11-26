@@ -93,7 +93,20 @@ func load_image(directory: String = DEFAULT_DIR) -> Image:
 		if not _is_sha256(expected):
 			return null
 		var local_path: String = "res://" + path
-		if not FileAccess.file_exists(local_path) or FileAccess.get_sha256(local_path) != expected.to_lower():
+		if not FileAccess.file_exists(local_path):
+			return null
+		# Refuse LFS pointer text even if a manifest happens to contain its hash.
+		var source := FileAccess.open(local_path, FileAccess.READ)
+		if source == null:
+			return null
+		var length := source.get_length()
+		var first_bytes := source.get_buffer(mini(128, length))
+		source.close()
+		if length <= 0 or first_bytes.slice(0, "version https://git-lfs.github.com/spec/v1".length()) == "version https://git-lfs.github.com/spec/v1".to_utf8_buffer():
+			return null
+		if path.ends_with(".bin") and length != 501 * 501 * 2:
+			return null
+		if FileAccess.get_sha256(local_path) != expected.to_lower():
 			return null
 	status = "invalid mask byte length"
 	var file := FileAccess.open(data_path, FileAccess.READ)
