@@ -51,7 +51,14 @@ func _ready() -> void:
 	for i: int in range(2):
 		var species: String = "fern" if i == 0 else "fir"
 		var limit := Vector3(1.05, 0.44, 1.05) if i == 0 else Vector3(0.95, 1.65, 0.95)
-		var existing := PremiumMesh.fit(species, limit)
+		var existing: ArrayMesh = null
+		var raw_path: String = "res://assets/premium_runtime/%s.glb" % species
+		var file := FileAccess.open(raw_path, FileAccess.READ)
+		if file != null:
+			var magic: String = file.get_buffer(4).get_string_from_ascii()
+			file.close()
+			if magic == "glTF":
+				existing = PremiumMesh.fit(species, limit)
 		var position_m := Vector3(-2.05 + i * 4.1, 0, 2.55)
 		if existing != null:
 			var display := MeshInstance3D.new()

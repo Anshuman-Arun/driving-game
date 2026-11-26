@@ -52,6 +52,9 @@ func _audit(species: String, alpha_path: String, limit: Vector3) -> void:
 	var triangles: int = 0
 	for surface: int in range(mesh.get_surface_count()):
 		var arrays: Array = mesh.surface_get_arrays(surface)
+		if arrays.size() != Mesh.ARRAY_MAX or not arrays[Mesh.ARRAY_VERTEX] is PackedVector3Array or not arrays[Mesh.ARRAY_NORMAL] is PackedVector3Array or not arrays[Mesh.ARRAY_TEX_UV] is PackedVector2Array:
+			_check(false, "Missing scan attributes: " + species)
+			continue
 		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
 		var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
@@ -69,9 +72,39 @@ func _audit(species: String, alpha_path: String, limit: Vector3) -> void:
 			continue
 		if material.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR:
 			alpha_surfaces += 1
-			_check(material.albedo_texture != null and material.cull_mode == BaseMaterial3D.CULL_DISABLED, "Bad cutout material: " + species)
+			_check(material.albedo_texture != null and material.cull_mode == BaseMaterial3D.CULL_DISABLED and absf(material.alpha_scissor_threshold - 0.39) < 0.01, "Bad cutout material: " + species)
+			if material.albedo_texture != null:
+				_audit_bound_alpha(material.albedo_texture, float(above) / float(above + below), species)
 		if material.normal_enabled:
 			var tangents: Variant = arrays[Mesh.ARRAY_TANGENT]
-			_check(material.normal_texture != null and tangents is PackedFloat32Array and tangents.size() == vertices.size() * 4, "Normal-mapped surface lacks tangents: " + species)
+			if material.normal_texture == null or not tangents is PackedFloat32Array or tangents.size() != vertices.size() * 4:
+				_check(false, "Normal-mapped surface lacks tangents: " + species)
+			else:
+				for i: int in range(vertices.size()):
+					var tangent := Vector3(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2])
+					_check(tangent.is_finite() and absf(tangent.length() - 1.0) < 0.05 and absf(absf(tangents[i * 4 + 3]) - 1.0) < 0.05, "Invalid tangent: " + species)
+					if i < normals.size():
+						_check(absf(tangent.dot(normals[i])) < 0.1, "Tangent is not orthogonal to normal: " + species)
 	_check(alpha_surfaces > 0, "No runtime alpha-scissor surface: " + species)
 	print(species, " fitted bounds ", bounds, ", triangles=", triangles, ", surfaces=", mesh.get_surface_count(), ", scissor surfaces=", alpha_surfaces)
+
+func _audit_bound_alpha(texture: Texture2D, reference_coverage: float, species: String) -> void:
+	var image := texture.get_image()
+	if image == null or image.is_empty():
+		_check(false, "Bound scan texture has no readable image: " + species)
+		return
+	if image.is_compressed() and image.decompress() != OK:
+		_check(false, "Cannot decompress bound scan alpha: " + species)
+		return
+	var total: int = image.get_width() * image.get_height()
+	var opaque: int = 0
+	for y: int in range(image.get_height()):
+		for x: int in range(image.get_width()):
+			if image.get_pixel(x, y).a >= 0.39:
+				opaque += 1
+	var coverage: float = float(opaque) / float(total)
+	_check(opaque > 0 and opaque < total, "Bound scan texture is not a cutout: " + species)
+	# Compression may move pixels around the threshold; this is a coverage
+	# sanity check, not a claim of exact pixel identity or visual alignment.
+	_check(absf(coverage - reference_coverage) < 0.08, "Bound alpha coverage differs from UV-matched source: " + species)
+	print(species, " bound alpha coverage=", coverage, " source=", reference_coverage, " mipmaps=", image.has_mipmaps())

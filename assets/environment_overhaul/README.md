@@ -4,13 +4,13 @@ This directory holds ten actual self-contained glTF 2.0 scenes, five species and
 
 | Species ID | Size X/Y/Z m | LOD0 triangles | LOD1 triangles |
 |---|---|---:|---:|
-| shrub | 1.05 / 0.65 / 1.05 | 480 | 200 |
-| fern | 1.05 / 0.44 / 1.05 | 1088 | 320 |
-| sapling | 0.95 / 1.65 / 0.95 | 394 | 166 |
-| reed | 0.68 / 1.15 / 0.68 | 342 | 130 |
-| wildflower | 0.42 / 0.52 / 0.42 | 432 | 180 |
+| shrub | 1.05 / 0.65 / 1.05 | 640 | 299 |
+| fern | 1.05 / 0.44 / 1.05 | 1280 | 565 |
+| sapling | 0.95 / 1.65 / 0.95 | 536 | 258 |
+| reed | 0.68 / 1.15 / 0.68 | 488 | 250 |
+| wildflower | 0.42 / 0.52 / 0.42 | 600 | 274 |
 
-LOD bounds are matched exactly; silhouettes are approximations and must be judged locally. Fir and fern scans in assets/premium_runtime remain separate optional existing candidates. No legacy files changed.
+LODs share one procedural scaffold and one physical normalization. Every LOD1 vertex position/color occurs in LOD0; extreme groups are retained to preserve bounds. Exposed stem/flower ends are capped. Silhouettes still require local visual judgment. Fir and fern scans in assets/premium_runtime remain separate optional existing candidates. No legacy files changed.
 
 ## Reproducible staging and validation
 
@@ -20,9 +20,9 @@ From repository root, Node.js 20+ (no npm packages):
     node tools/environment_assets/generate.mjs --stage
     node tools/environment_assets/generate.mjs --verify
 
-Staging writes only generated candidates and their manifest/notice, skips identical files, and atomically replaces changed individual files. Never stages external input or performs network access. glTF embeds the vertex payload as base64, not LFS. Validation is deliberately strict for this original format rather than a general-purpose glTF validator. Negative tests cover absent texture/payload, LFS pointer, malformed accessor, missing license, wrong hash and degenerate geometry. Because assets have no textures, alpha-channel stats/mipmap checks and tangent validation are not applicable.
+Staging preflights owned paths, rejects symbolic links/nonregular destinations, skips identical bytes, takes an exclusive staging lock, writes all changed bytes to temporary files, replaces files individually, and publishes the manifest last. A power loss or rename error can still leave a partially replaced pack; rerun --stage and --verify. If a crashed process left .stage-lock, remove it only after confirming no staging process is running. Scoped .gitattributes forces LF for hashed resources on Windows. Never stages external input or performs network access. glTF embeds the vertex payload as base64, not LFS. Validation is deliberately strict for this original format rather than a general-purpose glTF validator. 24 targeted negative tests require the specific expected rejection, including hidden transforms, scene cardinality, material texture dependencies, accessor offsets/strides/sparse data, wrong hashes/licenses, nonfinite geometry, degenerate triangles and mismatched LOD scaffolds. Run node tools/environment_assets/test_staging.mjs for filesystem edge cases. Because assets have no textures, alpha-channel stats/mipmap checks and tangent validation are not applicable.
 
-Godot 4.7.2 (root project):
+Godot 4.7.2 (root project): run python tools/environment_assets/verify_headless.py --existing --regressions for a bounded strict gate with error-log and completion-marker checks, or individually:
 
     godot --headless --path . --editor --import
     godot --headless --path . --script res://tools/environment_assets/test_import.gd
