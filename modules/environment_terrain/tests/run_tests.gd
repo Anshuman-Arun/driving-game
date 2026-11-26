@@ -298,6 +298,23 @@ func _test_mask(world, preview, region: Rect2) -> void:
 	DirAccess.remove_absolute(absolute.path_join("biome_rgba8.bin"))
 	DirAccess.remove_absolute(absolute)
 
+func _snapshot_geometry(node: Node, terrain: Node, output: Dictionary) -> void:
+	if node is MeshInstance3D:
+		var instance := node as MeshInstance3D
+		var resources: Array = [instance.mesh, instance.transform]
+		if instance.mesh != null:
+			for surface_index in range(instance.mesh.get_surface_count()):
+				resources.append(instance.mesh.surface_get_material(surface_index))
+				# Candidate may change terrain instance overrides only.
+				if not terrain.is_ancestor_of(instance):
+					resources.append(instance.get_active_material(surface_index))
+		output[instance.get_instance_id()] = resources
+	elif node is CollisionShape3D:
+		var collision_node := node as CollisionShape3D
+		output[collision_node.get_instance_id()] = [collision_node.shape, collision_node.transform, collision_node.disabled]
+	for child in node.get_children():
+		_snapshot_geometry(child, terrain, output)
+
 func _test_production() -> void:
 	var world := Runtime.new()
 	world.build_on_ready = false
@@ -321,6 +338,9 @@ func _test_production() -> void:
 	var report := world.report.duplicate(true)
 	var terrain := world.generated_root.get_node("TerrainChunks")
 	var originals: Dictionary = {}
+	var original_geometry: Dictionary = {}
+	_snapshot_geometry(world.generated_root, terrain, original_geometry)
+	check(not original_geometry.is_empty(), "production geometry snapshot populated")
 	for child in terrain.get_children():
 		if child is MeshInstance3D:
 			originals[child] = (child as MeshInstance3D).get_active_material(0)
@@ -330,6 +350,9 @@ func _test_production() -> void:
 	check(preview.apply_candidate(world, {"pilot_bounds": region, "roadside_bounds": region}), "real generated world material adapter")
 	check(preview.get_stats().get("chunks", 0) == originals.size(), "all real terrain chunks covered")
 	check(JSON.stringify(world.get_road_graph()) == graph and world.get_surface_height_at(-700.0, -320.0) == surface and world.road_clearance.triangle_count == triangles and world.report == report, "production graph, surface, clearance and build report unchanged")
+	var candidate_geometry: Dictionary = {}
+	_snapshot_geometry(world.generated_root, terrain, candidate_geometry)
+	check(candidate_geometry == original_geometry, "all production meshes, collider shapes and nonterrain materials remain identical")
 	preview.restore()
 	for child in originals:
 		check(child.get_active_material(0) == originals[child], "real terrain original restored " + str(child.name))
