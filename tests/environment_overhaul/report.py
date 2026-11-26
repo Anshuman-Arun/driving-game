@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 import re
 import statistics
+import struct
 import sys
 
 def percentile(values, q):
@@ -79,6 +80,21 @@ MATCH = ("site","scenario","preset","width","height","scale","renderer","gpu","c
 REQUIRED_COLUMNS = {"elapsed_s","frame_ms","speed_mps","gear","x","y","z","fov",
                     "gpu_ms","cpu_ms","vram_mib","draws","triangles","grass_instances"}
 
+def png_matches(path,width,height):
+    if not path.is_file() or path.stat().st_size<45:
+        return False
+    with path.open("rb") as f:
+        head=f.read(24)
+        if len(head)!=24 or head[:8]!=b"\x89PNG\r\n\x1a\n" or head[12:16]!=b"IHDR" or struct.unpack(">I",head[8:12])[0]!=13:
+            return False
+        if struct.unpack(">II",head[16:24])!=(width,height):
+            return False
+        f.seek(-12,2)
+        return f.read(12)==b"\x00\x00\x00\x00IEND\xaeB\x60\x82"
+
+def vector(value):
+    return value if isinstance(value,list) and len(value)==3 and all(type(x) in (float,int) and math.isfinite(x) for x in value) else None
+
 def load(path):
     meta=json.loads((path/"meta.json").read_text(encoding="utf-8"))
     if not isinstance(meta,dict):
@@ -91,9 +107,7 @@ def load(path):
     if any(None in row or None in row.values() for row in rows):
         raise ValueError("malformed CSV row")
     # A truncated capture must not pass on metadata alone.
-    meta["_screenshots_present"]=all((path/name).is_file() and (path/name).stat().st_size>24 and
-        (path/name).open("rb").read(24).startswith(b"\x89PNG\r\n\x1a\n")
-        for name in ("start.png","end.png"))
+    meta["_screenshots_present"]=all(png_matches(path/name,meta.get("width"),meta.get("height")) for name in ("start.png","end.png"))
     return meta,summarize(rows)
 
 def features(meta):
@@ -121,7 +135,7 @@ def compare(baseline,candidate):
             unresolved.append(name+" incomplete/invalid time series")
         if m.get("renderer")!="forward_plus" or not m.get("gpu") or not m.get("cpu") or m.get("driver") in ("unavailable","",None,[]):
             unresolved.append(name+" renderer/hardware unverified")
-        if m.get("car")!="mclaren_senna" or m.get("vsync")!="disabled" or m.get("max_fps")!=0 or m.get("capture_conditions_changed") is not False:
+        if m.get("car")!="mclaren_senna" or m.get("vsync")!="disabled" or m.get("max_fps")!=0 or m.get("capture_conditions_changed") is not False or type(m.get("interaction")) is not bool or valid(m.get("warmup_s")) is None or float(m["warmup_s"])<5:
             unresolved.append(name+" capture conditions unverified or changed")
         if m.get("traffic")!="enabled" or m.get("audio")!="enabled":
             unresolved.append(name+" production traffic/audio not confirmed")
@@ -136,6 +150,12 @@ def compare(baseline,candidate):
             unresolved.append("candidate grass absent or count unavailable")
     elif b.get("legacy_grass")!="enabled":
         unresolved.append("non-grass candidate changed legacy grass")
+    p,q=vector(a.get("camera_start_position")),vector(b.get("camera_start_position"))
+    u,v=vector(a.get("camera_start_forward")),vector(b.get("camera_start_forward"))
+    if p is None or q is None or u is None or v is None or math.dist(p,q)>.5 or math.dist(u,v)>.035:
+        unresolved.append("initial camera pose missing or mismatched")
+    if a.get("scenario")=="route" and (not re.fullmatch(r"[0-9a-f]{64}",str(a.get("route_hash",""))) or a.get("route_hash")!=b.get("route_hash")):
+        unresolved.append("scripted route identity missing or mismatched")
     if a.get("commit")!=b.get("commit"):
         unresolved.append("use same integrated commit with opt-in flags")
     trajectory=None

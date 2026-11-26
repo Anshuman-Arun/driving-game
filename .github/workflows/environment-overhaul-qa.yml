@@ -10,6 +10,7 @@ on:
       - 'modules/environment_rendering/**'
       - 'content/scenery/environment_overhaul/**'
       - 'assets/environment_overhaul/**'
+      - 'tools/environment_assets/**'
   workflow_dispatch:
     inputs:
       integrated:
@@ -98,11 +99,21 @@ jobs:
             exit 1
           }
           if [[ -n "${GITHUB_PATH:-}" ]]; then printf '%s\n' "$install_dir" >> "$GITHUB_PATH"; fi
+      - name: Configure candidate generator Python
+        if: ${{ inputs.integrated || github.head_ref == 'feat/env-integration' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned offline generator dependencies
+        if: ${{ inputs.integrated || github.head_ref == 'feat/env-integration' }}
+        run: python -m pip install -r content/scenery/environment_overhaul/requirements.txt
       - name: Run strict environment and root regression harness
         env:
           QA_MODE: ${{ (inputs.integrated || github.head_ref == 'feat/env-integration') && 'integrated' || 'baseline' }}
         run: |
-          python3 tests/environment_overhaul/qa.py --mode "$QA_MODE" --out "$RUNNER_TEMP/environment-qa"
+          args=(--mode "$QA_MODE" --out "$RUNNER_TEMP/environment-qa")
+          if [[ "$QA_MODE" == integrated ]]; then args+=(--prepare-mask); fi
+          python3 tests/environment_overhaul/qa.py "${args[@]}"
       - name: Summarize QA without uploading large artifacts
         if: always()
         run: |

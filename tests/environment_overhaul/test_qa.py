@@ -3,9 +3,10 @@ from pathlib import Path
 import tempfile
 import unittest
 from qa import verify_mask, verify_assets, verify_understory, sample, digest, ERROR, payload
-from report import percentile, summarize, compare, MATCH, load, main as report_main
+from report import percentile, summarize, compare, MATCH, load, png_matches, main as report_main
 from qa import run_command
 import sys
+import struct
 from unittest.mock import patch
 
 class QA(unittest.TestCase):
@@ -46,7 +47,8 @@ class QA(unittest.TestCase):
                  preset="medium",width=1920,height=1080,scale=1.0,sample_s=64,
                  renderer="forward_plus",gpu="GPU",cpu="CPU",driver=["driver"],car="mclaren_senna",
                  vsync="disabled",max_fps=0,capture_conditions_changed=False,
-                 _screenshots_present=True,interaction=False,route_departed=False)
+                 _screenshots_present=True,interaction=False,route_departed=False,warmup_s=15,
+                 camera_start_position=[0,3,8],camera_start_forward=[0,0,-1],route_hash="f"*64)
         return (dict(m,mode="baseline",features="",legacy_grass="enabled"),
                 dict(m,mode="candidate",features="a",legacy_grass="disabled"))
 
@@ -155,6 +157,18 @@ class QA(unittest.TestCase):
         for row in rows:
             row["x"]+=30
         self.assertFalse(compare((a,summary),(b,summarize(rows)))["comparable"])
+
+    def test_png_dimension_and_truncation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/"image.png"
+            # Header/trailer fixture only; not a claim of real rendered pixels.
+            head=b"\x89PNG\r\n\x1a\n"+struct.pack(">I",13)+b"IHDR"+struct.pack(">II",1920,1080)+b"\x00"*10
+            tail=b"\x00\x00\x00\x00IEND\xaeB\x60\x82"
+            path.write_bytes(head+tail)
+            self.assertTrue(png_matches(path,1920,1080))
+            self.assertFalse(png_matches(path,1280,720))
+            path.write_bytes(head)
+            self.assertFalse(png_matches(path,1920,1080))
 
     def test_timeout_and_early_log_error(self):
         with tempfile.TemporaryDirectory() as tmp:

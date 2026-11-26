@@ -88,6 +88,10 @@ def verify_mask(directory, root=ROOT, strict_sources=False):
     if strict_sources:
         for canonical in ("data/world/road_graph_v1.json","data/world/world_metadata_v1.json","data/world/terrain_height_r16le.bin","data/world/roadworks.json","data/world/terrain_roadworks_r16le.bin"):
             require(canonical in {k.removeprefix("res://") for k in sources}, f"unrecorded canonical source: {canonical}")
+    if "statistics_sha256" in m:
+        require(digest(payload(directory/"statistics.json"))==m["statistics_sha256"],"statistics SHA-256 mismatch")
+    if "generator_sha256" in m and strict_sources:
+        require(digest(payload(root/MASK.parent/"bake_biomes.py"))==m["generator_sha256"],"generator SHA-256 mismatch")
     if "understory_sha256" in m:
         understory = directory / "understory.json"
         require(digest(payload(understory)) == m["understory_sha256"], "understory SHA-256 mismatch")
@@ -182,6 +186,7 @@ def main():
     p.add_argument("--suite", choices=["all", "owned", "root"], default="all")
     p.add_argument("--agent-command", action="append", default=[], help="JSON argv array, repeat per agent")
     p.add_argument("--rebake-command", help="JSON argv; regenerate mask in place, must preserve exact bytes")
+    p.add_argument("--prepare-mask", action="store_true", help="Generate missing mask in disposable integrated checkout using C generator")
     p.add_argument("--agent-manifest", type=Path, help="JSON array of explicit agent test argv lists")
     p.add_argument("--bend-margin", type=float, default=0.36, help="Swept bound margin in metres (A: 0.24 displacement + 0.12 clearance)")
     p.add_argument("--stats-map", type=Path, help="Map semantic counters to A top-level keys")
@@ -211,6 +216,19 @@ def main():
                      "data/world/world_metadata_v1.json"):
             require(bool(payload(ROOT / path)), f"missing canonical payload {path}")
     check("canonical", canonical)
+    generator=ROOT/MASK.parent/"bake_biomes.py"
+    if args.prepare_mask:
+        def prepare():
+            require(args.mode=="integrated","--prepare-mask requires integrated mode")
+            require(generator.is_file(),"C generator missing")
+            expected=[ROOT/MASK/name for name in ("manifest.json","biome_rgba8.bin","understory.json","statistics.json")]
+            if any(p.exists() for p in expected):
+                require(all(p.is_file() for p in expected),"partial mask package; refuse implicit overwrite")
+                verify_mask(ROOT/MASK,strict_sources=True)
+            else:
+                require(run_command([sys.executable,str(generator),"--project",str(ROOT),"--output",str(ROOT/MASK),"--seed","20261121"],out/"prepare-mask.log",600)==0,"mask generation failed")
+                verify_mask(ROOT/MASK,strict_sources=True)
+        check("prepare-mask",prepare)
     missing = [p for p in CANDIDATES if not (ROOT / p).is_file()]
     if args.mode == "baseline" and missing:
         results["candidate_discovery"] = "N/A: baseline omits " + ", ".join(missing)
@@ -226,12 +244,19 @@ def main():
             check(key, validator)
         else:
             results[key] = "N/A: absent optional data" if key == "understory" or args.mode == "baseline" else "FAIL: missing"
-    if args.rebake_command:
+    if args.rebake_command or (args.mode=="integrated" and generator.is_file() and (ROOT/MASK/"manifest.json").is_file()):
         def rebake():
             before = verify_mask(ROOT / MASK, strict_sources=args.mode=="integrated")
             before_manifest = payload(ROOT / MASK / "manifest.json")
             before_understory = payload(ROOT / MASK / "understory.json") if (ROOT / MASK / "understory.json").exists() else None
-            argv = json.loads(args.rebake_command)
+            if args.rebake_command:
+                argv=json.loads(args.rebake_command)
+            else:
+                meta=read_json(ROOT/MASK/"manifest.json")
+                tuning=out/"rebake-tuning.json"
+                tuning.write_text(json.dumps(meta["tuning"]),encoding="utf-8")
+                argv=[sys.executable,str(generator),"--project",str(ROOT),"--output",str(ROOT/MASK),"--seed",str(meta["seed"]),"--tuning",str(tuning)]
+            require(isinstance(argv,list) and argv and all(isinstance(x,str) for x in argv),"rebake argv must be nonempty string array")
             for i in range(2):
                 require(run_command(argv, out / f"rebake-{i}.log", 600) == 0, "rebake failed")
                 require(verify_mask(ROOT / MASK, strict_sources=args.mode=="integrated") == before, "mask is not byte deterministic")
@@ -240,7 +265,7 @@ def main():
                     require(payload(ROOT / MASK / "understory.json")==before_understory,"understory nondeterminism")
         check("rebake", rebake)
     else:
-        results["rebake"] = "N/A: explicit generator command not provided"
+        results["rebake"] = "FAIL: integrated requires reproducibility command" if args.mode=="integrated" else "N/A: generator not available on baseline"
     command("python-fixtures", [sys.executable, "-m", "unittest", "discover", "-s",
                                  "tests/environment_overhaul", "-p", "test_*.py"], 90)
     command("engine-version", [args.godot, "--headless", "--version"], 20)
@@ -248,6 +273,15 @@ def main():
     command("root-import", [args.godot, "--headless", "--path", ".", "--editor", "--import"], 900)
     if results["root-import"] == "PASS" and results["engine-pin"] == "PASS":
         command("capture-parse",[args.godot,"--headless","--path",".","--check-only","--script","res://tests/environment_overhaul/capture.gd"],90)
+        if args.suite in ("all","owned"):
+            command("capture-self-test",[args.godot,"--headless","--path",".","--fixed-fps","60","--script","res://tests/environment_overhaul/capture.gd","--","--self-test"],180)
+            def refuse_headless():
+                target=out/"forbidden-headless-capture"
+                log=out/"capture-refusal.log"
+                status=run_command([args.godot,"--headless","--path",".","--script","res://tests/environment_overhaul/capture.gd","--","--out="+str(target)],log,60)
+                require(status==1 and "Graphical renderer required" in log.read_text(encoding="utf-8"),"headless capture did not explicitly refuse")
+                require(not target.exists(),"headless capture emitted output")
+            check("capture-headless-refusal",refuse_headless)
         if args.suite in ("all", "owned"):
             runtime = [args.godot, "--headless", "--path", ".", "--fixed-fps", "60",
                 "--script", "res://tests/environment_overhaul/environment_check.gd", "--", args.mode,
@@ -272,6 +306,8 @@ def main():
                     if cmd not in agent_commands:
                         agent_commands.append(cmd)
         check("agent-discovery",discover_commands)
+        if args.mode=="integrated":
+            check("agent-test-presence",lambda: require(all((ROOT/path).is_file() for path,_ in AGENT_TESTS),"missing owned agent tests"))
         if not agent_commands:
             results["agent_commands"] = "N/A: no explicit agent commands supplied"
         for i, argv in enumerate(agent_commands):

@@ -169,6 +169,11 @@ func apply_preview(path: String, target: Node, render: bool, quality: String, op
 		return bool(obj.call("apply_candidate", target, quality, options))
 	return bool(obj.call("apply_candidate", target, options))
 
+func audio_state() -> String:
+	if not is_instance_valid(drive) or not is_instance_valid(drive.vehicle_body):
+		return "unverified_or_muted"
+	return "enabled" if drive.vehicle_body.has_node("VehicleAudio") and not AudioServer.is_bus_mute(0) and AudioServer.get_bus_volume_db(0)>-80.0 else "unverified_or_muted"
+
 func grass_count() -> String:
 	if not is_instance_valid(cover):
 		return ""
@@ -309,6 +314,9 @@ func metric(value: float) -> String:
 	return str(value) if is_finite(value) and value > 0.0 else ""
 
 func run() -> void:
+	if OS.get_cmdline_user_args()==PackedStringArray(["--self-test"]):
+		await self_test()
+		return
 	if DisplayServer.get_name() == "headless":
 		await finish(1,"Graphical renderer required; no capture written")
 		return
@@ -391,12 +399,16 @@ func run() -> void:
 		return
 	if scenario=="offroad":
 		var found := false
-		for distance in [12.0,18.0,24.0,32.0,45.0]:
+		for distance in [12.0,18.0,24.0,32.0,45.0,60.0]:
 			for direction in [Vector3.RIGHT,Vector3.LEFT,Vector3.FORWARD,Vector3.BACK]:
 				var p: Vector3 = pose.origin+direction*distance
 				p.y = drive.world.get_surface_height_at(p.x,p.z)+0.58
 				if p.is_finite() and absf(p.x)<990 and absf(p.z)<990 and not drive.world.road_clearance.overlaps(AABB(p-Vector3(2,1,2),Vector3(4,4,4)),1.0,true):
-					pose.origin=p
+					var hit: Dictionary=drive.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(p+Vector3.UP*5,p-Vector3.UP*5,1))
+					if hit.is_empty() or not hit.collider.is_in_group("Grass") or hit.normal.dot(Vector3.UP)<0.92:
+						continue
+					var heading: Vector3=-pose.basis.z
+					pose=Transform3D(Basis.looking_at(heading.slide(hit.normal),hit.normal),hit.position+hit.normal*0.58)
 					found=true
 					break
 			if found:
@@ -412,14 +424,15 @@ func run() -> void:
 		return
 	var contacts:=0
 	for wheel in drive.vehicle_body.wheel_array:
-		contacts+=int(wheel.is_colliding())
+		if wheel.is_colliding() and (scenario!="offroad" or wheel.get_collider().is_in_group("Grass")):
+			contacts+=1
 	if contacts!=4 or not drive.vehicle_body.global_transform.is_finite() or drive.vehicle_body.global_basis.y.dot(Vector3.UP)<0.9:
 		await finish(1,"Senna failed settled four-wheel contact")
 		return
 	drive.camera.snap_to_vehicle()
 	drive.vehicle_body.freeze=true
 	legacy_grass=grass_state()
-	if mode=="baseline" and (not features.is_empty() or not feature_options.is_empty() or interaction):
+	if mode=="baseline" and (not features.is_empty() or not feature_options.is_empty()):
 		await finish(1,"Baseline must not enable experimental features")
 		return
 	if mode=="candidate":
@@ -427,6 +440,10 @@ func run() -> void:
 			await finish(1,"Explicit --features=a,d,e selection required")
 			return
 		var enabled := {}
+		for key: Variant in feature_options:
+			if not key in features.split(",",true):
+				await finish(1,"Options supplied for disabled feature: "+str(key))
+				return
 		for feature in features.split(",",true):
 			if enabled.has(feature):
 				await finish(1,"Duplicate feature: "+feature)
@@ -471,13 +488,13 @@ func run() -> void:
 				return
 	rid=root.get_viewport_rid()
 	RenderingServer.viewport_set_measure_render_time(rid,true)
-	var start_pose: Transform3D=drive.vehicle_body.global_transform
 	var warm_start:=Time.get_ticks_usec()
 	while float(Time.get_ticks_usec()-warm_start)/1e6<warmup:
 		await process_frame
 		if is_instance_valid(cover):
 			cover.call("update_focus",drive.camera.global_position,drive.vehicle_body.linear_velocity)
 	release_controls()
+	var start_pose: Transform3D=drive.vehicle_body.global_transform
 	if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale) or RenderingServer.get_current_rendering_method()!="forward_plus":
 		await finish(1,"1920x1080 output and requested scale required")
 		return
@@ -497,8 +514,10 @@ func run() -> void:
 		"gpu":RenderingServer.get_video_adapter_name(),"cpu":OS.get_processor_name(),"driver":driver_info,
 		"commit":opts["--commit"],"car":"mclaren_senna","fov":drive.camera.fov,
 		"pose":str(pose),"actual_start_pose":str(start_pose),"camera_pose":str(drive.camera.global_transform),
+		"camera_start_position":[drive.camera.global_position.x,drive.camera.global_position.y,drive.camera.global_position.z],
+		"camera_start_forward":[-drive.camera.global_basis.z.x,-drive.camera.global_basis.z.y,-drive.camera.global_basis.z.z],
 		"traffic":str(drive.get_meta("environment_qa_traffic_state","unverified")),
-		"audio":"enabled" if drive.vehicle_body.has_node("VehicleAudio") and not AudioServer.is_bus_mute(0) and AudioServer.get_bus_volume_db(0)>-80.0 else "unverified_or_muted",
+		"audio":audio_state(),
 		"warmup_s":warmup,"sample_s":duration,"controls":str(scenario)+":"+str(target_speed),"lighting":"scene default; candidate flags recorded",
 		"vsync":"disabled","max_fps":Engine.max_fps,"features":features,"feature_options":feature_options,"legacy_vegetation_visible":drive.vegetation!=null and drive.vegetation.visible,
 		"scene":"res://scenes/bootstrap/game.tscn","route_length_m":route.get_baked_length(),"route_hash":route_hash,"route_lanes":Array(route_lane_ids),"interaction":interaction,"legacy_grass":grass_state(),"complete":false}
@@ -510,7 +529,10 @@ func run() -> void:
 	var start:=Time.get_ticks_usec()
 	var prev:=start
 	var count_cache:=grass_count()
-	var next_count:=start
+	var next_count:=start+1000000
+	var expected_car: Node=drive.vehicle_body
+	var initial_traffic:=str(meta["traffic"])
+	var initial_audio:=str(meta["audio"])
 	while float(prev-start)/1e6<duration:
 		await process_frame
 		var now:=Time.get_ticks_usec()
@@ -519,8 +541,10 @@ func run() -> void:
 			cover.call("set_vehicle_interaction",drive.vehicle_body.global_position,drive.vehicle_body.linear_velocity,interaction)
 		if now>=next_count:
 			count_cache=grass_count()
+			if grass_state()!=legacy_grass or str(drive.get_meta("environment_qa_traffic_state","unverified"))!=initial_traffic or audio_state()!=initial_audio:
+				capture_conditions_changed=true
 			next_count=now+1000000
-		if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale) or drive.active_vehicle_id!="mclaren_senna" or paused or grass_state()!=legacy_grass:
+		if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale) or drive.active_vehicle_id!="mclaren_senna" or paused or drive.vehicle_body!=expected_car or drive.graphics_preset!=quality or Engine.max_fps!=0 or DisplayServer.window_get_vsync_mode()!=DisplayServer.VSYNC_DISABLED:
 			capture_conditions_changed=true
 		var p: Vector3=drive.vehicle_body.global_position
 		rows.append(PackedStringArray([str((now-start)/1e6),str((now-prev)/1000.0),
@@ -534,6 +558,8 @@ func run() -> void:
 		prev=now
 	if physics_frame.is_connected(route_controls):
 		physics_frame.disconnect(route_controls)
+	if grass_state()!=legacy_grass or str(drive.get_meta("environment_qa_traffic_state","unverified"))!=initial_traffic or audio_state()!=initial_audio:
+		capture_conditions_changed=true
 	release_controls()
 	await RenderingServer.frame_post_draw
 	image=root.get_texture().get_image()
@@ -558,3 +584,74 @@ func run() -> void:
 	file.store_string(JSON.stringify(meta,"\t"))
 	file.close()
 	await finish(0 if meta["complete"] else 1,"Capture complete; no graphical acceptance implied" if meta["complete"] else "Screenshot or capture conditions failed")
+
+
+func self_test() -> void:
+	# Headless test of actual capture prerequisites, NOT a benchmark or image.
+	if DisplayServer.get_name()!="headless":
+		await finish(1,"Self-test must be headless")
+		return
+	var errors:=0
+	var bounds: Dictionary={"pilot_bounds":[-10,-10,20,20]}
+	if not convert_rectangles(bounds) or not bounds["pilot_bounds"] is Rect2:
+		errors+=1
+	for bad in [{"pilot_bounds":[0,0,0,5]},{"roadside_bounds":[999,999,2,2]},{"pilot_bounds":[0,0,"x",1]}]:
+		if convert_rectangles(bad):
+			errors+=1
+	profile="user://capture-self-test-%d.json" % Time.get_ticks_usec()
+	game=GAME.instantiate()
+	var shell=game.get_node("GameShell")
+	shell.save_path=profile
+	root.add_child(game)
+	shell.enter_free_roam()
+	for tick in 900:
+		await physics_frame
+		drive=shell.drive
+		if is_instance_valid(drive) and drive.vehicle_body!=null:
+			break
+	if not is_instance_valid(drive) or drive.vehicle_body==null:
+		await finish(1,"Self-test world failed")
+		return
+	var plant: Node=drive.vegetation
+	var before: Dictionary=plant.get("_ground").duplicate()
+	if grass_state()!="enabled" or not suppress_grass() or grass_state()!="disabled":
+		errors+=1
+	else:
+		var current: Dictionary=plant.get("_ground")
+		for key: Variant in before:
+			if (key.z==2 and current.has(key)) or (key.z!=2 and current.get(key)!=before[key]):
+				errors+=1
+		restore_grass()
+		if plant.get("_ground")!=before or grass_state()!="enabled":
+			errors+=1
+	# Exercise all actual production spawn positions and the linked road route.
+	for site: String in VIEWS:
+		var spec: Array=VIEWS[site]
+		var pose: Variant=drive.find_road_pose(spec[0],spec[1])
+		if pose==null:
+			print("FAIL capture pose ",site)
+			errors+=1
+			continue
+		drive._spawn_vehicle("mclaren_senna",pose)
+		for tick in 90:
+			await physics_frame
+		var contacts:=0
+		for wheel in drive.vehicle_body.wheel_array:
+			contacts+=int(wheel.is_colliding())
+		if contacts!=4 or drive.active_vehicle_id!="mclaren_senna" or not drive.vehicle_body.has_node("CuratedCar"):
+			print("FAIL Senna capture prerequisites ",site," contacts=",contacts)
+			errors+=1
+		else:
+			print("PASS Senna capture prerequisites ",site)
+		route.clear_points()
+		route_lane_ids.clear()
+		route_limits.clear()
+		route_hash=""
+		var route_pose: Variant=make_route(spec[0],spec[1],60.0)
+		if route_pose==null or route.point_count<2 or route_hash.length()!=64 or route.get_baked_length()<100:
+			print("FAIL connected route ",site)
+			errors+=1
+		else:
+			print("PASS connected route ",site," length=",route.get_baked_length()," lanes=",route_lane_ids.size())
+	print("CAPTURE SELF TEST failures=",errors)
+	await finish(1 if errors else 0,"Capture fixture failed" if errors else "Capture fixture passed; no graphical output")
