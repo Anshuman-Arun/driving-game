@@ -38,7 +38,7 @@ const SUN_PROPERTIES := [
 static var _world_owners: Dictionary = {}
 var _world_id := 0
 var _owner_id := 0
-var _preview_root: Node
+var _watched_nodes: Array[Node] = []
 var _world_env: WorldEnvironment
 var _original_env: Environment
 var _candidate_env: Environment
@@ -100,8 +100,13 @@ func _owned_by_other(world_id: int) -> bool:
 	var owner: int = _world_owners.get(world_id, 0)
 	return owner != 0 and owner != get_instance_id() and is_instance_id_valid(owner)
 
-func _on_root_exiting() -> void:
+func _on_target_exiting() -> void:
 	restore()
+
+func _watch(node: Node) -> void:
+	if not _watched_nodes.has(node):
+		_watched_nodes.append(node)
+		node.tree_exiting.connect(_on_target_exiting)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE and _world_id != 0:
@@ -229,8 +234,9 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	_world_id = world_id
 	_owner_id = get_instance_id()
 	_world_owners[_world_id] = _owner_id
-	_preview_root = root
-	_preview_root.tree_exiting.connect(_on_root_exiting)
+	_watch(root)
+	_watch(world_env)
+	_watch(sun)
 	_world_env = world_env
 	_original_env = source
 	_candidate_env = candidate
@@ -258,6 +264,7 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 		var mesh: MeshInstance3D = entry["mesh"]
 		mesh.set_surface_override_material(entry["surface"], entry["candidate"])
 		_paint_before.append(entry)
+		_watch(mesh)
 	var unavailable: Array[String] = []
 	if p["ssao"] and not candidate.ssao_enabled:
 		unavailable.append("SSAO requires graphical Forward+")
@@ -277,9 +284,10 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	return true
 
 func restore() -> void:
-	if is_instance_valid(_preview_root) and _preview_root.tree_exiting.is_connected(_on_root_exiting):
-		_preview_root.tree_exiting.disconnect(_on_root_exiting)
-	_preview_root = null
+	for node in _watched_nodes:
+		if is_instance_valid(node) and node.tree_exiting.is_connected(_on_target_exiting):
+			node.tree_exiting.disconnect(_on_target_exiting)
+	_watched_nodes.clear()
 	for entry in _paint_before:
 		var mesh: Variant = entry["mesh"]
 		if is_instance_valid(mesh) and mesh.mesh != null and entry["surface"] < mesh.mesh.get_surface_count():
@@ -308,7 +316,23 @@ func restore() -> void:
 	_status = {"active": false}
 
 func get_status() -> Dictionary:
-	return _status.duplicate(true)
+	var status := _status.duplicate(true)
+	if status["active"]:
+		status["environment_attached"] = is_instance_valid(_world_env) and _world_env.environment == _candidate_env
+		var attached := 0
+		for entry in _paint_before:
+			var mesh: Variant = entry["mesh"]
+			if is_instance_valid(mesh) and mesh.mesh == entry["geometry"] and mesh.material_override == null and entry["surface"] < mesh.mesh.get_surface_count():
+				if mesh.get_surface_override_material(entry["surface"]) == entry["candidate"]:
+					attached += 1
+		status["paint_surfaces_attached"] = attached
+		var sun_changed := false
+		if is_instance_valid(_sun):
+			for property in _sun_applied:
+				if _sun.get(property) != _sun_applied[property]:
+					sun_changed = true
+		status["drifted"] = not status["environment_attached"] or attached != _paint_before.size() or sun_changed
+	return status
 
 ## Data only: no camera controls or blur shader changes.
 static func camera_candidate() -> Dictionary:
