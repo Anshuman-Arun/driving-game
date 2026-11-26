@@ -26,6 +26,16 @@ func _run() -> void:
 		check(Placement.word(-17,62,123,20261125,salts[i])==words[i],"word known vector")
 	check(Placement.allocate([4,20,56],[1000,400,100],1,120,1800)==[[1,0,0],[1,0,0]],"cap one known vector")
 	check(Placement.allocate([4,20,56],[1000,400,100],1000,120,1800)==[[4,20,56],[96,15,3]],"cap 1000 known vector")
+	for radii: Array in [[8.0,12.0,16.0],[152.0,156.0,160.0],[25.0,65.0,130.0]]:
+		var near := float(radii[0])
+		var mid := float(radii[1])
+		var far := float(radii[2])
+		var margin := Placement.lod_margin(near,mid,far)
+		check(margin>0 and margin*2<minf(mid-near,far-mid),"nonoverlapping LOD bands")
+		for previous in [-1,0,1,2]:
+			check(Placement.choose_lod(near-margin-0.1,near,mid,previous,margin)==0,"near jump")
+			check(Placement.choose_lod((near+mid)*0.5,near,mid,previous,margin)==1,"mid jump")
+			check(Placement.choose_lod(mid+margin+0.1,near,mid,previous,margin)==2,"far jump")
 	for seed: int in [-2147483648,-1,0,1,20261125,2147483647]:
 		for x: int in [-63,-17,0,62]:
 			for z: int in [-63,0,62]:
