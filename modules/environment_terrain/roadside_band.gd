@@ -9,7 +9,13 @@ var stats: Dictionary = {}
 
 func build(world: Node, region: Rect2) -> Texture2D:
 	var image := build_image(world, region)
-	return ImageTexture.create_from_image(image) if image != null else null
+	if image == null:
+		return null
+	var texture := ImageTexture.create_from_image(image)
+	if texture == null or texture.get_width() != image.get_width() or texture.get_height() != image.get_height():
+		status = "roadside texture creation failed"
+		return null
+	return texture
 
 func build_image(world: Node, region: Rect2) -> Image:
 	status = "invalid roadside region or clearance"
@@ -38,13 +44,13 @@ func build_image(world: Node, region: Rect2) -> Image:
 			var half := step * 1.5
 			var box := AABB(Vector3(center.x - half.x, -10000.0, center.y - half.y), Vector3(half.x * 2.0, 20000.0, half.y * 2.0))
 			queries += 1
-			if clearance.overlaps(box, 0.0, true):
+			if clearance.call("overlaps", box, 0.0, true):
 				excluded += 1
 				continue
 			var weight := 0.0
 			for i in range(1, 5):
 				queries += 1
-				if clearance.overlaps(box, float(i), true):
+				if clearance.call("overlaps", box, float(i), true):
 					weight = 1.0 - float(i - 1) / 4.0
 					break
 			# Fade the outer raster edge to avoid a visible rectangular boundary.
