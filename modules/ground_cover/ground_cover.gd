@@ -15,6 +15,7 @@ const PROFILES := {
 }
 var _world: Node
 var _clearance: Object
+var _clearance_triangles := 0
 var _capture_fixture := false
 var _mask = Mask.new()
 var _fixture: Callable
@@ -72,10 +73,20 @@ func build(world: Node, preset: String, mask_dir: String, options: Dictionary = 
 	_clearance = clearance
 	if not _valid_clearance():
 		return _fail("road clearance unavailable")
+	_clearance_triangles = int(_clearance.get("triangle_count"))
 	_fixture = Callable()
 	if options.get("fixture_sampler") is Callable and OS.is_debug_build() and bool(options.get("test_fixture", false)):
 		_fixture = options.fixture_sampler
 	_capture_fixture = _fixture.is_valid() and bool(options.get("capture_fixture", false))
+	# A preview runtime indexes only the rendered subset of roads. Never treat
+	# its incomplete index as authoritative for production mask placement.
+	if not _fixture.is_valid():
+		for property: Dictionary in world.get_property_list():
+			if str(property.get("name")) == "report":
+				var report: Variant = world.get("report")
+				if report is Dictionary and report.has("full_world") and not bool(report.full_world):
+					return _fail("production cover requires a full-world clearance index")
+				break
 	if not _fixture.is_valid() and not _mask.load_package(mask_dir):
 		return _fail(_mask.error)
 	_material = ShaderMaterial.new()
@@ -171,7 +182,7 @@ func set_vehicle_interaction(position: Vector3, velocity: Vector3, enabled: bool
 func _process(delta: float) -> void:
 	if _state != "ready":
 		return
-	if not is_instance_valid(_world) or not _valid_clearance() or _world.get("road_clearance") != _clearance:
+	if not is_instance_valid(_world) or not _valid_clearance() or _world.get("road_clearance") != _clearance or int(_clearance.get("triangle_count")) != _clearance_triangles:
 		_flush_active()
 		_fail("world or road clearance changed")
 		return
@@ -530,6 +541,7 @@ func shutdown() -> void:
 	_capture_fixture = false
 	_world = null
 	_clearance = null
+	_clearance_triangles = 0
 	_has_focus = false
 	_dirty = true
 	_state = "disabled"
