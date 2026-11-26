@@ -8,6 +8,8 @@ const CELL := 16.0
 const GRID := 64 # 16 candidates/m², nested by deterministic rank
 const SPECIES := 5
 const MAX_POOL := 75
+const GROUND_PROBE := 0.12
+const MAX_SLOPE := 0.8
 const WORLD := Rect2(-1000, -1000, 2000, 2000)
 const PROFILES := {
 	"low": {"radii": [20.0, 45.0, 80.0], "density": [0.30, 0.12, 0.035], "cap": 18000, "checks": 1200, "uploads": 2, "upload_instances": 1800, "work_usec": 1800, "chunks": 120},
@@ -59,6 +61,10 @@ var _last_work_usec := 0
 var _plan_usec := 0
 var _jobs_retargeted := 0
 var _jobs_cancelled := 0
+var _road_checks := 0
+var _height_samples := 0
+var _last_road_checks := 0
+var _last_height_samples := 0
 var _last_planned_limits := [0, 0, 0]
 var _last_planned_chunks := [0, 0, 0]
 
@@ -78,14 +84,14 @@ func build(world: Node, preset: String, mask_dir: String, options: Dictionary = 
 		return _fail("empty pilot bounds")
 	if is_inside_tree() and not global_transform.is_equal_approx(Transform3D.IDENTITY):
 		return _fail("ground cover requires identity global transform")
-	if not is_instance_valid(world) or not world.has_method("get_surface_height_at") or not _has_property(world,"road_clearance"):
+	if not is_instance_valid(world) or not _accepts_arguments(world,"get_surface_height_at",2) or not _has_property(world,"road_clearance"):
 		return _fail("world height API unavailable")
 	_world = world
 	var clearance: Variant = world.get("road_clearance")
 	if not clearance is Object:
 		return _fail("road clearance unavailable")
 	_clearance = clearance
-	if not _valid_clearance():
+	if not _valid_clearance() or not _accepts_arguments(_clearance,"overlaps",3):
 		return _fail("road clearance unavailable")
 	_clearance_triangles = int(_clearance.get("triangle_count"))
 	_fixture = Callable()
@@ -151,6 +157,18 @@ func _has_property(object: Object, property_name: String) -> bool:
 			return true
 	return false
 
+func _accepts_arguments(object: Object, method_name: String, count: int) -> bool:
+	if not object.has_method(method_name):
+		return false
+	for method: Dictionary in object.get_method_list():
+		if str(method.get("name")) != method_name:
+			continue
+		var args: Array = method.get("args", [])
+		var defaults: Array = method.get("default_args", [])
+		if count >= args.size() - defaults.size() and count <= args.size():
+			return true
+	return false
+
 func _valid_clearance() -> bool:
 	if not is_instance_valid(_clearance) or not _clearance.has_method("overlaps"):
 		return false
@@ -158,7 +176,7 @@ func _valid_clearance() -> bool:
 	return count is int and count > 0
 
 func _fail(reason: String) -> bool:
-	shutdown()
+	_teardown(false)
 	_reason = reason
 	return false
 
@@ -387,6 +405,8 @@ func _sample_mask(x: float, z: float) -> Vector4:
 	return _mask.sample(x,z)
 
 func _height(x: float, z: float) -> float:
+	_height_samples += 1
+	_last_height_samples += 1
 	var value: Variant = _world.call("get_surface_height_at", x, z)
 	if (value is float or value is int) and is_finite(float(value)) and absf(float(value)) <= 10000.0:
 		return float(value)
@@ -404,16 +424,30 @@ func _candidate(rank: int) -> void:
 	if _random(key,idx,23) >= mask.x * (1.0 - mask.w):
 		_rejected.mask += 1
 		return
+	# Never sample outside the world, even for a runtime that clamps its raster.
+	if not WORLD.grow(-GROUND_PROBE).has_point(p):
+		_rejected.bounds += 1
+		return
 	var y := _height(p.x,p.y)
-	var hx := _height(p.x+0.25,p.y)
-	var hz := _height(p.x,p.y+0.25)
-	if not is_finite(y) or not is_finite(hx) or not is_finite(hz):
+	var xp := _height(p.x+GROUND_PROBE,p.y)
+	var xm := _height(p.x-GROUND_PROBE,p.y)
+	var zp := _height(p.x,p.y+GROUND_PROBE)
+	var zm := _height(p.x,p.y-GROUND_PROBE)
+	if not is_finite(y) or not is_finite(xp) or not is_finite(xm) or not is_finite(zp) or not is_finite(zm):
 		_rejected.height += 1
 		return
-	var gradient := Vector2(hx-y,hz-y) * 4.0
-	if not gradient.is_finite() or gradient.length() > 0.8:
+	var gradient := Vector2(xp-xm,zp-zm) / (2.0 * GROUND_PROBE)
+	# Check one-sided slopes as well: central differences can hide a sharp crest.
+	var steepness := maxf(maxf(absf(xp-y),absf(xm-y)),maxf(absf(zp-y),absf(zm-y))) / GROUND_PROBE
+	if not gradient.is_finite() or gradient.length() > MAX_SLOPE or steepness > MAX_SLOPE:
 		_rejected.slope += 1
 		return
+	var plane_error := maxf(maxf(absf(xp+xm-2.0*y),absf(zp+zm-2.0*y)))*0.5
+	if plane_error > 0.055:
+		_rejected.slope += 1
+		return
+	# A modest extra sink at a curved terrain seam keeps the small roots grounded.
+	var root_sink := 0.025 + plane_error
 	var selector := _random(key,idx,31)
 	var species := 1
 	if mask.y > 0.55:
@@ -429,14 +463,19 @@ func _candidate(rank: int) -> void:
 	var alignment := Quaternion(Vector3.UP,normal)
 	var basis := Basis(alignment) * Basis(Vector3.UP,_random(key,idx,41)*TAU)
 	basis = basis.scaled(Vector3.ONE*scale)
-	var frame := Transform3D(basis,Vector3(p.x,y-0.025,p.y))
+	var frame := Transform3D(basis,Vector3(p.x,y-root_sink,p.y))
 	# Precomputed union of all LODs avoids renderer readback and is conservative.
 	var swept := Grass.sweep_aabb(_union_bounds[species],frame)
 	if not _bounds.encloses(Rect2(Vector2(swept.position.x,swept.position.z),Vector2(swept.size.x,swept.size.z))):
 		_rejected.bounds += 1
 		return
+	_road_checks += 1
+	_last_road_checks += 1
 	var overlap: Variant = _clearance.call("overlaps",swept,0.12,true)
-	if not overlap is bool or overlap:
+	if not overlap is bool:
+		_fail("road clearance returned non-boolean")
+		return
+	if overlap:
 		_rejected.road += 1
 		return
 	_job.groups[species].append({"frame":frame,"seed":_random(key,idx,53),"rank":rank})
@@ -445,6 +484,8 @@ func _work() -> void:
 	_last_checks = 0
 	_last_uploads = 0
 	_last_upload_instances = 0
+	_last_road_checks = 0
+	_last_height_samples = 0
 	var start := Time.get_ticks_usec()
 	var budget := int(_profile.checks)
 	var time_budget := int(_profile.work_usec)
@@ -456,6 +497,8 @@ func _work() -> void:
 			_start_job(_queue.pop_front())
 		while int(_job.cursor) < int(_job.limit) and _last_checks < budget:
 			_candidate(int(_job.cursor))
+			if _state != "ready":
+				return
 			_job.cursor += 1
 			_last_checks += 1
 			# Soft time budget (checked in blocks to avoid per-candidate timer cost).
@@ -466,6 +509,9 @@ func _work() -> void:
 		var count := 0
 		for group: Array in _job.groups:
 			count += group.size()
+		if count > upload_budget:
+			_fail("single chunk exceeds upload instance cap")
+			return
 		if _last_upload_instances + count > upload_budget:
 			break
 		if _last_checks > 0 and Time.get_ticks_usec() - start >= time_budget:
@@ -566,12 +612,17 @@ func _flush_active() -> void:
 	_last_uploads = 0
 	_last_upload_instances = 0
 	_last_work_usec = 0
+	_last_road_checks = 0
+	_last_height_samples = 0
 
 func get_stats() -> Dictionary:
 	var total := int(_counts[0]+_counts[1]+_counts[2])
-	return {"state":_state,"fallback":_reason,"plain_material":_plain_material != null,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"planned_chunks_per_lod":_last_planned_chunks.duplicate(),"planned_candidate_limit_per_chunk":_last_planned_limits.duplicate(),"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"planning_usec":_plan_usec,"retargeted_jobs":_jobs_retargeted,"cancelled_jobs":_jobs_cancelled,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"last_frame_upload_instances":_last_upload_instances,"last_frame_work_usec":_last_work_usec,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
+	return {"state":_state,"fallback":_reason,"plain_material":_plain_material != null,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"planned_chunks_per_lod":_last_planned_chunks.duplicate(),"planned_candidate_limit_per_chunk":_last_planned_limits.duplicate(),"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"road_checks":_road_checks,"height_samples":_height_samples,"last_frame_road_checks":_last_road_checks,"last_frame_height_samples":_last_height_samples,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"planning_usec":_plan_usec,"retargeted_jobs":_jobs_retargeted,"cancelled_jobs":_jobs_cancelled,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"last_frame_upload_instances":_last_upload_instances,"last_frame_work_usec":_last_work_usec,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
 
 func shutdown() -> void:
+	_teardown(true)
+
+func _teardown(reset_stats: bool) -> void:
 	set_process(false)
 	_flush_active()
 	for node in _pool:
@@ -592,12 +643,14 @@ func shutdown() -> void:
 	_clearance_triangles = 0
 	_has_focus = false
 	_dirty = true
-	_profile.clear()
 	_options.clear()
 	_counts = [0,0,0]
 	_clock = 0.0
 	_state = "disabled"
 	_reason = "shutdown"
+	if not reset_stats:
+		return
+	_profile.clear()
 	_generated = 0
 	_uploaded = 0
 	_generation_us = 0
@@ -609,5 +662,9 @@ func shutdown() -> void:
 	_plan_usec = 0
 	_jobs_retargeted = 0
 	_jobs_cancelled = 0
+	_road_checks = 0
+	_height_samples = 0
+	_last_road_checks = 0
+	_last_height_samples = 0
 	for k in _rejected:
 		_rejected[k] = 0
