@@ -5,6 +5,7 @@ const ORIGIN := -1000.0
 const CELL := 2.0
 const CHANNELS := ["grass_suitability", "woodland_weight", "moisture", "exposed_rock_weight"]
 const WORLD_FILES := ["world_metadata_v1.json", "road_graph_v1.json", "terrain_height_r16le.bin", "terrain_roadworks_r16le.bin", "roadworks.json"]
+const SCENERY_FILES := ["content/scenery/manifest.json", "content/scenery/avoidance/race_gate_reservations_v1.json", "content/scenery/lake/water_cells_v1.json"]
 var bytes := PackedByteArray()
 var source_hashes: Dictionary = {}
 var error := ""
@@ -68,16 +69,57 @@ func load_package(dir: String) -> bool:
 
 # Validate only fixed, trusted world filenames, never a path supplied by the manifest.
 # Called once at build for the canonical production runtime; not per frame.
+func _verify_hash(key: String, path: String) -> bool:
+	var expected: Variant = source_hashes.get(key)
+	if not _digest_valid(expected) or not FileAccess.file_exists(path):
+		return _fail("missing mask source: " + key)
+	if FileAccess.get_sha256(path) != str(expected).to_lower():
+		return _fail("stale mask source: " + key)
+	return true
+
 func verify_world_sources(directory: String) -> bool:
 	if bytes.size() != SIZE * SIZE * 4 or directory.is_empty():
 		return _fail("missing source directory or mask")
 	for filename: String in WORLD_FILES:
-		var expected: Variant = source_hashes.get("data/world/" + filename)
-		var path := directory.path_join(filename)
-		if not _digest_valid(expected) or not FileAccess.file_exists(path):
-			return _fail("missing mask world source: " + filename)
-		if FileAccess.get_sha256(path) != str(expected).to_lower():
-			return _fail("stale mask world source: " + filename)
+		if not _verify_hash("data/world/" + filename, directory.path_join(filename)):
+			return false
+	return true
+
+# Check the other actual inputs consumed by C's generator. Paths are fixed or
+# constrained to direct JSON children of the known scenery packs directory.
+func verify_production_sources(world_directory: String, project_root: String = "res://") -> bool:
+	if not verify_world_sources(world_directory):
+		return false
+	if not _verify_hash("data/world/vegetation.bin",world_directory.path_join("vegetation.bin")):
+		return false
+	var premium_path := world_directory.path_join("premium_foliage.bin")
+	var premium_key := "data/world/premium_foliage.bin"
+	if FileAccess.file_exists(premium_path) != source_hashes.has(premium_key):
+		return _fail("optional premium cache availability changed")
+	if source_hashes.has(premium_key) and not _verify_hash(premium_key,premium_path):
+		return false
+	for relative: String in SCENERY_FILES:
+		if not _verify_hash(relative,project_root.path_join(relative)):
+			return false
+	var manifest_path := project_root.path_join("content/scenery/manifest.json")
+	var scenery: Variant = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
+	if not scenery is Dictionary or not scenery.get("region_packs") is Array:
+		return _fail("invalid scenery manifest")
+	var packs: Array = scenery.region_packs
+	if packs.is_empty() or packs.size() > 32:
+		return _fail("invalid scenery pack count")
+	var visited: Dictionary = {}
+	for pack: Variant in packs:
+		if not pack is Dictionary or not pack.get("path") is String:
+			return _fail("invalid scenery pack entry")
+		var relative: String = pack.path
+		var prefix := "content/scenery/packs/"
+		var filename := relative.trim_prefix(prefix)
+		if not relative.begins_with(prefix) or filename.is_empty() or filename.contains("/") or filename.contains("\\") or filename.contains("..") or filename.contains(":") or not filename.ends_with(".json") or visited.has(relative):
+			return _fail("unsafe or duplicate scenery pack path")
+		visited[relative] = true
+		if not _verify_hash(relative,project_root.path_join(relative)):
+			return false
 	return true
 
 func sample(x: float, z: float) -> Vector4:
