@@ -399,6 +399,16 @@ func _test_production() -> void:
 	var preview := Preview.new()
 	var region := Rect2(-810, -450, 220, 220)
 	check(preview.apply_candidate(world, {"pilot_bounds": region, "roadside_bounds": region}), "real generated world material adapter")
+	var road_stats: Dictionary = preview.get_stats().get("roadside_stats", {})
+	check(preview.get_stats().get("roadside") == "ready" and int(road_stats.get("active_cells", 0)) > 0 and int(road_stats.get("excluded_cells", 0)) > 0, "production pilot has a nonempty protected roadside transition")
+	var real_band := Band.new()
+	# Actual Cedar lane passes this location in the pinned road graph.
+	var sample_region := Rect2(-786.25, -267.25, 28.5, 28.5)
+	var actual_band := real_band.build_image(world, sample_region)
+	var actual_stats := real_band.stats.duplicate()
+	var brute_band := real_band.build_reference_image(world, sample_region)
+	check(actual_band != null and brute_band != null and actual_band.get_data() == brute_band.get_data(), "real-road fractional raster equals per-cell reference")
+	check(int(actual_stats.get("active_cells", 0)) > 0 and int(actual_stats.get("excluded_cells", 0)) > 0, "real-road raster comparison is nonvacuous")
 	var changed := 0
 	var unchanged := 0
 	for child in originals:
@@ -410,6 +420,8 @@ func _test_production() -> void:
 		check(expected == actual, "production pilot material scope " + str(instance.name))
 		if actual:
 			changed += 1
+			var material := instance.get_active_material(0) as ShaderMaterial
+			check(material != null and material.get_shader_parameter("use_roadside") == true and material.get_shader_parameter("roadside_mask") is Texture2D, "production candidate binds actual roadside raster " + str(instance.name))
 		else:
 			unchanged += 1
 	check(changed > 0 and unchanged > 0 and preview.get_stats().get("chunks", 0) == changed and preview.get_stats().get("skipped_chunks", 0) == unchanged, "production pilot covers only intersecting chunks")
