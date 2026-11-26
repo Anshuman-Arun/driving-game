@@ -32,7 +32,10 @@ while (( $# )); do
 done
 [[ -f "$project/project.godot" ]]
 if (( editor )); then
-  if [[ "$MOCK_CASE" == import-error ]]; then echo 'SCRIPT ERROR: mock import parse error'; fi
+  case "$MOCK_CASE" in
+    import-error) echo 'SCRIPT ERROR: mock import parse error' ;;
+    import-engine-error) echo 'ERROR: mock import resource error' ;;
+  esac
   exit 0
 fi
 case "$script" in
@@ -44,6 +47,8 @@ case "$script" in
       bad-count) echo 'RENDER_PROFILE_RESULT passed=1 total=2 failures=0' ;;
       duplicate-marker) printf '%s\n' 'RENDER_PROFILE_RESULT passed=3 total=3 failures=0' 'RENDER_PROFILE_RESULT passed=3 total=3 failures=0' ;;
       shader-error) printf '%s\n' 'SHADER ERROR: mock failure' 'RENDER_PROFILE_RESULT passed=3 total=3 failures=0' ;;
+      engine-error) printf '%s\n' 'ERROR: mock engine failure' 'RENDER_PROFILE_RESULT passed=3 total=3 failures=0' ;;
+      mixed-marker) printf '%s\n' 'RENDER_PROFILE_RESULT passed=1 total=3 failures=2' 'RENDER_PROFILE_RESULT passed=3 total=3 failures=0' ;;
       assertion) echo 'FAIL mock assertion' ;;
       nonzero) echo 'RENDER_PROFILE_RESULT passed=3 total=3 failures=0'; exit 7 ;;
       timeout) exit 124 ;;
@@ -51,7 +56,12 @@ case "$script" in
     esac ;;
   *live_root_test.gd)
     [[ "$project" == "$MOCK_REPO" ]]
-    if [[ "$MOCK_CASE" == live-empty ]]; then echo 'LIVE_RENDER_PROFILE_RESULT failures=0 paint_surfaces=0'; else echo 'LIVE_RENDER_PROFILE_RESULT failures=0 paint_surfaces=2'; fi ;;
+    case "$MOCK_CASE" in
+      live-empty) echo 'LIVE_RENDER_PROFILE_RESULT failures=0 paint_surfaces=0' ;;
+      live-mixed) printf '%s\n' 'LIVE_RENDER_PROFILE_RESULT failures=1 paint_surfaces=2' 'LIVE_RENDER_PROFILE_RESULT failures=0 paint_surfaces=2' ;;
+      live-engine-error) printf '%s\n' 'ERROR: mock live engine failure' 'LIVE_RENDER_PROFILE_RESULT failures=0 paint_surfaces=2' ;;
+      *) echo 'LIVE_RENDER_PROFILE_RESULT failures=0 paint_surfaces=2' ;;
+    esac ;;
   *)
     [[ "$project" == "$MOCK_REPO" ]]
     if [[ "$script" == *garage_world.gd ]]; then
@@ -60,6 +70,7 @@ case "$script" in
         regression-error) echo 'ERROR: FAIL mock push_error' ;;
         regression-no-marker) exit 0 ;;
         regression-duplicate) echo 'GARAGE WORLD failures: 0' ;;
+        regression-mixed) echo 'GARAGE WORLD failures: 1' ;;
       esac
     fi
     case "$script" in
@@ -101,15 +112,15 @@ check() {
 check success 0 --owned
 check version 2 --owned
 check version-prefix 2 --owned
-for scenario in import-error no-marker zero-checks bad-count duplicate-marker shader-error assertion nonzero timeout; do
+for scenario in import-error import-engine-error no-marker zero-checks bad-count duplicate-marker mixed-marker shader-error engine-error assertion nonzero timeout; do
   check "$scenario" 1 --owned
 done
 check full-success 0 --full
-for scenario in lfs-fsck lfs-pointer live-empty regression regression-error regression-no-marker regression-duplicate; do
+for scenario in lfs-fsck lfs-pointer live-empty live-mixed live-engine-error regression regression-error regression-no-marker regression-duplicate regression-mixed; do
   check "$scenario" 1 --full
 done
 # A failure must not silently skip the remaining existing regression suites.
-for scenario in regression regression-error regression-no-marker regression-duplicate; do
+for scenario in regression regression-error regression-no-marker regression-duplicate regression-mixed; do
   [[ -f "$work/logs/$scenario/vehicle_world.log" ]]
 done
 [[ -f "$work/logs/full-success/map_width_check.log" ]]
