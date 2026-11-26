@@ -128,6 +128,22 @@ func _run() -> void:
 		far_count += far_groups[s].size()
 		check(near_groups[s].slice(0,far_groups[s].size()) == far_groups[s],"nested actual accepted transforms")
 	check(far_count > 0,"nested fixture nonempty")
+	cover._job.cursor = 150
+	cover._retarget_job({"lod":0,"limit":600})
+	check(cover._job.cursor==150,"retarget preserves completed rank prefix")
+	for rank in range(150,600):
+		cover._candidate(rank)
+	cover._job.cursor = 600
+	check(cover._job.groups==near_groups,"retarget extension equals original generation")
+	var original_far: Array = []
+	for group: Array in near_groups:
+		var prefix: Array = []
+		for pose: Dictionary in group:
+			if int(pose.rank) < 150:
+				prefix.append(pose)
+		original_far.append(prefix)
+	cover._retarget_job({"lod":2,"limit":150})
+	check(cover._job.groups==original_far and cover._job.cursor==150,"retarget shrink preserves only valid ranks")
 	cover._job.clear()
 	cover.update_focus(Vector3(8,2,8))
 	drain(cover)
@@ -176,6 +192,9 @@ func _run() -> void:
 	drain(cover)
 	check(cover.get_stats().active_instances==0 and cover.get_stats().rejected_candidates.slope>0,"steep slope rejected")
 	world.steep=false
+	world.add_strip(Rect2(27,-60,2,120),0.0,false)
+	cover._process(0.016)
+	check(cover.get_stats().state=="disabled","mutated triangle index disables")
 	world.road_clearance=null
 	cover._process(0.016)
 	check(cover.get_stats().state=="disabled","lost clearance disables")
