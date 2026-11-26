@@ -9,9 +9,9 @@ uniform vec3 vehicle_velocity = vec3(0.0);
 uniform bool fade_enabled = true;
 uniform float fade_start = 105.0;
 uniform float fade_end = 130.0;
-varying vec3 world_pos;
+varying flat vec3 tuft_root;
 varying float flex;
-varying float tuft_seed;
+varying flat float tuft_seed;
 
 void vertex() {
 	vec3 root = MODEL_MATRIX[3].xyz;
@@ -34,14 +34,14 @@ void vertex() {
 	}
 	bend *= min(1.0, 0.24 / max(length(bend), 0.001));
 	VERTEX.xz += bend * flex * flex;
-	world_pos = VERTEX;
+	tuft_root = root;
 	NORMAL = normalize(mix(NORMAL, vec3(0.0, 1.0, 0.0), 0.55));
 }
 
 void fragment() {
 	// Stable spatial cutout at outer range, no alpha-blended overdraw.
 	if (fade_enabled) {
-		float d = length(world_pos.xz - CAMERA_POSITION_WORLD.xz);
+		float d = length(tuft_root.xz - CAMERA_POSITION_WORLD.xz);
 		float keep = 1.0 - smoothstep(fade_start, fade_end, d);
 		if (tuft_seed > keep) { discard; }
 	}
