@@ -13,7 +13,10 @@ const MAX_INSTANCES := 1500000
 const MAX_BATCHES := 4096
 const MAX_CHUNKS := 2048
 var failures := 0
-var bend_margin := 0.0
+var bend_margin := 0.36
+var mask_bytes := PackedByteArray()
+var preset_under_test := "medium"
+const LIMITS := {"low":[18000,120,1200,2,1800],"medium":[54000,300,2400,3,2800],"high":[90000,360,3600,4,4200]}
 var strict_stats := false
 var stat_map := {}
 const MAX_UPLOADS_PER_FRAME := 64
@@ -79,7 +82,7 @@ func observe_budget(cover: Node3D, count: int) -> void:
 		for value: Variant in [active,queued]:
 			if value != null and read_nonnegative(value,"chunk counter"):
 				check(float(value)<=MAX_CHUNKS,"bounded active/queued chunks")
-		var per_frame: Variant = stat_value(stats,"uploads_per_frame",["uploads_per_frame","chunks_uploaded_this_frame","frame_upload_count"])
+		var per_frame: Variant = stat_value(stats,"uploads_per_frame",["last_frame_chunk_uploads","uploads_per_frame","chunks_uploaded_this_frame","frame_upload_count"])
 		var total: Variant = stat_value(stats,"uploads_total",["uploads_total","chunks_uploaded_total","upload_count_total"])
 		if per_frame != null and read_nonnegative(per_frame,"uploads per frame"):
 			peak_upload_delta=maxf(peak_upload_delta,float(per_frame))
@@ -88,6 +91,13 @@ func observe_budget(cover: Node3D, count: int) -> void:
 				peak_upload_delta=maxf(peak_upload_delta,float(total)-previous_uploads)
 			previous_uploads=float(total)
 		check(peak_upload_delta<=MAX_UPLOADS_PER_FRAME,"per-frame upload safety ceiling")
+		if strict_stats and str(stats.get("state",""))=="ready":
+			var limits: Array=LIMITS[preset_under_test]
+			var caps: Dictionary={"active_instances":limits[0],"active_chunks":limits[1],"queued_chunks":int(limits[1])+1,"last_frame_checks":limits[2],"last_frame_chunk_uploads":limits[3],"last_frame_upload_instances":limits[4]}
+			for key: String in caps:
+				var value: Variant=stats.get(key)
+				if read_nonnegative(value,key):
+					check(float(value)<=float(caps[key]),"preset "+preset_under_test+" cap "+key)
 
 func inspect_cover(cover: Node3D, world: Node, margin: float) -> Dictionary:
 	var count := 0
@@ -97,7 +107,11 @@ func inspect_cover(cover: Node3D, world: Node, margin: float) -> Dictionary:
 	var positions := PackedStringArray()
 	for node: MultiMeshInstance3D in cover.find_children("*", "MultiMeshInstance3D", true, false):
 		var batch := node.multimesh
-		if batch == null or batch.mesh == null:
+		if batch == null:
+			if node.visible:
+				invalid += 1
+			continue
+		if batch.mesh == null:
 			invalid += 1
 			continue
 		batches += 1
@@ -105,6 +119,8 @@ func inspect_cover(cover: Node3D, world: Node, margin: float) -> Dictionary:
 		count += batch.instance_count
 		if count > MAX_INSTANCES or batches > MAX_BATCHES:
 			break
+		if DisplayServer.get_name()=="headless" or not node.is_visible_in_tree():
+			continue
 		for i in active:
 			var transform := node.global_transform * batch.get_instance_transform(i)
 			if not transform.is_finite():
@@ -122,7 +138,7 @@ func inspect_cover(cover: Node3D, world: Node, margin: float) -> Dictionary:
 	check(invalid == 0 and overlap == 0, "finite in-map transforms; exact triangle clearance incl shoulders, margin %.2f: invalid=%d overlap=%d" % [margin, invalid, overlap])
 	var stats: Dictionary = cover.call("get_stats")
 	print("COVER_STATS ", JSON.stringify(stats), " allocation=", count, " batches=", batches, " peak_upload_delta=", peak_upload_delta)
-	if strict_stats and positions.size()>0:
+	if strict_stats and str(stats.get("state",""))=="ready":
 		for semantic in ["active_chunks","queued_chunks"]:
 			var aliases := ["active_chunks","active_chunk_count","chunks_active"] if semantic=="active_chunks" else ["queued_chunks","queued_chunk_count","chunks_queued","pending_chunks"]
 			var value: Variant = stat_value(stats,semantic,aliases)
@@ -135,13 +151,20 @@ func inspect_cover(cover: Node3D, world: Node, margin: float) -> Dictionary:
 			for value: Variant in values:
 				if read_nonnegative(value,"LOD instance count"):
 					total+=int(value)
-			check(total<=MAX_INSTANCES and total>0,"reported active LOD counts bounded and nonzero")
+			check(total<=int(LIMITS[preset_under_test][0]),"reported active LOD counts bounded")
+			check(total==int(stats.get("active_instances",-1)),"LOD sum agrees with active counter")
+			check(total==count,"LOD sum agrees with allocated nonempty batches")
 		else:
 			check(false,"instances-per-LOD stats missing; use --stats-map")
 		var rejected: Variant = stat_value(stats,"rejected_candidates",["rejected_candidates","rejected","rejection_count"])
-		read_nonnegative(rejected,"rejected candidates")
+		if rejected is Dictionary:
+			check(not rejected.is_empty(),"rejection categories present")
+			for value: Variant in rejected.values():
+				read_nonnegative(value,"rejection category")
+		else:
+			read_nonnegative(rejected,"rejected candidates")
 		var work: Variant = stat_value(stats,"uploads_total",["uploads_total","chunks_uploaded_total","upload_count_total"])
-		var frame_work: Variant = stat_value(stats,"uploads_per_frame",["uploads_per_frame","chunks_uploaded_this_frame","frame_upload_count"])
+		var frame_work: Variant = stat_value(stats,"uploads_per_frame",["last_frame_chunk_uploads","uploads_per_frame","chunks_uploaded_this_frame","frame_upload_count"])
 		check(work!=null or frame_work!=null,"upload work counter missing; use --stats-map")
 	check(not stats.is_empty(), "cover stats exposed")
 	for key: Variant in stats:
@@ -152,7 +175,7 @@ func inspect_cover(cover: Node3D, world: Node, margin: float) -> Dictionary:
 			if value is int or value is float:
 				check(value >= 0 and value <= MAX_CHUNKS, "chunk ceiling: " + str(key))
 	positions.sort()
-	return {"count": count, "active": positions.size(), "signature": "\n".join(positions).sha256_text()}
+	return {"count": count, "active": int(stats.get("active_instances",positions.size())), "signature": "\n".join(positions).sha256_text()}
 
 func focus_path(cover: Node3D, world: Node) -> void:
 	for point: Vector3 in FOCUS:
@@ -161,13 +184,56 @@ func focus_path(cover: Node3D, world: Node) -> void:
 		await observe_budget(cover,90)
 		var stats: Dictionary=cover.call("get_stats")
 		var queued: Variant=stat_value(stats,"queued_chunks",["queued_chunks","queued_chunk_count","chunks_queued","pending_chunks"])
-		for wait in range(3):
+		for wait in range(24):
 			if queued==null or float(queued)==0.0:
 				break
 			await observe_budget(cover,90)
 			stats=cover.call("get_stats")
 			queued=stat_value(stats,"queued_chunks",["queued_chunks","queued_chunk_count","chunks_queued","pending_chunks"])
 		check(queued==null or float(queued)==0.0,"bounded traversal settles queue")
+
+func sample_mask(x: float,z: float) -> Vector4:
+	if not is_finite(x) or not is_finite(z) or x< -1000.0 or x>=1000.0 or z< -1000.0 or z>=1000.0:
+		return Vector4.ZERO
+	var offset: int=4*(floori((z+1000.0)/2.0)*1000+floori((x+1000.0)/2.0))
+	return Vector4(mask_bytes[offset],mask_bytes[offset+1],mask_bytes[offset+2],mask_bytes[offset+3])/255.0
+
+func cpu_snapshot(cover: Node3D, world: Node) -> Dictionary:
+	# Agent A's explicit debug snapshot: dummy rendering does not preserve
+	# MultiMesh transforms. Use actual verified mask bytes and real clearance.
+	var active: Variant=cover.get("_active")
+	var meshes: Variant=cover.get("_meshes")
+	if not active is Dictionary or not meshes is Array:
+		check(false,"CPU snapshot adapter unavailable")
+		return {"count":0,"signature":""}
+	var frames_seen:=PackedStringArray()
+	var grass_script=load("res://modules/ground_cover/grass_mesh.gd")
+	if grass_script==null:
+		check(false,"swept mesh helper missing")
+		return {"count":0,"signature":""}
+	var invalid:=0
+	for entry: Dictionary in active.values():
+		if not entry.has("fixture_groups"):
+			check(false,"fixture snapshot missing")
+			continue
+		var groups: Array=entry["fixture_groups"]
+		for species in groups.size():
+			for item: Dictionary in groups[species]:
+				var transform: Transform3D=item["frame"]
+				var p:=transform.origin
+				if not transform.is_finite() or p.x< -1000 or p.x>=1000 or p.z< -1000 or p.z>=1000:
+					invalid+=1
+					continue
+				for mesh: Mesh in meshes[species]:
+					var swept: AABB=grass_script.swept_bounds(mesh,transform)
+					if not swept.position.is_finite() or not swept.size.is_finite() or world.road_clearance.overlaps(swept,0.12,true):
+						invalid+=1
+				frames_seen.append(str(transform))
+	check(invalid==0,"CPU snapshots finite and all LOD swept bounds clear, invalid="+str(invalid))
+	var stats: Dictionary=cover.call("get_stats")
+	check(frames_seen.size()==int(stats.get("active_instances",-1)),"CPU snapshot count agrees with stats")
+	frames_seen.sort()
+	return {"count":frames_seen.size(),"signature":"\n".join(frames_seen).sha256_text()}
 
 func cover_test(world: Node) -> void:
 	var script := load(COVER) as Script
@@ -180,6 +246,7 @@ func cover_test(world: Node) -> void:
 		return
 	root.add_child(cover)
 	var options := {"seed": 1234, "pilot_bounds": Rect2(-1000,-1000,2000,2000)}
+	preset_under_test="medium"
 	previous_uploads=-1.0
 	peak_upload_delta=0.0
 	var result: bool = cover.call("build", world, "medium", MASK, options)
@@ -189,26 +256,39 @@ func cover_test(world: Node) -> void:
 		var first := inspect_cover(cover, world, bend_margin)
 		check(first.active > 0, "nonempty observable candidate transforms")
 		for preset in ["low", "high", "medium"]:
+			preset_under_test=preset
 			cover.call("set_graphics", preset)
-			await observe_budget(cover,90)
-			inspect_cover(cover, world, bend_margin)
+			await focus_path(cover,world)
+			var state:=inspect_cover(cover,world,bend_margin)
+			check(state.active>0,"preset rebuild nonempty: "+preset)
 		cover.call("set_vehicle_interaction", FOCUS[3], Vector3(20,0,0), true)
 		await frames(30)
 		inspect_cover(cover, world, bend_margin)
 		cover.call("set_vehicle_interaction", FOCUS[3], Vector3.ZERO, false)
 		cover.call("shutdown")
 		await frames(10)
-		check(inspect_cover(cover, world, bend_margin).active == 0, "shutdown releases active instances")
-		cover.free()
-		cover = script.new() as Node3D
-		root.add_child(cover)
-		previous_uploads=-1.0
-		if bool(cover.call("build", world, "medium", MASK, options)):
-			await focus_path(cover, world)
-			var second := inspect_cover(cover, world, bend_margin)
-			check(first.signature == second.signature, "same seed and traversal yield same settled transforms")
-		else:
-			check(false, "rebuild succeeds")
+		var stopped:=inspect_cover(cover,world,bend_margin)
+		check(stopped.active==0 and stopped.count==0 and cover.get_child_count()==0,"shutdown releases active and pooled batches")
+		mask_bytes=FileAccess.get_file_as_bytes(MASK+"/biome_rgba8.bin")
+		check(mask_bytes.size()==4000000,"real mask fixture bytes")
+		if mask_bytes.size()==4000000:
+			options["fixture_sampler"]=sample_mask
+			options["test_fixture"]=true
+			options["capture_fixture"]=true
+			var signature:=""
+			for repeat in 2:
+				cover.call("shutdown")
+				previous_uploads=-1.0
+				if not bool(cover.call("build",world,"medium",MASK,options)):
+					check(false,"CPU snapshot rebuild")
+					break
+				await focus_path(cover,world)
+				var snap:=cpu_snapshot(cover,world)
+				check(snap.count>0,"nonempty CPU snapshot")
+				if repeat==0:
+					signature=snap.signature
+				else:
+					check(signature==snap.signature,"same seed and traversal deterministic CPU snapshot")
 	cover.call("shutdown")
 	await frames(10)
 	cover.free()
@@ -226,7 +306,7 @@ func cover_test(world: Node) -> void:
 	for bad_path in ["res://tests/environment_overhaul/nonexistent-mask",corrupt_dir]:
 		var bad := script.new() as Node3D
 		root.add_child(bad)
-		bad.call("build", world, "medium", bad_path, {})
+		check(not bool(bad.call("build", world, "medium", bad_path, {})),"missing/corrupt mask build refuses")
 		bad.call("update_focus", FOCUS[0], Vector3.ZERO)
 		await frames(30)
 		check(inspect_cover(bad, world, 0.0).active == 0, "missing mask fails closed")
@@ -239,7 +319,7 @@ func cover_test(world: Node) -> void:
 	root.add_child(bad_world)
 	var bad_cover := script.new() as Node3D
 	root.add_child(bad_cover)
-	bad_cover.call("build", bad_world, "medium", MASK, {})
+	check(not bool(bad_cover.call("build", bad_world, "medium", MASK, {})),"invalid world build refuses")
 	await frames(10)
 	check(inspect_cover(bad_cover, world, 0.0).active == 0, "invalid world fails closed")
 	bad_cover.call("shutdown")
@@ -260,7 +340,8 @@ func preview_test(path: String, target: Node, rendering: bool) -> void:
 	else:
 		ok = preview.call("apply_candidate", target, {})
 	# Headless capabilities may be unavailable; exercise restore even on refusal.
-	print("PREVIEW ", path, " applied=", ok, " (headless, not visual acceptance)" if ok else " N/A unsupported headless capability or adapter refusal")
+	print("PREVIEW ", path, " applied=", ok, " (headless, not visual acceptance)")
+	check(ok,"preview applies to actual root: "+path)
 	preview.call("restore")
 	preview.call("restore")
 	if preview is Node:

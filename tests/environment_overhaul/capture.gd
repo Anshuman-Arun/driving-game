@@ -26,6 +26,13 @@ var target_speed := 22.35
 var route_progress := 0.0
 var meta := {}
 var rows: Array[PackedStringArray] = []
+var removed_grass := {}
+var legacy_grass := "unknown"
+var route_hash := ""
+var route_limits: Array[Vector2] = []
+var route_lane_ids := PackedStringArray()
+var interaction := false
+var capture_conditions_changed := false
 
 func _initialize() -> void:
 	run.call_deferred()
@@ -37,6 +44,9 @@ func release_controls() -> void:
 
 func finish(code: int, reason: String) -> void:
 	release_controls()
+	if physics_frame.is_connected(route_controls):
+		physics_frame.disconnect(route_controls)
+	restore_grass()
 	if is_instance_valid(cover):
 		cover.call("shutdown")
 		cover.queue_free()
@@ -45,6 +55,8 @@ func finish(code: int, reason: String) -> void:
 		preview.call("restore")
 		if preview is Node:
 			preview.queue_free()
+		elif not preview is RefCounted:
+			preview.free()
 	if is_instance_valid(game):
 		game.queue_free()
 	await process_frame
@@ -61,8 +73,87 @@ func frames(n: int) -> void:
 	for i in n:
 		await process_frame
 
-func string_vec(p: Vector3) -> Array:
-	return [p.x,p.y,p.z]
+func suppress_grass() -> bool:
+	# Test-session-only adapter for the pinned live ValleyVegetation. Never
+	# disable trees, flowers, rocks, leaf effects, or authored scenery.
+	var plant: Node=drive.get("vegetation")
+	if not is_instance_valid(plant):
+		return false
+	var ground: Variant=plant.get("_ground")
+	var visible_ground: Variant=plant.get("_visible_ground")
+	if not ground is Dictionary or not visible_ground is Dictionary:
+		return false
+	for key: Variant in ground.keys():
+		if not key is Vector3i:
+			return false
+	for key: Vector3i in ground.keys():
+		if key.z==2:
+			removed_grass[key]=ground[key]
+			ground.erase(key)
+			if visible_ground.has(key):
+				var batch: Node3D=visible_ground[key]
+				batch.hide()
+				batch.queue_free()
+				visible_ground.erase(key)
+	if removed_grass.is_empty():
+		return false
+	plant.set("_ground_center",Vector2i(99999,99999))
+	legacy_grass="disabled"
+	return true
+
+func restore_grass() -> void:
+	if removed_grass.is_empty() or not is_instance_valid(drive):
+		return
+	var plant: Node=drive.get("vegetation")
+	if is_instance_valid(plant):
+		var ground: Dictionary=plant.get("_ground")
+		for key: Variant in removed_grass:
+			ground[key]=removed_grass[key]
+		plant.set("_ground_center",Vector2i(99999,99999))
+	removed_grass.clear()
+
+func grass_state() -> String:
+	var plant: Node=drive.get("vegetation")
+	if not is_instance_valid(plant):
+		return "unknown"
+	var ground: Variant=plant.get("_ground")
+	if not ground is Dictionary:
+		return "unknown"
+	for key: Variant in ground:
+		if key is Vector3i and key.z==2:
+			return "enabled"
+	return "disabled" if not removed_grass.is_empty() else "unknown"
+
+func number_option(key: String, default_value: float) -> float:
+	var value:=str(opts.get(key,str(default_value)))
+	return float(value) if value.is_valid_float() else NAN
+
+func convert_rectangles(options: Dictionary) -> bool:
+	for key: String in ["pilot_bounds","roadside_bounds"]:
+		if not options.has(key):
+			continue
+		var value: Variant=options[key]
+		if not value is Array or value.size()!=4:
+			return false
+		for n: Variant in value:
+			if not (n is int or n is float) or not is_finite(float(n)):
+				return false
+		var rect:=Rect2(float(value[0]),float(value[1]),float(value[2]),float(value[3]))
+		if not rect.has_area() or not Rect2(-1000,-1000,2000,2000).encloses(rect):
+			return false
+		options[key]=rect
+	return true
+
+func select_paint() -> Array[Dictionary]:
+	var result: Array[Dictionary]=[]
+	for node: MeshInstance3D in drive.vehicle_body.find_children("*","MeshInstance3D",true,false):
+		if node.mesh==null or node.material_override!=null:
+			continue
+		for surface in node.mesh.get_surface_count():
+			var material:=node.get_active_material(surface) as ShaderMaterial
+			if material!=null and material.shader!=null and material.shader.resource_path=="res://shaders/car_paint.gdshader":
+				result.append({"mesh":node,"surface":surface})
+	return result
 
 func apply_preview(path: String, target: Node, render: bool, quality: String, options: Dictionary) -> bool:
 	if not ResourceLoader.exists(path):
@@ -87,37 +178,88 @@ func grass_count() -> String:
 			count += node.multimesh.instance_count if node.multimesh.visible_instance_count < 0 else node.multimesh.visible_instance_count
 	return str(count)
 
-func make_route(site: Vector3, heading: Vector3) -> Variant:
-	var best := INF
-	var selected := PackedVector3Array()
+func make_route(site: Vector3, heading: Vector3, duration: float) -> Variant:
+	var best:=INF
+	var chosen: Dictionary={}
+	var chosen_i:=0
+	var lanes: Dictionary={}
 	for lane: Dictionary in drive.world.get_road_graph()["lanes"]:
-		var points: Array = lane["points"]
-		for i in range(points.size()-2):
-			var p := Vector3(points[i][0], points[i][1], points[i][2])
-			var next := Vector3(points[i+1][0], points[i+1][1], points[i+1][2])
-			var direction := next - p
-			direction.y = 0
-			if direction.normalized().dot(heading.normalized()) < 0.3:
+		lanes[str(lane["id"])]=lane
+		if not str(lane["id"]).begins_with("lane_"):
+			continue
+		var points: Array=lane["points"]
+		for i in range(1,points.size()-2):
+			var p:=Vector3(points[i][0],points[i][1],points[i][2])
+			var q:=Vector3(points[i+1][0],points[i+1][1],points[i+1][2])
+			var direction:=q-p
+			direction.y=0
+			if direction.normalized().dot(heading.normalized())<0.3:
 				continue
-			var distance := Vector2(p.x-site.x,p.z-site.z).length()
-			if distance >= best:
-				continue
-			var tail := PackedVector3Array()
-			var length := 0.0
-			for j in range(i, points.size()):
-				var q := Vector3(points[j][0],0,points[j][2])
-				if not tail.is_empty():
-					length += tail[-1].distance_to(q)
-				tail.append(q)
-			if length < 100.0:
-				continue
-			best = distance
-			selected = tail
-	if selected.size() < 2 or best > 200.0:
+			var distance:=Vector2(p.x-site.x,p.z-site.z).length()
+			if distance<best:
+				var pose: Variant=drive.call("_road_pose",p,direction)
+				if pose!=null:
+					best=distance
+					chosen=lane
+					chosen_i=i
+	if chosen.is_empty() or best>200:
 		return null
-	for p in selected:
-		route.add_point(p)
-	return drive.find_road_pose(selected[0], selected[1]-selected[0])
+	var start: Array=chosen["points"][chosen_i]
+	var next: Array=chosen["points"][chosen_i+1]
+	var pose: Variant=drive.call("_road_pose",Vector3(start[0],start[1],start[2]),Vector3(next[0]-start[0],0,next[2]-start[2]))
+	if pose==null:
+		return null
+	var length:=0.0
+	var last:=Vector3.INF
+	# Deterministic successor chain, no teleport. Extend beyond requested sample
+	# at nominal speed where possible; enforce connected endpoints and avoid loops.
+	for step in 32:
+		var id:=str(chosen["id"])
+		route_lane_ids.append(id)
+		var points: Array=chosen["points"]
+		for i in range(chosen_i,points.size()):
+			var raw: Array=points[i]
+			var p:=Vector3(raw[0],0,raw[2])
+			if not p.is_finite():
+				return null
+			if last.is_finite():
+				var distance:=last.distance_to(p)
+				if distance<0.02:
+					continue
+				if distance>20:
+					return null
+				length+=distance
+			route.add_point(p)
+			last=p
+			route_limits.append(Vector2(length,float(chosen.get("speed_limit_kph",30))/3.6))
+		if length>=duration*target_speed+100:
+			break
+		var successors: Array=chosen.get("next_lane_ids",[]).duplicate()
+		successors.sort()
+		var successor: Dictionary={}
+		for raw_id: Variant in successors:
+			var next_id:=str(raw_id)
+			if not lanes.has(next_id) or next_id in route_lane_ids:
+				continue
+			var candidate: Dictionary=lanes[next_id]
+			var pts: Array=candidate["points"]
+			if pts.size()<2:
+				continue
+			var first:=Vector3(pts[0][0],0,pts[0][2])
+			if last.distance_to(first)<=12:
+				successor=candidate
+				break
+		if successor.is_empty():
+			break
+		chosen=successor
+		chosen_i=0
+	if route.point_count<2 or length<100:
+		return null
+	var encoded:=PackedStringArray()
+	for i in route.point_count:
+		encoded.append(str(route.get_point_position(i)))
+	route_hash=("\n".join(encoded)+"|"+";".join(route_lane_ids)).sha256_text()
+	return pose
 
 func route_controls() -> void:
 	var body: Node3D = drive.vehicle_body
@@ -146,7 +288,20 @@ func route_controls() -> void:
 	Input.action_release("drive_right")
 	if absf(steer)>0.005:
 		Input.action_press("drive_left" if steer>0 else "drive_right",absf(steer))
-	var error := minf(target_speed,sqrt(maxf(0.0,2.0*3.0*(end-route_progress))))-speed
+	var desired:=target_speed
+	# Respect route geometry and upcoming speed limits. Scripted high-speed
+	# targets are never a license to blast through a hairpin or junction.
+	for sample: Vector2 in route_limits:
+		if sample.x>=route_progress and sample.x<=route_progress+maxf(25.0,speed*2.0):
+			desired=minf(desired,sample.y)
+	var ahead:=minf(end,route_progress+maxf(12.0,speed*1.2))
+	var a:=route.sample_baked(route_progress)
+	var b:=route.sample_baked((route_progress+ahead)*0.5)
+	var c:=route.sample_baked(ahead)
+	var turn:=absf((b-a).signed_angle_to(c-b,Vector3.UP))
+	if turn>0.02:
+		desired=minf(desired,sqrt(3.5*maxf(a.distance_to(c),1.0)/turn))
+	var error := minf(desired,sqrt(maxf(0.0,2.0*3.0*(end-route_progress))))-speed
 	Input.action_press("drive_throttle",clampf(0.20+error*0.24,0.0,1.0))
 	Input.action_press("drive_brake",clampf((-error-1.2)*0.24,0.0,0.72))
 
@@ -158,23 +313,30 @@ func run() -> void:
 		await finish(1,"Graphical renderer required; no capture written")
 		return
 	for arg in OS.get_cmdline_user_args():
-		var parts := arg.split("=",false,1)
-		if parts.size()==2:
-			opts[parts[0]]=parts[1]
+		var parts := arg.split("=",true,1)
+		if parts.size()!=2 or opts.has(parts[0]) or not parts[0] in ["--out","--site","--mode","--scenario","--preset","--features","--warmup","--scale","--seconds","--speed-mps","--commit","--options","--interaction"]:
+			await finish(1,"Unknown, repeated, or malformed capture argument: "+arg)
+			return
+		opts[parts[0]]=parts[1]
 	out = str(opts.get("--out",""))
 	var site := str(opts.get("--site","cedar"))
 	var mode := str(opts.get("--mode","baseline"))
 	var scenario := str(opts.get("--scenario","stationary"))
 	var quality := str(opts.get("--preset","medium"))
 	var features := str(opts.get("--features",""))
-	var warmup := float(opts.get("--warmup","15"))
-	var expected_scale := float(opts.get("--scale","0.85" if quality=="low" else "1.0"))
-	var duration := float(opts.get("--seconds","60"))
-	target_speed = float(opts.get("--speed-mps","22.35"))
-	if out.is_empty() or not out.is_absolute_path() or not VIEWS.has(site) or not mode in ["baseline","candidate"] or not scenario in ["stationary","offroad","manual","route"] or not quality in ["low","medium","high"] or warmup<5 or duration<60 or duration>600 or target_speed<=0 or target_speed>60.8 or str(opts.get("--commit","")).is_empty():
+	var warmup := number_option("--warmup",15.0)
+	var expected_scale := number_option("--scale",0.85 if quality=="low" else 1.0)
+	var duration := number_option("--seconds",60.0)
+	target_speed = number_option("--speed-mps",22.35)
+	interaction=str(opts.get("--interaction","off"))=="on"
+	for n in [warmup,expected_scale,duration,target_speed]:
+		if not is_finite(n):
+			await finish(1,"Nonfinite or malformed numeric option")
+			return
+	if out.is_empty() or not out.is_absolute_path() or not VIEWS.has(site) or not mode in ["baseline","candidate"] or not scenario in ["stationary","offroad","manual","route"] or not quality in ["low","medium","high"] or warmup<5 or warmup>120 or expected_scale<=0 or expected_scale>1.0 or duration<60 or duration>600 or target_speed<=0 or target_speed>60.8 or str(opts.get("--commit","")).length()!=40 or not str(opts.get("--interaction","off")) in ["on","off"]:
 		await finish(1,"Invalid capture options; see handoff")
 		return
-	if FileAccess.file_exists(out.path_join("meta.json")) or FileAccess.file_exists(out.path_join("frames.csv")):
+	if FileAccess.file_exists(out.path_join("meta.json")) or FileAccess.file_exists(out.path_join("frames.csv")) or FileAccess.file_exists(out.path_join("start.png")) or FileAccess.file_exists(out.path_join("end.png")):
 		await finish(1,"Refusing to overwrite capture")
 		return
 	if DirAccess.make_dir_recursive_absolute(out)!=OK:
@@ -223,7 +385,7 @@ func run() -> void:
 	var spec: Array = VIEWS[site]
 	var pose: Variant = drive.find_road_pose(spec[0],spec[1])
 	if scenario=="route":
-		pose = make_route(spec[0],spec[1])
+		pose = make_route(spec[0],spec[1],duration)
 	if pose==null:
 		await finish(1,"No validated road pose")
 		return
@@ -243,13 +405,21 @@ func run() -> void:
 			await finish(1,"No offroad clearance")
 			return
 	drive._spawn_vehicle("mclaren_senna",pose)
-	await frames(90)
+	for tick in 90:
+		await physics_frame
 	if drive.active_vehicle_id!="mclaren_senna" or not drive.vehicle_body.has_node("CuratedCar"):
 		await finish(1,"Actual curated Senna failed to mount")
 		return
+	var contacts:=0
+	for wheel in drive.vehicle_body.wheel_array:
+		contacts+=int(wheel.is_colliding())
+	if contacts!=4 or not drive.vehicle_body.global_transform.is_finite() or drive.vehicle_body.global_basis.y.dot(Vector3.UP)<0.9:
+		await finish(1,"Senna failed settled four-wheel contact")
+		return
 	drive.camera.snap_to_vehicle()
 	drive.vehicle_body.freeze=true
-	if mode=="baseline" and not features.is_empty():
+	legacy_grass=grass_state()
+	if mode=="baseline" and (not features.is_empty() or not feature_options.is_empty() or interaction):
 		await finish(1,"Baseline must not enable experimental features")
 		return
 	if mode=="candidate":
@@ -257,12 +427,15 @@ func run() -> void:
 			await finish(1,"Explicit --features=a,d,e selection required")
 			return
 		var enabled := {}
-		for feature in features.split(",",false):
+		for feature in features.split(",",true):
 			if enabled.has(feature):
 				await finish(1,"Duplicate feature: "+feature)
 				return
 			enabled[feature]=true
 			var options: Dictionary=feature_options.get(feature,{}).duplicate(true)
+			if not convert_rectangles(options):
+				await finish(1,"Invalid world-space bounds for "+feature)
+				return
 			var ok := false
 			match feature:
 				"a":
@@ -274,16 +447,24 @@ func run() -> void:
 								drive.add_child(cover)
 								if not options.has("seed"):
 									options["seed"]=1234
-								if options.has("pilot_bounds"):
-									var bounds: Variant=options["pilot_bounds"]
-									if not bounds is Array or bounds.size()!=4:
-										await finish(1,"pilot_bounds requires [x,z,width,height]")
-										return
-									options["pilot_bounds"]=Rect2(float(bounds[0]),float(bounds[1]),float(bounds[2]),float(bounds[3]))
 								ok=bool(cover.call("build",drive.world,quality,MASK,options))
+								if ok:
+									ok=suppress_grass()
 				"d":
+					if not options.has("pilot_bounds"):
+						var center: Vector2=Vector2(pose.origin.x,pose.origin.z)
+						options["pilot_bounds"]=Rect2(center-Vector2.ONE*100,Vector2.ONE*200).intersection(Rect2(-1000,-1000,2000,2000))
+					if not options.has("roadside_bounds"):
+						options["roadside_bounds"]=options["pilot_bounds"]
+					if not options.has("mask_dir"):
+						options["mask_dir"]=MASK
 					ok=apply_preview("res://modules/environment_terrain/terrain_preview.gd",drive.world,false,quality,options)
 				"e":
+					var paint:=select_paint()
+					if paint.is_empty():
+						await finish(1,"Verified Senna paint surfaces unavailable")
+						return
+					options["paint_surfaces"]=paint
 					ok=apply_preview("res://modules/environment_rendering/render_profile.gd",drive,true,quality,options)
 			if not ok:
 				await finish(1,"Candidate feature refused: "+feature)
@@ -297,7 +478,7 @@ func run() -> void:
 		if is_instance_valid(cover):
 			cover.call("update_focus",drive.camera.global_position,drive.vehicle_body.linear_velocity)
 	release_controls()
-	if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale):
+	if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale) or RenderingServer.get_current_rendering_method()!="forward_plus":
 		await finish(1,"1920x1080 output and requested scale required")
 		return
 	await RenderingServer.frame_post_draw
@@ -307,7 +488,10 @@ func run() -> void:
 		return
 	var driver_info: Variant = "unavailable"
 	if RenderingServer.has_method("get_video_adapter_driver_info"):
-		driver_info=RenderingServer.call("get_video_adapter_driver_info")
+		var info: Variant=RenderingServer.call("get_video_adapter_driver_info")
+		if info is PackedStringArray or info is Array:
+			if info.size()>0:
+				driver_info=Array(info)
 	meta={"mode":mode,"site":site,"scenario":scenario,"preset":quality,"width":root.size.x,"height":root.size.y,
 		"scale":root.scaling_3d_scale,"renderer":RenderingServer.get_current_rendering_method(),
 		"gpu":RenderingServer.get_video_adapter_name(),"cpu":OS.get_processor_name(),"driver":driver_info,
@@ -317,25 +501,27 @@ func run() -> void:
 		"audio":"enabled" if drive.vehicle_body.has_node("VehicleAudio") and not AudioServer.is_bus_mute(0) and AudioServer.get_bus_volume_db(0)>-80.0 else "unverified_or_muted",
 		"warmup_s":warmup,"sample_s":duration,"controls":str(scenario)+":"+str(target_speed),"lighting":"scene default; candidate flags recorded",
 		"vsync":"disabled","max_fps":Engine.max_fps,"features":features,"feature_options":feature_options,"legacy_vegetation_visible":drive.vegetation!=null and drive.vegetation.visible,
-		"scene":"res://scenes/bootstrap/game.tscn","route_length_m":route.get_baked_length(),"complete":false}
+		"scene":"res://scenes/bootstrap/game.tscn","route_length_m":route.get_baked_length(),"route_hash":route_hash,"route_lanes":Array(route_lane_ids),"interaction":interaction,"legacy_grass":grass_state(),"complete":false}
 	if scenario in ["manual","route"]:
 		drive.vehicle_body.freeze=false
+	if scenario=="route":
+		physics_frame.connect(route_controls)
 	print("CAPTURE START ", JSON.stringify(meta), " — manual: drive now")
 	var start:=Time.get_ticks_usec()
 	var prev:=start
-	var count_cache:=""
+	var count_cache:=grass_count()
 	var next_count:=start
 	while float(prev-start)/1e6<duration:
 		await process_frame
 		var now:=Time.get_ticks_usec()
-		if scenario=="route":
-			route_controls()
 		if is_instance_valid(cover):
 			cover.call("update_focus",drive.camera.global_position,drive.vehicle_body.linear_velocity)
-			cover.call("set_vehicle_interaction",drive.vehicle_body.global_position,drive.vehicle_body.linear_velocity,true)
+			cover.call("set_vehicle_interaction",drive.vehicle_body.global_position,drive.vehicle_body.linear_velocity,interaction)
 		if now>=next_count:
 			count_cache=grass_count()
 			next_count=now+1000000
+		if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale) or drive.active_vehicle_id!="mclaren_senna" or paused or grass_state()!=legacy_grass:
+			capture_conditions_changed=true
 		var p: Vector3=drive.vehicle_body.global_position
 		rows.append(PackedStringArray([str((now-start)/1e6),str((now-prev)/1000.0),
 			metric(RenderingServer.viewport_get_measured_render_time_gpu(rid)),
@@ -346,6 +532,8 @@ func run() -> void:
 			str(drive.adapter.get_speed_mps()),str(drive.adapter.get_gear_display()),str(p.x),str(p.y),str(p.z),
 			str(drive.camera.fov),count_cache,str(route_progress),str(route_done)]))
 		prev=now
+	if physics_frame.is_connected(route_controls):
+		physics_frame.disconnect(route_controls)
 	release_controls()
 	await RenderingServer.frame_post_draw
 	image=root.get_texture().get_image()
@@ -358,7 +546,8 @@ func run() -> void:
 	for row in rows:
 		file.store_csv_line(row)
 	file.close()
-	meta["complete"]=photo_ok
+	meta["complete"]=photo_ok and not capture_conditions_changed
+	meta["capture_conditions_changed"]=capture_conditions_changed
 	meta["route_done"]=route_done
 	meta["route_departed"]=route_departed
 	meta["grass_stats"]=cover.call("get_stats") if is_instance_valid(cover) else {}
@@ -368,4 +557,4 @@ func run() -> void:
 		return
 	file.store_string(JSON.stringify(meta,"\t"))
 	file.close()
-	await finish(0 if photo_ok else 1,"Capture complete; no graphical acceptance implied" if photo_ok else "End screenshot failed")
+	await finish(0 if meta["complete"] else 1,"Capture complete; no graphical acceptance implied" if meta["complete"] else "Screenshot or capture conditions failed")

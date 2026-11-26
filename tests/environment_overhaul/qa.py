@@ -3,7 +3,6 @@ import argparse
 import hashlib
 import json
 import math
-import os
 from pathlib import Path
 import re
 import subprocess
@@ -23,6 +22,18 @@ CANDIDATES = [
 PROTECTED = ["data/world", "content/scenery/vegetation.bin",
              "content/scenery/premium_foliage.bin"]
 ERROR = re.compile(r"SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error|^FAIL(?:ED)?(?:\s|:)", re.M | re.I)
+AGENT_TESTS = [
+    ("modules/ground_cover/tests/run_tests.gd", ["@godot","--headless","--path",".","--fixed-fps","60","--script","res://modules/ground_cover/tests/run_tests.gd"]),
+    ("modules/ground_cover/tests/real_world_smoke.gd", ["@godot","--headless","--path",".","--fixed-fps","60","--script","res://modules/ground_cover/tests/real_world_smoke.gd"]),
+    ("tools/environment_assets/generate.mjs", ["node","tools/environment_assets/generate.mjs","--self-test"]),
+    ("tools/environment_assets/generate.mjs", ["node","tools/environment_assets/generate.mjs","--verify"]),
+    ("tools/environment_assets/test_import.gd", ["@godot","--headless","--path",".","--script","res://tools/environment_assets/test_import.gd"]),
+    ("content/scenery/environment_overhaul/test_biomes.py", ["@python","-m","unittest","discover","-s","content/scenery/environment_overhaul","-p","test_biomes.py","-v"]),
+    ("content/scenery/environment_overhaul/test_surface.gd", ["@godot","--headless","--path",".","--script","res://content/scenery/environment_overhaul/test_surface.gd"]),
+    ("modules/environment_terrain/tests/run_tests.gd", ["@godot","--headless","--path",".","--script","res://modules/environment_terrain/tests/run_tests.gd"]),
+    ("modules/environment_rendering/tests/render_profile_test.gd", ["@godot","--headless","--path",".","--script","res://modules/environment_rendering/tests/render_profile_test.gd"]),
+    ("modules/environment_rendering/tests/live_root_test.gd", ["@godot","--headless","--path",".","--script","res://modules/environment_rendering/tests/live_root_test.gd"]),
+]
 ROOT_TESTS = [
     "tests/core/smoke.gd", "tests/core/steering_camera.gd",
     "tests/core/drift_and_controller.gd", "tests/integration/map_width_check.gd",
@@ -48,8 +59,9 @@ def payload(path):
             f"LFS pointer, not payload: {path}")
     return data
 
-def verify_mask(directory):
+def verify_mask(directory, root=ROOT, strict_sources=False):
     m = read_json(directory / "manifest.json")
+    require(isinstance(m, dict), "mask manifest object")
     for k, v in {"schema_version": 1, "width": 1000, "height": 1000,
                  "cell_size_m": 2, "origin_x": -1000, "origin_z": -1000,
                  "byte_order": "RGBA"}.items():
@@ -65,12 +77,22 @@ def verify_mask(directory):
     require(isinstance(sources, dict) and bool(sources), "source hashes required")
     for name, sha in sources.items():
         require(isinstance(sha, str) and bool(re.fullmatch("[0-9a-fA-F]{64}", sha)), f"invalid source SHA: {name}")
-        p = ROOT / name.removeprefix("res://")
-        if p.is_file() and p.resolve().is_relative_to(ROOT):
+        p = (root / name.removeprefix("res://")).resolve()
+        require(p.is_relative_to(root.resolve()), f"source path escapes project: {name}")
+        if strict_sources or p.is_file():
+            require(p.is_file(), f"source absent: {name}")
             require(digest(payload(p)) == sha.lower(), f"source hash mismatch: {name}")
     data = payload(directory / "biome_rgba8.bin")
     require(len(data) == 4_000_000, "mask byte count")
     require(digest(data) == m.get("sha256"), "mask SHA-256 mismatch")
+    if strict_sources:
+        for canonical in ("data/world/road_graph_v1.json","data/world/world_metadata_v1.json","data/world/terrain_height_r16le.bin","data/world/roadworks.json","data/world/terrain_roadworks_r16le.bin"):
+            require(canonical in {k.removeprefix("res://") for k in sources}, f"unrecorded canonical source: {canonical}")
+    if "understory_sha256" in m:
+        understory = directory / "understory.json"
+        require(digest(payload(understory)) == m["understory_sha256"], "understory SHA-256 mismatch")
+        u = read_json(understory)
+        require(u.get("seed")==m["seed"] and u.get("source_hashes")==sources, "understory provenance differs from mask")
     return data
 
 def sample(data, x, z):
@@ -81,42 +103,56 @@ def sample(data, x, z):
 
 def verify_assets(path, root=ROOT):
     m = read_json(path)
-    require(m.get("schema_version") == 1 and isinstance(m.get("assets"), list), "asset schema")
+    require(isinstance(m,dict) and type(m.get("schema_version")) is int and m["schema_version"] == 1 and isinstance(m.get("assets"), list), "asset schema")
     require(bool(m["assets"]), "empty asset inventory")
     keys = set()
     for entry in m["assets"]:
+        require(isinstance(entry,dict), "asset entry object")
         for field in ["species_id", "variant_id", "lod0", "lod1", "dimensions_m", "origin",
                       "source_url", "author", "license", "license_notice", "sha256_by_path"]:
             require(bool(entry.get(field)), f"missing asset {field}")
+        for field in ("species_id","variant_id","lod0","lod1","source_url","author","license","license_notice"):
+            require(isinstance(entry[field],str) and bool(entry[field].strip()), f"invalid asset {field}")
+        require(isinstance(entry["sha256_by_path"],dict), "asset hashes object")
         key = (entry["species_id"], entry["variant_id"])
         require(key not in keys, f"duplicate asset {key}")
         keys.add(key)
         require(entry["origin"] == "ground_center", "asset origin")
         d = entry["dimensions_m"]
-        require(len(d) == 3 and all(math.isfinite(x) and x > 0 for x in d), "asset dimensions")
+        require(isinstance(d,list) and len(d) == 3 and all(type(x) in (int,float) and math.isfinite(x) and x > 0 for x in d), "asset dimensions")
         for lod in ["lod0", "lod1", "lod2"]:
             if not entry.get(lod):
                 continue
             resource = entry[lod]
+            require(isinstance(resource,str) and resource.startswith("res://"), "LOD must be a project resource path")
             target = (root / resource.removeprefix("res://")).resolve()
             require(target.is_relative_to(root), "asset path escapes project")
             require(target.is_file(), f"missing asset payload {resource}")
             hashes = entry["sha256_by_path"]
             expected = hashes.get(resource, hashes.get(resource.removeprefix("res://")))
-            require(digest(payload(target)) == expected, f"asset hash mismatch {resource}")
+            require(bool(payload(target)) and digest(payload(target)) == expected, f"asset hash mismatch {resource}")
+        notice=entry["license_notice"]
+        if notice.startswith("res://"):
+            p=(root/notice.removeprefix("res://")).resolve()
+            require(p.is_relative_to(root.resolve()) and p.is_file() and bool(payload(p)), "license notice missing")
 
 def verify_understory(path):
     m = read_json(path)
-    require(m.get("schema_version") == 1 and type(m.get("seed")) is int
+    require(isinstance(m,dict) and type(m.get("schema_version")) is int and m["schema_version"] == 1 and type(m.get("seed")) is int
             and isinstance(m.get("source_hashes"), dict) and bool(m["source_hashes"]), "understory metadata")
     require(all(isinstance(v, str) and re.fullmatch("[0-9a-fA-F]{64}", v)
                 for v in m["source_hashes"].values()), "understory source hashes")
     require(isinstance(m.get("placements"), list), "understory placements")
+    seen=set()
     for p in m["placements"]:
+        require(isinstance(p,dict), "placement object")
         require(p["species_id"] in {"fern", "shrub", "sapling", "reed", "wildflower"}, "unknown species")
-        require(all(math.isfinite(p[k]) for k in ("x", "z", "yaw_rad", "scale")), "non-finite placement")
+        require(all(type(p[k]) in (int,float) and math.isfinite(p[k]) for k in ("x", "z", "yaw_rad", "scale")), "non-finite placement")
         require(-1000 <= p["x"] < 1000 and -1000 <= p["z"] < 1000 and p["scale"] > 0, "invalid placement")
         require(type(p["seed"]) is int, "placement seed")
+        key=(p["species_id"],p["x"],p["z"])
+        require(key not in seen,"duplicate placement")
+        seen.add(key)
 
 def run_command(command, log, seconds):
     with log.open("w", encoding="utf-8") as f:
@@ -131,35 +167,46 @@ def run_command(command, log, seconds):
             status = 127
     content = log.read_text(encoding="utf-8", errors="replace")
     print(content[-12000:], flush=True)
-    return status or (1 if ERROR.search(content) else 0)
+    matches=[line for line in content.splitlines() if ERROR.search(line)]
+    if matches:
+        print("Matched failure diagnostics:", "\n".join(matches[:40]),flush=True)
+    if status:
+        print(f"Process exit status: {status}; log: {log}",flush=True)
+    return status or (1 if matches else 0)
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--mode", choices=["baseline", "integrated"], default="baseline")
     p.add_argument("--godot", default="godot")
-    p.add_argument("--out", type=Path, default=Path(tempfile.gettempdir()) / "aster-env-qa")
+    p.add_argument("--out", type=Path, default=None)
     p.add_argument("--suite", choices=["all", "owned", "root"], default="all")
     p.add_argument("--agent-command", action="append", default=[], help="JSON argv array, repeat per agent")
     p.add_argument("--rebake-command", help="JSON argv; regenerate mask in place, must preserve exact bytes")
     p.add_argument("--agent-manifest", type=Path, help="JSON array of explicit agent test argv lists")
-    p.add_argument("--bend-margin", type=float, default=0.0, help="Additional swept bound margin in metres")
+    p.add_argument("--bend-margin", type=float, default=0.36, help="Swept bound margin in metres (A: 0.24 displacement + 0.12 clearance)")
     p.add_argument("--stats-map", type=Path, help="Map semantic counters to A top-level keys")
     args = p.parse_args()
-    out = args.out.resolve()
+    out = args.out.resolve() if args.out else Path(tempfile.mkdtemp(prefix="aster-env-qa-"))
     out.mkdir(parents=True, exist_ok=True)
+    if (out/"results.json").exists():
+        p.error("output already contains a run; choose a fresh directory")
+    print(f"QA logs: {out}",flush=True)
     results = {}
     def check(name, fn):
         try:
             fn()
             results[name] = "PASS"
-        except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+        except (ValueError, OSError, KeyError, TypeError, AttributeError, OverflowError, subprocess.SubprocessError) as exc:
             print(f"FAIL {name}: {exc}", flush=True)
             results[name] = f"FAIL: {exc}"
     def command(name, argv, timeout=420):
         check(name, lambda: require(run_command(argv, out / (name + ".log"), timeout) == 0,
                                     f"nonzero exit, timeout or script error: {name}.log"))
     def canonical():
+        subprocess.run(["git", "merge-base", "--is-ancestor", BASE, "HEAD"], cwd=ROOT, check=True)
         subprocess.run(["git", "diff", "--exit-code", BASE, "--", *PROTECTED], cwd=ROOT, check=True)
+        untracked=subprocess.check_output(["git","ls-files","--others","--exclude-standard","--",*PROTECTED],cwd=ROOT,text=True)
+        require(not untracked.strip(), "untracked canonical paths: "+untracked.strip())
         for path in ("data/world/road_graph_v1.json", "data/world/terrain_height_r16le.bin",
                      "data/world/world_metadata_v1.json"):
             require(bool(payload(ROOT / path)), f"missing canonical payload {path}")
@@ -170,9 +217,9 @@ def main():
     else:
         check("candidate_discovery", lambda: require(not missing, "missing candidate files: " + str(missing)))
     for key, path, validator in [
-        ("mask", ROOT / MASK / "manifest.json", lambda: verify_mask(ROOT / MASK)),
+        ("mask", ROOT / MASK / "manifest.json", lambda: verify_mask(ROOT / MASK, strict_sources=args.mode=="integrated")),
         ("assets", ROOT / CANDIDATES[3], lambda: verify_assets(ROOT / CANDIDATES[3])),
-        ("understory", ROOT / MASK.parent / "understory.json",
+        ("understory", ROOT / MASK / "understory.json",
          lambda: verify_understory(ROOT / MASK.parent / "understory.json")),
     ]:
         if path.exists():
@@ -181,11 +228,16 @@ def main():
             results[key] = "N/A: absent optional data" if key == "understory" or args.mode == "baseline" else "FAIL: missing"
     if args.rebake_command:
         def rebake():
-            before = verify_mask(ROOT / MASK)
+            before = verify_mask(ROOT / MASK, strict_sources=args.mode=="integrated")
+            before_manifest = payload(ROOT / MASK / "manifest.json")
+            before_understory = payload(ROOT / MASK / "understory.json") if (ROOT / MASK / "understory.json").exists() else None
             argv = json.loads(args.rebake_command)
             for i in range(2):
                 require(run_command(argv, out / f"rebake-{i}.log", 600) == 0, "rebake failed")
-                require(verify_mask(ROOT / MASK) == before, "mask is not byte deterministic")
+                require(verify_mask(ROOT / MASK, strict_sources=args.mode=="integrated") == before, "mask is not byte deterministic")
+                require(payload(ROOT / MASK / "manifest.json")==before_manifest,"manifest nondeterminism")
+                if before_understory is not None:
+                    require(payload(ROOT / MASK / "understory.json")==before_understory,"understory nondeterminism")
         check("rebake", rebake)
     else:
         results["rebake"] = "N/A: explicit generator command not provided"
@@ -194,7 +246,8 @@ def main():
     command("engine-version", [args.godot, "--headless", "--version"], 20)
     check("engine-pin", lambda: require((out / "engine-version.log").read_text().startswith("4.7.2.stable"), "wrong Godot version"))
     command("root-import", [args.godot, "--headless", "--path", ".", "--editor", "--import"], 900)
-    if results["root-import"] == "PASS":
+    if results["root-import"] == "PASS" and results["engine-pin"] == "PASS":
+        command("capture-parse",[args.godot,"--headless","--path",".","--check-only","--script","res://tests/environment_overhaul/capture.gd"],90)
         if args.suite in ("all", "owned"):
             runtime = [args.godot, "--headless", "--path", ".", "--fixed-fps", "60",
                 "--script", "res://tests/environment_overhaul/environment_check.gd", "--", args.mode,
@@ -206,9 +259,19 @@ def main():
             for script in ROOT_TESTS:
                 command(script.removesuffix(".gd").replace("/", "__"), [args.godot, "--headless", "--path", ".", "--fixed-fps", "60", "--script", "res://" + script])
         manifest = args.agent_manifest or ROOT / "tests/environment_overhaul/agent_commands.json"
-        agent_commands = [json.loads(raw) for raw in args.agent_command]
-        if manifest.is_file():
-            agent_commands.extend(read_json(manifest))
+        agent_commands = []
+        def discover_commands():
+            agent_commands.extend(json.loads(raw) for raw in args.agent_command)
+            if args.agent_manifest or manifest.is_file():
+                config=read_json(manifest)
+                require(isinstance(config,list),"agent manifest must be a list")
+                agent_commands.extend(config)
+            for path, argv in AGENT_TESTS:
+                if (ROOT/path).is_file():
+                    cmd=[args.godot if x=="@godot" else sys.executable if x=="@python" else x for x in argv]
+                    if cmd not in agent_commands:
+                        agent_commands.append(cmd)
+        check("agent-discovery",discover_commands)
         if not agent_commands:
             results["agent_commands"] = "N/A: no explicit agent commands supplied"
         for i, argv in enumerate(agent_commands):
@@ -218,6 +281,7 @@ def main():
                 results[f"agent-{i}"] = "FAIL: expected nonempty JSON argv array"
     else:
         results["runtime"] = "NOT RUN: import failed"
+    check("canonical-after",canonical)
     (out / "results.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
     print(json.dumps(results, indent=2))
     return int(any(v.startswith("FAIL") for v in results.values()))
