@@ -11,6 +11,7 @@ uniform bool lod_blade_fade_enabled = true;
 uniform bool lod_density_fade_enabled = true;
 uniform float mid_rank_limit = 4096.0;
 uniform float far_rank_limit = 4096.0;
+uniform float lod_hysteresis = 5.0;
 uniform float near_radius = 25.0;
 uniform float mid_radius = 65.0;
 uniform float fade_start = 105.0;
@@ -47,8 +48,8 @@ void vertex() {
 	density_keep = 1.0;
 	if (lod_density_fade_enabled) {
 		float rank = INSTANCE_CUSTOM.a * 4096.0;
-		float near_end = max(1.0, near_radius - 5.0);
-		float mid_end = max(1.0, mid_radius - 5.0);
+		float near_end = max(1.0, near_radius - lod_hysteresis);
+		float mid_end = max(1.0, mid_radius - lod_hysteresis);
 		if (rank >= mid_rank_limit) {
 			density_keep *= 1.0 - smoothstep(max(0.0, near_end - 8.0), near_end, chunk_distance);
 		}
@@ -58,7 +59,7 @@ void vertex() {
 	}
 	if (lod_blade_fade_enabled && UV.x >= 3.0) {
 		float boundary = UV.x >= 5.0 ? near_radius : mid_radius;
-		float fade_to = max(1.0, boundary - 5.0);
+		float fade_to = max(1.0, boundary - lod_hysteresis);
 		float fade_from = max(0.0, fade_to - 6.0);
 		blade_weight = 1.0 - smoothstep(fade_from, fade_to, chunk_distance);
 	}
