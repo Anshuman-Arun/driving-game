@@ -1,5 +1,6 @@
 import json
 import tempfile
+import sys
 import unittest
 from pathlib import Path
 
@@ -8,11 +9,22 @@ from scipy.spatial import cKDTree
 import bake_biomes as b
 import verify_road_envelope as geometry
 import verify_package as package
+import run_acceptance as runner
 
 ROOT = Path(__file__).resolve().parents[3]
 
 
 class UnitTests(unittest.TestCase):
+    def test_runner_rejects_false_success(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            logdir=Path(tmp)
+            for name,command in (("script_error", "print('SCRIPT ERROR: parser')"),
+                                 ("shader_error", "print('Shader compilation failed')"),
+                                 ("nonzero", "raise SystemExit(2)")):
+                self.assertFalse(runner.run(logdir,name,[sys.executable,"-c",command],inspect_errors=True))
+            self.assertFalse(runner.run(logdir,"missing_marker",[sys.executable,"-c","print('nothing')"],expected=("PASS: 77 biome surface probes",)))
+            self.assertTrue(runner.run(logdir,"marker",[sys.executable,"-c","print('PASS: 77 biome surface probes')"],expected=("PASS: 77 biome surface probes",)))
+
     def test_coordinates(self):
         self.assertEqual(b.cell_index(-999,-999),(0,0))
         self.assertEqual(b.cell_index(999,999),(999,999))
