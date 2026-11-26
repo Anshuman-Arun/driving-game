@@ -74,25 +74,10 @@ if [[ "$mode" == --full ]]; then
   run root-import 600 "$repo" none --editor --import || exit 1
   run live-root 420 "$repo" live --fixed-fps 60 --script res://modules/environment_rendering/tests/live_root_test.gd || true
   # The pinned base contains the network_upgrade map-width data and test.
-  run map_width_check 420 "$repo" '^Map width: [1-9][0-9]* edge rays, [0-9]+ isolated seam rechecks, 0 failures
-fi
-exit "$failed"
- --fixed-fps 60 --script res://tests/integration/map_width_check.gd || true
-  run roadworks_check 420 "$repo" '^PASS Verified five widened approaches, three water crossings and one new elevated span
-fi
-exit "$failed"
- --fixed-fps 60 --script res://tests/integration/roadworks_check.gd || true
-  run world_visual_qa 420 "$repo" '^PASS Live car moved on all 16 corridors, including [1-9][0-9]* gravel
-fi
-exit "$failed"
- --fixed-fps 60 --script res://tests/integration/world_visual_qa.gd || true
-  run garage_world 420 "$repo" '^GARAGE WORLD failures: 0
-fi
-exit "$failed"
- --fixed-fps 60 --script res://tests/integration/garage_world.gd || true
-  run vehicle_world 420 "$repo" '^Vehicle/world integration failures: 0
-fi
-exit "$failed"
- --fixed-fps 60 --script res://tests/integration/vehicle_world.gd || true
+  run map_width_check 420 "$repo" '^Map width: [1-9][0-9]* edge rays, [0-9]+ isolated seam rechecks, 0 failures$' --fixed-fps 60 --script res://tests/integration/map_width_check.gd || true
+  run roadworks_check 420 "$repo" '^PASS Verified five widened approaches, three water crossings and one new elevated span$' --fixed-fps 60 --script res://tests/integration/roadworks_check.gd || true
+  run world_visual_qa 420 "$repo" '^PASS Live car moved on all 16 corridors, including [1-9][0-9]* gravel$' --fixed-fps 60 --script res://tests/integration/world_visual_qa.gd || true
+  run garage_world 420 "$repo" '^GARAGE WORLD failures: 0$' --fixed-fps 60 --script res://tests/integration/garage_world.gd || true
+  run vehicle_world 420 "$repo" '^Vehicle/world integration failures: 0$' --fixed-fps 60 --script res://tests/integration/vehicle_world.gd || true
 fi
 exit "$failed"
