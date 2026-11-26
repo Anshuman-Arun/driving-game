@@ -317,18 +317,7 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 			_job.clear()
 			_jobs_cancelled += 1
 		else:
-			var target: Dictionary = wanted[job_key]
-			var new_limit := int(target.limit)
-			if new_limit != int(_job.limit) or int(target.lod) != int(_job.lod):
-				# Candidate acceptance is LOD-independent. Keep accepted rank prefixes
-				# when the moving camera changes the desired detail or quota.
-				for group: Array in _job.groups:
-					while not group.is_empty() and int(group.back().rank) >= new_limit:
-						group.pop_back()
-				_job.cursor = mini(int(_job.cursor), new_limit)
-				_job.limit = new_limit
-				_job.lod = target.lod
-				_jobs_retargeted += 1
+			_retarget_job(wanted[job_key])
 	for key: Vector2i in wanted:
 		var entry: Dictionary = wanted[key]
 		if _active.has(key) and int(_active[key].lod) == int(entry.lod) and int(_active[key].limit) == int(entry.limit):
@@ -355,6 +344,20 @@ func _start_job(entry: Dictionary) -> void:
 	_job = entry.duplicate()
 	_job["cursor"] = 0
 	_job["groups"] = [[],[],[],[],[]]
+
+func _retarget_job(target: Dictionary) -> void:
+	var new_limit := int(target.limit)
+	if new_limit == int(_job.limit) and int(target.lod) == int(_job.lod):
+		return
+	# Candidate acceptance is LOD-independent. Keep accepted rank prefixes
+	# when the moving camera changes the desired detail or quota.
+	for group: Array in _job.groups:
+		while not group.is_empty() and int(group.back().rank) >= new_limit:
+			group.pop_back()
+	_job.cursor = mini(int(_job.cursor), new_limit)
+	_job.limit = new_limit
+	_job.lod = target.lod
+	_jobs_retargeted += 1
 
 func _sample_mask(x: float, z: float) -> Vector4:
 	if not WORLD.has_point(Vector2(x,z)):
