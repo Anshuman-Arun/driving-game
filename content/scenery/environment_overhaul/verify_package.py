@@ -100,7 +100,8 @@ def verify(root,directory):
     x,z=b.coords()
     road=b.road_mask(graph,works,x,z,t["road_margin_m"])
     wet=b.water_mask(lake,works)
-    protected,props,_=b.scenery_masks(src,x,z)
+    protected,props,trees=b.scenery_masks(src,x,z)
+    canopy_dist=b.clearance_lower_bound(trees)
     rd,wd,pd=(b.clearance_lower_bound(a) for a in (road,wet,protected|props))
     slope=b.triangle_slope(h)
     blocked=road|wet|protected|(wd<=t["water_margin_m"])
@@ -115,6 +116,8 @@ def verify(root,directory):
                   wd[j,i]>t["water_margin_m"]+b.UNDERSTORY_RADIUS_M and
                   pd[j,i]>b.UNDERSTORY_RADIUS_M and slope[j,i]<=t["max_understory_slope"],
                   "Unsafe placement: "+str(p))
+        if p["species_id"]=="sapling":
+            b.require(canopy_dist[j,i]>b.UNDERSTORY_RADIUS_M,"Sapling overlaps mature canopy")
         if p["species_id"]=="reed":
             b.require(wc[j,i]+b.CELL_RADIUS<=18,"Reed too far from water")
     probes=m.get("mask_probes")
