@@ -7,6 +7,9 @@ uniform bool vehicle_enabled = false;
 uniform vec3 vehicle_position = vec3(0.0);
 uniform vec3 vehicle_velocity = vec3(0.0);
 uniform bool fade_enabled = true;
+uniform bool lod_blade_fade_enabled = true;
+uniform float near_radius = 25.0;
+uniform float mid_radius = 65.0;
 uniform float fade_start = 105.0;
 uniform float fade_end = 130.0;
 varying flat vec3 tuft_root;
@@ -33,7 +36,18 @@ void vertex() {
 		bend += away / max(d, 0.1) * influence * 0.18;
 	}
 	bend *= min(1.0, 0.24 / max(length(bend), 0.001));
-	VERTEX.xz += bend * flex * flex;
+	// No second batch: extra blades shrink before a chunk can switch LOD.
+	float blade_weight = 1.0;
+	if (lod_blade_fade_enabled && UV.x >= 3.0) {
+		vec2 chunk_center = root.xz + (INSTANCE_CUSTOM.gb - vec2(0.5)) * 16.0;
+		float chunk_distance = length(chunk_center - CAMERA_POSITION_WORLD.xz);
+		float boundary = UV.x >= 5.0 ? near_radius : mid_radius;
+		float fade_to = max(1.0, boundary - 5.0);
+		float fade_from = max(0.0, fade_to - 6.0);
+		blade_weight = 1.0 - smoothstep(fade_from, fade_to, chunk_distance);
+	}
+	VERTEX = root + (VERTEX - root) * blade_weight;
+	VERTEX.xz += bend * flex * flex * blade_weight;
 	tuft_root = root;
 	NORMAL = normalize(mix(NORMAL, vec3(0.0, 1.0, 0.0), 0.55));
 }
@@ -43,7 +57,7 @@ void fragment() {
 	if (fade_enabled) {
 		float d = length(tuft_root.xz - CAMERA_POSITION_WORLD.xz);
 		float keep = 1.0 - smoothstep(fade_start, fade_end, d);
-		if (tuft_seed > keep) { discard; }
+		if (keep <= 0.0 || (keep < 1.0 && tuft_seed >= keep)) { discard; }
 	}
 	vec3 up = (VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
 	NORMAL = normalize(mix(NORMAL, up, 0.72));
