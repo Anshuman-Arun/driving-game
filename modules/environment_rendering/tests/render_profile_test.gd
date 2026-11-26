@@ -65,6 +65,24 @@ func _run() -> void:
 	var valid := Profile.validate_profile("Medium")
 	check(valid["ok"], "case insensitive preset")
 	check(not Profile.validate_profile("ultra")["ok"], "unknown preset")
+	check(not Profile.validate_profile("medium", {42: true})["ok"], "nonstring option key")
+	# Bounds must not be rounded through Vector2/float32. In particular 0.15,
+	# 0.12 and 0.001 previously risked rejecting their exact advertised values.
+	for key in Profile.RANGES:
+		var bounds: Array = Profile.RANGES[key]
+		for bound in bounds:
+			var override: Dictionary = {key: bound}
+			if key == "split_1":
+				override["split_2"] = 0.28
+			if key == "split_2":
+				override["split_1"] = 0.05
+				override["split_3"] = 0.60
+			if key == "split_3":
+				override["split_2"] = 0.22
+			check(Profile.validate_profile("medium", override)["ok"], "inclusive bound " + key + ": " + str(bound))
+	var snapshot := Profile.validate_profile("medium")
+	snapshot["values"]["exposure"] = 0.0
+	check(Profile.validate_profile("medium")["values"]["exposure"] == 1.0, "profile values not shared")
 	for options in [{"exposure": NAN}, {"sun_energy": INF}, {"shadow_distance": 0}, {"ssao": 1}, {"split_1": 0.24, "split_2": 0.20}, {"ssr_steps": 32.5}, {"unexpected": true}]:
 		check(not Profile.validate_profile("medium", options)["ok"], "invalid option: " + str(options))
 	for preset in ["low", "medium", "high"]:
@@ -83,11 +101,37 @@ func _run() -> void:
 		var expected_ao: bool = preset == "high" and not status["headless"] and status["renderer"] == "forward_plus"
 		check(world_env.environment.ssao_enabled == expected_ao, "AO capability gate")
 		check(mesh.get_surface_override_material(0) == null, "no implicit paint edits")
+		check(not status["drifted"], "fresh candidate has no drift")
 	adapter.restore()
 	check(world_env.environment == original, "restore original environment identity after repeated apply")
 	for property in shadow_before:
 		check(sun.get(property) == shadow_before[property], "restore sun " + property)
 	var options := {"paint_surfaces": [{"mesh": mesh, "surface": 0}], "ssr": true, "ssao": true}
+	# World ownership protects separate adapter instances, including different
+	# roots in the same World3D. An independent viewport is not blocked.
+	var contender := Profile.new()
+	check(adapter.apply_candidate(fixture, "medium"), "ownership baseline")
+	var owned := world_env.environment
+	check(not contender.apply_candidate(fixture, "high"), "second adapter rejected")
+	check(world_env.environment == owned, "second adapter cannot alter first")
+	var viewport := SubViewport.new()
+	viewport.own_world_3d = true
+	fixture.add_child(viewport)
+	var alternate := Node3D.new()
+	viewport.add_child(alternate)
+	var alt_env := WorldEnvironment.new()
+	alt_env.environment = Environment.new()
+	alternate.add_child(alt_env)
+	var alt_sun := DirectionalLight3D.new()
+	alternate.add_child(alt_sun)
+	var alternate_options := {"world_environment": alt_env, "sun": alt_sun}
+	check(not adapter.apply_candidate(fixture, "high", alternate_options), "cross viewport rejected")
+	check(contender.apply_candidate(alternate, "high", alternate_options), "independent world accepted")
+	contender.restore()
+	viewport.free()
+	adapter.restore()
+	check(contender.apply_candidate(fixture, "low"), "world released after restore")
+	contender.restore()
 	check(adapter.apply_candidate(fixture, "medium", options), "explicit paint and effects")
 	var first := mesh.get_surface_override_material(0) as StandardMaterial3D
 	check(first != null and first != paint, "paint copied")
@@ -106,17 +150,82 @@ func _run() -> void:
 		check(status["unavailable"].size() >= 2, "unsupported features reported")
 	else:
 		check(preview.ssr_enabled and preview.ssao_enabled, "explicit effects enabled")
+	check(not adapter.apply_candidate(fixture, "high", {"paint_surfaces": [{"mesh": mesh, "surface": 0, "extra": true}]}), "malformed entry rejected")
+	check(not adapter.apply_candidate(fixture, "high", {"paint_surfaces": [{"mesh": mesh, "surface": 0.0}]}), "fractional surface type rejected")
+	check(not adapter.apply_candidate(fixture, "high", {"paint_surfaces": [42]}), "non dictionary rejected")
+	check(not adapter.apply_candidate(fixture, "high", {"paint_surfaces": "paint"}), "non array rejected")
+	var doomed := MeshInstance3D.new()
+	doomed.mesh = box
+	fixture.add_child(doomed)
+	doomed.queue_free()
+	check(not adapter.apply_candidate(fixture, "high", {"paint_surfaces": [{"mesh": doomed, "surface": 0}]}), "queued deletion target rejected")
+	doomed.free()
+	check(not adapter.apply_candidate(fixture, "high", {"paint_surfaces": [{"mesh": doomed, "surface": 0}]}), "freed target rejected")
+	check(not adapter.apply_candidate(fixture, "high", {"sun": 42}), "non node sun rejected")
+	check(world_env.environment == preview, "all invalid requests preserve active preview")
 	check(adapter.apply_candidate(fixture, "high", options), "reapply same paint")
 	check(mesh.get_surface_override_material(0) != first, "fresh copy on reapply")
 	adapter.restore()
 	adapter.restore()
 	check(mesh.get_surface_override_material(0) == null, "restore absent override")
 	check(world_env.environment == original, "restore env")
+	# A shared source gets one copied material, not one resource per surface.
+	var pair := {"paint_surfaces": [{"mesh": mesh, "surface": 0}, {"mesh": other_mesh, "surface": 0}]}
+	check(adapter.apply_candidate(fixture, "medium", pair), "two paint targets")
+	check(mesh.get_surface_override_material(0) == other_mesh.get_surface_override_material(0), "shared preview material reused")
+	check(adapter.get_status()["paint_material_count"] == 1, "one material copy")
+	check(adapter.apply_candidate(fixture, "medium", options), "remove second target on reapply")
+	check(other_mesh.get_surface_override_material(0) == null, "removed target restored")
+	adapter.restore()
 	var explicit := StandardMaterial3D.new()
 	mesh.set_surface_override_material(0, explicit)
 	check(adapter.apply_candidate(fixture, "low", options), "existing override preview")
 	adapter.restore()
 	check(mesh.get_surface_override_material(0) == explicit, "restore existing override identity")
+	# Late restore must leave a replacement resource or newer sun value alone.
+	check(adapter.apply_candidate(fixture, "medium", options), "external change preview")
+	var external_env := Environment.new()
+	var external_paint := StandardMaterial3D.new()
+	world_env.environment = external_env
+	mesh.set_surface_override_material(0, external_paint)
+	sun.light_energy = 2.4
+	check(adapter.get_status()["drifted"], "external drift visible")
+	adapter.restore()
+	check(world_env.environment == external_env, "external environment preserved")
+	check(mesh.get_surface_override_material(0) == external_paint, "external paint preserved")
+	check(is_equal_approx(sun.light_energy, 2.4), "external sun energy preserved")
+	world_env.environment = original
+	sun.light_energy = 1.92
+	mesh.set_surface_override_material(0, explicit)
+	check(adapter.apply_candidate(fixture, "medium", options), "replaced geometry preview")
+	var replacement := BoxMesh.new()
+	replacement.material = paint
+	mesh.mesh = replacement
+	adapter.restore()
+	check(mesh.get_surface_override_material(0) == null or mesh.get_surface_override_material(0) == explicit, "no stale preview on new mesh")
+	# Engine may clear overrides on mesh replacement; force a clean fixture.
+	mesh.mesh = box
+	mesh.set_surface_override_material(0, null)
+	check(adapter.apply_candidate(fixture, "medium", {"paint_surfaces": options["paint_surfaces"], "paint_clearcoat": 0}), "zero coat accepted")
+	var no_coat := mesh.get_surface_override_material(0) as StandardMaterial3D
+	check(no_coat != null and not no_coat.clearcoat_enabled, "zero coat disables feature")
+	adapter.restore()
+	# Removing a watched target must automatically release the preview, including
+	# resource and world ownership, even if the object remains alive.
+	check(adapter.apply_candidate(fixture, "medium", options), "target lifecycle preview")
+	fixture.remove_child(mesh)
+	check(not adapter.get_status()["active"], "target exit restores immediately")
+	check(world_env.environment == original, "target exit restored environment")
+	check(mesh.get_surface_override_material(0) == null, "detached target restored")
+	fixture.add_child(mesh)
+	check(contender.apply_candidate(fixture, "medium"), "target exit released ownership")
+	contender.restore()
+	var temporary := Profile.new()
+	check(temporary.apply_candidate(fixture, "medium"), "temporary adapter")
+	temporary = null
+	check(world_env.environment == original, "dropping adapter restores environment")
+	check(contender.apply_candidate(fixture, "medium"), "adapter disposal released ownership")
+	contender.restore()
 	# Paint shader path uses the actual project shader, not an invented implementation.
 	var shader_paint := ShaderMaterial.new()
 	shader_paint.shader = preload("res://shaders/car_paint.gdshader")
@@ -143,5 +252,5 @@ func _run() -> void:
 	adapter.restore()
 	check(not adapter.get_status()["active"], "restore after root destruction")
 	observer.free()
-	print("Render profile: ", checks - failures, "/", checks, " checks passed")
+	print("RENDER_PROFILE_RESULT passed=", checks - failures, " total=", checks, " failures=", failures)
 	quit(1 if failures else 0)
