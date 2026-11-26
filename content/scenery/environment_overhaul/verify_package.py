@@ -76,6 +76,8 @@ def load_package(root, directory):
         b.require(-980<=p["x"]<=980 and -980<=p["z"]<=980 and
                   0<=p["yaw_rad"]<=2*np.pi and .75<=p["scale"]<=1.25 and
                   type(p["seed"]) is int and 0<=p["seed"]<2**31,"Invalid placement range")
+        b.require(all(float(np.float32(p[k]))==p[k] for k in ("x","z")),
+                  "Placement coordinates not representable at runtime precision")
         xy.append([p["x"],p["z"]])
     xy=np.asarray(xy,dtype=float).reshape(-1,2)
     if len(xy)>1:
@@ -88,7 +90,7 @@ def load_package(root, directory):
     return mask,m,u,s,src
 
 
-def verify(root,directory):
+def verify(root,directory,rebuild=True):
     mask,m,u,s,src=load_package(root,directory)
     t=m["tuning"]
     graph=src.json("data/world/road_graph_v1.json")
@@ -103,7 +105,7 @@ def verify(root,directory):
     protected,props,trees=b.scenery_masks(src,x,z)
     canopy_dist=b.clearance_lower_bound(trees)
     rd,wd,pd=(b.clearance_lower_bound(a) for a in (road,wet,protected|props))
-    slope=b.triangle_slope(h)
+    slope=b.footprint_slope(b.triangle_slope(h))
     blocked=road|wet|protected|(wd<=t["water_margin_m"])
     b.require(np.all(mask[:,:,0][blocked]==0),"Grass on excluded cells")
     b.require(np.all(mask[:,:,1][road|wet|protected]==0),"Woodland on excluded cells")
@@ -134,16 +136,26 @@ def verify(root,directory):
                   "Surface probe mismatch")
     audit=geometry.audit(graph,works,mask[:,:,0]==0)
     b.require(audit["corridors"]>0 and audit["misses"]==audit["outside"]==0,"Road envelope mismatch")
+    if rebuild:
+        # A checksum or even geometric exclusion checks cannot distinguish a
+        # legitimate ecological field from an all-zero field with valid hashes.
+        # Require reproducible content, including statistics and all probes.
+        current=dict(numpy=np.__version__,scipy=__import__("scipy").__version__)
+        b.require(m["numeric_versions"]==current,"Numerical versions differ; install recorded versions to rebake")
+        raw,expected_m,expected_u,expected_s=b.bake(root,m["seed"],t)
+        b.require(raw==mask.tobytes() and expected_m==m and expected_u==u and expected_s==s,
+                  "Deterministic rebake mismatch")
     return dict(placements=len(u["placements"]),mask_sha256=m["sha256"],geometry=audit,
-                source_files=len(src.hashes))
+                source_files=len(src.hashes),rebake_verified=rebuild)
 
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--project",required=True,type=Path)
     p.add_argument("--mask-dir",required=True,type=Path)
+    p.add_argument("--structural-only",action="store_true",help="Skip exact rebake; diagnostic, not acceptance")
     args=p.parse_args()
-    print(b.json_bytes(verify(args.project,args.mask_dir)).decode(),end="")
+    print(b.json_bytes(verify(args.project,args.mask_dir,rebuild=not args.structural_only)).decode(),end="")
 
 
 if __name__=="__main__":
