@@ -111,6 +111,17 @@ static func validate_profile(preset: String, options: Dictionary = {}) -> Dictio
 		return {"ok": false, "error": "Shadow splits require at least 0.01 separation"}
 	return {"ok": true, "values": p}
 
+## Pure feature policy for testing renderer branches without pretending a
+## dummy headless renderer has a working GPU. Unknown methods fail closed.
+static func resolve_effects(renderer: String, headless: bool, values: Dictionary) -> Dictionary:
+	var forward := not headless and renderer == "forward_plus"
+	var glow_capable := not headless and renderer in ["forward_plus", "mobile"]
+	return {
+		"ssao_enabled": forward and bool(values.get("ssao", false)),
+		"ssr_enabled": forward and bool(values.get("ssr", false)),
+		"glow_enabled": glow_capable and bool(values.get("glow", false)),
+	}
+
 static func _within(root: Node, node: Node) -> bool:
 	if not is_instance_valid(node) or not node.is_inside_tree() or node.get_viewport() != root.get_viewport():
 		return false
@@ -282,7 +293,7 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	# sun orientation, reflection source, camera attributes and existing fog switch.
 	var renderer := RenderingServer.get_current_rendering_method()
 	var headless := DisplayServer.get_name() == "headless"
-	var forward := renderer == "forward_plus" and not headless
+	var effects := resolve_effects(renderer, headless, p)
 	candidate.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	candidate.ambient_light_color = p["ambient_color"]
 	candidate.ambient_light_energy = p["ambient_energy"]
@@ -292,13 +303,13 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	candidate.adjustment_enabled = true
 	candidate.adjustment_contrast = p["contrast"]
 	candidate.adjustment_saturation = p["saturation"]
-	candidate.glow_enabled = p["glow"] and not headless and renderer in ["forward_plus", "mobile"]
+	candidate.glow_enabled = effects["glow_enabled"]
 	candidate.glow_intensity = 0.16
 	candidate.glow_bloom = 0.025
-	candidate.ssao_enabled = p["ssao"] and forward
+	candidate.ssao_enabled = effects["ssao_enabled"]
 	candidate.ssao_radius = p["ao_radius"]
 	candidate.ssao_intensity = p["ao_intensity"]
-	candidate.ssr_enabled = p["ssr"] and forward
+	candidate.ssr_enabled = effects["ssr_enabled"]
 	candidate.ssr_max_steps = int(p["ssr_steps"])
 	candidate.ssr_depth_tolerance = 0.2
 	candidate.ssil_enabled = false
