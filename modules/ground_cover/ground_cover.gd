@@ -205,9 +205,14 @@ func set_graphics(preset: String) -> void:
 	if _material != null:
 		_material.set_shader_parameter("lod_density_fade_enabled", bool(tuning.get("lod_density_fade_enabled", true)))
 		_material.set_shader_parameter("lod_blade_fade_enabled", bool(tuning.get("lod_blade_fade_enabled", true)))
+		_material.set_shader_parameter("lod_hysteresis", Placement.lod_margin(float(radii[0]),float(radii[1]),float(radii[2])))
 		_material.set_shader_parameter("near_radius", float(radii[0]))
 		_material.set_shader_parameter("mid_radius", float(radii[1]))
 		_material.set_shader_parameter("wind_enabled", bool(tuning.get("wind_enabled", true)))
+		var wind: Variant = tuning.get("wind_direction",Vector2(0.85,0.53))
+		if wind is Vector2 and wind.is_finite() and wind.length_squared() > 0.0001:
+			var direction: Vector2 = wind
+			_material.set_shader_parameter("wind_direction",direction.normalized())
 		_material.set_shader_parameter("wind_strength", clampf(_finite_number(tuning.get("wind_strength", 0.08), 0.08), 0.0, 0.16))
 		_material.set_shader_parameter("fade_enabled", bool(tuning.get("fade_enabled", true)))
 		_material.set_shader_parameter("fade_start", float(radii[2]) * 0.84)
@@ -291,6 +296,7 @@ func _center(key: Vector2i) -> Vector2:
 func _plan(current: Vector2, predicted: Vector2) -> void:
 	var radii: Array = _profile.radii
 	var outer := float(radii[2])
+	var margin := Placement.lod_margin(float(radii[0]),float(radii[1]),outer)
 	var candidates: Array = []
 	var start := _cell(current.min(predicted) - Vector2.ONE * (outer + CELL))
 	var finish := _cell(current.max(predicted) + Vector2.ONE * (outer + CELL))
@@ -312,17 +318,9 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 			var nearest_predicted := predicted.distance_to(predicted.clamp(rect.position, rect.end))
 			if minf(nearest, nearest_predicted) > outer + keep_margin:
 				continue
-			var lod := 2
-			if d < float(radii[0]):
-				lod = 0
-			elif d < float(radii[1]):
-				lod = 1
-			if not existing.is_empty():
-				var old := int(existing.lod)
-				if old < lod and d < float(radii[old]) + 5.0:
-					lod = old
-				elif old > lod and d > float(radii[lod]) - 5.0:
-					lod = old
+			# Prewarm detail along travel direction; current focus still wins.
+			var detail_distance := minf(d, pd + 12.0)
+			var lod := Placement.choose_lod(detail_distance,float(radii[0]),float(radii[1]),int(existing.get("lod",-1)),margin)
 			candidates.append({"key":key,"lod":lod,"priority":minf(d, pd + 8.0)})
 	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if a.priority == b.priority:
