@@ -7,6 +7,7 @@ const LAKE := "res://content/scenery/lake/water_cells_v1.json"
 const GRID := 4.0
 const ORIGIN := -1000.0
 const MARGIN := 0.5
+const CONTACT_TOLERANCE_M := 0.05
 var _water: Dictionary = {}
 var _world: WeakRef
 var _built_root: WeakRef
@@ -76,7 +77,7 @@ func _add_cells(cells: Variant) -> bool:
 	return true
 
 func accepts(frame: Transform3D, local_bounds: AABB) -> bool:
-	if _world == null or not is_instance_valid(_world.get_ref()):
+	if status != "ready" or _world == null or not is_instance_valid(_world.get_ref()):
 		return false
 	if not frame.is_finite() or absf(frame.basis.determinant()) < 0.000001 or not local_bounds.position.is_finite() or not local_bounds.size.is_finite():
 		return false
@@ -121,4 +122,11 @@ func accepts(frame: Transform3D, local_bounds: AABB) -> bool:
 		for x in range(x0, x1 + 1):
 			if _water.has(Vector2i(x, z)):
 				return false
-	return true
+	# A finite sample alone does not imply contact. Require the transformed
+	# AABB to straddle the terrain at its horizontal center (with small tolerance).
+	# This is an eligibility check, not a mesh/surface intersection proof.
+	var center := bounds.get_center()
+	var ground: Variant = world.call("get_surface_height_at", center.x, center.z)
+	if not (ground is float or ground is int) or not is_finite(float(ground)):
+		return false
+	return bounds.position.y <= float(ground) + CONTACT_TOLERANCE_M and bounds.end.y >= float(ground) - CONTACT_TOLERANCE_M
