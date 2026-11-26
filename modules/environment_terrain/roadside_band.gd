@@ -1,6 +1,7 @@
 extends RefCounted
 ## Conservative distance-band approximation from actual rendered triangle clearance.
 ## The entire vertical column is excluded, including terrain beneath bridge decks.
+const Contract := preload("world_contract.gd")
 const MAX_SIDE := 256
 const CELL_M := 1.0
 var status := "disabled"
@@ -13,18 +14,14 @@ func build(world: Node, region: Rect2) -> Texture2D:
 func build_image(world: Node, region: Rect2) -> Image:
 	status = "invalid roadside region or clearance"
 	stats = {}
-	if not is_instance_valid(world) or not world.is_inside_tree():
-		return null
 	if not region.position.is_finite() or not region.size.is_finite():
 		return null
 	if region.size.x < 1.0 or region.size.y < 1.0 or region.size.x > MAX_SIDE or region.size.y > MAX_SIDE:
 		return null
 	if region.position.x < -1000.0 or region.position.y < -1000.0 or region.end.x > 1000.0 or region.end.y > 1000.0:
 		return null
-	var clearance: Variant = world.get("road_clearance")
-	if not clearance is RefCounted or not clearance.has_method("overlaps"):
-		return null
-	if int(clearance.get("triangle_count")) <= 0:
+	var clearance := Contract.clearance_for(world)
+	if clearance == null:
 		return null
 	var width := ceili(region.size.x / CELL_M)
 	var height := ceili(region.size.y / CELL_M)
