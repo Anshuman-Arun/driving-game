@@ -37,6 +37,5 @@ gate_expect numeric '^\[GroundCoverNumeric\] [1-9][0-9]* checks, 0 failures$'
 gate_run fixture "$engine" --headless --path "$stage" --script res://modules/ground_cover/tests/run_tests.gd
 gate_expect fixture '^\[GroundCover\] [1-9][0-9]* checks, 0 failures$'
 gate_run mask "$engine" --headless --path "$stage" --script res://modules/ground_cover/tests/mask_production.gd
-gate_expect mask '^\\[GroundCoverMask\\] [1-9][0-9]* checks, 0 failures
-
+gate_expect mask '^\[GroundCoverMask\] [1-9][0-9]* checks, 0 failures$'
 echo "Ground cover isolated fixtures PASS (headless only)"
