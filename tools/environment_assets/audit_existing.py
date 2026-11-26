@@ -3,6 +3,7 @@ import argparse
 import base64
 import hashlib
 import json
+import math
 from pathlib import Path
 import struct
 from urllib.parse import unquote, urlsplit
@@ -22,6 +23,53 @@ def check(ok, message):
 def index(items, value, label):
     check(type(value) is int and 0 <= value < len(items), f"invalid {label} index")
     return items[value]
+
+
+def decode_accessor(accessors, views, binary, accessor_id, expected_type, allowed_components):
+    acc = index(accessors, accessor_id, "accessor")
+    check(acc.get("type") == expected_type and acc.get("componentType") in allowed_components,
+          "invalid accessor type")
+    check("sparse" not in acc and not acc.get("normalized", False), "unsupported sparse or normalized geometry")
+    fmt, width = {5121: ("B", 1), 5123: ("H", 2), 5125: ("I", 4), 5126: ("f", 4)}[acc["componentType"]]
+    components = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4}[expected_type]
+    view = index(views, acc.get("bufferView"), "accessor buffer view")
+    check("extensions" not in view, "unsupported compressed buffer view")
+    count, start = acc.get("count"), acc.get("byteOffset", 0)
+    packed = width * components
+    stride = view.get("byteStride", packed)
+    view_start = view.get("byteOffset", 0)
+    check(type(count) is int and count > 0 and type(start) is int and start >= 0
+          and type(stride) is int and stride >= packed and stride <= 252 and stride % width == 0
+          and (view_start + start) % width == 0
+          and start + (count - 1) * stride + packed <= view["byteLength"], "accessor exceeds buffer view")
+    unpack = struct.Struct("<" + fmt * components).unpack_from
+    rows = [unpack(binary, view_start + start + i * stride) for i in range(count)]
+    check(all(math.isfinite(x) for row in rows for x in row), "nonfinite geometry attribute")
+    return rows
+
+
+def inspect_primitive(primitive, accessors, views, binary):
+    check(primitive.get("mode", 4) == 4, "non-triangle primitive")
+    check("extensions" not in primitive, "unsupported primitive compression")
+    attributes = primitive.get("attributes", {})
+    positions = decode_accessor(accessors, views, binary, attributes.get("POSITION"), "VEC3", (5126,))
+    for name, fmt in (("NORMAL", "VEC3"), ("TANGENT", "VEC4"), ("TEXCOORD_0", "VEC2")):
+        if name in attributes:
+            rows = decode_accessor(accessors, views, binary, attributes[name], fmt, (5126,))
+            check(len(rows) == len(positions), "attribute count mismatch")
+    if "indices" in primitive:
+        ids = [row[0] for row in decode_accessor(accessors, views, binary, primitive["indices"], "SCALAR", (5121, 5123, 5125))]
+    else:
+        ids = range(len(positions))
+    check(len(ids) > 0 and len(ids) % 3 == 0, "invalid triangle count")
+    check(all(0 <= i < len(positions) for i in ids), "index outside position accessor")
+    for i in range(0, len(ids), 3):
+        a, b, c = (positions[ids[j]] for j in range(i, i+3))
+        x = tuple(v-u for u,v in zip(a,b))
+        y = tuple(v-u for u,v in zip(a,c))
+        cross = (x[1]*y[2]-x[2]*y[1], x[2]*y[0]-x[0]*y[2], x[0]*y[1]-x[1]*y[0])
+        check(math.hypot(*cross) > 1e-12, "degenerate scan triangle")
+    return len(ids) // 3
 
 
 def inspect_glb(data, asset_dir):
@@ -92,18 +140,8 @@ def inspect_glb(data, asset_dir):
     triangles = 0
     for mesh in doc.get("meshes", []):
         for primitive in mesh.get("primitives", []):
-            check(primitive.get("mode", 4) == 4, "non-triangle primitive")
-            pos = index(accessors, primitive.get("attributes", {}).get("POSITION"), "position accessor")
-            check(pos.get("type") == "VEC3" and pos.get("componentType") == 5126, "invalid position accessor")
-            count = pos.get("count")
-            check(type(count) is int and count > 0, "invalid vertex count")
-            if "indices" in primitive:
-                idx = index(accessors, primitive["indices"], "index accessor")
-                check(idx.get("type") == "SCALAR" and idx.get("componentType") in (5121, 5123, 5125), "invalid index accessor")
-                count = idx.get("count")
-            check(type(count) is int and count > 0 and count % 3 == 0, "invalid triangle count")
             index(materials, primitive.get("material"), "primitive material")
-            triangles += count // 3
+            triangles += inspect_primitive(primitive, accessors, views, binary)
     check(triangles > 0, "no triangles")
     # Raw MASK flags are descriptive: PremiumMesh.fit can apply scissor on import.
     # Pixel decoding, UV alignment and actual bound material are Godot/local gates.

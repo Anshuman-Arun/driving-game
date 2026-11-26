@@ -7,7 +7,7 @@ import unittest
 from audit_existing import inspect_glb
 
 # Minimal container/reference fixture, not a decoded image or GPU fixture.
-PAYLOAD = bytes(36) + b"\x89PNG\r\n\x1a\n"
+PAYLOAD = struct.pack("<9f", 0, 0, 0, 1, 0, 0, 0, 1, 0) + b"\x89PNG\r\n\x1a\n"
 DOC = {"asset": {"version": "2.0"}, "buffers": [{"byteLength": len(PAYLOAD)}],
        "bufferViews": [{"buffer": 0, "byteLength": 36}, {"buffer": 0, "byteOffset": 36, "byteLength": 8}],
        "accessors": [{"bufferView": 0, "type": "VEC3", "componentType": 5126, "count": 3}],
@@ -82,7 +82,36 @@ class AuditTests(unittest.TestCase):
         self.rejected(lambda d: d["images"][0].update(mimeType="image/jpeg"), "invalid image signature or MIME")
 
     def test_bad_triangle_count(self):
-        self.rejected(lambda d: d["accessors"][0].update(count=4), "invalid triangle count")
+        self.rejected(lambda d: d["accessors"][0].update(count=4), "accessor exceeds buffer view")
+
+    def test_invalid_accessor_offset(self):
+        self.rejected(lambda d: d["accessors"][0].update(byteOffset=4), "accessor exceeds buffer view")
+
+    def test_invalid_accessor_stride(self):
+        self.rejected(lambda d: d["bufferViews"][0].update(byteStride=8), "accessor exceeds buffer view")
+
+    def test_sparse(self):
+        self.rejected(lambda d: d["accessors"][0].update(sparse={"count": 1}), "unsupported sparse")
+
+    def test_degenerate(self):
+        data = bytes(36) + PAYLOAD[36:]
+        with self.assertRaisesRegex(ValueError, "degenerate scan triangle"):
+            inspect_glb(glb(DOC, data), self.dir)
+
+    def test_nonfinite(self):
+        data = struct.pack("<f", float("nan")) + PAYLOAD[4:]
+        with self.assertRaisesRegex(ValueError, "nonfinite geometry attribute"):
+            inspect_glb(glb(DOC, data), self.dir)
+
+    def test_out_of_range_indices(self):
+        doc = copy.deepcopy(DOC)
+        doc["bufferViews"].append({"buffer": 0, "byteOffset": len(PAYLOAD), "byteLength": 6})
+        doc["accessors"].append({"bufferView": 2, "type": "SCALAR", "componentType": 5123, "count": 3})
+        doc["meshes"][0]["primitives"][0]["indices"] = 1
+        doc["buffers"][0]["byteLength"] += 6
+        with self.assertRaisesRegex(ValueError, "index outside position accessor"):
+            inspect_glb(glb(doc, PAYLOAD + struct.pack("<3H", 0, 1, 3)), self.dir)
+        self.assertEqual(inspect_glb(glb(doc, PAYLOAD + struct.pack("<3H", 0, 1, 2)), self.dir)["triangles"], 1)
 
 
 if __name__ == "__main__":
