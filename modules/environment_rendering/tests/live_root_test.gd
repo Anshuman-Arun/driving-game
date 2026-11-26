@@ -25,14 +25,20 @@ func _run() -> void:
 		check(false, "real drive did not initialize")
 		quit(1)
 		return
-	var env := drive.get_node("WorldEnvironment") as WorldEnvironment
-	var sun := drive.get_node("Sun") as DirectionalLight3D
+	var env := drive.get_node_or_null("WorldEnvironment") as WorldEnvironment
+	var sun := drive.get_node_or_null("Sun") as DirectionalLight3D
+	if env == null or env.environment == null or sun == null:
+		check(false, "production environment nodes missing")
+		drive.queue_free()
+		quit(1)
+		return
 	var original := env.environment
 	var energy := sun.light_energy
 	var vehicle: Node = drive.vehicle_body
 	check(vehicle.get_meta("vehicle_id") == "mclaren_senna", "actual Senna selected")
 	var paint_targets: Array[Dictionary] = []
 	var paint_originals: Array[Material] = []
+	var roughness_originals: Array[float] = []
 	for node in vehicle.find_children("*", "MeshInstance3D", true, false):
 		var mesh := node as MeshInstance3D
 		if mesh.mesh == null or mesh.material_override != null:
@@ -42,19 +48,31 @@ func _run() -> void:
 			if material != null and material.shader != null and material.shader.resource_path == Profile.PAINT_SHADER:
 				paint_targets.append({"mesh": mesh, "surface": surface})
 				paint_originals.append(mesh.get_surface_override_material(surface))
+				roughness_originals.append(float(material.get_shader_parameter("roughness")))
 	check(not paint_targets.is_empty(), "real imported Senna paint surfaces found")
 	var profile := Profile.new()
 	var camera: Camera3D = drive.camera
 	var viewport_scale := root.scaling_3d_scale
 	var camera_far := camera.far
-	check(profile.apply_candidate(drive, "medium", {"paint_surfaces": paint_targets}), "real root apply")
+	var camera_fov := camera.fov
+	var camera_transform := camera.transform
+	if not profile.apply_candidate(drive, "medium", {"paint_surfaces": paint_targets}):
+		check(false, "real root apply: " + str(profile.get_status()))
+		drive.queue_free()
+		quit(1)
+		return
 	check(env.environment != original and env.environment.sky == original.sky, "real environment isolated")
 	check(is_equal_approx(sun.light_energy, 1.75), "candidate light applied")
-	check(root.scaling_3d_scale == viewport_scale and camera.far == camera_far, "camera and viewport unchanged")
+	check(root.scaling_3d_scale == viewport_scale and camera.far == camera_far and camera.fov == camera_fov and camera.transform == camera_transform, "camera and viewport unchanged")
+	check(not env.environment.ssr_enabled and not env.environment.ssao_enabled, "Medium default avoids screen-space effects")
+	check(profile.get_status()["paint_surfaces_attached"] == paint_targets.size(), "all paint targets attached")
 	for i in range(paint_targets.size()):
 		var item := paint_targets[i]
 		var mesh: MeshInstance3D = item["mesh"]
-		check(mesh.get_surface_override_material(item["surface"]) != paint_originals[i], "paint copied")
+		var candidate := mesh.get_surface_override_material(item["surface"]) as ShaderMaterial
+		check(candidate != null and candidate != paint_originals[i], "paint copied")
+		if candidate != null:
+			check(is_equal_approx(float(candidate.get_shader_parameter("roughness")), 0.24), "real paint uniform applied")
 	await process_frame
 	profile.restore()
 	check(env.environment == original and is_equal_approx(sun.light_energy, energy), "real environment restored")
@@ -62,7 +80,9 @@ func _run() -> void:
 		var item := paint_targets[i]
 		var mesh: MeshInstance3D = item["mesh"]
 		check(mesh.get_surface_override_material(item["surface"]) == paint_originals[i], "real paint restored")
-	print("Real root rendering profile smoke: ", failures, " failures, ", paint_targets.size(), " paint surfaces")
+		var restored := mesh.get_active_material(item["surface"]) as ShaderMaterial
+		check(restored != null and is_equal_approx(float(restored.get_shader_parameter("roughness")), roughness_originals[i]), "original paint uniform unchanged")
 	drive.queue_free()
 	await process_frame
+	print("LIVE_RENDER_PROFILE_RESULT failures=", failures, " paint_surfaces=", paint_targets.size())
 	quit(1 if failures else 0)
