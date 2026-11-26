@@ -209,13 +209,13 @@ func audio_state() -> String:
 func traffic_observation(elapsed: float) -> Dictionary:
 	# Coordinator supplies a callable bound to the actual live traffic adapter,
 	# not a static string claiming traffic is enabled. No traffic is spawned by F.
-	if not is_instance_valid(drive):
+	if not is_instance_valid(drive) or not drive.has_meta("environment_qa_traffic_probe"):
 		return {}
-	var probe: Variant=drive.get_meta("environment_qa_traffic_probe",null)
+	var probe: Variant=drive.get_meta("environment_qa_traffic_probe")
 	if not probe is Callable or not probe.is_valid():
 		return {}
 	var result: Variant=probe.call()
-	if not result is Dictionary or result.get("enabled")!=true:
+	if not result is Dictionary or not result.get("enabled") is bool or not result.get("enabled"):
 		return {}
 	for key: String in ["ticks","active_agents","visible_agents","seed","density"]:
 		if not result.get(key) is int:
@@ -244,7 +244,7 @@ func legacy_grass_count() -> String:
 		if key.z!=2:
 			continue
 		var batch: Variant=visible_ground[key]
-		if not is_instance_valid(batch) or not batch is MultiMeshInstance3D or batch.multimesh==null:
+		if not batch is MultiMeshInstance3D or not is_instance_valid(batch) or batch.multimesh==null:
 			return ""
 		if batch.is_visible_in_tree():
 			count+=batch.multimesh.instance_count if batch.multimesh.visible_instance_count<0 else batch.multimesh.visible_instance_count
@@ -694,6 +694,9 @@ func run() -> void:
 		if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale) or drive.active_vehicle_id!="mclaren_senna" or paused or drive.vehicle_body!=expected_car or drive.graphics_preset!=quality or Engine.max_fps!=0 or DisplayServer.window_get_vsync_mode()!=DisplayServer.VSYNC_DISABLED:
 			capture_conditions_changed=true
 		var p: Vector3=drive.vehicle_body.global_position
+		if rows.size()>=500000:
+			await finish(1,"Capture sample memory ceiling exceeded; shorten requested sample")
+			return
 		rows.append(PackedStringArray([str((now-start)/1e6),str((now-prev)/1000.0),
 			metric(RenderingServer.viewport_get_measured_render_time_gpu(rid)),
 			metric(RenderingServer.viewport_get_measured_render_time_cpu(rid)),
@@ -775,6 +778,20 @@ func self_test() -> void:
 	if not is_instance_valid(drive) or drive.vehicle_body==null:
 		await finish(1,"Self-test world failed")
 		return
+	# Probe interface only: this fixture does not claim live traffic exists.
+	if not traffic_observation(0.0).is_empty():
+		print("FAIL absent traffic probe")
+		errors+=1
+	drive.set_meta("environment_qa_traffic_probe","enabled")
+	if not traffic_observation(0.0).is_empty():
+		print("FAIL static traffic flag accepted")
+		errors+=1
+	drive.set_meta("environment_qa_traffic_probe",func() -> Dictionary: return {"enabled":true,"ticks":30,"active_agents":8,"visible_agents":3,"seed":42,"density":12})
+	var probe_fixture:=traffic_observation(1.0)
+	if probe_fixture.get("ticks")!=30 or probe_fixture.get("visible_agents")!=3:
+		print("FAIL live probe interface fixture")
+		errors+=1
+	drive.remove_meta("environment_qa_traffic_probe")
 	var plant: Node=drive.vegetation
 	var before: Dictionary=plant.get("_ground").duplicate()
 	if grass_state()!="enabled" or not suppress_grass() or grass_state()!="disabled" or legacy_grass_count()!="0":
