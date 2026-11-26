@@ -57,6 +57,7 @@ const ENV_PROPERTIES := [
 ]
 static var _world_owners: Dictionary = {}
 var _world_id := 0
+var _leased_world: World3D
 var _preview_root: Node
 var _watched_nodes: Array[Node] = []
 var _world_env: WorldEnvironment
@@ -66,6 +67,8 @@ var _env_applied: Dictionary = {}
 var _sun: DirectionalLight3D
 var _sun_before: Dictionary = {}
 var _sun_applied: Dictionary = {}
+var _sun_expected: Dictionary = {}
+var _paint_expected: Dictionary = {}
 var _paint_before: Array[Dictionary] = []
 var _status: Dictionary = {"active": false}
 
@@ -135,9 +138,19 @@ static func _sole_world_environment(world: World3D, target: WorldEnvironment) ->
 static func _live_object(value: Variant) -> bool:
 	return typeof(value) == TYPE_OBJECT and is_instance_valid(value)
 
-func _owned_by_other(world_id: int) -> bool:
-	var owner: Variant = _world_owners.get(world_id)
-	return owner != null and owner != self
+func _owned_by_other(world: World3D, target_root: Node) -> bool:
+	# Check both original and current world. An active viewport can migrate
+	# between worlds without tree_exiting, so the registry key alone is stale.
+	for owner in _world_owners.values():
+		if owner == self:
+			continue
+		if owner._leased_world == world or owner._preview_root == target_root:
+			return true
+		var other_root: Node = owner._preview_root
+		if is_instance_valid(other_root) and other_root.is_inside_tree():
+			if other_root.get_viewport().find_world_3d() == world:
+				return true
+	return false
 
 ## Recovery if the integration loses its handle. Only the exact owning root can
 ## release the lease; a sibling root sharing the World3D cannot do so.
@@ -184,7 +197,7 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	if not _within(root, world_env) or not _within(root, sun) or not is_instance_valid(world_env.environment):
 		return _reject("Invalid environment or nodes outside preview root")
 	var world: World3D = root.get_viewport().find_world_3d()
-	if world == null or _owned_by_other(world.get_instance_id()):
+	if world == null or _owned_by_other(world, root):
 		return _reject("World3D missing or already has an active render preview")
 	if not _sole_world_environment(world, world_env):
 		return _reject("Supplied WorldEnvironment is not the sole active environment in this World3D")
@@ -294,6 +307,7 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	# Commit only after all preflight checks have succeeded.
 	restore()
 	_world_id = world_id
+	_leased_world = world
 	_preview_root = root
 	# Keep the lease alive until explicit restore or tree exit. Calling instance
 	# methods from RefCounted PREDELETE is unsafe (Godot issue #80834).
@@ -324,12 +338,16 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 		sun.shadow_blur = p["shadow_blur"]
 	for property in SUN_PROPERTIES:
 		var current: Variant = sun.get(property)
+		_sun_expected[property] = current
 		if current != _sun_before[property]:
 			_sun_applied[property] = current
 	for entry in prepared:
 		var mesh: MeshInstance3D = entry["mesh"]
 		mesh.set_surface_override_material(entry["surface"], entry["candidate"])
 		_paint_before.append(entry)
+		var material: Material = entry["candidate"]
+		if not _paint_expected.has(material):
+			_paint_expected[material] = _paint_snapshot(material)
 		_watch(mesh)
 	var unavailable: Array[String] = []
 	if p["ssao"] and not candidate.ssao_enabled:
@@ -352,6 +370,17 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 		"paint_surface_count": prepared.size(), "paint_material_count": copies.size()}
 	return true
 
+static func _paint_snapshot(material: Material) -> Dictionary:
+	var snapshot: Dictionary = {}
+	if material is StandardMaterial3D:
+		for property in ["roughness", "metallic", "clearcoat_enabled", "clearcoat", "clearcoat_roughness", "albedo_color", "albedo_texture", "normal_enabled", "normal_texture", "normal_scale"]:
+			snapshot[property] = material.get(property)
+	elif material is ShaderMaterial:
+		snapshot["shader"] = material.shader
+		for uniform in PAINT_UNIFORMS:
+			snapshot[uniform] = material.get_shader_parameter(uniform)
+	return snapshot
+
 func restore() -> void:
 	if not Thread.is_main_thread():
 		return
@@ -367,6 +396,7 @@ func restore() -> void:
 			if mesh.get_surface_override_material(entry["surface"]) == entry["candidate"]:
 				mesh.set_surface_override_material(entry["surface"], entry["original"] if mesh.mesh == entry["geometry"] else null)
 	_paint_before.clear()
+	_paint_expected.clear()
 	if is_instance_valid(_world_env) and _world_env.environment == _candidate_env:
 		_world_env.environment = _original_env
 	if is_instance_valid(_sun):
@@ -376,11 +406,13 @@ func restore() -> void:
 			if _sun.get(property) == _sun_applied[property]:
 				_sun.set(property, _sun_before[property])
 	_sun_applied.clear()
+	_sun_expected.clear()
 	_sun_before.clear()
 	_env_applied.clear()
 	if _world_id != 0 and _world_owners.get(_world_id) == self:
 		_world_owners.erase(_world_id)
 	_world_id = 0
+	_leased_world = null
 	_preview_root = null
 	_world_env = null
 	_original_env = null
@@ -417,10 +449,15 @@ func get_status() -> Dictionary:
 		if is_instance_valid(_sun):
 			sun_changed = _sun.shadow_enabled != status["shadow_enabled"]
 			status["shadow_enabled"] = _sun.shadow_enabled
-			for property in _sun_applied:
-				if _sun.get(property) != _sun_applied[property]:
+			for property in _sun_expected:
+				if _sun.get(property) != _sun_expected[property]:
 					sun_changed = true
-		status["drifted"] = not status["environment_attached"] or attached != _paint_before.size() or sun_changed or environment_changed
+		var paint_changed := false
+		for material in _paint_expected:
+			if _paint_snapshot(material) != _paint_expected[material]:
+				paint_changed = true
+		status["paint_parameters_drifted"] = paint_changed
+		status["drifted"] = not status["environment_attached"] or attached != _paint_before.size() or sun_changed or environment_changed or paint_changed
 	return status
 
 ## Data only: no camera controls or blur shader changes.
