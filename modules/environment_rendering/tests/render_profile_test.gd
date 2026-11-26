@@ -65,6 +65,8 @@ func _run() -> void:
 	var valid := Profile.validate_profile("Medium")
 	check(valid["ok"], "case insensitive preset")
 	check(not Profile.validate_profile("ultra")["ok"], "unknown preset")
+	check(not Profile.validate_profile("medium", {"split_1": 0.2, "split_2": 0.200001})["ok"], "reject vanishing shadow cascade")
+	check(Profile.validate_profile("medium", {"split_1": 0.2, "split_2": 0.21})["ok"], "accept minimum shadow cascade separation")
 	check(not Profile.validate_profile("medium", {42: true})["ok"], "nonstring option key")
 	check(not Profile.validate_profile("medium", {"sun_color": Color(1.1, 0.8, 0.7)})["ok"], "out of range daylight color")
 	check(not Profile.validate_profile("medium", {"ambient_color": Color(0.1, NAN, 0.5)})["ok"], "non-finite fill color")
@@ -125,6 +127,13 @@ func _run() -> void:
 	check(not adapter.get_status()["drifted"], "reverted in-place drift")
 	var owned := world_env.environment
 	check(not contender.apply_candidate(fixture, "high"), "second adapter rejected")
+	var duplicate_env := WorldEnvironment.new()
+	duplicate_env.environment = owned
+	fixture.add_child(duplicate_env)
+	check(not adapter.apply_candidate(fixture, "high", {"world_environment": duplicate_env}), "shared resource does not imply active environment node")
+	check(not adapter.apply_candidate(fixture, "high"), "competing environment nodes rejected")
+	duplicate_env.free()
+	check(world_env.environment == owned, "ambiguous apply preserves active preview")
 	check(world_env.environment == owned, "second adapter cannot alter first")
 	var viewport := SubViewport.new()
 	viewport.own_world_3d = true
@@ -139,6 +148,8 @@ func _run() -> void:
 	var alternate_options := {"world_environment": alt_env, "sun": alt_sun}
 	check(not adapter.apply_candidate(fixture, "high", alternate_options), "cross viewport rejected")
 	check(contender.apply_candidate(alternate, "high", alternate_options), "independent world accepted")
+	check(alt_env.environment.ambient_light_sky_contribution == 0.0, "skyless world uses color fill")
+	check("No existing sky resource; no HDRI fabricated" in contender.get_status()["unavailable"], "sky absence reported")
 	contender.restore()
 	viewport.free()
 	adapter.restore()
@@ -166,6 +177,9 @@ func _run() -> void:
 	check(not adapter.apply_candidate(fixture, "high", {"paint_surfaces": [{"mesh": mesh, "surface": 0.0}]}), "fractional surface type rejected")
 	check(not adapter.apply_candidate(fixture, "high", {"paint_surfaces": [42]}), "non dictionary rejected")
 	check(not adapter.apply_candidate(fixture, "high", {"paint_surfaces": "paint"}), "non array rejected")
+	var oversized: Array = []
+	oversized.resize(Profile.MAX_PAINT_SURFACES + 1)
+	check(not adapter.apply_candidate(fixture, "high", {"paint_surfaces": oversized}), "oversize paint request rejected before iterating")
 	var doomed := MeshInstance3D.new()
 	doomed.mesh = box
 	fixture.add_child(doomed)
@@ -251,12 +265,20 @@ func _run() -> void:
 	check(adapter.apply_candidate(fixture, "medium"), "camera override preview")
 	check("Current camera has an environment override; world preview may not be visible" in adapter.get_status()["unavailable"], "camera override reported")
 	check(camera.environment != world_env.environment, "camera override untouched")
+	check(adapter.get_status()["camera_environment_override"], "current camera bypass status")
+	camera.environment = null
+	check(not adapter.get_status()["camera_environment_override"], "camera bypass status updates")
 	adapter.restore()
 	camera.free()
 	# Paint shader path uses the actual project shader, not an invented implementation.
 	var shader_paint := ShaderMaterial.new()
 	shader_paint.shader = preload("res://shaders/car_paint.gdshader")
 	shader_paint.set_shader_parameter("roughness", 0.31)
+	shader_paint.set_shader_parameter("base_color", Color(0.13, 0.42, 0.78))
+	shader_paint.set_shader_parameter("grazing_color", Color(0.4, 0.65, 0.9))
+	shader_paint.set_shader_parameter("flake_intensity", 0.021)
+	shader_paint.set_shader_parameter("normal_scale", 0.75)
+	shader_paint.set_shader_parameter("specular", 0.46)
 	mesh.set_surface_override_material(0, shader_paint)
 	check(adapter.apply_candidate(fixture, "medium", options), "existing shader paint preview")
 	var shader_copy := mesh.get_surface_override_material(0) as ShaderMaterial
@@ -264,6 +286,10 @@ func _run() -> void:
 	if shader_copy != null:
 		check(is_equal_approx(shader_copy.get_shader_parameter("roughness"), 0.24), "shader parameter applied")
 		check(shader_copy.shader == shader_paint.shader, "shader resource unchanged")
+		for uniform in ["base_color", "grazing_color", "flake_intensity", "normal_scale", "specular"]:
+			check(shader_copy.get_shader_parameter(uniform) == shader_paint.get_shader_parameter(uniform), "untuned shader parameter preserved: " + uniform)
+		for uniform in ["metallic", "clearcoat", "clearcoat_roughness"]:
+			check(is_equal_approx(float(shader_copy.get_shader_parameter(uniform)), float(Profile.DEFAULTS["paint_" + uniform])), "tuned shader parameter: " + uniform)
 	check(is_equal_approx(shader_paint.get_shader_parameter("roughness"), 0.31), "shader original unchanged")
 	adapter.restore()
 	check(mesh.get_surface_override_material(0) == shader_paint, "shader override restored")
