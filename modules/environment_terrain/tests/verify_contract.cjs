@@ -15,9 +15,15 @@ const paths = {
   metadata: "data/world/world_metadata_v1.json",
   lake: "content/scenery/lake/water_cells_v1.json",
   roadworks: "data/world/roadworks.json",
-  mask: "modules/environment_terrain/biome_mask.gd"
+  mask: "modules/environment_terrain/biome_mask.gd",
+  contract: "modules/environment_terrain/world_contract.gd",
+  runtime: "modules/world_runtime/src/world_runtime.gd",
+  fixture: "modules/environment_terrain/tests/fixture_world.gd",
+  fixtureGate: "modules/environment_terrain/tests/fixture_rock_gate.gd",
+  tests: "modules/environment_terrain/tests/run_tests.gd",
+  runner: "modules/environment_terrain/tests/run_headless.sh"
 };
-function verify(read) {
+function verify(read, exists = null) {
   let checks = 0;
   const check = (ok, message) => { checks++; if (!ok) throw Error(message); };
   const files = Object.fromEntries(Object.entries(paths).map(([k,p]) => [k, read(p)]));
@@ -48,10 +54,13 @@ function verify(read) {
     }
   }
   const refs = Object.fromEntries([...files.material.matchAll(/\[ext_resource type="([^"]+)" path="([^"]+)" id="([^"]+)"\]/g)].map(m=>[m[3], {type:m[1], path:m[2]}]));
+  const resourcePaths = [];
   for(const key of textures) {
     const binding = files.material.match(new RegExp("shader_parameter/"+key+' = ExtResource\\("([^"]+)"\\)'));
     check(binding && refs[binding[1]]?.type==="Texture2D", "production texture binding "+key);
+    resourcePaths.push(refs[binding[1]].path.replace(/^res:\/\//,""));
   }
+  if(exists) for(const p of [...new Set(resourcePaths)]) check(exists(p), "PBR asset path exists: "+p);
   check(files.live.includes('const MAT_TERRAIN_PATH := "res://'+paths.material+'"'), "production prefers inspected material");
   check(files.builder.includes('terrain.name = "TerrainChunks"') && files.builder.includes('mesh.surface_set_material(0, materials["terrain"])'), "production terrain surface binding");
   check(candidate.biome_mask.tail.includes("filter_linear") && !candidate.biome_mask.tail.includes("source_color"), "biome texture treated as raw linear channels");
@@ -61,8 +70,40 @@ function verify(read) {
   check(files.band.includes("const MAX_SIDE := 256") && files.band.includes("const CELL_M := 1.0") && files.band.includes("var half := step * 1.5") && files.band.includes("range(1, 5)"), "reference raster model constants match implementation");
   check(files.clearance.includes("extent.dot(normal.abs()) >= 0.0") && files.clearance.includes("if not include_shoulders and tri.shoulder"), "reference checks target actual SAT clearance implementation");
   check(files.rock.includes("/ GRID - 0.000001") && files.rock.includes('const MARGIN := 0.5'), "inclusive lower water boundary and setback");
+  check(files.adapter.includes("not _chunk_overlaps(mesh_instance, pilot)") && files.adapter.includes('"skipped_chunks": skipped'), "pilot scope precedes mutation");
+  check(files.contract.includes('report.get("full_world") == true') && files.runtime.includes('report["full_world"] = full'), "complete clearance gate uses actual runtime report");
+  check(files.contract.includes('report.source_directory') && files.runtime.includes('report["source_directory"] = directory') && files.contract.includes('works == parser.data'), "canonical graded source identity gate");
+  check(files.rock.includes("Contract.has_complete_clearance(world)") && files.rock.includes("_canonical_source_ok(world)"), "rock gate rejects partial/noncanonical world");
+  check(files.mask.includes('length != 501 * 501 * 2') && files.mask.includes("version https://git-lfs.github.com/spec/v1"), "binary source validation rejects pointer text");
+  for(const k of ["meadow_tint_multiplier","woodland_tint_multiplier"]) {
+    check(candidate[k].type==="vec3" && candidate[k].tail==="= vec3(1.0)", "linear neutral tint control "+k);
+    check(files.candidate.includes("mix(vec3(1.0), "+k+", candidate_w)"), "tint control limited to pilot "+k);
+  }
+  check(files.candidate.includes("textureLod(biome_mask, biome_uv, 0.0)") && files.candidate.includes("textureLod(roadside_mask, ruv, 0.0)"), "explicit zero-LOD mask samples");
+  check(files.runner.includes("production pilot completed:") && files.tests.includes("production pilot completed:"), "full production completion marker enforced");
+  check(files.tests.includes("production pilot covers only intersecting chunks"), "production scope asserted");
   const meta=JSON.parse(files.metadata);
   check(meta.bounds.min_x===-1000 && meta.bounds.max_x===1000 && meta.bounds.min_z===-1000 && meta.bounds.max_z===1000, "centered world coordinates");
+  // Model the real generated grid, independently of the Godot material adapter.
+  const hfield=meta.heightfield, chunkCells=32;
+  const chunks=[];
+  for(let z=0;z<hfield.sample_height-1;z+=chunkCells)
+    for(let x=0;x<hfield.sample_width-1;x+=chunkCells)
+      chunks.push([hfield.origin_x+x*hfield.spacing_m,hfield.origin_z+z*hfield.spacing_m,
+        Math.min(chunkCells,hfield.sample_width-1-x)*hfield.spacing_m,Math.min(chunkCells,hfield.sample_height-1-z)*hfield.spacing_m]);
+  const overlapsRect=(a,b)=>a[0]<b[0]+b[2]&&a[0]+a[2]>b[0]&&a[1]<b[1]+b[3]&&a[1]+a[3]>b[1];
+  const countPilot=(p)=>chunks.filter(c=>overlapsRect(c,p)).length;
+  const cedar=countPilot([-810,-450,220,220]), meadow=countPilot([-65,60,220,220]);
+  check(chunks.length===256 && cedar===9 && meadow===9, "actual grid footprint selects nine of 256 chunks in each 220m pilot");
+  check(countPilot([-1000,-1000,128,128])===1 && countPilot([999,999,1,1])===1, "exact chunk border and last partial cell");
+  check(countPilot([1000,1000,1,1])===0, "outside map selects no terrain");
+  const weight=(p,r)=>{ const fade=Math.min(8,Math.min(r[2],r[3])/2);
+    const edge=Math.min(p[0]-r[0],r[0]+r[2]-p[0],p[1]-r[1],r[1]+r[3]-p[1]);
+    const u=Math.max(0,Math.min(1,edge/fade)); return u*u*(3-2*u); };
+  for(const r of [[-810,-450,220,220],[-1,-1,1,1],[-2,-3,4,6]]) {
+    check(weight([r[0]+r[2]/2,r[1]+r[3]/2],r)===1,"adaptive pilot center reaches full weight");
+    check(weight([r[0],r[1]+r[3]/2],r)===0 && weight([r[0]-0.01,r[1]+r[3]/2],r)===0,"pilot edge/outside preserves original");
+  }
   const lake=JSON.parse(files.lake), works=JSON.parse(files.roadworks);
   check(lake.schema_version===1 && lake.origin_x===-1000 && lake.origin_z===-1000 && lake.spacing_m===4 && Number.isFinite(lake.water_height_m), "live lake grid");
   const waterCells=[lake.cells,...works.waters.map(p=>p.cells)].flat();
@@ -142,13 +183,13 @@ function verify(read) {
   check(positivePixels>0 && protectedSamples>10000,"non-vacuous raster coverage");
   const waterIndex = (x)=>Math.floor((x+1000)/4-0.000001);
   check(waterIndex(16)===253 && waterIndex(16.001)===254,"water cell inclusive contact vs separated bounds");
-  return {checks,protectedSamples,positivePixels,waterCells:waterCells.length,sourceUniforms:Object.keys(old).length,candidateSamplers:18,kind:"source checks and independent geometry model; not engine execution"};
+  return {checks,protectedSamples,positivePixels,waterCells:waterCells.length,sourceUniforms:Object.keys(old).length,candidateSamplers:18,assetPaths:exists?new Set(resourcePaths).size:0,modeledPilotChunks:{full:chunks.length,cedar,meadow},kind:"source checks and independent geometry model; not engine execution"};
 }
 module.exports={verify,paths};
 if(require.main===module){
   const fs=require("node:fs"), path=require("node:path");
   const root=path.resolve(__dirname,"../../..");
-  const report=verify(p=>fs.readFileSync(path.join(root,p),"utf8"));
+  const report=verify(p=>fs.readFileSync(path.join(root,p),"utf8"), p=>fs.existsSync(path.join(root,p)));
   if(process.argv.includes("--check-lfs")){
     const {execFileSync}=require("node:child_process");
     const lfs=execFileSync("git",["lfs","ls-files","--name-only"],{cwd:root,encoding:"utf8"}).trim().split(/\r?\n/).filter(Boolean);
