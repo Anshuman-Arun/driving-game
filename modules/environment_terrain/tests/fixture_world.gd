@@ -13,7 +13,7 @@ var collision: CollisionShape3D
 func get_world_metadata() -> Variant:
 	if metadata_override != null:
 		return metadata_override
-	return {"bounds": {"min_x": -1000, "max_x": 1000, "min_z": -1000, "max_z": 1000}}
+	return {"coordinate_system": "godot_y_up", "bounds": {"min_x": -1000, "max_x": 1000, "min_z": -1000, "max_z": 1000}}
 
 func build_fixture() -> void:
 	if is_instance_valid(generated_root):
@@ -62,18 +62,27 @@ func build_fixture() -> void:
 	bridge.position.y = 38.0
 	generated_root.add_child(bridge)
 	road_clearance.add_surface(bridge_mesh, 0, bridge.global_transform)
+	# A steep synthetic bank makes the isolated shader A/B meaningful for rock too.
+	# This is fixture-only art, not a modification to the actual world.
+	var bank := MeshInstance3D.new()
+	var bank_mesh := ArrayMesh.new()
+	var vertices := PackedVector3Array([Vector3(12, 30, -14), Vector3(12, 46, -28), Vector3(32, 30, -14),
+		Vector3(32, 30, -14), Vector3(12, 46, -28), Vector3(32, 46, -28)])
+	_add_surface(bank_mesh, vertices, MATERIAL, Vector3(0, 14, 16).normalized())
+	bank.mesh = bank_mesh
+	terrain.add_child(bank)
 
 func _quad(x0: float, x1: float, z0: float, z1: float) -> PackedVector3Array:
 	return PackedVector3Array([Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3(x0, 0, z1),
 		Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3(x0, 0, z1)])
 
-func _add_surface(mesh: ArrayMesh, vertices: PackedVector3Array, material: Material) -> void:
+func _add_surface(mesh: ArrayMesh, vertices: PackedVector3Array, material: Material, normal: Vector3 = Vector3.UP) -> void:
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	var normals := PackedVector3Array()
 	normals.resize(vertices.size())
-	normals.fill(Vector3.UP)
+	normals.fill(normal)
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	mesh.surface_set_material(mesh.get_surface_count() - 1, material)
