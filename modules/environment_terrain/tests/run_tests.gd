@@ -90,6 +90,7 @@ func run() -> void:
 		var second := band.build_image(world, region)
 		check(second != null and second.get_data() == image.get_data(), "deterministic raster")
 	check(band.build_image(world, Rect2(-200, -200, 400, 400)) == null, "oversized raster rejected")
+	check(band.build(world, Rect2(-100, -100, 8, 8)) == null and band.status == "no roadside transition in region", "empty band avoids allocating GPU texture")
 	check(preview.apply_candidate(world, {"mask_dir": missing, "pilot_bounds": region, "roadside_bounds": region}), "candidate applies without optional mask")
 	var candidate := world.ground.get_active_material(0) as ShaderMaterial
 	check(candidate != null, "candidate material exists")
@@ -151,6 +152,14 @@ func run() -> void:
 	check(not preview.apply_candidate(world, {"mask_dir": missing}), "missing textures fail closed")
 	check(world.ground.material_override == bad, "failed material left untouched")
 	world.ground.material_override = null
+	var extra := MeshInstance3D.new()
+	var extra_mesh := PlaneMesh.new()
+	extra_mesh.material = StandardMaterial3D.new()
+	extra.mesh = extra_mesh
+	world.ground.get_parent().add_child(extra)
+	check(not preview.apply_candidate(world, {"mask_dir": missing}), "invalid second chunk rejects entire transaction")
+	check(world.ground.get_active_material(0) == original and world.ground.get_surface_override_material(0) == null, "staging failure cannot partially modify first chunk")
+	extra.free()
 	_test_mask(world, preview, region)
 	check(preview.apply_candidate(world, {"mask_dir": missing}), "apply before world rebuild")
 	world.build_fixture()
@@ -212,9 +221,14 @@ func _test_mask(world, preview, region: Rect2) -> void:
 	hasher.start(HashingContext.HASH_SHA256)
 	hasher.update(bytes)
 	var digest := hasher.finish().hex_encode()
+	var source_hashes: Dictionary = {}
+	for source in Mask.CRITICAL_SOURCES:
+		var source_hash := FileAccess.get_sha256("res://" + source)
+		check(source_hash.length() == 64, "fixture critical source hash: " + source)
+		source_hashes[source] = source_hash
 	var manifest := {"schema_version": 1, "width": 1000, "height": 1000, "cell_size_m": 2,
 		"origin_x": -1000, "origin_z": -1000, "channels": Mask.CHANNELS,
-		"byte_order": "RGBA", "sha256": digest, "source_hashes": {"fixture": digest}, "seed": 1}
+		"byte_order": "RGBA", "sha256": digest, "source_hashes": source_hashes.duplicate(), "seed": 1, "row_order": "z_ascending_x_ascending"}
 	var manifest_file := FileAccess.open(dir.path_join("manifest.json"), FileAccess.WRITE)
 	var raw_file := FileAccess.open(dir.path_join("biome_rgba8.bin"), FileAccess.WRITE)
 	if manifest_file == null or raw_file == null:
@@ -259,6 +273,18 @@ func _test_mask(world, preview, region: Rect2) -> void:
 	manifest_file.store_string(JSON.stringify(manifest))
 	manifest_file.close()
 	check(reader.load_image(dir) == null, "invalid source hash rejected")
+	manifest.source_hashes = source_hashes.duplicate()
+	manifest.source_hashes[Mask.CRITICAL_SOURCES[0]] = "0".repeat(64)
+	manifest_file = FileAccess.open(dir.path_join("manifest.json"), FileAccess.WRITE)
+	manifest_file.store_string(JSON.stringify(manifest))
+	manifest_file.close()
+	check(reader.load_image(dir) == null and reader.status == "mask source mismatch", "stale world source hash rejected")
+	manifest.source_hashes = source_hashes.duplicate()
+	manifest.row_order = "x_ascending_z_ascending"
+	manifest_file = FileAccess.open(dir.path_join("manifest.json"), FileAccess.WRITE)
+	manifest_file.store_string(JSON.stringify(manifest))
+	manifest_file.close()
+	check(reader.load_image(dir) == null, "contradictory mask row order rejected")
 	manifest_file = FileAccess.open(dir.path_join("manifest.json"), FileAccess.WRITE)
 	manifest_file.store_string("{")
 	manifest_file.close()
