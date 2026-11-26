@@ -19,7 +19,7 @@ func _run() -> void:
 	var cover := Cover.new()
 	root.add_child(cover)
 	var p := world.preview_center_xz
-	var options := {"test_fixture":true,"fixture_sampler":func(_x: float,_z: float) -> Vector4: return Vector4(1,0.2,0.5,0),"pilot_bounds":Rect2(p-Vector2.ONE*48,Vector2.ONE*96),"tuning":{"radii":[16,28,42],"density":[0.12,0.06,0.025],"cap":8000,"checks":800}}
+	var options := {"test_fixture":true,"capture_fixture":true,"fixture_sampler":func(_x: float,_z: float) -> Vector4: return Vector4(1,0.2,0.5,0),"pilot_bounds":Rect2(p-Vector2.ONE*48,Vector2.ONE*96),"tuning":{"radii":[16,28,42],"density":[0.12,0.06,0.025],"cap":8000,"checks":800}}
 	if not cover.build(world,"medium","",options):
 		printerr("FAIL cover build: ",cover.get_stats())
 		quit(1)
@@ -33,12 +33,13 @@ func _run() -> void:
 	var stats: Dictionary = cover.get_stats()
 	var failed: bool = stats.active_instances <= 0 or stats.queued_chunks != 0 or stats.active_instances > stats.cap
 	for key: Vector2i in cover._active:
-		for node: MultiMeshInstance3D in cover._active[key].nodes:
-			var mm := node.multimesh
-			for i in range(mm.instance_count):
-				var frame := Transform3D(Basis.IDENTITY,node.position)*mm.get_instance_transform(i)
-				if world.road_clearance.overlaps(Grass.swept_bounds(mm.mesh,frame),0.12,true):
-					failed = true
+		var entry: Dictionary = cover._active[key]
+		for s in range(5):
+			for pose: Dictionary in entry.fixture_groups[s]:
+				var frame: Transform3D = pose.frame
+				for lod in range(3):
+					if world.road_clearance.overlaps(Grass.swept_bounds(cover._meshes[s][lod],frame),0.12,true):
+						failed = true
 	print("[GroundCoverRealWorld] ",JSON.stringify(stats))
 	cover.shutdown()
 	cover.free()
