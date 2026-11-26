@@ -70,14 +70,15 @@ class QA(unittest.TestCase):
                  _screenshots_present=True,interaction=False,route_departed=False,warmup_s=15,
                  camera_start_position=[0,3,8],camera_start_forward=[0,0,-1],route_hash="f"*64,
                  site="cedar",scene="res://scenes/bootstrap/game.tscn",_artifact_hashes_valid=True,
-                 speed_band="normal" if scenario in ("route","manual") else "stationary",route_max_cross_track_m=1.0)
+                 speed_band="normal" if scenario in ("route","manual") else "stationary",route_max_cross_track_m=1.0,
+                 traffic_observations=[dict(elapsed_s=i,ticks=i*30,active_agents=12,visible_agents=4,seed=42,density=12) for i in range(65)])
         return (dict(m,mode="baseline",features="",legacy_grass="enabled"),
                 dict(m,mode="candidate",features="a",legacy_grass="disabled"))
 
     def rows(self, moving=False, interval=16, duration=64):
         return [dict(frame_ms=interval,elapsed_s=(i+1)*interval/1000,speed_mps=22 if moving else 0,
                      x=-800+i*interval/1000*22 if moving else 0,y=0,z=0,fov=58,gear="2" if moving else "N",
-                     grass_instances=20,draws=100,triangles=200,gpu_ms=8,cpu_ms=4,vram_mib=1000)
+                     grass_instances=20,legacy_grass_instances=0,draws=100,triangles=200,gpu_ms=8,cpu_ms=4,vram_mib=1000)
                 for i in range(round(duration*1000/interval))]
 
     def test_strict_source_and_package_hashes(self):
@@ -161,6 +162,17 @@ class QA(unittest.TestCase):
         for row in rows:
             row["grass_instances"]=""
         self.assertTrue(compare((a,good),(dict(b,features="e",legacy_grass="enabled"),summarize(rows)))["comparable"])
+
+    def test_traffic_and_stacked_instances(self):
+        a,b=self.matching_meta()
+        frames=summarize(self.rows())
+        for observations in ([],[dict(x,ticks=0) for x in b["traffic_observations"]],
+                             [dict(x,seed=99) for x in b["traffic_observations"]],
+                             [dict(x,visible_agents=0) for x in b["traffic_observations"]]):
+            self.assertFalse(compare((a,frames),(dict(b,traffic_observations=observations),frames))["comparable"])
+        rows=self.rows()
+        rows[1]["legacy_grass_instances"]=1
+        self.assertFalse(compare((a,frames),(b,summarize(rows)))["comparable"])
 
     def test_bad_csv_and_missing_files(self):
         with tempfile.TemporaryDirectory() as tmp:

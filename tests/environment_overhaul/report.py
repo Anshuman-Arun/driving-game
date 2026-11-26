@@ -40,10 +40,11 @@ def summarize(rows):
                "frame_ms": describe(frames), "mean_fps": n / duration if duration else None,
                "one_percent_low_fps": 1000 / statistics.mean(tail) if tail else None,
                "deadline_misses": sum(v > 1000/60 for v in frames)}
-    for name in ("gpu_ms","cpu_ms","vram_mib","draws","triangles","speed_mps","grass_instances","fov"):
+    for name in ("gpu_ms","cpu_ms","vram_mib","draws","triangles","speed_mps","grass_instances","legacy_grass_instances","fov"):
         values = [x for row in rows if (x := valid(row.get(name), name in ("gpu_ms","cpu_ms","fov","vram_mib"))) is not None]
         summary[name] = describe(values)
         summary[name]["missing"] = len(rows) - len(values)
+        summary[name]["max"] = max(values,default=None)
     trajectory = {}
     telemetry_errors = 0
     previous = 0.0
@@ -91,7 +92,7 @@ MATCH = ("site","scenario","preset","width","height","scale","renderer","gpu","c
          "driver","car","fov","pose","traffic","audio","warmup_s","sample_s",
          "controls","lighting","vsync","max_fps","scene","route_hash","interaction","speed_band")
 REQUIRED_COLUMNS = {"elapsed_s","frame_ms","speed_mps","gear","x","y","z","fov",
-                    "gpu_ms","cpu_ms","vram_mib","draws","triangles","grass_instances"}
+                    "gpu_ms","cpu_ms","vram_mib","draws","triangles","grass_instances","legacy_grass_instances"}
 
 def png_matches(path,width,height):
     """Check complete 8-bit non-interlaced RGB/RGBA PNG stream from Godot.
@@ -190,6 +191,40 @@ def features(meta):
     items=raw.split(",") if raw else []
     return set(items) if len(set(items))==len(items) and all(x in {"a","d","e"} for x in items) else None
 
+def traffic_signature(meta):
+    """Require advancing counters from the real coordinator-supplied adapter.
+    A static "enabled" string is never sufficient evidence.
+    """
+    observations=meta.get("traffic_observations")
+    duration=valid(meta.get("sample_s"))
+    if meta.get("traffic")!="enabled" or not isinstance(observations,list) or duration is None:
+        return None
+    if len(observations)<math.ceil(duration*.8):
+        return None
+    signature=None
+    previous_time=-1.0
+    previous_tick=-1
+    visible=0
+    for item in observations:
+        if not isinstance(item,dict):
+            return None
+        elapsed=valid(item.get("elapsed_s"),False)
+        keys=("ticks","active_agents","visible_agents","seed","density")
+        if any(type(item.get(key)) is not int for key in keys):
+            return None
+        tick,active,shown,seed,density=(item[key] for key in keys)
+        if elapsed is None or elapsed<=previous_time or elapsed-previous_time>3 or tick<=previous_tick or not (0<=shown<=active<=20 and 1<=density<=20):
+            return None
+        current=(seed,density)
+        if signature is not None and current!=signature:
+            return None
+        signature=current
+        visible+=int(shown>0)
+        previous_time,previous_tick=elapsed,tick
+    if previous_time<duration-3 or visible<len(observations)*.5:
+        return None
+    return signature
+
 def compare(baseline,candidate):
     a,sa=baseline
     b,sb=candidate
@@ -216,10 +251,15 @@ def compare(baseline,candidate):
             unresolved.append(name+" missing or zero rendering counters")
         if m.get("site") not in ("alder","cedar","ridge","valley","eastwater") or m.get("preset") not in ("low","medium","high") or m.get("scene")!="res://scenes/bootstrap/game.tscn":
             unresolved.append(name+" invalid site, quality or scene")
+    at,bt=traffic_signature(a),traffic_signature(b)
+    if at is None or bt is None or at!=bt:
+        unresolved.append("live advancing traffic counters, visible NPCs or matched seed/density missing")
+    if sa["legacy_grass_instances"]["missing"] or sb["legacy_grass_instances"]["missing"]:
+        unresolved.append("legacy grass instance counters unavailable")
     if a.get("legacy_grass")!="enabled":
         unresolved.append("baseline legacy grass not confirmed")
     if bf and "a" in bf:
-        if b.get("legacy_grass")!="disabled":
+        if b.get("legacy_grass")!="disabled" or sb["legacy_grass_instances"]["max"]!=0:
             unresolved.append("candidate grass stacked or legacy state unknown")
         if sb["grass_instances"]["missing"] or not sb["grass_instances"]["n"] or not (sb["grass_instances"]["p95"] or 0)>0:
             unresolved.append("candidate grass absent or count unavailable")

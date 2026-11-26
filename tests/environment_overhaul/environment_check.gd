@@ -63,6 +63,8 @@ func fixture() -> void:
 	check(not placement_clear(index,Transform3D(Basis.IDENTITY,Vector3(2,10,2)),AABB(Vector3.ZERO,Vector3.ONE),0.12),"placement rejects deck")
 	check(placement_clear(index,Transform3D(Basis.IDENTITY,Vector3(2,0,2)),AABB(Vector3.ZERO,Vector3.ONE),0.12),"placement permits under high bridge")
 	check(not placement_clear(index,Transform3D(Basis.IDENTITY,Vector3(999.5,0,0)),AABB(Vector3.ZERO,Vector3.ONE),0.12),"placement rejects footprint outside map")
+	check(not placement_clear(null,Transform3D.IDENTITY,AABB(Vector3.ZERO,Vector3.ONE),0.12),"placement rejects unavailable clearance")
+	check(not placement_clear(index,Transform3D.IDENTITY,AABB(Vector3.ZERO,Vector3.ONE),-1.0),"placement rejects negative safety margin")
 	check(not placement_clear(index,Transform3D(Basis(Vector3.ZERO,Vector3.ZERO,Vector3.ZERO),Vector3.ZERO),AABB(Vector3.ZERO,Vector3.ONE),0.12),"placement rejects singular transform")
 
 func stat_value(stats: Dictionary, semantic: String, aliases: Array) -> Variant:
@@ -415,12 +417,15 @@ func mesh_bounds(node: Node, parent: Transform3D, parts: Array[AABB]) -> void:
 		mesh_bounds(child,frame,parts)
 
 func placement_clear(index: Object, frame: Transform3D, bounds: AABB, margin: float) -> bool:
+	if not is_instance_valid(index) or not index.has_method("overlaps") or not is_finite(margin) or margin<0.0:
+		return false
 	if not frame.is_finite() or absf(frame.basis.determinant())<0.0001 or not bounds.position.is_finite() or not bounds.size.is_finite() or bounds.size.x<=0 or bounds.size.y<=0 or bounds.size.z<=0:
 		return false
 	var actual:=frame*bounds
 	if not actual.position.is_finite() or not actual.size.is_finite() or actual.position.x< -1000 or actual.end.x>1000 or actual.position.z< -1000 or actual.end.z>1000:
 		return false
-	return not bool(index.call("overlaps",actual,margin,true))
+	var overlap: Variant=index.call("overlaps",actual,margin,true)
+	return overlap is bool and not overlap
 
 func understory_test(world: Node) -> void:
 	# The F-owned audit does not spawn or approve production vegetation. It

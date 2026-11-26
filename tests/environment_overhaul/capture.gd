@@ -36,6 +36,7 @@ var capture_conditions_changed := false
 var route_max_cross_track := 0.0
 var route_peak_speed := 0.0
 var applied_features := {}
+var traffic_observations: Array[Dictionary]=[]
 
 func _initialize() -> void:
 	run.call_deferred()
@@ -205,12 +206,56 @@ func audio_state() -> String:
 		return "unverified_or_muted"
 	return "enabled" if drive.vehicle_body.has_node("VehicleAudio") and not AudioServer.is_bus_mute(0) and AudioServer.get_bus_volume_db(0)>-80.0 else "unverified_or_muted"
 
+func traffic_observation(elapsed: float) -> Dictionary:
+	# Coordinator supplies a callable bound to the actual live traffic adapter,
+	# not a static string claiming traffic is enabled. No traffic is spawned by F.
+	if not is_instance_valid(drive):
+		return {}
+	var probe: Variant=drive.get_meta("environment_qa_traffic_probe",null)
+	if not probe is Callable or not probe.is_valid():
+		return {}
+	var result: Variant=probe.call()
+	if not result is Dictionary or result.get("enabled")!=true:
+		return {}
+	for key: String in ["ticks","active_agents","visible_agents","seed","density"]:
+		if not result.get(key) is int:
+			return {}
+	var active:=int(result.active_agents)
+	var visible_agents:=int(result.visible_agents)
+	var density:=int(result.density)
+	if int(result.ticks)<0 or active<0 or active>20 or visible_agents<0 or visible_agents>active or density<1 or density>20:
+		return {}
+	return {"elapsed_s":elapsed,"ticks":int(result.ticks),"active_agents":active,
+		"visible_agents":visible_agents,"seed":int(result.seed),"density":density}
+
+func legacy_grass_count() -> String:
+	if not is_instance_valid(drive):
+		return ""
+	var plant: Node=drive.get("vegetation")
+	if not is_instance_valid(plant):
+		return ""
+	var visible_ground: Variant=plant.get("_visible_ground")
+	if not visible_ground is Dictionary:
+		return ""
+	var count:=0
+	for key: Variant in visible_ground:
+		if not key is Vector3i:
+			return ""
+		if key.z!=2:
+			continue
+		var batch: Variant=visible_ground[key]
+		if not is_instance_valid(batch) or not batch is MultiMeshInstance3D or batch.multimesh==null:
+			return ""
+		if batch.is_visible_in_tree():
+			count+=batch.multimesh.instance_count if batch.multimesh.visible_instance_count<0 else batch.multimesh.visible_instance_count
+	return str(count)
+
 func grass_count() -> String:
 	if not is_instance_valid(cover):
 		return ""
 	var count := 0
 	for node: MultiMeshInstance3D in cover.find_children("*", "MultiMeshInstance3D", true, false):
-		if node.multimesh != null:
+		if node.multimesh != null and node.is_visible_in_tree():
 			count += node.multimesh.instance_count if node.multimesh.visible_instance_count < 0 else node.multimesh.visible_instance_count
 	return str(count)
 
@@ -607,7 +652,7 @@ func run() -> void:
 		"pose":str(pose),"actual_start_pose":str(start_pose),"camera_pose":str(drive.camera.global_transform),
 		"camera_start_position":[drive.camera.global_position.x,drive.camera.global_position.y,drive.camera.global_position.z],
 		"camera_start_forward":[-drive.camera.global_basis.z.x,-drive.camera.global_basis.z.y,-drive.camera.global_basis.z.z],
-		"traffic":str(drive.get_meta("environment_qa_traffic_state","unverified")),
+		"traffic":"unverified",
 		"audio":audio_state(),
 		"warmup_s":warmup,"sample_s":duration,"controls":str(scenario)+":"+str(target_speed),"lighting":"scene default; candidate flags recorded",
 		"vsync":"disabled","max_fps":Engine.max_fps,"features":features,"feature_options":feature_options,"legacy_vegetation_visible":drive.vegetation!=null and drive.vegetation.visible,
@@ -620,9 +665,13 @@ func run() -> void:
 	var start:=Time.get_ticks_usec()
 	var prev:=start
 	var count_cache:=grass_count()
+	var legacy_count_cache:=legacy_grass_count()
+	var initial_observation:=traffic_observation(0.0)
+	if not initial_observation.is_empty():
+		traffic_observations.append(initial_observation)
+		meta["traffic"]="enabled"
 	var next_count:=start+1000000
 	var expected_car: Node=drive.vehicle_body
-	var initial_traffic:=str(meta["traffic"])
 	var initial_audio:=str(meta["audio"])
 	while float(prev-start)/1e6<duration:
 		await process_frame
@@ -635,7 +684,11 @@ func run() -> void:
 			cover.call("set_vehicle_interaction",drive.vehicle_body.global_position,drive.vehicle_body.linear_velocity,interaction)
 		if now>=next_count:
 			count_cache=grass_count()
-			if grass_state()!=legacy_grass or str(drive.get_meta("environment_qa_traffic_state","unverified"))!=initial_traffic or audio_state()!=initial_audio or not candidate_status_ok():
+			legacy_count_cache=legacy_grass_count()
+			var observation:=traffic_observation((now-start)/1e6)
+			if not observation.is_empty():
+				traffic_observations.append(observation)
+			if grass_state()!=legacy_grass or (meta["traffic"]=="enabled" and observation.is_empty()) or audio_state()!=initial_audio or not candidate_status_ok():
 				capture_conditions_changed=true
 			next_count=now+1000000
 		if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale) or drive.active_vehicle_id!="mclaren_senna" or paused or drive.vehicle_body!=expected_car or drive.graphics_preset!=quality or Engine.max_fps!=0 or DisplayServer.window_get_vsync_mode()!=DisplayServer.VSYNC_DISABLED:
@@ -648,11 +701,11 @@ func run() -> void:
 			str(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)),
 			str(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)),
 			str(drive.adapter.get_speed_mps()),str(drive.adapter.get_gear_display()),str(p.x),str(p.y),str(p.z),
-			str(drive.camera.fov),count_cache,str(route_progress),str(route_done)]))
+			str(drive.camera.fov),count_cache,legacy_count_cache,str(route_progress),str(route_done)]))
 		prev=now
 	if physics_frame.is_connected(route_controls):
 		physics_frame.disconnect(route_controls)
-	if grass_state()!=legacy_grass or str(drive.get_meta("environment_qa_traffic_state","unverified"))!=initial_traffic or audio_state()!=initial_audio or not candidate_status_ok():
+	if grass_state()!=legacy_grass or audio_state()!=initial_audio or not candidate_status_ok():
 		capture_conditions_changed=true
 	release_controls()
 	await RenderingServer.frame_post_draw
@@ -662,7 +715,7 @@ func run() -> void:
 	if file==null:
 		await finish(1,"CSV output failed")
 		return
-	file.store_csv_line(PackedStringArray(["elapsed_s","frame_ms","gpu_ms","cpu_ms","vram_mib","draws","triangles","speed_mps","gear","x","y","z","fov","grass_instances","route_progress_m","route_done"]))
+	file.store_csv_line(PackedStringArray(["elapsed_s","frame_ms","gpu_ms","cpu_ms","vram_mib","draws","triangles","speed_mps","gear","x","y","z","fov","grass_instances","legacy_grass_instances","route_progress_m","route_done"]))
 	for row in rows:
 		file.store_csv_line(row)
 	file.close()
@@ -673,6 +726,14 @@ func run() -> void:
 	meta["route_max_cross_track_m"]=route_max_cross_track
 	meta["route_peak_speed_mps"]=route_peak_speed
 	meta["grass_stats"]=cover.call("get_stats") if is_instance_valid(cover) else {}
+	meta["traffic_observations"]=traffic_observations
+	meta["legacy_grass_count_unit"]="visible legacy cluster instances; not equivalent to candidate tufts"
+	meta["candidate_grass_count_unit"]="visible candidate tuft instances"
+	meta["adapter_status"]={}
+	for feature: Variant in applied_features:
+		var adapter: Object=applied_features[feature]
+		if is_instance_valid(adapter):
+			meta["adapter_status"][feature]=adapter.call("get_status" if feature=="e" else "get_stats")
 	meta["sha256_by_file"]={}
 	for name: String in ["start.png","end.png","frames.csv"]:
 		var hash_value:=FileAccess.get_sha256(out.path_join(name))
@@ -716,7 +777,7 @@ func self_test() -> void:
 		return
 	var plant: Node=drive.vegetation
 	var before: Dictionary=plant.get("_ground").duplicate()
-	if grass_state()!="enabled" or not suppress_grass() or grass_state()!="disabled":
+	if grass_state()!="enabled" or not suppress_grass() or grass_state()!="disabled" or legacy_grass_count()!="0":
 		errors+=1
 	else:
 		var current: Dictionary=plant.get("_ground")

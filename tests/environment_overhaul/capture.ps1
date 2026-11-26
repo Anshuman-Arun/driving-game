@@ -44,6 +44,9 @@ function Assert-FeatureSelection([string]$CaptureMode,[string]$Flags,[string]$Op
 function Invoke-BoundedNative([string]$Executable,[string[]]$Arguments,[string]$Stdout,[string]$Stderr,[int]$TimeoutSeconds,[switch]$AnnounceCapture) {
     $joined = Join-NativeArguments $Arguments
     $process = Start-Process -FilePath $Executable -ArgumentList $joined -PassThru -RedirectStandardOutput $Stdout -RedirectStandardError $Stderr
+    # Windows PowerShell 5.1 can lose ExitCode after WaitForExit unless the
+    # Process object acquires and retains its native handle before exit.
+    $null = $process.Handle
     $timer = [Diagnostics.Stopwatch]::StartNew()
     $announced = $false
     try {
@@ -59,7 +62,10 @@ function Invoke-BoundedNative([string]$Executable,[string[]]$Arguments,[string]$
                 throw "Native process timeout; inspect $Stdout and $Stderr"
             }
         }
-        return $process.ExitCode
+        $process.WaitForExit()
+        $code=$process.ExitCode
+        if ($null -eq $code) { throw "Native process exit code unavailable; inspect $Stdout and $Stderr" }
+        return [int]$code
     } finally {
         if (!$process.HasExited) { $process.Kill(); $process.WaitForExit() }
         $process.Dispose()
@@ -84,7 +90,7 @@ if ($SelfTest) {
         $stdout = Join-Path $scratch "stdout.log"
         $stderr = Join-Path $scratch "stderr.log"
         $status = Invoke-BoundedNative $python (@($echoScript)+$expected) $stdout $stderr 15
-        if ($status -ne 0) { throw "Native echo fixture failed: $status" }
+        if ($status -ne 0) { throw "Native echo fixture failed: $status; $(Get-Content -LiteralPath $stderr -Raw)" }
         $actual = @(Get-Content -LiteralPath $stdout -Raw | ConvertFrom-Json)
         if ($actual.Count -ne $expected.Count) { throw "Native argument count mismatch" }
         for ($i=0; $i -lt $actual.Count; $i++) {
@@ -98,6 +104,12 @@ if ($SelfTest) {
         }
         if (!$timedOut) { throw "Timeout fixture failed" }
         Write-Host "PASS Windows native quoting, feature validation and bounded process contract"
+    } catch {
+        foreach ($log in @("stdout.log","stderr.log")) {
+            $logPath=Join-Path $scratch $log
+            if (Test-Path -LiteralPath $logPath) { Write-Host (Get-Content -LiteralPath $logPath -Raw) }
+        }
+        throw
     } finally {
         Remove-Item -LiteralPath $scratch -Recurse -Force
     }
