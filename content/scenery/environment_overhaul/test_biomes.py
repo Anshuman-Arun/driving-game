@@ -162,10 +162,14 @@ class FixtureTests(unittest.TestCase):
             write("content/scenery/avoidance/race_gate_reservations_v1.json",
                 dict(zones=[dict(x=100,z=100,radius_m=10)]))
             write("content/scenery/manifest.json",dict(assets={"house":dict(r=7,kind="architecture"),
-                "pine":dict(r=3,kind="natural")},region_packs=[dict(path="content/scenery/packs/test.json")]))
+                "pine":dict(r=3,kind="natural"),"garage":dict(r=8,kind="landmark"),
+                "fuel_station":dict(r=12,kind="landmark"),"pier":dict(r=6.5,kind="landmark")},region_packs=[dict(path="content/scenery/packs/test.json")]))
             write("content/scenery/packs/test.json",dict(placements=[
                 dict(asset="house",position=[40,50,40],scale=1),
-                dict(asset="pine",position=[60,50,60],scale=1)]))
+                dict(asset="pine",position=[60,50,60],scale=2),
+                dict(asset="garage",position=[-200,50,200],scale=1),
+                dict(asset="fuel_station",position=[-300,50,300],scale=1),
+                dict(asset="pier",position=[200,50,200],scale=1)]))
             for name in ("vegetation.bin","premium_foliage.bin"):
                 write("data/world/"+name,np.array([[80,50,80,0,1,0,.5]],dtype="<f4").tobytes())
             tuning=dict(spacing_m=24,max_placements=400)
@@ -179,6 +183,14 @@ class FixtureTests(unittest.TestCase):
             self.assertEqual(mask[550,550,0],0) # gate reservation
             self.assertEqual(mask[520,520,0],0) # building
             self.assertGreater(mask[580,520,0],100)
+            for a,z in ((-200,200),(-300,300),(208,200)):
+                i,j=b.cell_index(a,z)
+                self.assertEqual(mask[j,i,0],0)
+            x,z=b.coords()
+            protected,props,canopy=b.scenery_masks(b.Sources(root),x,z)
+            self.assertTrue(np.any(canopy & ~props))
+            self.assertGreater(canopy.sum(),0)
+            self.assertTrue(props[b.cell_index(60,60)[1],b.cell_index(60,60)[0]])
             self.assertGreater(len(understory["placements"]),0)
             self.assertLessEqual(len(understory["placements"]),400)
             self.assertAlmostEqual(stats["lane_alignment_max_m"],0)
@@ -279,7 +291,7 @@ class CanonicalTests(unittest.TestCase):
         lake=src.json("content/scenery/lake/water_cells_v1.json")
         road=b.road_mask(graph,works,x,z,b.DEFAULTS["road_margin_m"])
         wet=b.water_mask(lake,works)
-        protected,props,_=b.scenery_masks(src,x,z)
+        protected,props,trees=b.scenery_masks(src,x,z)
         self.assertTrue(np.all(mask[:,:,0][road|wet|protected]==0))
         self.assertTrue(np.all(mask[:,:,2][wet]==255))
         audit=geometry.audit(graph,works,mask[:,:,0]==0)
@@ -313,6 +325,7 @@ class CanonicalTests(unittest.TestCase):
         rd,wd=b.clearance_lower_bound(road),b.clearance_lower_bound(wet)
         pd=b.clearance_lower_bound(props|protected)
         wc=b.distance(wet)
+        canopy_dist=b.clearance_lower_bound(trees)
         for p in u["placements"]:
             i,j=b.cell_index(p["x"],p["z"])
             self.assertIn(p["species_id"],b.SPECIES)
@@ -321,6 +334,8 @@ class CanonicalTests(unittest.TestCase):
             self.assertGreater(wd[j,i],b.DEFAULTS["water_margin_m"]+b.UNDERSTORY_RADIUS_M)
             self.assertGreater(pd[j,i],b.UNDERSTORY_RADIUS_M)
             self.assertLessEqual(slope[j,i],b.DEFAULTS["max_understory_slope"])
+            if p["species_id"]=="sapling":
+                self.assertGreater(canopy_dist[j,i],b.UNDERSTORY_RADIUS_M)
             if p["species_id"]=="reed":
                 self.assertLessEqual(wc[j,i]+b.CELL_RADIUS,18)
 
