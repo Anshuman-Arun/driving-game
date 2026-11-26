@@ -99,24 +99,27 @@ func build(world: Node, preset: String, mask_dir: String, options: Dictionary = 
 		_fixture = options.fixture_sampler
 	_fixture_mode = _fixture.is_valid()
 	_capture_fixture = _fixture_mode and bool(options.get("capture_fixture", false))
-	var source_directory := ""
+	var source_directory := "res://data/world"
 	# A preview runtime indexes only rendered roads; never use it as a
 	# production clearance source. Canonical masks are baked with roadworks.
 	if not _fixture_mode and _has_property(world,"report"):
 		var report: Variant = world.get("report")
 		if not report is Dictionary or not bool(report.get("full_world",false)):
 			return _fail("production cover requires a full-world clearance index")
+		source_directory = str(report.get("source_directory",""))
+		if source_directory.is_empty():
+			return _fail("production world source directory unavailable")
 		if _has_property(world,"roadworks"):
 			var works: Variant = world.get("roadworks")
 			if not works is Dictionary or works.is_empty():
 				return _fail("production mask requires roadworks terrain")
-			source_directory = str(report.get("source_directory",""))
-			if source_directory.is_empty():
-				return _fail("production world source directory unavailable")
+			var disk_works: Variant = JSON.parse_string(FileAccess.get_file_as_string(source_directory.path_join("roadworks.json")))
+			if not disk_works is Dictionary or works != disk_works:
+				return _fail("runtime roadworks differ from mask source")
 	if not _fixture_mode:
 		if not _mask.load_package(mask_dir):
 			return _fail(_mask.error)
-		if not source_directory.is_empty() and not _mask.verify_world_sources(source_directory):
+		if not _mask.verify_production_sources(source_directory):
 			return _fail(_mask.error)
 	_material = ShaderMaterial.new()
 	_material.shader = SHADER
