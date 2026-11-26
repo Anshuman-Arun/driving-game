@@ -77,9 +77,19 @@ uniform vec4 pilot_rect = vec4(0.0, 0.0, 1.0, 1.0);
 varying vec3 world_pos;
 varying vec3 world_normal;
 
+// A blended or perturbed near-vertical normal can cancel to zero.
+// Preserve the geometric normal rather than generating NaNs at that texel.
+vec3 safe_unit(vec3 v, vec3 fallback_normal) {
+	float magnitude_squared = dot(v, v);
+	if (magnitude_squared > 0.00000001) {
+		return v * inversesqrt(magnitude_squared);
+	}
+	return fallback_normal;
+}
+
 void vertex() {
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	world_normal = normalize(MODEL_NORMAL_MATRIX * NORMAL);
+	world_normal = safe_unit(MODEL_NORMAL_MATRIX * NORMAL, vec3(0.0, 1.0, 0.0));
 }
 
 // Procedural hash and noise primitives for macro variation & anti-tiling
@@ -144,7 +154,7 @@ vec3 sample_stochastic_world_normal(sampler2D tex, vec2 uv, float scale, float b
 	vec3 nb_raw = unpack_normal(texture(tex, uv_b).rgb);
 	vec2 nb_rot = transpose(rot) * nb_raw.xy;
 	vec2 d_xz = mix(na.xy, nb_rot, blend_w) * str;
-	return normalize(vec3(surf_n.x + d_xz.x, surf_n.y, surf_n.z + d_xz.y));
+	return safe_unit(vec3(surf_n.x + d_xz.x, surf_n.y, surf_n.z + d_xz.y), surf_n);
 }
 
 // Triplanar sampling functions for steep cliff rock
@@ -215,11 +225,11 @@ vec3 sample_triplanar_world_normal(sampler2D tex, vec3 p, vec3 n, vec3 weights, 
 	vec3 wy = vec3(n.x + tny.x, n.y, n.z + tny.y);
 	vec3 wz = vec3(n.x + tnz.x * sign(n.z), n.y + tnz.y, n.z);
 
-	return normalize(wx * weights.x + wy * weights.y + wz * weights.z);
+	return safe_unit(wx * weights.x + wy * weights.y + wz * weights.z, n);
 }
 
 void fragment() {
-	vec3 n = normalize(world_normal);
+	vec3 n = safe_unit(world_normal, vec3(0.0, 1.0, 0.0));
 	vec2 xz = world_pos.xz;
 	float h = world_pos.y;
 	float candidate_w = 1.0;
@@ -312,7 +322,7 @@ void fragment() {
 
 	vec3 n_grass = sample_stochastic_world_normal(grass_normal, xz, grass_scale, dist_blend, n, eff_normal_str * 0.75);
 	vec3 n_dirt = sample_stochastic_world_normal(dirt_normal, xz, dirt_scale, dist_blend, n, eff_normal_str * 0.75);
-	vec3 flat_n = normalize(mix(n_grass, n_dirt, ground_forest));
+	vec3 flat_n = safe_unit(mix(n_grass, n_dirt, ground_forest), n);
 
 	// Shoreline handling near lake waterline
 	float shore_h = h + (detail_noise - 0.5) * 1.0;
@@ -327,7 +337,7 @@ void fragment() {
 
 		flat_col = mix(flat_col, col_shore, shore_w);
 		flat_rgh = mix(flat_rgh, rgh_shore, shore_w);
-		flat_n = normalize(mix(flat_n, n_shore, shore_w));
+		flat_n = safe_unit(mix(flat_n, n_shore, shore_w), n);
 	}
 
 	if (rock_weight > 0.008) {
@@ -348,7 +358,7 @@ void fragment() {
 		flat_col = mix(flat_col, rock_col, rock_weight);
 		flat_rgh = mix(flat_rgh, rock_rgh, rock_weight);
 		flat_ao = mix(flat_ao, rock_ao_val, rock_weight);
-		flat_n = normalize(mix(flat_n, rock_n, rock_weight));
+		flat_n = safe_unit(mix(flat_n, rock_n, rock_weight), n);
 	}
 
 	// Stochastic macro luminance variation eliminating tiling on distant hills
@@ -359,5 +369,5 @@ void fragment() {
 	SPECULAR = mix(0.35, 0.55, wet_w * shore_w);
 	AO = clamp(flat_ao, 0.3, 1.0);
 	AO_LIGHT_AFFECT = 0.65;
-	NORMAL = normalize((VIEW_MATRIX * vec4(flat_n, 0.0)).xyz);
+	NORMAL = safe_unit((VIEW_MATRIX * vec4(flat_n, 0.0)).xyz, (VIEW_MATRIX * vec4(n, 0.0)).xyz);
 }
