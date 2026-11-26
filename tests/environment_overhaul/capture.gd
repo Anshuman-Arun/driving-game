@@ -33,6 +33,8 @@ var route_limits: Array[Vector2] = []
 var route_lane_ids := PackedStringArray()
 var interaction := false
 var capture_conditions_changed := false
+var route_max_cross_track := 0.0
+var route_peak_speed := 0.0
 
 func _initialize() -> void:
 	run.call_deferred()
@@ -266,16 +268,83 @@ func make_route(site: Vector3, heading: Vector3, duration: float) -> Variant:
 	route_hash=("\n".join(encoded)+"|"+";".join(route_lane_ids)).sha256_text()
 	return pose
 
+func reset_route() -> void:
+	route.clear_points()
+	route_lane_ids.clear()
+	route_limits.clear()
+	route_hash=""
+	route_progress=0.0
+	route_done=false
+	route_departed=false
+	route_max_cross_track=0.0
+	route_peak_speed=0.0
+
+func local_route_offset(p: Vector3, progress: float, speed: float) -> float:
+	# A global nearest-point query jumps at crossings and nearby return lanes.
+	# Search only the reachable arc around the previous physics tick.
+	var end:=route.get_baked_length()
+	var begin:=maxf(0.0,progress-4.0)
+	var finish:=minf(end,progress+maxf(6.0,speed/float(Engine.physics_ticks_per_second)*4.0+2.0))
+	var best:=progress
+	var error:=INF
+	for i in range(ceili((finish-begin)/0.5)+1):
+		var offset:=minf(finish,begin+i*0.5)
+		var distance:=p.distance_squared_to(route.sample_baked(offset))
+		if distance<error:
+			error=distance
+			best=offset
+	return best
+
+func offroad_pose(road: Transform3D) -> Variant:
+	for distance: float in [12.0,18.0,24.0,32.0,45.0,60.0,80.0]:
+		for direction: Vector3 in [Vector3.RIGHT,Vector3.LEFT,Vector3.FORWARD,Vector3.BACK,Vector3(1,0,1).normalized(),Vector3(-1,0,1).normalized(),Vector3(1,0,-1).normalized(),Vector3(-1,0,-1).normalized()]:
+			var p:=road.origin+direction*distance
+			p.y=drive.world.get_surface_height_at(p.x,p.z)+0.58
+			if not p.is_finite() or absf(p.x)>=990 or absf(p.z)>=990 or drive.world.road_clearance.overlaps(AABB(p-Vector3(2,1,2),Vector3(4,4,4)),1.0,true):
+				continue
+			var state: PhysicsDirectSpaceState3D=drive.get_world_3d().direct_space_state
+			var hit:=state.intersect_ray(PhysicsRayQueryParameters3D.create(p+Vector3.UP*5,p-Vector3.UP*5,1))
+			if hit.is_empty() or not hit.collider.is_in_group("Grass") or hit.normal.dot(Vector3.UP)<0.97:
+				continue
+			var basis:=Basis.looking_at((-road.basis.z).slide(hit.normal),hit.normal)
+			var clear:=true
+			for offset: Vector3 in [Vector3(-0.95,0,-1.5),Vector3(0.95,0,-1.5),Vector3(-0.95,0,1.5),Vector3(0.95,0,1.5)]:
+				var wheel_point: Vector3=hit.position+basis*offset
+				var wheel_hit:=state.intersect_ray(PhysicsRayQueryParameters3D.create(wheel_point+Vector3.UP*2,wheel_point-Vector3.UP*2,1))
+				if wheel_hit.is_empty() or not wheel_hit.collider.is_in_group("Grass") or absf(wheel_hit.position.y-wheel_point.y)>0.15:
+					clear=false
+					break
+			if clear:
+				return Transform3D(basis,hit.position+hit.normal*0.58)
+	return null
+
+func contact_count(group: String="") -> int:
+	var count:=0
+	for wheel in drive.vehicle_body.wheel_array:
+		if wheel.is_colliding() and (group.is_empty() or wheel.get_collider().is_in_group(group)):
+			count+=1
+	return count
+
 func route_controls() -> void:
+	if not is_instance_valid(drive) or not is_instance_valid(drive.vehicle_body):
+		route_departed=true
+		release_controls()
+		return
 	var body: Node3D = drive.vehicle_body
 	var p := body.global_position
 	p.y = 0
-	route_progress = route.get_closest_offset(p)
 	var speed: float = maxf(drive.adapter.get_forward_speed_mps(), 0.0)
+	if not p.is_finite() or not is_finite(speed):
+		route_departed=true
+		release_controls()
+		return
+	route_progress = local_route_offset(p,route_progress,speed)
+	route_peak_speed=maxf(route_peak_speed,speed)
+	route_max_cross_track=maxf(route_max_cross_track,p.distance_to(route.sample_baked(route_progress)))
 	var end := route.get_baked_length()
 	if route_progress >= end-3.0:
 		route_done = true
-	if p.distance_to(route.sample_baked(route_progress)) > 5.0:
+	if p.distance_to(route.sample_baked(route_progress)) > 5.0 or body.global_basis.y.dot(Vector3.UP)<0.85:
 		route_departed = true
 	if route_done or route_departed:
 		route_done = true
@@ -296,9 +365,15 @@ func route_controls() -> void:
 	var desired:=target_speed
 	# Respect route geometry and upcoming speed limits. Scripted high-speed
 	# targets are never a license to blast through a hairpin or junction.
-	for sample: Vector2 in route_limits:
-		if sample.x>=route_progress and sample.x<=route_progress+maxf(25.0,speed*2.0):
-			desired=minf(desired,sample.y)
+	for i in route_limits.size():
+		var sample: Vector2=route_limits[i]
+		var next_offset: float=route_limits[i+1].x if i+1<route_limits.size() else end
+		if next_offset<route_progress:
+			continue
+		if sample.x>route_progress+maxf(40.0,speed*3.0):
+			break
+		# Braking envelope, including the current segment's limit.
+		desired=minf(desired,sqrt(sample.y*sample.y+2.0*3.0*maxf(0.0,sample.x-route_progress)))
 	var ahead:=minf(end,route_progress+maxf(12.0,speed*1.2))
 	var a:=route.sample_baked(route_progress)
 	var b:=route.sample_baked((route_progress+ahead)*0.5)
@@ -307,8 +382,9 @@ func route_controls() -> void:
 	if turn>0.02:
 		desired=minf(desired,sqrt(3.5*maxf(a.distance_to(c),1.0)/turn))
 	var error := minf(desired,sqrt(maxf(0.0,2.0*3.0*(end-route_progress))))-speed
-	Input.action_press("drive_throttle",clampf(0.20+error*0.24,0.0,1.0))
-	Input.action_press("drive_brake",clampf((-error-1.2)*0.24,0.0,0.72))
+	var brake:=clampf((-error-0.8)*0.3,0.0,0.85)
+	Input.action_press("drive_throttle",0.0 if brake>0.0 else clampf(0.20+error*0.24,0.0,1.0))
+	Input.action_press("drive_brake",brake)
 
 func metric(value: float) -> String:
 	return str(value) if is_finite(value) and value > 0.0 else ""
@@ -398,23 +474,9 @@ func run() -> void:
 		await finish(1,"No validated road pose")
 		return
 	if scenario=="offroad":
-		var found := false
-		for distance in [12.0,18.0,24.0,32.0,45.0,60.0]:
-			for direction in [Vector3.RIGHT,Vector3.LEFT,Vector3.FORWARD,Vector3.BACK]:
-				var p: Vector3 = pose.origin+direction*distance
-				p.y = drive.world.get_surface_height_at(p.x,p.z)+0.58
-				if p.is_finite() and absf(p.x)<990 and absf(p.z)<990 and not drive.world.road_clearance.overlaps(AABB(p-Vector3(2,1,2),Vector3(4,4,4)),1.0,true):
-					var hit: Dictionary=drive.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(p+Vector3.UP*5,p-Vector3.UP*5,1))
-					if hit.is_empty() or not hit.collider.is_in_group("Grass") or hit.normal.dot(Vector3.UP)<0.92:
-						continue
-					var heading: Vector3=-pose.basis.z
-					pose=Transform3D(Basis.looking_at(heading.slide(hit.normal),hit.normal),hit.position+hit.normal*0.58)
-					found=true
-					break
-			if found:
-				break
-		if not found:
-			await finish(1,"No offroad clearance")
+		pose=offroad_pose(pose)
+		if pose==null:
+			await finish(1,"No offroad clearance and suitable four-wheel footprint")
 			return
 	drive._spawn_vehicle("mclaren_senna",pose)
 	for tick in 90:
@@ -422,10 +484,7 @@ func run() -> void:
 	if drive.active_vehicle_id!="mclaren_senna" or not drive.vehicle_body.has_node("CuratedCar"):
 		await finish(1,"Actual curated Senna failed to mount")
 		return
-	var contacts:=0
-	for wheel in drive.vehicle_body.wheel_array:
-		if wheel.is_colliding() and (scenario!="offroad" or wheel.get_collider().is_in_group("Grass")):
-			contacts+=1
+	var contacts:=contact_count("Grass" if scenario=="offroad" else "")
 	if contacts!=4 or not drive.vehicle_body.global_transform.is_finite() or drive.vehicle_body.global_basis.y.dot(Vector3.UP)<0.9:
 		await finish(1,"Senna failed settled four-wheel contact")
 		return
@@ -576,6 +635,8 @@ func run() -> void:
 	meta["capture_conditions_changed"]=capture_conditions_changed
 	meta["route_done"]=route_done
 	meta["route_departed"]=route_departed
+	meta["route_max_cross_track_m"]=route_max_cross_track
+	meta["route_peak_speed_mps"]=route_peak_speed
 	meta["grass_stats"]=cover.call("get_stats") if is_instance_valid(cover) else {}
 	file=FileAccess.open(out.path_join("meta.json"),FileAccess.WRITE)
 	if file==null:
@@ -643,15 +704,54 @@ func self_test() -> void:
 			errors+=1
 		else:
 			print("PASS Senna capture prerequisites ",site)
-		route.clear_points()
-		route_lane_ids.clear()
-		route_limits.clear()
-		route_hash=""
+		reset_route()
 		var route_pose: Variant=make_route(spec[0],spec[1],60.0)
 		if route_pose==null or route.point_count<2 or route_hash.length()!=64 or route.get_baked_length()<100:
 			print("FAIL connected route ",site)
 			errors+=1
 		else:
 			print("PASS connected route ",site," length=",route.get_baked_length()," lanes=",route_lane_ids.size())
+	# Exercise the same off-road selector used by graphical capture and the
+	# physical controller on the two pilot regions, not merely route creation.
+	for site: String in ["cedar","valley"]:
+		var spec: Array=VIEWS[site]
+		var road: Variant=drive.find_road_pose(spec[0],spec[1])
+		var offroad: Variant=offroad_pose(road) if road!=null else null
+		if offroad==null:
+			print("FAIL offroad pose ",site)
+			errors+=1
+		else:
+			drive._spawn_vehicle("mclaren_senna",offroad)
+			for tick in 90:
+				await physics_frame
+			var grounded:=contact_count("Grass")
+			if grounded!=4 or drive.vehicle_body.global_basis.y.dot(Vector3.UP)<0.9:
+				print("FAIL offroad settled ",site," grass_contacts=",grounded)
+				errors+=1
+			else:
+				print("PASS offroad settled ",site," grass_contacts=",grounded)
+		reset_route()
+		var route_pose: Variant=make_route(spec[0],spec[1],60.0)
+		if route_pose==null:
+			errors+=1
+			continue
+		drive._spawn_vehicle("mclaren_senna",route_pose)
+		for tick in 90:
+			await physics_frame
+		var grounded_ticks:=0
+		var total_ticks:=0
+		for tick in 20*Engine.physics_ticks_per_second:
+			await physics_frame
+			route_controls()
+			total_ticks+=1
+			grounded_ticks+=int(contact_count()>=3)
+			if route_departed or route_done:
+				break
+		release_controls()
+		var contact_ratio:=float(grounded_ticks)/maxi(total_ticks,1)
+		print("PHYSICAL ROUTE ",site," progress_m=",route_progress," peak_mps=",route_peak_speed," cross_track_m=",route_max_cross_track," grounded_fraction=",contact_ratio," departed=",route_departed)
+		if route_departed or route_progress<100.0 or route_peak_speed<8.0 or contact_ratio<0.95:
+			print("FAIL pilot physical route ",site)
+			errors+=1
 	print("CAPTURE SELF TEST failures=",errors)
 	await finish(1 if errors else 0,"Capture fixture failed" if errors else "Capture fixture passed; no graphical output")

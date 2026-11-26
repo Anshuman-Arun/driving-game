@@ -3,6 +3,8 @@ import argparse
 import hashlib
 import json
 import math
+import os
+import signal
 from pathlib import Path
 import re
 import subprocess
@@ -50,7 +52,13 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 def read_json(path):
-    return json.loads(path.read_text(encoding="utf-8"),
+    def unique_object(pairs):
+        result={}
+        for key,value in pairs:
+            require(key not in result,f"duplicate JSON key: {key}")
+            result[key]=value
+        return result
+    return json.loads(path.read_text(encoding="utf-8"),object_pairs_hook=unique_object,
                       parse_constant=lambda x: (_ for _ in ()).throw(ValueError(x)))
 
 def payload(path):
@@ -70,8 +78,10 @@ def verify_mask(directory, root=ROOT, strict_sources=False):
     if isinstance(names, dict):
         names = [names.get(k) for k in "RGBA"]
     require(isinstance(names, list) and len(names) == 4, "four ordered channels required")
-    for value, token in zip(names, ["grass", "woodland", "moisture", "rock"]):
-        require(token in str(value).lower(), f"channel mismatch: {value}")
+    for value, allowed in zip(names, [("grass_suitability","grass"),("woodland_weight","woodland"),("moisture",),("exposed_rock_weight","rock")]):
+        require(isinstance(value,str) and value in allowed,f"channel mismatch: {value}")
+    if "row_order" in m:
+        require(m["row_order"]=="z_ascending_x_ascending","mask row order")
     require(type(m.get("seed")) is int, "integer mask seed")
     sources = m.get("source_hashes")
     require(isinstance(sources, dict) and bool(sources), "source hashes required")
@@ -92,17 +102,23 @@ def verify_mask(directory, root=ROOT, strict_sources=False):
         require(digest(payload(directory/"statistics.json"))==m["statistics_sha256"],"statistics SHA-256 mismatch")
     if "generator_sha256" in m and strict_sources:
         require(digest(payload(root/MASK.parent/"bake_biomes.py"))==m["generator_sha256"],"generator SHA-256 mismatch")
+    if strict_sources and (directory/"understory.json").exists():
+        require("understory_sha256" in m,"unhashed understory file")
     if "understory_sha256" in m:
         understory = directory / "understory.json"
         require(digest(payload(understory)) == m["understory_sha256"], "understory SHA-256 mismatch")
         u = read_json(understory)
-        require(u.get("seed")==m["seed"] and u.get("source_hashes")==sources, "understory provenance differs from mask")
+        require(isinstance(u,dict) and u.get("seed")==m["seed"] and u.get("source_hashes")==sources, "understory provenance differs from mask")
+        verify_understory(understory)
     return data
 
 def sample(data, x, z):
     if not (-1000 <= x < 1000 and -1000 <= z < 1000):
         return None
-    i, j = math.floor((x + 1000) / 2), math.floor((z + 1000) / 2)
+    require(len(data)==4_000_000,"invalid sample buffer")
+    # Addition can round the representable predecessor of +1000 to 2000.
+    # The half-open domain test above remains authoritative.
+    i,j=min(999,math.floor((x+1000)/2)),min(999,math.floor((z+1000)/2))
     return tuple(data[4 * (j * 1000 + i):4 * (j * 1000 + i) + 4])
 
 def verify_assets(path, root=ROOT):
@@ -154,21 +170,37 @@ def verify_understory(path):
         require(all(type(p[k]) in (int,float) and math.isfinite(p[k]) for k in ("x", "z", "yaw_rad", "scale")), "non-finite placement")
         require(-1000 <= p["x"] < 1000 and -1000 <= p["z"] < 1000 and p["scale"] > 0, "invalid placement")
         require(type(p["seed"]) is int, "placement seed")
-        key=(p["species_id"],p["x"],p["z"])
+        key=(p["x"],p["z"])
         require(key not in seen,"duplicate placement")
         seen.add(key)
 
 def run_command(command, log, seconds):
-    with log.open("w", encoding="utf-8") as f:
+    with log.open("w",encoding="utf-8") as f:
+        process=None
         try:
-            proc = subprocess.run(command, cwd=ROOT, stdout=f, stderr=subprocess.STDOUT,
-                                  timeout=seconds, check=False)
-            status = proc.returncode
+            process=subprocess.Popen(command,cwd=ROOT,stdout=f,stderr=subprocess.STDOUT,
+                start_new_session=os.name!="nt",creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name=="nt" else 0)
+            status=process.wait(timeout=seconds)
         except subprocess.TimeoutExpired:
-            status = 124
+            # Kill descendant processes as well as their launcher. Otherwise a
+            # timed-out agent script could continue mutating the test checkout.
+            if os.name=="nt":
+                try:
+                    subprocess.run(["taskkill","/F","/T","/PID",str(process.pid)],stdout=f,stderr=subprocess.STDOUT,timeout=10,check=False)
+                except (OSError,subprocess.SubprocessError):
+                    pass
+                if process.poll() is None:
+                    process.kill()
+            else:
+                try:
+                    os.killpg(process.pid,signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            process.wait(timeout=10)
+            status=124
         except OSError as exc:
             f.write(str(exc))
-            status = 127
+            status=127
     content = log.read_text(encoding="utf-8", errors="replace")
     print(content[-12000:], flush=True)
     matches=[line for line in content.splitlines() if ERROR.search(line)]
@@ -197,6 +229,10 @@ def main():
         p.error("output already contains a run; choose a fresh directory")
     print(f"QA logs: {out}",flush=True)
     results = {}
+    def persist():
+        temp=out/"results.tmp"
+        temp.write_text(json.dumps(results,indent=2),encoding="utf-8")
+        temp.replace(out/"results.json")
     def check(name, fn):
         try:
             fn()
@@ -204,6 +240,8 @@ def main():
         except (ValueError, OSError, KeyError, TypeError, AttributeError, OverflowError, subprocess.SubprocessError) as exc:
             print(f"FAIL {name}: {exc}", flush=True)
             results[name] = f"FAIL: {exc}"
+        finally:
+            persist()
     def command(name, argv, timeout=420):
         check(name, lambda: require(run_command(argv, out / (name + ".log"), timeout) == 0,
                                     f"nonzero exit, timeout or script error: {name}.log"))
@@ -212,10 +250,13 @@ def main():
         subprocess.run(["git", "diff", "--exit-code", BASE, "--", *PROTECTED], cwd=ROOT, check=True)
         untracked=subprocess.check_output(["git","ls-files","--others","--exclude-standard","--",*PROTECTED],cwd=ROOT,text=True)
         require(not untracked.strip(), "untracked canonical paths: "+untracked.strip())
-        for path in ("data/world/road_graph_v1.json", "data/world/terrain_height_r16le.bin",
-                     "data/world/world_metadata_v1.json"):
+        for path in ("data/world/road_graph_v1.json","data/world/terrain_height_r16le.bin",
+                     "data/world/world_metadata_v1.json","data/world/roadworks.json","data/world/terrain_roadworks_r16le.bin",
+                     "content/scenery/vegetation.bin"):
             require(bool(payload(ROOT / path)), f"missing canonical payload {path}")
     check("canonical", canonical)
+    if args.mode=="integrated" and args.suite!="all":
+        results["integrated-scope"]="FAIL: integrated verification requires --suite all"
     generator=ROOT/MASK.parent/"bake_biomes.py"
     if args.prepare_mask:
         def prepare():
@@ -238,7 +279,7 @@ def main():
         ("mask", ROOT / MASK / "manifest.json", lambda: verify_mask(ROOT / MASK, strict_sources=args.mode=="integrated")),
         ("assets", ROOT / CANDIDATES[3], lambda: verify_assets(ROOT / CANDIDATES[3])),
         ("understory", ROOT / MASK / "understory.json",
-         lambda: verify_understory(ROOT / MASK.parent / "understory.json")),
+         lambda: verify_understory(ROOT / MASK / "understory.json")),
     ]:
         if path.exists():
             check(key, validator)
@@ -318,7 +359,7 @@ def main():
     else:
         results["runtime"] = "NOT RUN: import failed"
     check("canonical-after",canonical)
-    (out / "results.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
+    persist()
     print(json.dumps(results, indent=2))
     return int(any(v.startswith("FAIL") for v in results.values()))
 
