@@ -22,6 +22,11 @@ func drain(cover: Node, max_frames: int = 400) -> void:
 		check(stats.active_instances <= stats.cap,"instance cap")
 		check(stats.last_frame_checks <= int(cover._profile.checks),"candidate budget")
 		check(stats.last_frame_chunk_uploads <= int(cover._profile.uploads),"upload budget")
+		check(stats.last_frame_upload_instances <= int(cover._profile.upload_instances),"instance upload budget")
+		var reserved := 0
+		for lod in range(3):
+			reserved += int(stats.planned_chunks_per_lod[lod]) * int(stats.planned_candidate_limit_per_chunk[lod])
+		check(reserved <= stats.cap,"planned candidate cap")
 		check(stats.pooled_batches <= 75,"pool cap")
 		check(stats.active_chunks <= int(cover._profile.chunks),"chunk cap")
 		check(stats.queued_chunks <= int(cover._profile.chunks),"queue cap")
@@ -35,10 +40,12 @@ func fingerprint(cover: Node) -> int:
 	keys.sort_custom(func(a: Vector2i,b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
 	for key: Vector2i in keys:
 		var entry: Dictionary = cover._active[key]
-		for node: MultiMeshInstance3D in entry.nodes:
-			var mm := node.multimesh
-			for i in range(mm.instance_count):
-				entries.append(mm.get_instance_transform(i))
+		entries.append(key)
+		entries.append(entry.lod)
+		for group: Array in entry.fixture_groups:
+			for pose: Dictionary in group:
+				entries.append(pose.frame)
+				entries.append(pose.seed)
 	return hash(entries)
 
 func _run() -> void:
@@ -97,7 +104,7 @@ func _run() -> void:
 	root.add_child(world)
 	var cover := Cover.new()
 	root.add_child(cover)
-	var options := {"test_fixture":true,"fixture_sampler":Callable(world,"sample_mask"),"pilot_bounds":Rect2(-48,-48,96,96),"tuning":{"radii":[16.0,26.0,44.0],"density":[0.18,0.09,0.04],"cap":10000,"checks":500,"uploads":2,"chunks":48}}
+	var options := {"test_fixture":true,"capture_fixture":true,"fixture_sampler":Callable(world,"sample_mask"),"pilot_bounds":Rect2(-48,-48,96,96),"tuning":{"radii":[16.0,26.0,44.0],"density":[0.18,0.09,0.04],"cap":10000,"checks":500,"uploads":2,"chunks":48}}
 	check(not cover.build(world,"medium","user://missing"),"missing production mask")
 	check(cover.build(world,"medium","",options),"fixture build")
 	cover.set_process(false)
@@ -128,11 +135,12 @@ func _run() -> void:
 	var stats: Dictionary = cover.get_stats()
 	check(stats.active_instances>0 and stats.rejected_candidates.road>0,"actual grass and road rejection")
 	for key: Vector2i in cover._active:
-		for node: MultiMeshInstance3D in cover._active[key].nodes:
-			var mm := node.multimesh
-			for i in range(mm.instance_count):
-				var frame := Transform3D(Basis.IDENTITY,node.position)*mm.get_instance_transform(i)
-				check(not world.road_clearance.overlaps(Grass.swept_bounds(mm.mesh,frame),0.12,true),"exact swept road exclusion")
+		var entry: Dictionary = cover._active[key]
+		for s in range(5):
+			for pose: Dictionary in entry.fixture_groups[s]:
+				var frame: Transform3D = pose.frame
+				for lod in range(3):
+					check(not world.road_clearance.overlaps(Grass.swept_bounds(cover._meshes[s][lod],frame),0.12,true),"exact swept road exclusion, every LOD")
 	check(world.road_clearance.overlaps(AABB(Vector3(3.5,0,7),Vector3(0.2,0.3,0.2)),0,true),"shoulder fixture")
 	check(not world.road_clearance.overlaps(AABB(Vector3(17,0,7),Vector3(0.2,0.3,0.2)),0,true),"under bridge allowed")
 	check(world.road_clearance.overlaps(AABB(Vector3(17,8,7),Vector3(0.2,0.3,0.2)),0,true),"deck excluded")
@@ -153,6 +161,11 @@ func _run() -> void:
 	cover.update_focus(Vector3(8,2,8))
 	drain(cover)
 	check(first==fingerprint(cover),"teleport deterministic")
+	cover.update_focus(Vector3(NAN,0,0))
+	check(cover.get_stats().active_instances==0,"invalid focus clears old instances")
+	cover.update_focus(Vector3(8,2,8))
+	drain(cover)
+	check(first==fingerprint(cover),"valid focus recovers deterministically")
 	world.bad_height=true
 	cover.set_graphics("medium")
 	drain(cover)
@@ -167,6 +180,19 @@ func _run() -> void:
 	cover._process(0.016)
 	check(cover.get_stats().state=="disabled","lost clearance disables")
 	check(not cover.build(world,"medium","",options),"invalid clearance build")
+	# Full pilot planning under cap pressure: check all tiers without spawning.
+	world.road_clearance = Fixture.Clearance.new()
+	world.add_strip(Rect2(-3,-60,6,120),0.0,false)
+	check(cover.build(world,"high","",{"test_fixture":true,"fixture_sampler":Callable(world,"sample_mask"),"tuning":{"cap":12000}}),"tight cap fixture")
+	cover.set_process(false)
+	for p in [Vector2(0,0),Vector2(7,7),Vector2(-19,3),Vector2(70,-50)]:
+		cover._plan(p,p+Vector2(48,0))
+		var plan: Dictionary = cover.get_stats()
+		var reserved := 0
+		for lod in range(3):
+			check(plan.planned_chunks_per_lod[lod] > 0 and plan.planned_candidate_limit_per_chunk[lod] > 0,"tight cap preserves all distance tiers")
+			reserved += int(plan.planned_chunks_per_lod[lod])*int(plan.planned_candidate_limit_per_chunk[lod])
+		check(reserved <= plan.cap,"tight cap exact reservation")
 	cover.shutdown()
 	check(cover.get_child_count()==0 and cover.get_stats().active_instances==0,"shutdown releases nodes")
 	cover.free()
