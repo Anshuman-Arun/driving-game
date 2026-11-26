@@ -65,7 +65,7 @@ function verify(read, exists = null) {
   check(files.builder.includes('terrain.name = "TerrainChunks"') && files.builder.includes('mesh.surface_set_material(0, materials["terrain"])'), "production terrain surface binding");
   check(candidate.biome_mask.tail.includes("filter_linear") && !candidate.biome_mask.tail.includes("source_color"), "biome texture treated as raw linear channels");
   check(candidate.roadside_mask.tail.includes("repeat_disable"), "roadside raster clamps at edge");
-  check(files.candidate.includes("normalize(mix(n_grass, n_dirt, ground_forest))"), "roadside normal follows albedo/roughness mix");
+  check(files.candidate.includes("safe_unit(mix(n_grass, n_dirt, ground_forest), n)"), "roadside normal follows albedo/roughness mix");
   check(!/\bVERTEX\s*[+\-*/]?=/.test(files.candidate), "shader does not displace terrain");
   check(files.band.includes("const MAX_SIDE := 256") && files.band.includes("const CELL_M := 1.0") && files.band.includes("var half := step * 1.5") && files.band.includes("range(1, 5)"), "reference raster model constants match implementation");
   check(files.clearance.includes("extent.dot(normal.abs()) >= 0.0") && files.clearance.includes("if not include_shoulders and tri.shoulder"), "reference checks target actual SAT clearance implementation");
@@ -250,6 +250,18 @@ function verify(read, exists = null) {
     }
   }
   check(optimizedCalls<referenceCalls,"modeled tile rejection reduces aggregate query count");
+  check(files.candidate.includes("float magnitude_squared = dot(v, v)") && files.candidate.includes("magnitude_squared > 0.00000001") && !files.candidate.includes("normalize("), "all terrain normal blends use safe normalization");
+  const safeUnit=(v,fallback)=>{
+    const m=v.reduce((sum,x)=>sum+x*x,0);
+    return m>1e-8?v.map(x=>x/Math.sqrt(m)):fallback.slice();
+  };
+  const fallback=[0,1,0];
+  check(safeUnit([0,0,0],fallback).every((v,i)=>v===fallback[i]),"zero normal falls back to geometric normal");
+  check(safeUnit([1e-6,-1e-6,0],fallback).every((v,i)=>v===fallback[i]),"near-cancelled normal falls back");
+  for(let i=0;i<1000;i++){
+    const v=[random()*2-1,random()*2-1,random()*2-1], n=safeUnit(v,fallback);
+    check(n.every(Number.isFinite) && Math.abs(n.reduce((sum,x)=>sum+x*x,0)-1)<1e-12,"normal model remains unit finite");
+  }
   const waterIndex = (x)=>Math.floor((x+1000)/4-0.000001);
   check(waterIndex(16)===253 && waterIndex(16.001)===254,"water cell inclusive contact vs separated bounds");
   return {checks,protectedSamples,positivePixels,waterCells:waterCells.length,sourceUniforms:Object.keys(old).length,candidateSamplers:18,assetPaths:exists?new Set(resourcePaths).size:0,modeledPilotChunks:{full:chunks.length,cedar,meadow},tileReference:{cases:48,comparedCells,referenceCalls,optimizedCalls},kind:"source checks and independent geometry model; not engine execution"};
