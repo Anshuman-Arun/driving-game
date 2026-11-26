@@ -64,6 +64,20 @@ func _run() -> void:
 	var project_shadow_value: Variant = ProjectSettings.get_setting(project_shadow_key)
 	var valid := Profile.validate_profile("Medium")
 	check(valid["ok"], "case insensitive preset")
+	# Pure policy checks exercise branches unreachable under --headless. They
+	# do not claim that a graphical renderer compiled or rendered the effects.
+	for renderer in ["forward_plus", "mobile", "gl_compatibility", "unknown"]:
+		for headless in [false, true]:
+			for preset in ["low", "medium", "high"]:
+				var requested: Dictionary = Profile.validate_profile(preset)["values"]
+				for ssr in [false, true]:
+					requested["ssr"] = ssr
+					var effects := Profile.resolve_effects(renderer, headless, requested)
+					var graphical_forward: bool = not headless and renderer == "forward_plus"
+					var graphical_glow: bool = not headless and renderer in ["forward_plus", "mobile"]
+					check(effects["ssao_enabled"] == (graphical_forward and preset == "high"), "AO policy " + renderer + " " + preset)
+					check(effects["ssr_enabled"] == (graphical_forward and ssr), "SSR policy " + renderer)
+					check(effects["glow_enabled"] == (graphical_glow and preset != "low"), "glow policy " + renderer + " " + preset)
 	check(not Profile.validate_profile("ultra")["ok"], "unknown preset")
 	check(not Profile.validate_profile("medium", {"split_1": 0.2, "split_2": 0.200001})["ok"], "reject vanishing shadow cascade")
 	check(Profile.validate_profile("medium", {"split_1": 0.2, "split_2": 0.21})["ok"], "accept minimum shadow cascade separation")
@@ -107,6 +121,9 @@ func _run() -> void:
 		check(status["active"] and status["preset"] == preset, "status preset")
 		var expected_ao: bool = preset == "high" and not status["headless"] and status["renderer"] == "forward_plus"
 		check(world_env.environment.ssao_enabled == expected_ao, "AO capability gate")
+		var effective := Profile.resolve_effects(status["renderer"], status["headless"], status["values"])
+		check(world_env.environment.glow_enabled == effective["glow_enabled"], "actual environment matches glow policy")
+		check(world_env.environment.ssr_enabled == effective["ssr_enabled"], "actual environment matches SSR policy")
 		check(mesh.get_surface_override_material(0) == null, "no implicit paint edits")
 		check(not status["drifted"], "fresh candidate has no drift")
 	adapter.restore()
