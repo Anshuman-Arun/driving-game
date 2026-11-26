@@ -228,7 +228,11 @@ void fragment() {
 	vec2 biome_uv = (xz + vec2(1000.0)) / 2000.0;
 	if (use_biome_mask && candidate_w > 0.0 && biome_uv.x >= 0.0 && biome_uv.y >= 0.0 && biome_uv.x < 1.0 && biome_uv.y < 1.0) {
 		biome = texture(biome_mask, biome_uv);
-		ecological_w = biome_strength * candidate_w;
+		// C deliberately zeros grass/woodland/rock in hard-excluded cells.
+		// Do not read those zeros as a different terrain biome along coarse road
+		// or reserved-area edges. Exact roadside data controls the soil band.
+		float ecological_coverage = max(biome.r, max(biome.g, biome.a));
+		ecological_w = biome_strength * candidate_w * smoothstep(0.01, 0.12, ecological_coverage);
 	}
 
 	// Distance from camera for LOD / anti-shimmering
