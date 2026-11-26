@@ -94,7 +94,7 @@ function verify(read, exists = null) {
   const overlapsRect=(a,b)=>a[0]<b[0]+b[2]&&a[0]+a[2]>b[0]&&a[1]<b[1]+b[3]&&a[1]+a[3]>b[1];
   const countPilot=(p)=>chunks.filter(c=>overlapsRect(c,p)).length;
   const cedar=countPilot([-810,-450,220,220]), meadow=countPilot([-65,60,220,220]);
-  check(chunks.length===256 && cedar===9 && meadow===9, "actual grid footprint selects nine of 256 chunks in each 220m pilot");
+  check(chunks.length===256 && cedar===9 && meadow===6, "actual grid footprint selects nine Cedar and six Meadow chunks of 256; exact upper border excluded");
   check(countPilot([-1000,-1000,128,128])===1 && countPilot([999,999,1,1])===1, "exact chunk border and last partial cell");
   check(countPilot([1000,1000,1,1])===0, "outside map selects no terrain");
   const weight=(p,r)=>{ const fade=Math.min(8,Math.min(r[2],r[3])/2);
