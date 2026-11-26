@@ -3,6 +3,7 @@ extends Node3D
 const Cover := preload("res://modules/ground_cover/ground_cover.gd")
 const Terrain := preload("res://modules/environment_terrain/terrain_preview.gd")
 const Render := preload("res://modules/environment_rendering/render_profile.gd")
+const Understory := preload("environment_understory.gd")
 const MASK := "res://content/scenery/environment_overhaul/masks"
 # Anchored to the QA's actual centered Cedar and Valley route starts.
 const REGIONS := {"cedar": Rect2(-1000, -380, 360, 450), "valley": Rect2(-110, -40, 420, 430)}
@@ -10,6 +11,7 @@ var bounds := Rect2()
 var cover: Cover
 var terrain: Terrain
 var rendering: Render
+var understory: Understory
 var _drive: Node
 var _preset := "medium"
 var _render_enabled := false
@@ -49,6 +51,16 @@ func start(drive: Node, region: String) -> bool:
 		status.terrain = terrain.apply_candidate(drive.world, {"pilot_bounds": bounds, "roadside_bounds": bounds, "mask_dir": MASK})
 		if not status.terrain:
 			push_warning("Environment pilot terrain fallback: " + str(terrain.get_stats()))
+	status.understory = false
+	if _switch("ASTER_ENV_UNDERSTORY"):
+		understory = Understory.new()
+		understory.name = "PilotUnderstory"
+		add_child(understory)
+		status.understory = understory.build(drive, bounds, MASK)
+		if not status.understory:
+			push_warning("Environment pilot understory skipped: " + str(understory.report))
+			understory.queue_free()
+			understory = null
 	_render_enabled = _switch("ASTER_ENV_RENDERING")
 	_running = true
 	set_process(true)
@@ -113,6 +125,10 @@ func stop() -> void:
 		cover.shutdown()
 		cover.queue_free()
 		cover = null
+	if is_instance_valid(understory):
+		understory.hide()
+		understory.queue_free()
+		understory = null
 	if terrain != null:
 		terrain.restore()
 		terrain = null

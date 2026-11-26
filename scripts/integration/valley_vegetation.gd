@@ -274,6 +274,27 @@ func set_pilot_coverage(bounds: Rect2, chunks: Dictionary) -> void:
 		batch.visibility_range_end_margin = 26.0
 		_visible_ground[key] = batch
 
+# Exact existing non-grass footprints for understory deduplication. Preserve
+# mature canopy shade space by using only a conservative trunk core.
+func pilot_obstacles(bounds: Rect2) -> Array[Rect2]:
+	var result: Array[Rect2] = []
+	for at in range(0, _placements.size(), STRIDE):
+		var kind := int(_placements[at + 5])
+		if kind == 2 or kind < 0 or kind >= _meshes.size():
+			continue
+		var pos := Vector2(_placements[at], _placements[at + 2])
+		if not bounds.grow(12.0).has_point(pos):
+			continue
+		if kind < 2:
+			var radius := maxf(0.5, _placements[at + 4] * 0.45)
+			result.append(Rect2(pos - Vector2.ONE * radius, Vector2.ONE * radius * 2.0))
+		else:
+			var origin := Vector3(pos.x, _placements[at + 1], pos.y)
+			var frame := _instance_frame(origin, _placements[at + 3], _placements[at + 4], _placements[at + 6])
+			var box := frame * _meshes[kind].get_aabb()
+			result.append(Rect2(Vector2(box.position.x, box.position.z), Vector2(box.size.x, box.size.z)))
+	return result
+
 func _rock_mesh(material: ShaderMaterial) -> ArrayMesh:
 	var asset := BOULDER.instantiate()
 	var part: MeshInstance3D = asset if asset is MeshInstance3D else asset.find_children("*", "MeshInstance3D", true, false)[0]
