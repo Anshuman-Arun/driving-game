@@ -76,3 +76,25 @@ static func allocate(tiers: Array, density: Array, cap: int, chunks: int, upload
 			limits[lod] = quota
 			previous = quota
 	return [selected, limits]
+
+# No overlapping hysteresis bands even with minimum 4 m radius spacing.
+static func lod_margin(near: float, mid: float, far: float) -> float:
+	return minf(5.0, minf(mid - near, far - mid) * 0.4)
+
+static func choose_lod(distance: float, near: float, mid: float, previous: int, margin: float) -> int:
+	var near_cut: float = near
+	var mid_cut: float = mid
+	if previous == 0:
+		near_cut += margin
+		mid_cut += margin
+	if previous == 1:
+		near_cut -= margin
+		mid_cut += margin
+	if previous == 2:
+		near_cut -= margin
+		mid_cut -= margin
+	if distance < near_cut:
+		return 0
+	if distance < mid_cut:
+		return 1
+	return 2
