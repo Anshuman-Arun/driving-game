@@ -62,10 +62,12 @@ func _run() -> void:
 			var arrays: Array = geometry.arrays
 			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 			var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+			var anchors: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV2]
 			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
 			var roots := 0
 			for i in range(vertices.size()):
 				check(vertices[i].is_finite() and uv[i].y >= 0 and uv[i].y <= 1,"finite mesh and flex")
+				check(anchors[i].is_finite() and int(uv[i].x) >= 0 and int(uv[i].x) < int([8,5,3][lod]),"stable blade root and ID")
 				if uv[i].y == 0:
 					roots += 1
 					check(is_zero_approx(vertices[i].y),"root anchored")
@@ -80,11 +82,14 @@ func _run() -> void:
 			for vertex: Vector3 in vertices:
 				for bend: Vector3 in [Vector3(0.239,0,0),Vector3(-0.239,0,0),Vector3(0,0,0.239),Vector3(0,0,-0.239)]:
 					check(world_bounds.has_point(frame*vertex+bend),"rotated swept bounds contain displaced vertex")
+			for i in range(vertices.size()):
+				var anchor := Vector3(anchors[i].x,0,anchors[i].y)
+				check(world_bounds.has_point(frame*vertices[i].lerp(anchor,0.5)),"blade shrink stays in swept bounds")
 	var packed := PackedFloat32Array()
 	packed.resize(32)
 	var basis := Basis(Vector3(1,2,3),Vector3(4,5,6),Vector3(7,8,9))
-	Grass.write_instance(packed,16,Transform3D(basis,Vector3(-4,11,4)),0.5)
-	check(packed.slice(16,32)==PackedFloat32Array([1,4,7,-4,2,5,8,11,3,6,9,4,0.5,0.75,0.25,1]),"bulk buffer row-major layout")
+	Grass.write_instance(packed,16,Transform3D(basis,Vector3(-4,11,4)),0.5,127)
+	check(packed.slice(16,32)==PackedFloat32Array([1,4,7,-4,2,5,8,11,3,6,9,4,0.5,0.75,0.25,127.5/4096.0]),"bulk buffer row-major layout")
 	check(packed.slice(0,16)==PackedFloat32Array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),"bulk buffer offset isolation")
 	var mask := Mask.new()
 	check(not mask.load_package("user://not-a-mask"),"missing mask rejected")
