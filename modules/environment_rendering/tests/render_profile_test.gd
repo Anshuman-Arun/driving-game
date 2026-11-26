@@ -66,6 +66,11 @@ func _run() -> void:
 	check(valid["ok"], "case insensitive preset")
 	check(not Profile.validate_profile("ultra")["ok"], "unknown preset")
 	check(not Profile.validate_profile("medium", {42: true})["ok"], "nonstring option key")
+	check(not Profile.validate_profile("medium", {"sun_color": Color(1.1, 0.8, 0.7)})["ok"], "out of range daylight color")
+	check(not Profile.validate_profile("medium", {"ambient_color": Color(0.1, NAN, 0.5)})["ok"], "non-finite fill color")
+	check(not Profile.validate_profile("medium", {"ambient_color": Color(0.1, 0.2, 0.3, 0.5)})["ok"], "transparent fill color")
+	check(not Profile.validate_profile("medium", {"sun_color": "orange"})["ok"], "wrong color type")
+	check(Profile.validate_profile("medium", {"sun_color": Color.WHITE})["ok"], "valid custom daylight color")
 	# Bounds must not be rounded through Vector2/float32. In particular 0.15,
 	# 0.12 and 0.001 previously risked rejecting their exact advertised values.
 	for key in Profile.RANGES:
@@ -110,7 +115,14 @@ func _run() -> void:
 	# World ownership protects separate adapter instances, including different
 	# roots in the same World3D. An independent viewport is not blocked.
 	var contender := Profile.new()
-	check(adapter.apply_candidate(fixture, "medium"), "ownership baseline")
+	var custom_sun := Color(0.95, 0.89, 0.83)
+	var custom_fill := Color(0.62, 0.75, 0.88)
+	check(adapter.apply_candidate(fixture, "medium", {"sun_color": custom_sun, "ambient_color": custom_fill}), "ownership baseline")
+	check(sun.light_color.is_equal_approx(custom_sun) and world_env.environment.ambient_light_color.is_equal_approx(custom_fill), "custom daylight applied")
+	world_env.environment.tonemap_exposure = 1.1
+	check(adapter.get_status()["drifted"], "in-place candidate environment drift reported")
+	world_env.environment.tonemap_exposure = 1.0
+	check(not adapter.get_status()["drifted"], "reverted in-place drift")
 	var owned := world_env.environment
 	check(not contender.apply_candidate(fixture, "high"), "second adapter rejected")
 	check(world_env.environment == owned, "second adapter cannot alter first")
@@ -202,7 +214,7 @@ func _run() -> void:
 	replacement.material = paint
 	mesh.mesh = replacement
 	adapter.restore()
-	check(mesh.get_surface_override_material(0) == null or mesh.get_surface_override_material(0) == explicit, "no stale preview on new mesh")
+	check(mesh.get_surface_override_material(0) == null, "no stale old override on replacement mesh")
 	# Engine may clear overrides on mesh replacement; force a clean fixture.
 	mesh.mesh = box
 	mesh.set_surface_override_material(0, null)
@@ -223,9 +235,24 @@ func _run() -> void:
 	var temporary := Profile.new()
 	check(temporary.apply_candidate(fixture, "medium"), "temporary adapter")
 	temporary = null
-	check(world_env.environment == original, "dropping adapter restores environment")
-	check(contender.apply_candidate(fixture, "medium"), "adapter disposal released ownership")
+	check(world_env.environment != original, "active lease survives dropped handle")
+	check(not Profile.restore_for_root(mesh), "unrelated root cannot release lease")
+	check(not contender.apply_candidate(fixture, "medium"), "lost handle still owns world")
+	check(Profile.restore_for_root(fixture), "recover lease by exact owning root")
+	check(world_env.environment == original, "recovery restores environment")
+	check(not Profile.restore_for_root(fixture), "repeat recovery no-op")
+	check(contender.apply_candidate(fixture, "medium"), "recovery releases ownership")
 	contender.restore()
+	# Camera-specific environments are never edited; the status warns about bypass.
+	var camera := Camera3D.new()
+	camera.environment = Environment.new()
+	fixture.add_child(camera)
+	camera.make_current()
+	check(adapter.apply_candidate(fixture, "medium"), "camera override preview")
+	check("Current camera has an environment override; world preview may not be visible" in adapter.get_status()["unavailable"], "camera override reported")
+	check(camera.environment != world_env.environment, "camera override untouched")
+	adapter.restore()
+	camera.free()
 	# Paint shader path uses the actual project shader, not an invented implementation.
 	var shader_paint := ShaderMaterial.new()
 	shader_paint.shader = preload("res://shaders/car_paint.gdshader")
@@ -248,9 +275,28 @@ func _run() -> void:
 	check(root.scaling_3d_scale == original_scale and root.msaa_3d == original_msaa and root.use_taa == original_taa, "viewport unchanged")
 	check(ProjectSettings.get_setting(project_shadow_key) == project_shadow_value, "project settings unchanged")
 	check(adapter.apply_candidate(fixture, "medium", options), "lifecycle preview")
+	root.remove_child(fixture)
+	check(not adapter.get_status()["active"] and world_env.environment == original, "root exit restores automatically")
+	root.add_child(fixture)
+	var orphan := Profile.new()
+	check(orphan.apply_candidate(fixture, "medium"), "orphan lease before root destruction")
+	orphan = null
 	fixture.free()
 	adapter.restore()
 	check(not adapter.get_status()["active"], "restore after root destruction")
+	# New fixture in the same World3D must be able to claim it after the orphan exited.
+	var fresh := Node3D.new()
+	root.add_child(fresh)
+	var fresh_env := WorldEnvironment.new()
+	fresh_env.name = "WorldEnvironment"
+	fresh_env.environment = Environment.new()
+	fresh.add_child(fresh_env)
+	var fresh_sun := DirectionalLight3D.new()
+	fresh_sun.name = "Sun"
+	fresh.add_child(fresh_sun)
+	check(contender.apply_candidate(fresh, "medium"), "orphan target exit released world")
+	contender.restore()
+	fresh.free()
 	observer.free()
 	print("RENDER_PROFILE_RESULT passed=", checks - failures, " total=", checks, " failures=", failures)
 	quit(1 if failures else 0)
