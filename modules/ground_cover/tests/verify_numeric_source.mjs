@@ -59,6 +59,7 @@ function verify(source,profiles){
     }
   }
   let permutations=0;
+  assert(math.rank_index(0,0,0,-2147483648)!==math.rank_index(0,0,0,0),"seed sign bit contributes");
   for(const seed of [-2147483648,-1,0,1,20261125,2147483647])for(const x of [-63,-17,0,62])for(const z of [-63,0,62]){
     const seen=new Set(), bins=Array(16).fill(0);
     let mean=0;
@@ -74,7 +75,13 @@ function verify(source,profiles){
     assert(Math.abs(mean/4096-.5)<.035,"mean random distribution");
     permutations++;
   }
-  return {cases,permutations,checks,summary:Object.fromEntries(Object.entries(profiles).map(([name,p])=>[name,math.allocate(name==="low"?[4,20,56]:name==="medium"?[4,48,156]:[12,68,196],p.density.map(d=>Math.ceil(d*4096)),p.cap,p.chunks,p.upload_instances)]))};
+  return {cases,permutations,checks,known_vectors:{
+    mix: [0,1,-1,20261125].map(n=>math.mix31(n)),
+    rank: [0,1,31,4095].map(n=>math.rank_index(-17,62,n,20261125)),
+    word: [11,17,23,53].map(s=>math.word(-17,62,123,20261125,s)),
+    cap1: math.allocate([4,20,56],[1000,400,100],1,120,1800),
+    cap1000: math.allocate([4,20,56],[1000,400,100],1000,120,1800)
+  }};
 }
 const source=fs.readFileSync(new URL("../placement_math.gd",import.meta.url),"utf8");
 const runtime=fs.readFileSync(new URL("../ground_cover.gd",import.meta.url),"utf8");
