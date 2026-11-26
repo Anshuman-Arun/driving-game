@@ -39,6 +39,22 @@ jobs:
           persist-credentials: false
       - name: Standard library fixture and report tests
         run: python3 -m unittest discover -s tests/environment_overhaul -p 'test_*.py' -v
+  windows-contract:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          lfs: false
+        env:
+          GIT_LFS_SKIP_SMUDGE: '1'
+      - name: Windows PowerShell 5.1 launcher contract (no Godot or GPU)
+        shell: powershell
+        run: .\tests\environment_overhaul\capture.ps1 -SelfTest
+      - name: PowerShell 7 launcher contract (no Godot or GPU)
+        shell: pwsh
+        run: .\tests\environment_overhaul\capture.ps1 -SelfTest
   data:
     runs-on: ubuntu-latest
     timeout-minutes: 15

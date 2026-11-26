@@ -6,10 +6,12 @@ from pathlib import Path
 import tempfile
 import unittest
 from qa import read_json, verify_mask, verify_assets, verify_understory, sample, digest, ERROR, payload
-from report import percentile, summarize, compare, MATCH, load, png_matches, main as report_main
+from report import percentile, summarize, compare, MATCH, load, png_matches, file_hash, main as report_main
 from qa import run_command
 import sys
 import struct
+import csv
+import zlib
 from unittest.mock import patch
 
 class QA(unittest.TestCase):
@@ -66,13 +68,15 @@ class QA(unittest.TestCase):
                  renderer="forward_plus",gpu="GPU",cpu="CPU",driver=["driver"],car="mclaren_senna",
                  vsync="disabled",max_fps=0,capture_conditions_changed=False,
                  _screenshots_present=True,interaction=False,route_departed=False,warmup_s=15,
-                 camera_start_position=[0,3,8],camera_start_forward=[0,0,-1],route_hash="f"*64)
+                 camera_start_position=[0,3,8],camera_start_forward=[0,0,-1],route_hash="f"*64,
+                 site="cedar",scene="res://scenes/bootstrap/game.tscn",_artifact_hashes_valid=True,
+                 speed_band="normal" if scenario in ("route","manual") else "stationary",route_max_cross_track_m=1.0)
         return (dict(m,mode="baseline",features="",legacy_grass="enabled"),
                 dict(m,mode="candidate",features="a",legacy_grass="disabled"))
 
     def rows(self, moving=False, interval=16, duration=64):
         return [dict(frame_ms=interval,elapsed_s=(i+1)*interval/1000,speed_mps=22 if moving else 0,
-                     x=i*interval/1000*22 if moving else 0,y=0,z=0,fov=58,gear="2" if moving else "N",
+                     x=-800+i*interval/1000*22 if moving else 0,y=0,z=0,fov=58,gear="2" if moving else "N",
                      grass_instances=20,draws=100,triangles=200,gpu_ms=8,cpu_ms=4,vram_mib=1000)
                 for i in range(round(duration*1000/interval))]
 
@@ -183,17 +187,56 @@ class QA(unittest.TestCase):
             row["x"]+=30
         self.assertFalse(compare((a,summary),(b,summarize(rows)))["comparable"])
 
+    @staticmethod
+    def png_fixture(width=2,height=3):
+        def chunk(kind,data):
+            return struct.pack(">I",len(data))+kind+data+struct.pack(">I",zlib.crc32(kind+data))
+        return (b"\x89PNG\r\n\x1a\n"+chunk(b"IHDR",struct.pack(">IIBBBBB",width,height,8,2,0,0,0))+
+                chunk(b"IDAT",zlib.compress((b"\x00"+b"\xff\x00\x00"*width)*height))+chunk(b"IEND",b""))
+
     def test_png_dimension_and_truncation(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/"image.png"
-            # Header/trailer fixture only; not a claim of real rendered pixels.
-            head=b"\x89PNG\r\n\x1a\n"+struct.pack(">I",13)+b"IHDR"+struct.pack(">II",1920,1080)+b"\x00"*10
-            tail=b"\x00\x00\x00\x00IEND\xaeB\x60\x82"
-            path.write_bytes(head+tail)
-            self.assertTrue(png_matches(path,1920,1080))
-            self.assertFalse(png_matches(path,1280,720))
-            path.write_bytes(head)
-            self.assertFalse(png_matches(path,1920,1080))
+            # Deliberately generated test fixture, never capture evidence.
+            data=self.png_fixture()
+            path.write_bytes(data)
+            self.assertTrue(png_matches(path,2,3))
+            self.assertFalse(png_matches(path,2,4))
+            path.write_bytes(data[:-1])
+            self.assertFalse(png_matches(path,2,3))
+            path.write_bytes(data[:33]+data[-12:])
+            self.assertFalse(png_matches(path,2,3))
+            damaged=bytearray(data)
+            damaged[42]^=1
+            path.write_bytes(damaged)
+            self.assertFalse(png_matches(path,2,3))
+
+    def test_artifact_hash_and_speed_band(self):
+        a,b=self.matching_meta("route")
+        rows=self.rows(moving=True)
+        summary=summarize(rows)
+        self.assertTrue(compare((a,summary),(b,summary))["comparable"])
+        for row in rows:
+            row["speed_mps"]=6
+        slow=summarize(rows)
+        self.assertFalse(compare((a,slow),(b,slow))["comparable"])
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)
+            for name in ("start.png","end.png"):
+                (path/name).write_bytes(self.png_fixture())
+            with (path/"frames.csv").open("w",newline="") as f:
+                writer=csv.DictWriter(f,fieldnames=list(rows[0]))
+                writer.writeheader()
+                writer.writerows(rows)
+            b.update(width=2,height=3,sha256_by_file={name:file_hash(path/name) for name in ("start.png","end.png","frames.csv")})
+            (path/"meta.json").write_text(json.dumps(b))
+            metadata,_=load(path)
+            self.assertTrue(metadata["_artifact_hashes_valid"])
+            self.assertTrue(metadata["_screenshots_present"])
+            with (path/"frames.csv").open("a") as f:
+                f.write("\n")
+            metadata,_=load(path)
+            self.assertFalse(metadata["_artifact_hashes_valid"])
 
     def test_timeout_and_early_log_error(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -35,6 +35,7 @@ var interaction := false
 var capture_conditions_changed := false
 var route_max_cross_track := 0.0
 var route_peak_speed := 0.0
+var applied_features := {}
 
 func _initialize() -> void:
 	run.call_deferred()
@@ -164,12 +165,40 @@ func apply_preview(path: String, target: Node, render: bool, quality: String, op
 	if script == null:
 		return false
 	var obj: Object = script.new()
+	if not is_instance_valid(obj) or not obj.has_method("apply_candidate") or not obj.has_method("restore"):
+		return false
 	if obj is Node:
 		root.add_child(obj)
 	previews.append(obj)
+	var ok: bool
 	if render:
-		return bool(obj.call("apply_candidate", target, quality, options))
-	return bool(obj.call("apply_candidate", target, options))
+		ok=bool(obj.call("apply_candidate",target,quality,options))
+	else:
+		ok=bool(obj.call("apply_candidate",target,options))
+	if ok:
+		applied_features["e" if render else "d"]=obj
+	return ok
+
+func candidate_status_ok() -> bool:
+	if is_instance_valid(cover):
+		var stats: Dictionary=cover.call("get_stats")
+		if str(stats.get("state",""))!="ready" or int(stats.get("active_instances",-1))<0:
+			return false
+	if applied_features.has("e"):
+		var adapter: Object=applied_features["e"]
+		if not is_instance_valid(adapter) or not adapter.has_method("get_status"):
+			return false
+		var status: Dictionary=adapter.call("get_status")
+		if not bool(status.get("environment_attached",false)) or bool(status.get("drifted",true)):
+			return false
+	if applied_features.has("d"):
+		var adapter: Object=applied_features["d"]
+		if not is_instance_valid(adapter) or not adapter.has_method("get_stats"):
+			return false
+		var status: Dictionary=adapter.call("get_stats")
+		if str(status.get("state",""))!="active":
+			return false
+	return true
 
 func audio_state() -> String:
 	if not is_instance_valid(drive) or not is_instance_valid(drive.vehicle_body):
@@ -553,6 +582,9 @@ func run() -> void:
 		if is_instance_valid(cover):
 			cover.call("update_focus",drive.camera.global_position,drive.vehicle_body.linear_velocity)
 	release_controls()
+	if not candidate_status_ok():
+		await finish(1,"Candidate inactive after warmup")
+		return
 	var start_pose: Transform3D=drive.vehicle_body.global_transform
 	if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale) or RenderingServer.get_current_rendering_method()!="forward_plus":
 		await finish(1,"1920x1080 output and requested scale required")
@@ -579,7 +611,7 @@ func run() -> void:
 		"audio":audio_state(),
 		"warmup_s":warmup,"sample_s":duration,"controls":str(scenario)+":"+str(target_speed),"lighting":"scene default; candidate flags recorded",
 		"vsync":"disabled","max_fps":Engine.max_fps,"features":features,"feature_options":feature_options,"legacy_vegetation_visible":drive.vegetation!=null and drive.vegetation.visible,
-		"scene":"res://scenes/bootstrap/game.tscn","route_length_m":route.get_baked_length(),"route_hash":route_hash,"route_lanes":Array(route_lane_ids),"interaction":interaction,"legacy_grass":grass_state(),"complete":false}
+		"scene":"res://scenes/bootstrap/game.tscn","speed_band":"stationary" if scenario in ["stationary","offroad"] else ("normal" if target_speed>=17.8816 and target_speed<=26.8224 else ("fast" if target_speed>=44.704 and target_speed<=60.8 else "exploratory")),"route_length_m":route.get_baked_length(),"route_hash":route_hash,"route_lanes":Array(route_lane_ids),"interaction":interaction,"legacy_grass":grass_state(),"complete":false}
 	if scenario in ["manual","route"]:
 		drive.vehicle_body.freeze=false
 	if scenario=="route":
@@ -595,12 +627,15 @@ func run() -> void:
 	while float(prev-start)/1e6<duration:
 		await process_frame
 		var now:=Time.get_ticks_usec()
+		if not is_instance_valid(drive) or not is_instance_valid(drive.vehicle_body) or not is_instance_valid(drive.camera):
+			await finish(1,"Capture scene unloaded")
+			return
 		if is_instance_valid(cover):
 			cover.call("update_focus",drive.camera.global_position,drive.vehicle_body.linear_velocity)
 			cover.call("set_vehicle_interaction",drive.vehicle_body.global_position,drive.vehicle_body.linear_velocity,interaction)
 		if now>=next_count:
 			count_cache=grass_count()
-			if grass_state()!=legacy_grass or str(drive.get_meta("environment_qa_traffic_state","unverified"))!=initial_traffic or audio_state()!=initial_audio:
+			if grass_state()!=legacy_grass or str(drive.get_meta("environment_qa_traffic_state","unverified"))!=initial_traffic or audio_state()!=initial_audio or not candidate_status_ok():
 				capture_conditions_changed=true
 			next_count=now+1000000
 		if root.size!=Vector2i(1920,1080) or not is_equal_approx(root.scaling_3d_scale,expected_scale) or drive.active_vehicle_id!="mclaren_senna" or paused or drive.vehicle_body!=expected_car or drive.graphics_preset!=quality or Engine.max_fps!=0 or DisplayServer.window_get_vsync_mode()!=DisplayServer.VSYNC_DISABLED:
@@ -617,7 +652,7 @@ func run() -> void:
 		prev=now
 	if physics_frame.is_connected(route_controls):
 		physics_frame.disconnect(route_controls)
-	if grass_state()!=legacy_grass or str(drive.get_meta("environment_qa_traffic_state","unverified"))!=initial_traffic or audio_state()!=initial_audio:
+	if grass_state()!=legacy_grass or str(drive.get_meta("environment_qa_traffic_state","unverified"))!=initial_traffic or audio_state()!=initial_audio or not candidate_status_ok():
 		capture_conditions_changed=true
 	release_controls()
 	await RenderingServer.frame_post_draw
@@ -638,6 +673,12 @@ func run() -> void:
 	meta["route_max_cross_track_m"]=route_max_cross_track
 	meta["route_peak_speed_mps"]=route_peak_speed
 	meta["grass_stats"]=cover.call("get_stats") if is_instance_valid(cover) else {}
+	meta["sha256_by_file"]={}
+	for name: String in ["start.png","end.png","frames.csv"]:
+		var hash_value:=FileAccess.get_sha256(out.path_join(name))
+		if hash_value.length()!=64:
+			meta["complete"]=false
+		meta["sha256_by_file"][name]=hash_value
 	file=FileAccess.open(out.path_join("meta.json"),FileAccess.WRITE)
 	if file==null:
 		await finish(1,"Metadata output failed")

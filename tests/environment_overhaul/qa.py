@@ -98,6 +98,9 @@ def verify_mask(directory, root=ROOT, strict_sources=False):
     if strict_sources:
         for canonical in ("data/world/road_graph_v1.json","data/world/world_metadata_v1.json","data/world/terrain_height_r16le.bin","data/world/roadworks.json","data/world/terrain_roadworks_r16le.bin"):
             require(canonical in {k.removeprefix("res://") for k in sources}, f"unrecorded canonical source: {canonical}")
+    if strict_sources and (root/MASK.parent/"bake_biomes.py").is_file():
+        for key in ("row_order","generator_sha256","statistics_sha256","numeric_versions","tuning"):
+            require(key in m,f"missing producer provenance: {key}")
     if "statistics_sha256" in m:
         require(digest(payload(directory/"statistics.json"))==m["statistics_sha256"],"statistics SHA-256 mismatch")
     if "generator_sha256" in m and strict_sources:
@@ -287,23 +290,34 @@ def main():
             results[key] = "N/A: absent optional data" if key == "understory" or args.mode == "baseline" else "FAIL: missing"
     if args.rebake_command or (args.mode=="integrated" and generator.is_file() and (ROOT/MASK/"manifest.json").is_file()):
         def rebake():
-            before = verify_mask(ROOT / MASK, strict_sources=args.mode=="integrated")
-            before_manifest = payload(ROOT / MASK / "manifest.json")
-            before_understory = payload(ROOT / MASK / "understory.json") if (ROOT / MASK / "understory.json").exists() else None
+            strict=args.mode=="integrated"
+            directory=ROOT/MASK
+            verify_mask(directory,strict_sources=strict)
+            files=("biome_rgba8.bin","manifest.json","understory.json","statistics.json")
+            before={name:payload(directory/name) for name in files if (directory/name).exists()}
             if args.rebake_command:
                 argv=json.loads(args.rebake_command)
+                require(isinstance(argv,list) and argv and all(isinstance(x,str) for x in argv),"rebake argv must be nonempty string array")
+                # Explicit legacy overrides may regenerate in place; callers must
+                # use a disposable checkout. The automatic path never does so.
+                for i in range(2):
+                    require(run_command(argv,out/f"rebake-{i}.log",600)==0,"rebake failed")
+                    verify_mask(directory,strict_sources=strict)
+                    require({name:payload(directory/name) for name in files if (directory/name).exists()}==before,"package not byte deterministic")
             else:
-                meta=read_json(ROOT/MASK/"manifest.json")
+                meta=read_json(directory/"manifest.json")
                 tuning=out/"rebake-tuning.json"
                 tuning.write_text(json.dumps(meta["tuning"]),encoding="utf-8")
-                argv=[sys.executable,str(generator),"--project",str(ROOT),"--output",str(ROOT/MASK),"--seed",str(meta["seed"]),"--tuning",str(tuning)]
-            require(isinstance(argv,list) and argv and all(isinstance(x,str) for x in argv),"rebake argv must be nonempty string array")
-            for i in range(2):
-                require(run_command(argv, out / f"rebake-{i}.log", 600) == 0, "rebake failed")
-                require(verify_mask(ROOT / MASK, strict_sources=args.mode=="integrated") == before, "mask is not byte deterministic")
-                require(payload(ROOT / MASK / "manifest.json")==before_manifest,"manifest nondeterminism")
-                if before_understory is not None:
-                    require(payload(ROOT / MASK / "understory.json")==before_understory,"understory nondeterminism")
+                # Generator supports external directories: do not overwrite the
+                # accepted package while attempting to validate reproducibility.
+                with tempfile.TemporaryDirectory(prefix="aster-mask-rebake-") as scratch:
+                    for i in range(2):
+                        destination=Path(scratch)/str(i)
+                        argv=[sys.executable,str(generator),"--project",str(ROOT),"--output",str(destination),"--seed",str(meta["seed"]),"--tuning",str(tuning)]
+                        require(run_command(argv,out/f"rebake-{i}.log",600)==0,"rebake failed")
+                        verify_mask(destination,strict_sources=strict)
+                        require({name:payload(destination/name) for name in files if (destination/name).exists()}==before,"package not byte deterministic")
+                require({name:payload(directory/name) for name in files if (directory/name).exists()}==before,"source package changed during rebake")
         check("rebake", rebake)
     else:
         results["rebake"] = "FAIL: integrated requires reproducibility command" if args.mode=="integrated" else "N/A: generator not available on baseline"
@@ -348,7 +362,7 @@ def main():
                         agent_commands.append(cmd)
         check("agent-discovery",discover_commands)
         if args.mode=="integrated":
-            check("agent-test-presence",lambda: require(all((ROOT/path).is_file() for path,_ in AGENT_TESTS),"missing owned agent tests"))
+            check("agent-test-presence",lambda: require(all((ROOT/path).is_file() for path,_ in AGENT_TESTS),"missing owned agent tests: "+", ".join(path for path,_ in AGENT_TESTS if not (ROOT/path).is_file())))
         if not agent_commands:
             results["agent_commands"] = "N/A: no explicit agent commands supplied"
         for i, argv in enumerate(agent_commands):
