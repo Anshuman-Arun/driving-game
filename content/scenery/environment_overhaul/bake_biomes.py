@@ -35,6 +35,18 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def strict_json(data):
+    def pairs(items):
+        result = {}
+        for key,value in items:
+            require(key not in result,"Duplicate JSON key: "+key)
+            result[key] = value
+        return result
+    def constant(value):
+        raise ValueError("Invalid JSON constant: "+value)
+    return json.loads(data,object_pairs_hook=pairs,parse_constant=constant)
+
+
 def json_bytes(value):
     return (json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode()
 
@@ -82,10 +94,12 @@ class Sources:
         data = p.read_bytes()
         require(data and not data.startswith(b"version https://git-lfs.github.com/spec/v1"),
                 "Empty or LFS pointer: "+str(rel))
-        self.hashes[str(rel)] = sha(data)
+        digest = sha(data)
+        require(self.hashes.get(str(rel),digest)==digest,"Source changed during bake: "+str(rel))
+        self.hashes[str(rel)] = digest
         return data
     def json(self, rel):
-        return json.loads(self.read(rel))
+        return strict_json(self.read(rel))
 
 
 def coords():
@@ -190,7 +204,7 @@ def water_mask(lake, works):
     result = np.zeros((N,N),bool)
     for cells in [lake["cells"]]+[w["cells"] for w in works["waters"]]:
         for i,j in cells:
-            require(isinstance(i,int) and isinstance(j,int) and 0<=i<500 and 0<=j<500,"Bad water cell")
+            require(type(i) is int and type(j) is int and 0<=i<500 and 0<=j<500,"Bad water cell")
             result[2*j:2*j+2,2*i:2*i+2] = True
     return result
 
@@ -270,11 +284,12 @@ def scenery_masks(src,x,z):
 
 
 def bake(root, seed, tuning=None):
+    require(tuning is None or isinstance(tuning,dict),"Tuning must be a JSON object")
     t = dict(DEFAULTS,**(tuning or {}))
     require(set(t)==set(DEFAULTS),"Unknown tuning key")
     for k,v in t.items():
         checked_number(v,k)
-    require(isinstance(seed,int) and not isinstance(seed,bool) and 0<=seed<2**64,"Invalid seed")
+    require(isinstance(seed,int) and not isinstance(seed,bool) and 0<=seed<2**53,"Invalid seed")
     require(4<=t["spacing_m"]<=1960 and t["density"]<=1 and 0<=t["max_placements"]<=12000 and int(t["max_placements"])==t["max_placements"],"Invalid placement budget")
     require(t["rock_slope_full"]>t["rock_slope_start"] and t["alpine_full_m"]>t["alpine_start_m"]
             and t["canopy_grass_penalty"]<=1, "Invalid ecology thresholds")
@@ -406,16 +421,22 @@ def bake(root, seed, tuning=None):
     probes = [(-1000,-1000), (1000,1000), (-1000,1000), (1000,-1000),
               (-999,-999),(-997,-997),(-998,-998),(0,0),(-872,-872),
               (-871,-873),(-700,-320),(45,170),(700,450)]
-    probes.extend((float(a),float(b)) for a,b in rng.uniform(-999,999,(64,2)))
+    # Independent stream: geometry probes do not change if placement density changes.
+    probe_rng = np.random.default_rng(np.random.SeedSequence([seed,0xB10]))
+    probes.extend((float(a),float(b)) for a,b in probe_rng.uniform(-999,999,(64,2)))
     manifest["surface_probes"] = [dict(x=a,z=b,height_m=float(surface(h,a,b))) for a,b in probes]
     cells = [(0,0),(999,0),(0,999),(999,999),(499,499),(500,500),(150,340),(522,585),(850,725)]
     manifest["mask_probes"] = [dict(x=-999+2*i,z=-999+2*j,rgba=mask[j,i].tolist()) for i,j in cells]
+    # Detect input replacement between the first read and completed generation.
+    for rel in tuple(src.hashes):
+        src.read(rel)
     return raw,manifest,understory,stats
 
 
 def validate_mask(raw,manifest):
     require(all(manifest.get(k)==v for k,v in dict(schema_version=1,width=N,height=N,cell_size_m=CELL,
-            origin_x=ORIGIN,origin_z=ORIGIN,byte_order="RGBA",channels=CHANNELS).items()),"Invalid mask manifest")
+            origin_x=ORIGIN,origin_z=ORIGIN,byte_order="RGBA",channels=CHANNELS,
+            row_order="z_ascending_x_ascending").items()),"Invalid mask manifest")
     require(len(raw)==N*N*4 and sha(raw)==manifest.get("sha256"),"Corrupt or truncated mask")
     return np.frombuffer(raw,dtype=np.uint8).reshape(N,N,4)
 
@@ -457,7 +478,7 @@ def main():
     out = args.output.resolve()
     owned = root/"content/scenery/environment_overhaul"
     require(not out.is_relative_to(root) or out.is_relative_to(owned),"Refusing output outside owned project directory")
-    tuning = json.loads(args.tuning.read_text()) if args.tuning else None
+    tuning = strict_json(args.tuning.read_bytes()) if args.tuning else None
     result = bake(root,args.seed,tuning)
     publish(out,*result)
     print(json.dumps(result[3],indent=2))
