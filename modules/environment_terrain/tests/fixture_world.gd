@@ -3,16 +3,21 @@ extends Node3D
 const Clearance := preload("res://modules/world_runtime/src/road_clearance.gd")
 const MATERIAL := preload("res://assets/forza_env/materials/terrain_triplanar_pbr.tres")
 var generated_root: Node3D
-var road_clearance: RefCounted
+var road_clearance: Clearance
+var metadata_override: Variant = null
 var roadworks := {"waters": [{"height": 30.0, "cells": [[253, 253]]}]}
 var ground: MeshInstance3D
 var road: MeshInstance3D
 var collision: CollisionShape3D
 
-func get_world_metadata() -> Dictionary:
+func get_world_metadata() -> Variant:
+	if metadata_override != null:
+		return metadata_override
 	return {"bounds": {"min_x": -1000, "max_x": 1000, "min_z": -1000, "max_z": 1000}}
 
 func build_fixture() -> void:
+	if is_instance_valid(generated_root):
+		generated_root.free()
 	generated_root = Node3D.new()
 	add_child(generated_root)
 	var terrain := Node3D.new()
