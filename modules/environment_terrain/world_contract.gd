@@ -39,3 +39,29 @@ static func clearance_for(world: Node) -> ExactClearance:
 	if not count is int or count <= 0:
 		return null
 	return clearance as ExactClearance
+
+## Masks and water cells are tied to the repository's actual graded world.
+## WorldRuntime may also load external or ungraded maps using the same bounds.
+static func uses_canonical_graded_sources(world: Node) -> bool:
+	if generated_root(world) == null or not has_property(world, "report") or not has_property(world, "roadworks"):
+		return false
+	var report: Variant = world.get("report")
+	if not report is Dictionary or not report.get("source_directory") is String:
+		return false
+	var directory: String = ProjectSettings.globalize_path(report.source_directory).simplify_path()
+	var canonical: String = ProjectSettings.globalize_path("res://data/world").simplify_path()
+	if directory.trim_suffix("/") != canonical.trim_suffix("/"):
+		return false
+	if not FileAccess.file_exists("res://data/world/roadworks.json"):
+		return false
+	var parser := JSON.new()
+	if parser.parse(FileAccess.get_file_as_string("res://data/world/roadworks.json")) != OK:
+		return false
+	var works: Variant = world.get("roadworks")
+	return works is Dictionary and not works.is_empty() and works == parser.data
+
+static func has_complete_clearance(world: Node) -> bool:
+	if clearance_for(world) == null or not has_property(world, "report"):
+		return false
+	var report: Variant = world.get("report")
+	return report is Dictionary and report.get("full_world") == true
