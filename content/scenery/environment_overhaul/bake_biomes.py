@@ -258,10 +258,10 @@ def scenery_masks(src,x,z):
         require(np.all((kinds==np.floor(kinds)) & (kinds>=0) & (kinds<=5)),"Invalid vegetation kind")
         require(np.all(np.abs(rows[:,[0,2]])<=1000) and np.all((rows[:,6]>=0)&(rows[:,6]<=1)),
                 "Invalid vegetation bounds or seed")
-        for row in rows[(kinds!=2) if filename=="vegetation.bin" else np.ones(len(rows),bool)]:
+        for row in rows[kinds!=(2 if filename=="vegetation.bin" else 5)]:
             px,_,pz,_,scale,kind,_ = row
             p = [px,pz]
-            # Skip dense legacy grass (class 2) but avoid retained trees, rocks and flowers.
+            # Skip dense grass in both formats (live class 2, premium class 5).
             radius = max(1.5,float(scale)*(3.5 if kind in (0,1) else 1.5))
             capsule(props,x,z,p,p,radius+UNDERSTORY_RADIUS_M)
             if kind in (0,1) and filename=="vegetation.bin":
@@ -301,6 +301,7 @@ def bake(root, seed, tuning=None):
     protected,props,trees = scenery_masks(src,x,z)
     road_dist,water_dist = clearance_lower_bound(road),clearance_lower_bound(wet)
     prop_dist = clearance_lower_bound(props|protected)
+    water_center_dist = distance(wet)
     canopy = gaussian_filter(trees.astype(float),sigma=4)
     rng = np.random.default_rng(seed)
     # Smooth multi-scale noise, deterministic with pinned NumPy/SciPy.
@@ -353,7 +354,7 @@ def bake(root, seed, tuning=None):
             continue
         g,w,m,k = grass[j,i],woodland[j,i],moisture[j,i],rock[j,i]
         probabilities = np.array([w*m, w*.65, w*.22*(1-town[j,i]),
-                                 float(4<=water_dist[j,i]<=18)*m*(1-k),
+                                 float(water_dist[j,i]>=4 and water_center_dist[j,i]+CELL_RADIUS<=18)*m*(1-k),
                                  g*meadow[j,i]*(1-w)])
         total = probabilities.sum()
         if total<=0 or rng.random()>=min(1,t["density"]*min(1,total)*(.45+.8*n[j,i])):
@@ -386,7 +387,8 @@ def bake(root, seed, tuning=None):
         valid = region & ~excluded
         stats["regions"][k] = dict(cells=int(region.sum()), eligible=int(valid.sum()),
             mean_channels=(mask[valid].mean(axis=0)/255).tolist() if valid.any() else [0]*4,
-            grass_coverage=float(np.mean(grass[region]>.5)),mean_slope=float(slope[region].mean()),
+            grass_coverage=float(np.mean(grass[region]>.5)) if region.any() else 0.0,
+            mean_slope=float(slope[region].mean()) if region.any() else 0.0,
             placements=sum(dominant[cell_index(p["x"],p["z"])[1],cell_index(p["x"],p["z"])[0]]==i for p in placements))
     # numpy integer from sum of numpy booleans must be converted for JSON.
     for region in stats["regions"].values():
@@ -397,6 +399,8 @@ def bake(root, seed, tuning=None):
     understory = dict(schema_version=1,source_hashes=src.hashes,seed=seed,placements=placements)
     manifest["understory_sha256"] = sha(json_bytes(understory))
     manifest["statistics_sha256"] = sha(json_bytes(stats))
+    manifest["generator_sha256"] = sha(Path(__file__).read_bytes())
+    manifest["numeric_versions"] = dict(numpy=np.__version__, scipy=__import__("scipy").__version__)
     manifest["optional_premium_cache_used"] = "data/world/premium_foliage.bin" in src.hashes
     # Runtime cross-check points include corners, triangle interiors, diagonals and chunk seams.
     probes = [(-1000,-1000), (1000,1000), (-1000,1000), (1000,-1000),
@@ -424,12 +428,20 @@ def publish(output, raw, manifest, understory, stats):
     output.mkdir(parents=True,exist_ok=True)
     require(not any((output/name).is_symlink() for name in ("manifest.json","biome_rgba8.bin","understory.json","statistics.json")),
             "Refusing symlink output")
-    with tempfile.TemporaryDirectory(dir=output) as temp:
-        for name,data in (("biome_rgba8.bin",raw),("understory.json",json_bytes(understory)),
-                          ("statistics.json",json_bytes(stats)),("manifest.json",json_bytes(manifest))):
-            path = Path(temp)/name
-            path.write_bytes(data)
-            os.replace(path,output/name)
+    # Serialize writers. An interrupted process leaves the lock in place;
+    # remove it manually only after confirming no baker is active.
+    lock = output/".bake.lock"
+    lock.mkdir()
+    try:
+        with tempfile.TemporaryDirectory(dir=output) as temp:
+            entries = (("biome_rgba8.bin",raw),("understory.json",json_bytes(understory)),
+                       ("statistics.json",json_bytes(stats)),("manifest.json",json_bytes(manifest)))
+            for name,data in entries:
+                (Path(temp)/name).write_bytes(data)
+            for name,_ in entries:
+                os.replace(Path(temp)/name,output/name)
+    finally:
+        lock.rmdir()
 
 
 def main():
