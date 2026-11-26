@@ -408,6 +408,8 @@ def bake(root, seed, tuning=None):
               (-871,-873),(-700,-320),(45,170),(700,450)]
     probes.extend((float(a),float(b)) for a,b in rng.uniform(-999,999,(64,2)))
     manifest["surface_probes"] = [dict(x=a,z=b,height_m=float(surface(h,a,b))) for a,b in probes]
+    cells = [(0,0),(999,0),(0,999),(999,999),(499,499),(500,500),(150,340),(522,585),(850,725)]
+    manifest["mask_probes"] = [dict(x=-999+2*i,z=-999+2*j,rgba=mask[j,i].tolist()) for i,j in cells]
     return raw,manifest,understory,stats
 
 
