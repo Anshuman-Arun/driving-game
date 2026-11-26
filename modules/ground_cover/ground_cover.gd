@@ -2,6 +2,7 @@ extends Node3D
 ## Camera-driven, main-thread-only procedural ground cover. World-aligned coordinates.
 const Grass = preload("grass_mesh.gd")
 const Mask = preload("biome_mask.gd")
+const Placement = preload("placement_math.gd")
 const SHADER = preload("grass.gdshader")
 const CELL := 16.0
 const GRID := 64 # 16 candidates/m², nested by deterministic rank
@@ -235,12 +236,17 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 	for z in range(start.y, finish.y + 1):
 		for x in range(start.x, finish.x + 1):
 			var key := Vector2i(x,z)
+			var rect := Rect2(Vector2(key) * CELL, Vector2.ONE * CELL)
+			if not rect.intersects(_bounds):
+				continue
 			var center := _center(key)
 			var d := center.distance_to(current)
 			var pd := center.distance_to(predicted)
 			var existing: Dictionary = _active.get(key, {})
 			var keep_margin := 5.0 if not existing.is_empty() else 0.0
-			if minf(d, pd) > outer + keep_margin:
+			var nearest := current.distance_to(current.clamp(rect.position, rect.end))
+			var nearest_predicted := predicted.distance_to(predicted.clamp(rect.position, rect.end))
+			if minf(nearest, nearest_predicted) > outer + keep_margin:
 				continue
 			var lod := 2
 			if d < float(radii[0]):
@@ -259,52 +265,21 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 			return a.key.y < b.key.y or (a.key.y == b.key.y and a.key.x < b.key.x)
 		return a.priority < b.priority)
 	var wanted: Dictionary = {}
-	# Keep a spatially distributed prefix of each tier, rather than consuming the
-	# entire cap near the camera and leaving an abrupt empty outer ring.
 	var tiers: Array = [[], [], []]
-	var chunk_budget := int(_profile.chunks)
+	var density: Array = []
+	var tier_counts: Array = []
 	for entry: Dictionary in candidates:
 		tiers[int(entry.lod)].append(entry)
-	var selected: Array = [[], [], []]
-	# Reserve some chunk slots for mid/far even with a small experimental cap.
-	var shares := [0.50, 0.32, 0.18]
-	var remaining := chunk_budget
 	for lod in range(3):
-		var take := mini(tiers[lod].size(), maxi(1, floori(chunk_budget * float(shares[lod]))))
-		take = mini(take, remaining)
-		selected[lod] = tiers[lod].slice(0, take)
-		remaining -= take
-	# Fill unused slots in near-to-far order.
+		tier_counts.append(tiers[lod].size())
+		density.append(ceili(GRID * GRID * float(_profile.density[lod])))
+	var plan := Placement.allocate(tier_counts, density, int(_profile.cap), int(_profile.chunks), int(_profile.upload_instances))
+	_last_planned_chunks = plan[0]
+	_last_planned_limits = plan[1]
 	for lod in range(3):
-		var extra := mini(remaining, tiers[lod].size() - selected[lod].size())
-		selected[lod].append_array(tiers[lod].slice(selected[lod].size(), selected[lod].size() + extra))
-		remaining -= extra
-	var cap := int(_profile.cap)
-	var desired := [0, 0, 0]
-	var allocation := [0, 0, 0]
-	remaining = cap
-	for lod in range(3):
-		desired[lod] = selected[lod].size() * ceili(GRID * GRID * float(_profile.density[lod]))
-		allocation[lod] = mini(int(desired[lod]), mini(remaining, floori(cap * float(shares[lod]))))
-		remaining -= int(allocation[lod])
-	for lod in range(3):
-		var extra := mini(remaining, int(desired[lod]) - int(allocation[lod]))
-		allocation[lod] += extra
-		remaining -= extra
-	# Quantization reduces rebuild churn as neighboring chunk counts change.
-	# Prefixes of the same deterministic rank permutation preserve tuft identity.
-	_last_planned_limits = [0, 0, 0]
-	_last_planned_chunks = [0, 0, 0]
-	for lod in range(3):
-		if selected[lod].is_empty():
-			continue
-		var per_chunk := mini(int(_profile.upload_instances), floori(float(allocation[lod]) / selected[lod].size()))
-		if per_chunk >= 64:
-			per_chunk = (per_chunk >> 5) << 5
-		_last_planned_limits[lod] = per_chunk
-		_last_planned_chunks[lod] = selected[lod].size()
-		for entry: Dictionary in selected[lod]:
-			entry["limit"] = per_chunk
+		for i in range(int(_last_planned_chunks[lod])):
+			var entry: Dictionary = tiers[lod][i]
+			entry["limit"] = int(_last_planned_limits[lod])
 			wanted[entry.key] = entry
 	for key: Vector2i in _active.keys():
 		if not wanted.has(key) or int(_active[key].count) > int(wanted[key].limit):
@@ -326,19 +301,12 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 			continue
 		_queue.append(entry)
 
-# Four-round 6+6 bit Feistel permutation: decorrelated spatial rank, exact nested subsets.
+# Pure integer mixing, stable across engine hash implementations.
 func candidate_index(key: Vector2i, rank: int) -> int:
-	var left := (rank >> 6) & 63
-	var right := rank & 63
-	for round_index in range(4):
-		var mix := hash(Vector4i(key.x,key.y,right,_seed ^ (round_index * 7919))) & 63
-		var next := left ^ mix
-		left = right
-		right = next
-	return (left << 6) | right
+	return Placement.rank_index(key.x, key.y, rank, _seed)
 
 func _random(key: Vector2i, index: int, salt: int) -> float:
-	return float(hash(Vector4i(key.x, key.y, index, _seed ^ salt)) & 0xFFFFFF) / 16777216.0
+	return Placement.unit_random(key.x, key.y, index, _seed, salt)
 
 func _start_job(entry: Dictionary) -> void:
 	_job = entry.duplicate()
