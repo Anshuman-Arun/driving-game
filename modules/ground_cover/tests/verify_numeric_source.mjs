@@ -3,7 +3,7 @@
 import fs from "node:fs";
 function translate(source){
   // Intentionally restricted syntax. Fail on unfamiliar constructs instead of silently ignoring them.
-  const out=["'use strict';","const mini=Math.min,maxi=Math.max,floori=Math.floor,float=Number,int=Math.trunc;"];
+  const out=["'use strict';","const mini=Math.min,maxi=Math.max,minf=Math.min,floori=Math.floor,float=Number,int=Math.trunc;"];
   let depth=0;
   const names=[];
   for(const raw of source.split("\n")){
@@ -58,6 +58,22 @@ function verify(source,profiles){
       }
     }
   }
+  let lodScenarios=0;
+  for(const [near,mid,far] of [[8,12,16],[152,156,160],...Object.values(profiles).map(p=>p.radii)]){
+    const margin=math.lod_margin(near,mid,far);
+    assert(margin>0&&margin<=5&&2*margin<Math.min(mid-near,far-mid),"hysteresis bands never overlap");
+    for(const previous of [-1,0,1,2]){
+      let last=0;
+      for(let d=0;d<=far+12;d+=.25){
+        const actual=math.choose_lod(d,near,mid,previous,margin);
+        assert(actual>=last&&actual<=2,"monotone detail with distance");
+        if(d<near-margin)assert(actual===0,"near jump always reaches near");
+        if(d>near+margin&&d<mid-margin)assert(actual===1,"mid jump always reaches mid");
+        if(d>mid+margin)assert(actual===2,"far jump always reaches far");
+        last=actual;lodScenarios++;
+      }
+    }
+  }
   let permutations=0;
   assert(math.rank_index(0,0,0,-2147483648)!==math.rank_index(0,0,0,0),"seed sign bit contributes");
   for(const seed of [-2147483648,-1,0,1,20261125,2147483647])for(const x of [-63,-17,0,62])for(const z of [-63,0,62]){
@@ -75,7 +91,7 @@ function verify(source,profiles){
     assert(Math.abs(mean/4096-.5)<.035,"mean random distribution");
     permutations++;
   }
-  return {cases,permutations,checks,known_vectors:{
+  return {cases,lodScenarios,permutations,checks,known_vectors:{
     mix: [0,1,-1,20261125].map(n=>math.mix31(n)),
     rank: [0,1,31,4095].map(n=>math.rank_index(-17,62,n,20261125)),
     word: [11,17,23,53].map(s=>math.word(-17,62,123,20261125,s)),
