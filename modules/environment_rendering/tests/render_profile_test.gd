@@ -125,6 +125,11 @@ func _run() -> void:
 	check(adapter.get_status()["drifted"], "in-place candidate environment drift reported")
 	world_env.environment.tonemap_exposure = 1.0
 	check(not adapter.get_status()["drifted"], "reverted in-place drift")
+	var candidate_specular := sun.light_specular
+	sun.light_specular = 0.5
+	check(adapter.get_status()["drifted"], "in-place sun edit detected")
+	sun.light_specular = candidate_specular
+	check(not adapter.get_status()["drifted"], "reverted sun drift")
 	var owned := world_env.environment
 	check(not contender.apply_candidate(fixture, "high"), "second adapter rejected")
 	var duplicate_env := WorldEnvironment.new()
@@ -136,7 +141,7 @@ func _run() -> void:
 	check(world_env.environment == owned, "ambiguous apply preserves active preview")
 	check(world_env.environment == owned, "second adapter cannot alter first")
 	var viewport := SubViewport.new()
-	viewport.own_world_3d = true
+	viewport.world_3d = World3D.new()
 	fixture.add_child(viewport)
 	var alternate := Node3D.new()
 	viewport.add_child(alternate)
@@ -150,7 +155,16 @@ func _run() -> void:
 	check(contender.apply_candidate(alternate, "high", alternate_options), "independent world accepted")
 	check(alt_env.environment.ambient_light_sky_contribution == 0.0, "skyless world uses color fill")
 	check("No existing sky resource; no HDRI fabricated" in contender.get_status()["unavailable"], "sky absence reported")
-	contender.restore()
+	# A viewport may switch World3D while its nodes stay in the tree.
+	var previous_world := viewport.find_world_3d()
+	viewport.world_3d = World3D.new()
+	check(viewport.find_world_3d() != previous_world, "viewport changed worlds")
+	check(contender.get_status()["drifted"], "migration detected")
+	var migrant := Profile.new()
+	check(not migrant.apply_candidate(alternate, "medium", alternate_options), "migrated lease still excludes second adapter")
+	check(Profile.restore_for_root(alternate), "restore migrated lease by root identity")
+	check(migrant.apply_candidate(alternate, "medium", alternate_options), "migration recovery releases lease")
+	migrant.restore()
 	viewport.free()
 	adapter.restore()
 	check(contender.apply_candidate(fixture, "low"), "world released after restore")
@@ -160,6 +174,12 @@ func _run() -> void:
 	check(first != null and first != paint, "paint copied")
 	if first != null:
 		check(is_equal_approx(first.roughness, 0.24) and first.clearcoat_enabled, "paint tuning")
+		check(not adapter.get_status()["paint_parameters_drifted"], "fresh paint has no parameter drift")
+		first.roughness = 0.41
+		check(adapter.get_status()["paint_parameters_drifted"], "in-place standard paint edit detected")
+		check(adapter.get_status()["drifted"], "paint edit sets overall drift")
+		first.roughness = 0.24
+		check(not adapter.get_status()["paint_parameters_drifted"], "paint drift clears after reverting")
 	check(is_equal_approx(paint.roughness, 0.4) and not paint.clearcoat_enabled, "asset unchanged")
 	check(other_mesh.get_active_material(0) == paint, "shared mesh unaffected")
 	var preview := world_env.environment
@@ -286,6 +306,10 @@ func _run() -> void:
 	if shader_copy != null:
 		check(is_equal_approx(shader_copy.get_shader_parameter("roughness"), 0.24), "shader parameter applied")
 		check(shader_copy.shader == shader_paint.shader, "shader resource unchanged")
+		shader_copy.set_shader_parameter("normal_scale", 0.22)
+		check(adapter.get_status()["paint_parameters_drifted"], "in-place shader uniform drift detected")
+		shader_copy.set_shader_parameter("normal_scale", 0.75)
+		check(not adapter.get_status()["paint_parameters_drifted"], "shader drift clears after reverting")
 		for uniform in ["base_color", "grazing_color", "flake_intensity", "normal_scale", "specular"]:
 			check(shader_copy.get_shader_parameter(uniform) == shader_paint.get_shader_parameter(uniform), "untuned shader parameter preserved: " + uniform)
 		for uniform in ["metallic", "clearcoat", "clearcoat_roughness"]:
