@@ -12,6 +12,7 @@ var _world: WeakRef
 var _built_root: WeakRef
 var _clearance: WeakRef
 var _waters_snapshot: Array = []
+var _triangle_count := 0
 var status := "unprepared"
 
 func prepare(world: Node) -> bool:
@@ -19,6 +20,7 @@ func prepare(world: Node) -> bool:
 	_built_root = null
 	_clearance = null
 	_waters_snapshot.clear()
+	_triangle_count = 0
 	_water.clear()
 	status = "water or road clearance unavailable"
 	var built := Contract.generated_root(world)
@@ -42,6 +44,7 @@ func prepare(world: Node) -> bool:
 	_world = weakref(world)
 	_built_root = weakref(built)
 	_clearance = weakref(clearance)
+	_triangle_count = clearance.triangle_count
 	_waters_snapshot = roadworks.waters.duplicate(true)
 	status = "ready"
 	return true
@@ -74,7 +77,7 @@ func accepts(frame: Transform3D, local_bounds: AABB) -> bool:
 		return false
 	var world: Node = _world.get_ref()
 	var clearance := Contract.clearance_for(world)
-	if clearance == null or _clearance == null or clearance != _clearance.get_ref() or _built_root == null or Contract.generated_root(world) != _built_root.get_ref():
+	if clearance == null or _clearance == null or clearance != _clearance.get_ref() or clearance.triangle_count != _triangle_count or _built_root == null or Contract.generated_root(world) != _built_root.get_ref():
 		status = "stale world; prepare again"
 		return false
 	if not Contract.has_property(world, "roadworks"):
