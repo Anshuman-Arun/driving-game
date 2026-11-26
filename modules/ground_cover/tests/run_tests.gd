@@ -3,6 +3,23 @@ const Cover = preload("../ground_cover.gd")
 const Grass = preload("../grass_mesh.gd")
 const Mask = preload("../biome_mask.gd")
 const Fixture = preload("fixture_world.gd")
+class InvalidClearance extends RefCounted:
+	var triangle_count := 1
+	func overlaps(_bounds: AABB, _margin: float, _shoulders: bool) -> Variant:
+		return null
+
+class WrongArityClearance extends RefCounted:
+	var triangle_count := 1
+	func overlaps(_bounds: AABB) -> bool:
+		return false
+
+class InvalidWorld extends Node3D:
+	var road_clearance: Object = InvalidClearance.new()
+	func get_surface_height_at(_x: float,_z: float) -> float:
+		return 0.0
+	func sample_mask(_x: float,_z: float) -> Vector4:
+		return Vector4(1,0,0.5,0)
+
 var failures := 0
 var checks := 0
 
@@ -24,6 +41,8 @@ func drain(cover: Cover, max_frames: int = 1200) -> void:
 			return
 		check(stats.active_instances <= stats.cap,"instance cap")
 		check(stats.last_frame_checks <= int(cover._profile.checks),"candidate budget")
+		check(stats.last_frame_road_checks <= stats.last_frame_checks,"exact road check budget")
+		check(stats.last_frame_height_samples <= stats.last_frame_checks*5,"height sample budget")
 		check(stats.last_frame_chunk_uploads <= int(cover._profile.uploads),"upload budget")
 		check(stats.last_frame_upload_instances <= int(cover._profile.upload_instances),"instance upload budget")
 		var reserved := 0
@@ -200,6 +219,16 @@ func _run() -> void:
 	cover._retarget_job({"lod":2,"limit":150})
 	check(cover._job.groups==original_far and cover._job.cursor==150,"retarget shrink preserves only valid ranks")
 	cover._job.clear()
+	# At this cusp central differences alone would report nearly zero slope.
+	var crest_cell := Vector2i(1,0)
+	var crest_index := cover.candidate_index(crest_cell,0)
+	world.crest_x = float(crest_cell.x)*Cover.CELL + (float(crest_index%Cover.GRID)+cover._random(crest_cell,crest_index,11))*(Cover.CELL/Cover.GRID)
+	var slope_before := int(cover.get_stats().rejected_candidates.slope)
+	cover._start_job({"key":crest_cell,"lod":0,"limit":1})
+	cover._candidate(0)
+	check(int(cover.get_stats().rejected_candidates.slope)==slope_before+1,"one-sided crest rejection")
+	world.crest_x=INF
+	cover._job.clear()
 	cover.update_focus(Vector3(8,2,8))
 	drain(cover)
 	var first := fingerprint(cover)
@@ -302,6 +331,25 @@ func _run() -> void:
 	cover.update_focus(Vector3(8,2,8))
 	drain(cover)
 	check(cover.get_stats().active_chunks==0 and cover.get_stats().candidates_processed==0,"zero density does not enqueue empty chunks")
+	var invalid_world := InvalidWorld.new()
+	root.add_child(invalid_world)
+	var invalid_options := {"test_fixture":true,"fixture_sampler":Callable(invalid_world,"sample_mask"),"pilot_bounds":Rect2(0,0,48,48)}
+	invalid_world.road_clearance = WrongArityClearance.new()
+	check(not cover.build(invalid_world,"low","",invalid_options),"wrong clearance arity rejected at build")
+	invalid_world.road_clearance = InvalidClearance.new()
+	if not cover.build(invalid_world,"low","",invalid_options):
+		printerr("FAIL invalid return fixture setup")
+		quit(1)
+		return
+	cover.set_process(false)
+	cover.update_focus(Vector3(8,2,8))
+	for i in range(20):
+		cover._process(0.016)
+		if cover.get_stats().state=="disabled":
+			break
+	var invalid_stats: Dictionary = cover.get_stats()
+	check(invalid_stats.state=="disabled" and "non-boolean" in str(invalid_stats.fallback) and invalid_stats.road_checks>0 and invalid_stats.active_instances==0,"nonboolean clearance fails closed and preserves evidence")
+	invalid_world.free()
 	cover.shutdown()
 	check(cover.get_child_count()==0 and cover.get_stats().active_instances==0,"shutdown releases nodes")
 	cover.free()
