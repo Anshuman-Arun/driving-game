@@ -31,6 +31,8 @@ var _reason := ""
 var _material: ShaderMaterial
 var _plain_material: StandardMaterial3D
 var _meshes: Array = []
+var _mesh_bounds: Array = []
+var _union_bounds: Array[AABB] = []
 var _active: Dictionary = {}
 var _queue: Array = []
 var _pool: Array[MultiMeshInstance3D] = []
@@ -122,12 +124,21 @@ func build(world: Node, preset: String, mask_dir: String, options: Dictionary = 
 		draw_material = _plain_material
 	for s in range(SPECIES):
 		var variants: Array[Mesh] = []
+		var bounds: Array[AABB] = []
+		var merged := AABB()
 		for lod in range(3):
-			var mesh := Grass.make_mesh(s, lod, draw_material)
+			var geometry := Grass.make_geometry(s,lod)
+			var mesh := Grass.mesh_from_geometry(geometry, draw_material)
+			var bound: AABB = geometry.bounds
+			if not bound.has_volume() or mesh.get_surface_count() != 1:
+				return _fail("invalid generated grass geometry")
 			variants.append(mesh)
-			var arrays := mesh.surface_get_arrays(0)
-			_geometry_bytes += arrays[Mesh.ARRAY_VERTEX].size() * 48 + arrays[Mesh.ARRAY_INDEX].size() * 4
+			bounds.append(bound)
+			merged = bound if lod == 0 else merged.merge(bound)
+			_geometry_bytes += int(geometry.estimated_bytes)
 		_meshes.append(variants)
+		_mesh_bounds.append(bounds)
+		_union_bounds.append(merged)
 	_state = "ready"
 	_reason = ""
 	set_graphics(preset)
@@ -407,10 +418,8 @@ func _candidate(rank: int) -> void:
 	var basis := Basis(alignment) * Basis(Vector3.UP,_random(key,idx,41)*TAU)
 	basis = basis.scaled(Vector3.ONE*scale)
 	var frame := Transform3D(basis,Vector3(p.x,y-0.025,p.y))
-	# Near mesh bounds also enclose reduced-detail variants (same seeded blades).
-	var swept := Grass.swept_bounds(_meshes[species][0],frame)
-	for lod in range(1,3):
-		swept = swept.merge(Grass.swept_bounds(_meshes[species][lod],frame))
+	# Precomputed union of all LODs avoids renderer readback and is conservative.
+	var swept := Grass.sweep_aabb(_union_bounds[species],frame)
 	if not _bounds.encloses(Rect2(Vector2(swept.position.x,swept.position.z),Vector2(swept.size.x,swept.size.z))):
 		_rejected.bounds += 1
 		return
@@ -451,7 +460,8 @@ func _work() -> void:
 			# A fully prepared job can publish next frame without redoing candidate work.
 			break
 		var upload_start := Time.get_ticks_usec()
-		_publish()
+		if not _publish():
+			return
 		_upload_us += Time.get_ticks_usec() - upload_start
 		_last_uploads += 1
 		_last_upload_instances += count
@@ -471,16 +481,17 @@ func _take_batch() -> MultiMeshInstance3D:
 	add_child(node)
 	return node
 
-func _publish() -> void:
+func _publish() -> bool:
 	var key: Vector2i = _job.key
 	var lod := int(_job.lod)
-	_release(key)
 	var count := 0
 	for group: Array in _job.groups:
 		count += group.size()
-	# Enforce cap even while old LODs await replacement.
-	if _counts[0]+_counts[1]+_counts[2]+count > int(_profile.cap):
-		return
+	var old_count := int(_active.get(key,{}).get("count",0))
+	# A violation is a programming error, never silently drop a completed job.
+	if count > int(_job.limit) or _counts[0]+_counts[1]+_counts[2]-old_count+count > int(_profile.cap):
+		return _fail("instance cap invariant violated")
+	_release(key)
 	var nodes: Array[MultiMeshInstance3D] = []
 	var center := _center(key)
 	var origin := Vector3(center.x,0,center.y)
@@ -494,13 +505,15 @@ func _publish() -> void:
 		mesh.mesh = _meshes[species][lod]
 		mesh.instance_count = group.size()
 		var bounds := AABB()
+		var buffer := PackedFloat32Array()
+		buffer.resize(group.size()*16)
 		for i in range(group.size()):
 			var frame: Transform3D = group[i].frame
 			frame.origin -= origin
-			mesh.set_instance_transform(i,frame)
-			mesh.set_instance_custom_data(i,Color(group[i].seed,0,0,1))
-			var swept := Grass.swept_bounds(mesh.mesh,frame)
+			Grass.write_instance(buffer,i*16,frame,float(group[i].seed))
+			var swept := Grass.sweep_aabb(_mesh_bounds[species][lod],frame)
 			bounds = swept if i == 0 else bounds.merge(swept)
+		mesh.buffer = buffer
 		mesh.custom_aabb = bounds
 		var node := _take_batch()
 		node.position = origin
@@ -514,6 +527,7 @@ func _publish() -> void:
 		_active[key]["fixture_groups"] = _job.groups.duplicate(true)
 	_counts[lod] += count
 	_uploaded += count
+	return true
 
 func _release(key: Vector2i) -> void:
 	if not _active.has(key):
@@ -548,6 +562,8 @@ func shutdown() -> void:
 		node.free()
 	_pool.clear()
 	_meshes.clear()
+	_mesh_bounds.clear()
+	_union_bounds.clear()
 	_geometry_bytes = 0
 	_material = null
 	_plain_material = null
