@@ -1,4 +1,6 @@
 import json
+import contextlib
+import io
 import tempfile
 import sys
 import unittest
@@ -16,7 +18,8 @@ ROOT = Path(__file__).resolve().parents[3]
 
 class UnitTests(unittest.TestCase):
     def test_runner_rejects_false_success(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        # Intentional child failures are asserted here, not leaked as real CI failures.
+        with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()):
             logdir=Path(tmp)
             for name,command in (("script_error", "print('SCRIPT ERROR: parser')"),
                                  ("shader_error", "print('Shader compilation failed')"),

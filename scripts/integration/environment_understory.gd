@@ -1,5 +1,6 @@
 extends Node3D
 ## Bounded optional visual-only placement of C records with B's licensed meshes.
+const MaterialAdapter := preload("res://assets/environment_overhaul/prepare_material.gd")
 const Mask := preload("res://modules/ground_cover/biome_mask.gd")
 const ASSETS := "res://assets/environment_overhaul/"
 const CAP := 1600
@@ -22,7 +23,7 @@ func _parts(node: Node, parent: Transform3D, result: Array) -> void:
 	if node is Node3D:
 		frame = parent * (node as Node3D).transform
 	if node is MeshInstance3D:
-		var mesh: Mesh = (node as MeshInstance3D).mesh
+		var mesh: Mesh = MaterialAdapter.prepare((node as MeshInstance3D).mesh)
 		if mesh != null:
 			result.append({"mesh": mesh, "frame": frame, "bounds": frame * mesh.get_aabb()})
 	for child: Node in node.get_children():
@@ -41,6 +42,8 @@ func _load_species(entry: Dictionary) -> Dictionary:
 		if not path.begins_with(ASSETS) or path.contains("..") or not path.ends_with(".gltf"):
 			return {}
 		if not FileAccess.file_exists(path) or FileAccess.get_sha256(path) != str(entry.sha256_by_path.get(path, "")):
+			return {}
+		if not MaterialAdapter.source_valid(path):
 			return {}
 		var packed := ResourceLoader.load(path, "PackedScene") as PackedScene
 		if packed == null:

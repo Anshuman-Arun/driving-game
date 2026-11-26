@@ -1,5 +1,6 @@
 extends SceneTree
 ## Run after root editor import. No rendering or world integration required.
+const MaterialAdapter := preload("res://assets/environment_overhaul/prepare_material.gd")
 const MANIFEST := "res://assets/environment_overhaul/manifest.json"
 var failures: int = 0
 
@@ -62,6 +63,7 @@ func _run() -> void:
 			if FileAccess.get_sha256(path) != entry["sha256_by_path"][path]:
 				_check(false, "Source hash mismatch: " + path)
 				continue
+			_check(MaterialAdapter.source_valid(path), "Source material declaration mismatch: " + path)
 			var packed := ResourceLoader.load(path, "PackedScene") as PackedScene
 			if packed == null:
 				_check(false, "Cannot load imported scene: " + path)
@@ -78,7 +80,16 @@ func _run() -> void:
 			var surfaces: int = 0
 			for part: Dictionary in parts:
 				bounds = bounds.merge(part["bounds"])
-				var mesh: Mesh = part["mesh"]
+				var raw: Mesh = part["mesh"]
+				var mesh := MaterialAdapter.prepare(raw)
+				_check(mesh != null and mesh != raw, "Production material preparation: " + path)
+				if mesh == null:
+					continue
+				for raw_surface in raw.get_surface_count():
+					var raw_material := raw.surface_get_material(raw_surface) as StandardMaterial3D
+					if raw_material != null:
+						print("Raw import flags ", path, ": vertex_color=", raw_material.vertex_color_use_as_albedo, ", transparency=", raw_material.transparency, ", cull=", raw_material.cull_mode)
+						_check(raw_material != mesh.surface_get_material(raw_surface), "Material must be copied: " + path)
 				for surface: int in range(mesh.get_surface_count()):
 					surfaces += 1
 					_check(mesh.surface_get_primitive_type(surface) == Mesh.PRIMITIVE_TRIANGLES, "Non-triangular surface: " + path)
