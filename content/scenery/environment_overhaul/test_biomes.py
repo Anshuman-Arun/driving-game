@@ -17,6 +17,9 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(b.cell_index(-999,-999),(0,0))
         self.assertEqual(b.cell_index(999,999),(999,999))
         self.assertEqual(b.cell_index(0,0),(500,500))
+        self.assertEqual(b.cell_index(np.nextafter(1000.,-np.inf),0),(999,500))
+        self.assertEqual(b.cell_index(np.nextafter(0.,-np.inf),0),(499,500))
+        self.assertEqual(b.cell_index(np.nextafter(2.,-np.inf),0),(500,500))
         for x,z in [(1000,0),(0,1000),(-1000.01,0)]:
             with self.assertRaises(ValueError):
                 b.cell_index(x,z)
@@ -38,6 +41,11 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(slopes[1,0],slopes[1,1])
         with self.assertRaises(ValueError):
             b.surface(h,1001,0)
+        field=np.zeros((1000,1000))
+        field[500,502]=1.0
+        footprint=b.footprint_slope(field)
+        self.assertEqual(footprint[500,500],1.0)
+        self.assertEqual(footprint[500,499],0.0)
 
     def test_capsule(self):
         x,z=b.coords()
@@ -85,7 +93,7 @@ class UnitTests(unittest.TestCase):
             b.water_mask(dict(lake,cells=[[500,1]]),dict(waters=[]))
 
     def test_strict_json_and_source_replacement(self):
-        for bad in ('{"a":1,"a":2}','{"a":NaN}','{"a":Infinity}'):
+        for bad in ('{"a":1,"a":2}','{"a":NaN}','{"a":Infinity}','{"a":1e999}'):
             with self.assertRaises(ValueError):
                 b.strict_json(bad)
         with tempfile.TemporaryDirectory() as tmp:
@@ -201,6 +209,21 @@ class FixtureTests(unittest.TestCase):
             report=package.verify(root,root/"output")
             self.assertEqual(report["placements"],len(understory["placements"]))
             self.assertEqual(report["geometry"]["misses"],0)
+            self.assertTrue(report["rebake_verified"])
+            # A zero grass field can satisfy exclusions and hashes but must
+            # fail reproducibility, even when its probes have been updated.
+            blank=mask.copy()
+            blank[:,:,0]=0
+            blank_raw=blank.tobytes()
+            blank_m=b.strict_json(b.json_bytes(manifest))
+            blank_m["sha256"]=b.sha(blank_raw)
+            for probe in blank_m["mask_probes"]:
+                probe["rgba"][0]=0
+            b.publish(root/"output",blank_raw,blank_m,understory,stats)
+            self.assertFalse(package.verify(root,root/"output",rebuild=False)["rebake_verified"])
+            with self.assertRaisesRegex(ValueError,"Deterministic rebake mismatch"):
+                package.verify(root,root/"output")
+            b.publish(root/"output",*result)
             # An updated hash alone must not legitimize an unsafe placement.
             corrupt=b.strict_json(b.json_bytes(understory))
             corrupt["placements"][0]["x"]=0
@@ -306,6 +329,7 @@ class CanonicalTests(unittest.TestCase):
         h=b.decode_height(src.read("data/world/terrain_roadworks_r16le.bin"),
                           src.json("data/world/world_metadata_v1.json"))
         slope=b.triangle_slope(h)
+        plant_slope=b.footprint_slope(slope)
         grass=mask[:,:,0].astype(float)/255
         far=((x-45)**2+(z-170)**2<250**2)&(b.distance(road)>80)&(slope<.25)&~protected&~wet
         rocky=(slope>.7)&~road&~wet&~protected
@@ -333,7 +357,7 @@ class CanonicalTests(unittest.TestCase):
             self.assertGreaterEqual(rd[j,i],b.DEFAULTS["sightline_m"]+b.UNDERSTORY_RADIUS_M)
             self.assertGreater(wd[j,i],b.DEFAULTS["water_margin_m"]+b.UNDERSTORY_RADIUS_M)
             self.assertGreater(pd[j,i],b.UNDERSTORY_RADIUS_M)
-            self.assertLessEqual(slope[j,i],b.DEFAULTS["max_understory_slope"])
+            self.assertLessEqual(plant_slope[j,i],b.DEFAULTS["max_understory_slope"])
             if p["species_id"]=="sapling":
                 self.assertGreater(canopy_dist[j,i],b.UNDERSTORY_RADIUS_M)
             if p["species_id"]=="reed":
