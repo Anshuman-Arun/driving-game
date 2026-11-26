@@ -16,7 +16,7 @@ func check(ok: bool, message: String) -> void:
 
 func write_text(relative: String, content: String) -> bool:
 	var path := fixture_root.path_join(relative)
-	if DirAccess.make_dir_recursive_absolute(path.get_base_dir()) != OK:
+	if not DirAccess.dir_exists_absolute(path.get_base_dir()) and DirAccess.make_dir_recursive_absolute(path.get_base_dir()) != OK:
 		return false
 	var file := FileAccess.open(path,FileAccess.WRITE)
 	if file == null:
