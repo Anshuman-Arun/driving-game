@@ -14,7 +14,11 @@ cat > "$work/bin/mock-godot" <<'MOCK'
 set -eu
 case " $* " in
   *' --version '*)
-    if [[ "$MOCK_CASE" == version ]]; then echo 4.6.stable; else echo 4.7.2.stable.mock; fi
+    case "$MOCK_CASE" in
+      version) echo 4.6.stable ;;
+      version-prefix) echo 4.7.2.stablefake ;;
+      *) echo 4.7.2.stable.mock ;;
+    esac
     exit 0 ;;
 esac
 project= script= editor=0
@@ -50,7 +54,22 @@ case "$script" in
     if [[ "$MOCK_CASE" == live-empty ]]; then echo 'LIVE_RENDER_PROFILE_RESULT failures=0 paint_surfaces=0'; else echo 'LIVE_RENDER_PROFILE_RESULT failures=0 paint_surfaces=2'; fi ;;
   *)
     [[ "$project" == "$MOCK_REPO" ]]
-    if [[ "$MOCK_CASE" == regression && "$script" == *garage_world.gd ]]; then echo 'FAIL mock existing regression'; fi ;;
+    if [[ "$script" == *garage_world.gd ]]; then
+      case "$MOCK_CASE" in
+        regression) echo 'FAIL mock existing regression'; exit 0 ;;
+        regression-error) echo 'ERROR: FAIL mock push_error' ;;
+        regression-no-marker) exit 0 ;;
+        regression-duplicate) echo 'GARAGE WORLD failures: 0' ;;
+      esac
+    fi
+    case "$script" in
+      *map_width_check.gd) echo 'Map width: 1782 edge rays, 0 isolated seam rechecks, 0 failures' ;;
+      *roadworks_check.gd) echo 'PASS Verified five widened approaches, three water crossings and one new elevated span' ;;
+      *world_visual_qa.gd) echo 'PASS Live car moved on all 16 corridors, including 2 gravel' ;;
+      *garage_world.gd) echo 'GARAGE WORLD failures: 0' ;;
+      *vehicle_world.gd) echo 'Vehicle/world integration failures: 0' ;;
+      *) exit 2 ;;
+    esac ;;
 esac
 MOCK
 cat > "$work/bin/git" <<'MOCK'
@@ -81,13 +100,17 @@ check() {
 }
 check success 0 --owned
 check version 2 --owned
+check version-prefix 2 --owned
 for scenario in import-error no-marker zero-checks bad-count duplicate-marker shader-error assertion nonzero timeout; do
   check "$scenario" 1 --owned
 done
 check full-success 0 --full
-for scenario in lfs-fsck lfs-pointer live-empty regression; do
+for scenario in lfs-fsck lfs-pointer live-empty regression regression-error regression-no-marker regression-duplicate; do
   check "$scenario" 1 --full
 done
 # A failure must not silently skip the remaining existing regression suites.
-[[ -f "$work/logs/regression/vehicle_world.log" ]]
+for scenario in regression regression-error regression-no-marker regression-duplicate; do
+  [[ -f "$work/logs/$scenario/vehicle_world.log" ]]
+done
+[[ -f "$work/logs/full-success/map_width_check.log" ]]
 echo "RUNNER_MOCK_RESULT passed=$count total=$count failures=0"
