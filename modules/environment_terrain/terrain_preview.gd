@@ -27,14 +27,17 @@ const BASE_DEFAULTS := {
 const LIMITS := {
 	"biome_strength": [0.0, 1.0], "meadow_micro_strength": [0.0, 0.3],
 	"moss_strength": [0.0, 0.5], "roughness_bias": [-0.2, 0.2],
-	"roadside_strength": [0.0, 1.0], "normal_strength": [0.0, 2.0],
+	"roadside_strength": [0.0, 1.0], "anti_tile_strength": [0.0, 1.0],
+	"pilot_normal_multiplier": [0.5, 1.5], "normal_strength": [0.0, 2.0],
 	"grass_scale": [0.02, 0.5], "dirt_scale": [0.02, 0.5],
 	"rock_scale": [0.01, 0.5], "shore_scale": [0.02, 0.5],
 	"slope_threshold": [0.3, 0.9], "slope_blend_margin": [0.02, 0.3],
 	"macro_scale": [0.001, 0.05], "macro_luminance_mod": [0.0, 0.5]}
+const TINT_MULTIPLIERS := ["meadow_tint_multiplier", "woodland_tint_multiplier"]
 const EXTRA_BASE_LIMITS := {"rock_strata_strength": [0.0, 0.6], "rock_strata_freq": [0.05, 1.0], "triplanar_sharpness": [1.0, 16.0]}
 var _entries: Array[Dictionary] = []
 var _world_root: WeakRef
+var _owner: WeakRef
 var _stats: Dictionary = {"state": "inactive"}
 
 func get_stats() -> Dictionary:
@@ -44,7 +47,8 @@ func get_stats() -> Dictionary:
 func _prune_destroyed_transaction() -> void:
 	if _world_root != null:
 		var built: Node = _world_root.get_ref()
-		if not is_instance_valid(built) or not built.is_inside_tree() or built.is_queued_for_deletion():
+		var owner: Node = _owner.get_ref() if _owner != null else null
+		if not is_instance_valid(built) or not is_instance_valid(owner) or Contract.generated_root(owner) != built:
 			restore()
 
 func _fail(reason: String) -> bool:
@@ -65,6 +69,18 @@ func _finite(value: Variant) -> bool:
 	if value is Vector3:
 		return value.is_finite()
 	return value is bool
+
+func _valid_tint_multiplier(value: Variant) -> bool:
+	if not value is Vector3 or not value.is_finite():
+		return false
+	return value.x >= 0.5 and value.x <= 1.5 and value.y >= 0.5 and value.y <= 1.5 and value.z >= 0.5 and value.z <= 1.5
+
+func _chunk_overlaps(instance: MeshInstance3D, pilot: Rect2) -> bool:
+	var bounds := instance.global_transform * instance.mesh.get_aabb()
+	if not bounds.position.is_finite() or not bounds.size.is_finite():
+		return false
+	var footprint := Rect2(bounds.position.x, bounds.position.z, bounds.size.x, bounds.size.z)
+	return footprint.intersects(pilot)
 
 func _base_value_valid(key: String, value: Variant) -> bool:
 	if not _finite(value):
@@ -125,7 +141,10 @@ func _make_candidate(original: ShaderMaterial, tuning: Dictionary, pilot: Varian
 			continue
 		result.set_shader_parameter(key, texture)
 	for key in tuning:
-		result.set_shader_parameter(key, float(tuning[key]))
+		if key in TINT_MULTIPLIERS:
+			result.set_shader_parameter(key, tuning[key])
+		else:
+			result.set_shader_parameter(key, float(tuning[key]))
 	result.set_shader_parameter("use_biome_mask", biome != null)
 	if biome != null:
 		result.set_shader_parameter("biome_mask", biome)
@@ -159,6 +178,10 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 	if not tuning is Dictionary:
 		return _fail("tuning must be a dictionary")
 	for key in tuning:
+		if key in TINT_MULTIPLIERS:
+			if not _valid_tint_multiplier(tuning[key]):
+				return _fail("invalid linear tint multiplier: " + str(key))
+			continue
 		if not LIMITS.has(key) or not (tuning[key] is float or tuning[key] is int):
 			return _fail("unknown or nonnumeric tuning: " + str(key))
 		var value := float(tuning[key])
@@ -171,7 +194,13 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 	if not mask_dir is String:
 		return _fail("invalid mask directory")
 	var mask_reader := BiomeMask.new()
-	var biome := mask_reader.load_mask(mask_dir)
+	var biome: Texture2D = null
+	if mask_dir.strip_edges().is_empty():
+		mask_reader.status = "disabled"
+	elif not Contract.uses_canonical_graded_sources(world):
+		mask_reader.status = "noncanonical or ungraded world; using fallback"
+	else:
+		biome = mask_reader.load_mask(mask_dir)
 	var roadside_reader := RoadsideBand.new()
 	var roadside: Texture2D = null
 	var roadside_region := Rect2()
@@ -184,13 +213,19 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 	# Stage every material and original reference before touching any scene state.
 	var staged: Array[Dictionary] = []
 	var candidates: Dictionary = {}
+	var skipped := 0
 	for child in terrain.get_children():
 		if not child is MeshInstance3D:
 			continue
 		var mesh_instance: MeshInstance3D = child
 		if mesh_instance.is_queued_for_deletion() or not mesh_instance.global_transform.is_finite():
 			return _fail("terrain chunk queued for deletion")
-		if mesh_instance.mesh == null or mesh_instance.mesh.get_surface_count() != 1:
+		if mesh_instance.mesh == null:
+			return _fail("missing terrain mesh")
+		if pilot is Rect2 and not _chunk_overlaps(mesh_instance, pilot):
+			skipped += 1
+			continue
+		if mesh_instance.mesh.get_surface_count() != 1:
 			return _fail("unexpected terrain mesh layout")
 		var original: Material = mesh_instance.get_active_material(0)
 		if not original is ShaderMaterial:
@@ -205,7 +240,7 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 		var prior: Material = mesh_instance.material_override if global_override else mesh_instance.get_surface_override_material(0)
 		staged.append({"node": weakref(mesh_instance), "global": global_override, "prior": prior, "candidate": candidates[id]})
 	if staged.is_empty():
-		return _fail("no terrain mesh instances")
+		return _fail("no terrain mesh instances intersect the requested pilot")
 	for entry in staged:
 		var instance: MeshInstance3D = entry.node.get_ref()
 		if entry.global:
@@ -214,7 +249,8 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 			instance.set_surface_override_material(0, entry.candidate)
 	_entries = staged
 	_world_root = weakref(generated)
-	_stats = {"state": "active", "chunks": staged.size(), "candidate_materials": candidates.size(),
+	_owner = weakref(world)
+	_stats = {"state": "active", "chunks": staged.size(), "skipped_chunks": skipped, "candidate_materials": candidates.size(),
 		"biome": mask_reader.status, "roadside": roadside_reader.status, "roadside_stats": roadside_reader.stats}
 	return true
 
@@ -231,4 +267,5 @@ func restore() -> void:
 			instance.set_surface_override_material(0, entry.prior)
 	_entries.clear()
 	_world_root = null
+	_owner = null
 	_stats = {"state": "inactive"}
