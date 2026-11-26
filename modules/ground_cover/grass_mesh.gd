@@ -2,7 +2,7 @@ extends RefCounted
 ## Original opaque curved ribbons; local root plane y=0, UV.y is flex.
 const HEIGHTS := [0.24, 0.38, 0.58, 0.42, 0.32]
 const WIDTHS := [0.034, 0.042, 0.050, 0.032, 0.046]
-const TINTS := [Color("496e26"), Color("5a7d2e"), Color("436624"), Color("9e8e48"), Color("345724")]
+const TINTS := [Color("566e2c"), Color("667b35"), Color("4d642a"), Color("96894b"), Color("3e5728")]
 const MAX_BEND := 0.24
 
 static func make_geometry(species: int, lod: int) -> Dictionary:

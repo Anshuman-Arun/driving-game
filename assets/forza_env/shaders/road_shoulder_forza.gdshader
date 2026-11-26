@@ -55,7 +55,7 @@ void fragment() {
 		texture(grass_albedo, world_pos.xz * 0.16).rgb,
 		texture(grass_albedo, world_pos.xz * 0.065 + vec2(0.31, 0.67)).rgb,
 		0.38
-	) * grass_tint * vec3(1.06, 1.02, 0.92);
+	) * grass_tint * vec3(1.14, 1.00, 0.78);
 
 	float base_rgh = mix(
 		texture(shoulder_roughness, uv_det).r,

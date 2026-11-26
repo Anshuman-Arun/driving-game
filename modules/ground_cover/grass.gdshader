@@ -85,10 +85,10 @@ void fragment() {
 	NORMAL = normalize(mix(NORMAL, up, 0.72));
 	// Convert sRGB vertex color to linear PBR space so grass matches terrain albedo naturally.
 	vec3 base_lin = pow(max(COLOR.rgb, vec3(0.0001)), vec3(2.2));
-	vec3 meadow_var = mix(vec3(0.84, 1.04, 0.86), vec3(1.22, 1.04, 0.72), tuft_seed);
+	vec3 meadow_var = mix(vec3(0.90, 1.00, 0.80), vec3(1.24, 1.06, 0.70), tuft_seed);
 	vec3 blade_col = base_lin * meadow_var;
-	blade_col *= mix(vec3(1.0), vec3(1.26, 1.20, 0.82), smoothstep(0.42, 1.0, flex));
-	vec3 root_ground = vec3(0.032, 0.052, 0.016);
+	blade_col *= mix(vec3(1.0), vec3(1.24, 1.18, 0.80), smoothstep(0.42, 1.0, flex));
+	vec3 root_ground = vec3(0.042, 0.056, 0.020);
 	float root_t = smoothstep(0.0, 0.34, flex);
 	vec3 col = mix(root_ground, blade_col, root_t);
 	float root_ao = mix(0.42, 1.0, smoothstep(0.0, 0.46, flex));
