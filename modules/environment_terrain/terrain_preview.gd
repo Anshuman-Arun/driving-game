@@ -13,19 +13,42 @@ const BASE_VALUES := ["slope_threshold", "slope_blend_margin", "normal_strength"
 	"triplanar_sharpness", "use_rock_arm", "grass_scale", "grass_tint",
 	"dirt_scale", "dirt_tint", "shore_scale", "shore_tint",
 	"water_level_m", "shore_height_m", "macro_scale", "macro_luminance_mod"]
+# Source shader defaults, used when ShaderMaterial returns null for an unset uniform.
+const BASE_DEFAULTS := {
+	"slope_threshold": 0.65, "slope_blend_margin": 0.12, "normal_strength": 0.85,
+	"rock_scale": 0.075, "rock_tint": Color(0.85, 0.84, 0.82),
+	"rock_strata_strength": 0.16, "rock_strata_freq": 0.22, "triplanar_sharpness": 6.0,
+	"use_rock_arm": true, "grass_scale": 0.22, "grass_tint": Color(0.68, 0.82, 0.52),
+	"dirt_scale": 0.13, "dirt_tint": Color(0.65, 0.62, 0.50),
+	"shore_scale": 0.16, "shore_tint": Color(0.84, 0.80, 0.72),
+	"water_level_m": 5.35, "shore_height_m": 7.4, "macro_scale": 0.0055,
+	"macro_luminance_mod": 0.18}
 const LIMITS := {
-	"biome_strength": Vector2(0.0, 1.0), "meadow_micro_strength": Vector2(0.0, 0.3),
-	"moss_strength": Vector2(0.0, 0.5), "roughness_bias": Vector2(-0.2, 0.2),
-	"roadside_strength": Vector2(0.0, 1.0), "normal_strength": Vector2(0.0, 2.0),
-	"grass_scale": Vector2(0.02, 0.5), "dirt_scale": Vector2(0.02, 0.5),
-	"rock_scale": Vector2(0.01, 0.5), "shore_scale": Vector2(0.02, 0.5),
-	"slope_threshold": Vector2(0.3, 0.9), "slope_blend_margin": Vector2(0.02, 0.3),
-	"macro_scale": Vector2(0.001, 0.05), "macro_luminance_mod": Vector2(0.0, 0.5)}
+	"biome_strength": [0.0, 1.0], "meadow_micro_strength": [0.0, 0.3],
+	"moss_strength": [0.0, 0.5], "roughness_bias": [-0.2, 0.2],
+	"roadside_strength": [0.0, 1.0], "normal_strength": [0.0, 2.0],
+	"grass_scale": [0.02, 0.5], "dirt_scale": [0.02, 0.5],
+	"rock_scale": [0.01, 0.5], "shore_scale": [0.02, 0.5],
+	"slope_threshold": [0.3, 0.9], "slope_blend_margin": [0.02, 0.3],
+	"macro_scale": [0.001, 0.05], "macro_luminance_mod": [0.0, 0.5]}
+const EXTRA_BASE_LIMITS := {"rock_strata_strength": [0.0, 0.6], "rock_strata_freq": [0.05, 1.0], "triplanar_sharpness": [1.0, 16.0]}
 var _entries: Array[Dictionary] = []
+var _world_root: WeakRef
 var _stats: Dictionary = {"state": "inactive"}
 
 func get_stats() -> Dictionary:
+	_prune_destroyed_transaction()
 	return _stats.duplicate(true)
+
+func _prune_destroyed_transaction() -> void:
+	if _world_root != null and not is_instance_valid(_world_root.get_ref()):
+		restore()
+
+func _has_property(object: Object, property_name: String) -> bool:
+	for property in object.get_property_list():
+		if str(property.name) == property_name:
+			return true
+	return false
 
 func _fail(reason: String) -> bool:
 	_stats = {"state": "rejected", "reason": reason}
@@ -46,6 +69,21 @@ func _finite(value: Variant) -> bool:
 		return value.is_finite()
 	return value is bool
 
+func _base_value_valid(key: String, value: Variant) -> bool:
+	if not _finite(value):
+		return false
+	if key == "use_rock_arm":
+		return value is bool
+	if key.ends_with("_tint"):
+		return value is Color or value is Vector3
+	if not (value is float or value is int):
+		return false
+	var limits: Array = LIMITS.get(key, EXTRA_BASE_LIMITS.get(key, []))
+	if not limits.is_empty():
+		# Existing shader values may have float32 endpoint rounding.
+		return float(value) >= float(limits[0]) - 0.000001 and float(value) <= float(limits[1]) + 0.000001
+	return true
+
 func _make_candidate(original: ShaderMaterial, tuning: Dictionary, pilot: Variant, biome: Texture2D, roadside: Texture2D, roadside_region: Rect2) -> ShaderMaterial:
 	if original.shader == null:
 		return null
@@ -58,20 +96,33 @@ func _make_candidate(original: ShaderMaterial, tuning: Dictionary, pilot: Varian
 	result.shader = Candidate
 	result.render_priority = original.render_priority
 	result.next_pass = original.next_pass
-	for key in TEXTURES:
-		var texture: Variant = original.get_shader_parameter(key)
-		if not texture is Texture2D:
-			return null
-		result.set_shader_parameter(key, texture)
+	var base_values: Dictionary = {}
 	for key in BASE_VALUES:
 		var value: Variant = original.get_shader_parameter(key)
 		if value == null:
-			continue # The candidate retains the original shader's defaults.
-		if not _finite(value):
+			value = BASE_DEFAULTS[key]
+		if not _base_value_valid(key, value):
 			return null
+		base_values[key] = value
+		if value is int:
+			value = float(value)
 		result.set_shader_parameter(key, value)
+	if float(base_values.shore_height_m) <= float(base_values.water_level_m):
+		return null
+	for key in TEXTURES:
+		var texture: Variant = original.get_shader_parameter(key)
+		var required: bool = true
+		if key == "rock_arm":
+			required = base_values.use_rock_arm
+		elif key in ["rock_roughness", "rock_ao"]:
+			required = not base_values.use_rock_arm
+		if not texture is Texture2D or texture.get_width() <= 0 or texture.get_height() <= 0:
+			if required:
+				return null
+			continue
+		result.set_shader_parameter(key, texture)
 	for key in tuning:
-		result.set_shader_parameter(key, tuning[key])
+		result.set_shader_parameter(key, float(tuning[key]))
 	result.set_shader_parameter("use_biome_mask", biome != null)
 	if biome != null:
 		result.set_shader_parameter("biome_mask", biome)
@@ -85,22 +136,31 @@ func _make_candidate(original: ShaderMaterial, tuning: Dictionary, pilot: Varian
 	return result
 
 func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
+	_prune_destroyed_transaction()
 	if not _entries.is_empty():
 		return false # Explicit restore before reapplying; preserve the active transaction.
 	if not is_instance_valid(world) or not world.is_inside_tree():
 		return _fail("world must be built and in tree")
-	if not world.has_method("get_world_metadata"):
+	if not world is Node3D or not world.has_method("get_world_metadata") or not _has_property(world, "generated_root"):
 		return _fail("unsupported world")
-	var metadata: Dictionary = world.call("get_world_metadata")
-	var bounds: Dictionary = metadata.get("bounds", {})
+	if not (world as Node3D).global_transform.is_equal_approx(Transform3D.IDENTITY):
+		return _fail("transformed world is unsupported")
+	var metadata: Variant = world.call("get_world_metadata")
+	if not metadata is Dictionary:
+		return _fail("invalid world metadata")
+	var bounds: Variant = metadata.get("bounds")
+	if not bounds is Dictionary:
+		return _fail("invalid world bounds")
 	if bounds.get("min_x") != -1000 or bounds.get("max_x") != 1000 or bounds.get("min_z") != -1000 or bounds.get("max_z") != 1000:
 		return _fail("unsupported world coordinate bounds")
 	var generated: Variant = world.get("generated_root")
-	if not generated is Node3D or not is_instance_valid(generated):
-		return _fail("missing generated root")
+	if not generated is Node3D or not is_instance_valid(generated) or not generated.is_inside_tree() or not world.is_ancestor_of(generated):
+		return _fail("missing or foreign generated root")
+	if not generated.global_transform.is_equal_approx(Transform3D.IDENTITY):
+		return _fail("transformed generated world is unsupported")
 	var terrain: Node = generated.get_node_or_null("TerrainChunks")
-	if terrain == null:
-		return _fail("missing terrain chunks")
+	if not terrain is Node3D or not (terrain as Node3D).global_transform.is_equal_approx(Transform3D.IDENTITY):
+		return _fail("missing or transformed terrain chunks")
 	var pilot: Variant = options.get("pilot_bounds")
 	if pilot != null and (not pilot is Rect2 or not _valid_rect(pilot)):
 		return _fail("invalid pilot bounds")
@@ -111,9 +171,11 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 		if not LIMITS.has(key) or not (tuning[key] is float or tuning[key] is int):
 			return _fail("unknown or nonnumeric tuning: " + str(key))
 		var value := float(tuning[key])
-		var bounds_for_key: Vector2 = LIMITS[key]
-		if not is_finite(value) or value < bounds_for_key.x or value > bounds_for_key.y:
+		var bounds_for_key: Array = LIMITS[key]
+		if not is_finite(value) or value < float(bounds_for_key[0]) or value > float(bounds_for_key[1]):
 			return _fail("out-of-range tuning: " + str(key))
+		if pilot != null and key in BASE_VALUES:
+			return _fail("base PBR tuning is global; omit pilot_bounds for: " + str(key))
 	var mask_dir: Variant = options.get("mask_dir", BiomeMask.DEFAULT_DIR)
 	if not mask_dir is String:
 		return _fail("invalid mask directory")
@@ -124,7 +186,7 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 	var roadside_region := Rect2()
 	if options.has("roadside_bounds"):
 		var region: Variant = options["roadside_bounds"]
-		if not region is Rect2 or not _valid_rect(region):
+		if not region is Rect2 or not _valid_rect(region) or region.size.x < 1.0 or region.size.y < 1.0 or region.size.x > RoadsideBand.MAX_SIDE or region.size.y > RoadsideBand.MAX_SIDE:
 			return _fail("invalid roadside bounds")
 		roadside_region = region
 		roadside = roadside_reader.build(world, roadside_region)
@@ -158,6 +220,7 @@ func apply_candidate(world: Node, options: Dictionary = {}) -> bool:
 		else:
 			instance.set_surface_override_material(0, entry.candidate)
 	_entries = staged
+	_world_root = weakref(generated)
 	_stats = {"state": "active", "chunks": staged.size(), "candidate_materials": candidates.size(),
 		"biome": mask_reader.status, "roadside": roadside_reader.status, "roadside_stats": roadside_reader.stats}
 	return true
@@ -174,4 +237,5 @@ func restore() -> void:
 		elif instance.get_surface_override_material(0) == entry.candidate:
 			instance.set_surface_override_material(0, entry.prior)
 	_entries.clear()
+	_world_root = null
 	_stats = {"state": "inactive"}
