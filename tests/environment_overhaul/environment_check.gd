@@ -226,7 +226,7 @@ func cpu_snapshot(cover: Node3D, world: Node) -> Dictionary:
 					continue
 				for mesh: Mesh in meshes[species]:
 					var swept: AABB=grass_script.swept_bounds(mesh,transform)
-					if not swept.position.is_finite() or not swept.size.is_finite() or world.road_clearance.overlaps(swept,0.12,true):
+					if not swept.position.is_finite() or not swept.size.is_finite() or world.road_clearance.overlaps(swept,maxf(0.12,bend_margin-0.24),true):
 						invalid+=1
 				frames_seen.append(str(transform))
 	check(invalid==0,"CPU snapshots finite and all LOD swept bounds clear, invalid="+str(invalid))

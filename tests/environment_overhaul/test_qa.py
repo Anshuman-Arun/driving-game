@@ -1,4 +1,6 @@
 import json
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 import tempfile
 import unittest
@@ -173,10 +175,12 @@ class QA(unittest.TestCase):
     def test_timeout_and_early_log_error(self):
         with tempfile.TemporaryDirectory() as tmp:
             log=Path(tmp)/"test.log"
-            self.assertNotEqual(run_command([sys.executable,"-c","print('SCRIPT ERROR: early'); print('x'*13000)"],log,10),0)
-            self.assertEqual(run_command([sys.executable,"-c","print('PASS')"],log,10),0)
-            self.assertEqual(run_command([sys.executable,"-c","import time; time.sleep(5)"],log,.05),124)
-            self.assertEqual(run_command([sys.executable,"-c","raise SystemExit(7)"],log,10),7)
+            with redirect_stdout(StringIO()) as captured:
+                self.assertNotEqual(run_command([sys.executable,"-c","print('SCRIPT ERROR: early'); print('x'*13000)"],log,10),0)
+                self.assertEqual(run_command([sys.executable,"-c","print('PASS')"],log,10),0)
+                self.assertEqual(run_command([sys.executable,"-c","import time; time.sleep(5)"],log,.05),124)
+                self.assertEqual(run_command([sys.executable,"-c","raise SystemExit(7)"],log,10),7)
+            self.assertIn("Matched failure diagnostics",captured.getvalue())
 
     def test_log_gate(self):
         self.assertTrue(ERROR.search("SCRIPT ERROR: Parser failed"))
