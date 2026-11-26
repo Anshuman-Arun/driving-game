@@ -9,9 +9,9 @@ const SPECIES := 5
 const MAX_POOL := 75
 const WORLD := Rect2(-1000, -1000, 2000, 2000)
 const PROFILES := {
-	"low": {"radii": [20.0, 45.0, 80.0], "density": [0.30, 0.12, 0.035], "cap": 18000, "checks": 1200, "uploads": 2, "chunks": 120},
-	"medium": {"radii": [25.0, 65.0, 130.0], "density": [0.55, 0.20, 0.055], "cap": 54000, "checks": 2400, "uploads": 3, "chunks": 300},
-	"high": {"radii": [32.0, 80.0, 150.0], "density": [0.85, 0.30, 0.08], "cap": 90000, "checks": 3600, "uploads": 4, "chunks": 360}
+	"low": {"radii": [20.0, 45.0, 80.0], "density": [0.30, 0.12, 0.035], "cap": 18000, "checks": 1200, "uploads": 2, "upload_instances": 1800, "work_usec": 1800, "chunks": 120},
+	"medium": {"radii": [25.0, 65.0, 130.0], "density": [0.55, 0.20, 0.055], "cap": 54000, "checks": 2400, "uploads": 3, "upload_instances": 2800, "work_usec": 2200, "chunks": 300},
+	"high": {"radii": [32.0, 80.0, 150.0], "density": [0.85, 0.30, 0.08], "cap": 90000, "checks": 3600, "uploads": 4, "upload_instances": 4200, "work_usec": 3000, "chunks": 360}
 }
 var _world: Node
 var _clearance: Object
@@ -49,6 +49,8 @@ var _generation_us := 0
 var _upload_us := 0
 var _last_checks := 0
 var _last_uploads := 0
+var _last_upload_instances := 0
+var _last_work_usec := 0
 var _last_planned_limits := [0, 0, 0]
 var _last_planned_chunks := [0, 0, 0]
 
@@ -125,7 +127,7 @@ func set_graphics(preset: String) -> void:
 	if tuning.get("radii") is Array and tuning.radii.size() == 3:
 		for i in range(3):
 			radii[i] = clampf(_finite_number(tuning.radii[i], float(radii[i])), 8.0 if i == 0 else float(radii[i-1]) + 4.0, 152.0 + i * 4.0)
-	for k in ["cap", "checks", "uploads", "chunks"]:
+	for k in ["cap", "checks", "uploads", "chunks", "upload_instances", "work_usec"]:
 		if tuning.has(k):
 			_profile[k] = int(clampf(_finite_number(tuning[k], float(_profile[k])), 1.0, float(PROFILES.high[k])))
 	if _material != null:
@@ -280,7 +282,7 @@ func _plan(current: Vector2, predicted: Vector2) -> void:
 	for lod in range(3):
 		if selected[lod].is_empty():
 			continue
-		var per_chunk := floori(float(allocation[lod]) / selected[lod].size())
+		var per_chunk := mini(int(_profile.upload_instances), floori(float(allocation[lod]) / selected[lod].size()))
 		if per_chunk >= 64:
 			per_chunk = (per_chunk >> 5) << 5
 		_last_planned_limits[lod] = per_chunk
@@ -395,8 +397,11 @@ func _candidate(rank: int) -> void:
 func _work() -> void:
 	_last_checks = 0
 	_last_uploads = 0
+	_last_upload_instances = 0
 	var start := Time.get_ticks_usec()
 	var budget := int(_profile.checks)
+	var time_budget := int(_profile.work_usec)
+	var upload_budget := int(_profile.upload_instances)
 	while _last_uploads < int(_profile.uploads):
 		if _job.is_empty():
 			if _queue.is_empty():
@@ -406,17 +411,30 @@ func _work() -> void:
 			_candidate(int(_job.cursor))
 			_job.cursor += 1
 			_last_checks += 1
+			# Soft time budget (checked in blocks to avoid per-candidate timer cost).
+			if _last_checks % 32 == 0 and Time.get_ticks_usec() - start >= time_budget:
+				break
 		if int(_job.cursor) < int(_job.limit):
+			break
+		var count := 0
+		for group: Array in _job.groups:
+			count += group.size()
+		if _last_upload_instances + count > upload_budget:
+			break
+		if _last_checks > 0 and Time.get_ticks_usec() - start >= time_budget:
+			# A fully prepared job can publish next frame without redoing candidate work.
 			break
 		var upload_start := Time.get_ticks_usec()
 		_publish()
 		_upload_us += Time.get_ticks_usec() - upload_start
 		_last_uploads += 1
+		_last_upload_instances += count
 		_job.clear()
-		if _last_checks >= budget:
+		if _last_checks >= budget or Time.get_ticks_usec() - start >= time_budget:
 			break
 	_generated += _last_checks
-	_generation_us += Time.get_ticks_usec() - start
+	_last_work_usec = Time.get_ticks_usec() - start
+	_generation_us += _last_work_usec
 
 func _take_batch() -> MultiMeshInstance3D:
 	if not _pool.is_empty():
@@ -495,7 +513,7 @@ func _flush_active() -> void:
 
 func get_stats() -> Dictionary:
 	var total := int(_counts[0]+_counts[1]+_counts[2])
-	return {"state":_state,"fallback":_reason,"plain_material":_plain_material != null,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"planned_chunks_per_lod":_last_planned_chunks.duplicate(),"planned_candidate_limit_per_chunk":_last_planned_limits.duplicate(),"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
+	return {"state":_state,"fallback":_reason,"plain_material":_plain_material != null,"active_chunks":_active.size(),"queued_chunks":_queue.size()+int(not _job.is_empty()),"pooled_batches":_pool.size(),"instances_per_lod":_counts.duplicate(),"active_instances":total,"planned_chunks_per_lod":_last_planned_chunks.duplicate(),"planned_candidate_limit_per_chunk":_last_planned_limits.duplicate(),"rejected_candidates":_rejected.duplicate(),"candidates_processed":_generated,"instances_uploaded":_uploaded,"generation_usec_including_upload":_generation_us,"upload_usec":_upload_us,"last_frame_checks":_last_checks,"last_frame_chunk_uploads":_last_uploads,"last_frame_upload_instances":_last_upload_instances,"last_frame_work_usec":_last_work_usec,"instance_buffer_estimated_bytes":total*64,"geometry_estimated_bytes":_geometry_bytes,"triangles_estimate":int(_counts[0])*56+int(_counts[1])*15+int(_counts[2])*3,"cap":int(_profile.get("cap",0))}
 
 func shutdown() -> void:
 	set_process(false)
@@ -522,5 +540,7 @@ func shutdown() -> void:
 	_upload_us = 0
 	_last_checks = 0
 	_last_uploads = 0
+	_last_upload_instances = 0
+	_last_work_usec = 0
 	for k in _rejected:
 		_rejected[k] = 0
