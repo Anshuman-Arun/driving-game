@@ -60,6 +60,11 @@ uniform bool use_biome_mask = false;
 uniform sampler2D biome_mask : filter_linear, repeat_disable;
 uniform float biome_strength : hint_range(0.0, 1.0) = 0.7;
 uniform float meadow_micro_strength : hint_range(0.0, 0.3) = 0.08;
+uniform float anti_tile_strength : hint_range(0.0, 1.0) = 1.0;
+uniform float pilot_normal_multiplier : hint_range(0.5, 1.5) = 1.0;
+// Linear RGB multipliers, not source_color swatches: 1.0 is exact identity.
+uniform vec3 meadow_tint_multiplier = vec3(1.0);
+uniform vec3 woodland_tint_multiplier = vec3(1.0);
 uniform float moss_strength : hint_range(0.0, 0.5) = 0.18;
 uniform float roughness_bias : hint_range(-0.2, 0.2) = 0.025;
 uniform bool use_roadside = false;
@@ -238,6 +243,7 @@ void fragment() {
 	// Distance from camera for LOD / anti-shimmering
 	float cam_dist = length(VERTEX);
 	float eff_normal_str = normal_strength * mix(1.0, 0.35, smoothstep(20.0, 150.0, cam_dist));
+	eff_normal_str *= mix(1.0, pilot_normal_multiplier, candidate_w);
 
 	// Multi-octave stochastic noise
 	float anti_tile_w = smoothstep(0.25, 0.75, fbm3(xz * 0.02));
@@ -247,7 +253,7 @@ void fragment() {
 	// Macro distance anti-tiling blend
 	float dist_blend = clamp(anti_tile_w * 0.65 + smoothstep(50.0, 300.0, cam_dist) * 0.35, 0.15, 0.85);
 	// Use existing organic detail to modulate the rotated secondary projection at a finer scale.
-	dist_blend = clamp(dist_blend + (detail_noise - 0.5) * 0.18 * candidate_w, 0.15, 0.85);
+	dist_blend = clamp(dist_blend + (detail_noise - 0.5) * 0.18 * candidate_w * anti_tile_strength, 0.15, 0.85);
 
 	// Slope Calculation:
 	// n.y is 1.0 for completely horizontal ground, 0.0 for vertical cliff.
@@ -280,9 +286,11 @@ void fragment() {
 		col_grass *= 1.0 + (micro - 0.5) * meadow_micro_strength * candidate_w * (1.0 - smoothstep(25.0, 110.0, cam_dist));
 	}
 	col_grass *= mix(vec3(1.0), mix(vec3(1.07, 0.96, 0.82), vec3(0.94, 1.04, 0.94), biome.r), ecological_w);
+	col_grass *= mix(vec3(1.0), meadow_tint_multiplier, candidate_w);
 	vec3 col_dirt = sample_stochastic_albedo(dirt_albedo, xz, dirt_scale, dist_blend) * dirt_tint;
 	col_dirt *= mix(vec3(1.0), vec3(0.77, 0.90, 0.78), cedar);
 	col_dirt *= mix(vec3(1.0), vec3(0.81, 1.07, 0.80), moss_strength * candidate_w * forest_w * mix(0.5, biome.b, ecological_w));
+	col_dirt *= mix(vec3(1.0), woodland_tint_multiplier, candidate_w);
 	float ground_forest = forest_w * 0.65;
 	if (use_roadside && candidate_w > 0.0) {
 		vec2 ruv = (xz - roadside_rect.xy) / roadside_rect.zw;
