@@ -422,7 +422,8 @@ func _candidate(rank: int) -> void:
 		_rejected.bounds += 1
 		return
 	var mask := _sample_mask(p.x, p.y)
-	if _random(key,idx,23) >= mask.x * (1.0 - mask.w):
+	var suitability := clampf(mask.x * (1.0 - mask.w), 0.0, 1.0)
+	if suitability <= 0.0 or _random(key,idx,23) >= pow(suitability, 0.48):
 		_rejected.mask += 1
 		return
 	# Never sample outside the world, even for a runtime that clamps its raster.

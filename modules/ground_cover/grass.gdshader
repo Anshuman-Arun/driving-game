@@ -83,16 +83,17 @@ void fragment() {
 	}
 	vec3 up = (VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
 	NORMAL = normalize(mix(NORMAL, up, 0.72));
-	// Per-tuft natural meadow warmth variation + mossy root grounding + sunlit golden tips.
-	vec3 meadow_var = mix(vec3(0.88, 1.04, 0.90), vec3(1.16, 1.02, 0.78), tuft_seed);
-	vec3 blade_col = COLOR.rgb * meadow_var;
-	blade_col *= mix(vec3(1.0), vec3(1.20, 1.15, 0.85), smoothstep(0.45, 1.0, flex));
-	vec3 root_ground = vec3(0.15, 0.22, 0.10);
+	// Convert sRGB vertex color to linear PBR space so grass matches terrain albedo naturally.
+	vec3 base_lin = pow(max(COLOR.rgb, vec3(0.0001)), vec3(2.2));
+	vec3 meadow_var = mix(vec3(0.84, 1.04, 0.86), vec3(1.22, 1.04, 0.72), tuft_seed);
+	vec3 blade_col = base_lin * meadow_var;
+	blade_col *= mix(vec3(1.0), vec3(1.26, 1.20, 0.82), smoothstep(0.42, 1.0, flex));
+	vec3 root_ground = vec3(0.032, 0.052, 0.016);
 	float root_t = smoothstep(0.0, 0.34, flex);
 	vec3 col = mix(root_ground, blade_col, root_t);
-	float root_ao = mix(0.50, 1.0, smoothstep(0.0, 0.44, flex));
+	float root_ao = mix(0.42, 1.0, smoothstep(0.0, 0.46, flex));
 	ALBEDO = col * root_ao;
-	ROUGHNESS = mix(0.94, 0.76, flex);
+	ROUGHNESS = mix(0.94, 0.74, flex);
 	SPECULAR = mix(0.06, 0.16, flex);
-	BACKLIGHT = ALBEDO * 0.28 * (0.25 + 0.75 * flex);
+	BACKLIGHT = ALBEDO * 0.34 * (0.20 + 0.80 * flex);
 }

@@ -1,14 +1,14 @@
 extends RefCounted
 ## Original opaque curved ribbons; local root plane y=0, UV.y is flex.
-const HEIGHTS := [0.22, 0.34, 0.54, 0.38, 0.28]
-const WIDTHS := [0.030, 0.036, 0.044, 0.028, 0.040]
-const TINTS := [Color("4f742b"), Color("5d7f33"), Color("496b2b"), Color("9d9150"), Color("385928")]
+const HEIGHTS := [0.24, 0.38, 0.58, 0.42, 0.32]
+const WIDTHS := [0.034, 0.042, 0.050, 0.032, 0.046]
+const TINTS := [Color("496e26"), Color("5a7d2e"), Color("436624"), Color("9e8e48"), Color("345724")]
 const MAX_BEND := 0.24
 
 static func make_geometry(species: int, lod: int) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 67123 + species * 197
-	var blades: int = [10, 5, 3][lod]
+	var blades: int = [12, 5, 3][lod]
 	var segments: int = [4, 2, 1][lod]
 	var verts := PackedVector3Array()
 	var normals := PackedVector3Array()
@@ -20,10 +20,10 @@ static func make_geometry(species: int, lod: int) -> Dictionary:
 		var angle := float(blade) * 2.399963 + rng.randf_range(-0.3, 0.3)
 		var along := Vector3(cos(angle), 0, sin(angle))
 		var side := along.cross(Vector3.UP)
-		var root := along * rng.randf_range(0.022, 0.115)
-		var height: float = HEIGHTS[species] * rng.randf_range(0.74, 1.24)
-		var width: float = WIDTHS[species] * rng.randf_range(0.84, 1.22)
-		var lean := rng.randf_range(0.28, 0.68) * height
+		var root := along * rng.randf_range(0.025, 0.165)
+		var height: float = HEIGHTS[species] * rng.randf_range(0.74, 1.26)
+		var width: float = WIDTHS[species] * rng.randf_range(0.84, 1.24)
+		var lean := rng.randf_range(0.28, 0.70) * height
 		var tint: Color = TINTS[species].lightened(rng.randf_range(-0.08, 0.10))
 		var start := verts.size()
 		for j in range(segments):
