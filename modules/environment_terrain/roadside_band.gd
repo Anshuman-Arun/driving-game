@@ -1,9 +1,13 @@
 extends RefCounted
-## Conservative distance-band approximation from actual rendered triangle clearance.
-## The entire vertical column is excluded, including terrain beneath bridge decks.
+## Conservative square-distance band from actual rendered triangle clearance.
+## Full vertical columns, including terrain beneath bridge decks, are protected.
 const Contract := preload("world_contract.gd")
 const MAX_SIDE := 256
 const CELL_M := 1.0
+const TILE_CELLS := 8
+const MAX_MARGIN_M := 4.0
+# Cushion for float32 rounding when forming a tile's enclosing AABB.
+const BROADPHASE_PAD_M := 0.01
 var status := "disabled"
 var stats: Dictionary = {}
 
@@ -18,6 +22,17 @@ func build(world: Node, region: Rect2) -> Texture2D:
 	return texture
 
 func build_image(world: Node, region: Rect2) -> Image:
+	return _rasterize(world, region, true)
+
+# CPU oracle used by tests only. It deliberately bypasses tile rejection.
+func build_reference_image(world: Node, region: Rect2) -> Image:
+	return _rasterize(world, region, false)
+
+func _column(center: Vector2, half: Vector2) -> AABB:
+	return AABB(Vector3(center.x - half.x, -10000.0, center.y - half.y),
+		Vector3(half.x * 2.0, 20000.0, half.y * 2.0))
+
+func _rasterize(world: Node, region: Rect2, use_tiles: bool) -> Image:
 	status = "invalid roadside region or clearance"
 	stats = {}
 	if not region.position.is_finite() or not region.size.is_finite():
@@ -29,6 +44,7 @@ func build_image(world: Node, region: Rect2) -> Image:
 	var clearance := Contract.clearance_for(world)
 	if clearance == null:
 		return null
+	var started := Time.get_ticks_usec()
 	var width := ceili(region.size.x / CELL_M)
 	var height := ceili(region.size.y / CELL_M)
 	var step := region.size / Vector2(width, height)
@@ -37,28 +53,48 @@ func build_image(world: Node, region: Rect2) -> Image:
 	var active := 0
 	var excluded := 0
 	var queries := 0
-	for z in range(height):
-		for x in range(width):
-			var center := region.position + (Vector2(x, z) + Vector2(0.5, 0.5)) * step
-			# One extra texel margin prevents bilinear leakage into protected triangles.
-			var half := step * 1.5
-			var box := AABB(Vector3(center.x - half.x, -10000.0, center.y - half.y), Vector3(half.x * 2.0, 20000.0, half.y * 2.0))
-			queries += 1
-			if clearance.call("overlaps", box, 0.0, true):
-				excluded += 1
-				continue
-			var weight := 0.0
-			for i in range(1, 5):
-				queries += 1
-				if clearance.call("overlaps", box, float(i), true):
-					weight = 1.0 - float(i - 1) / 4.0
-					break
-			# Fade the outer raster edge to avoid a visible rectangular boundary.
-			var edge := minf(minf(center.x - region.position.x, region.end.x - center.x), minf(center.y - region.position.y, region.end.y - center.y))
-			weight *= clampf((edge - 1.0) / 5.0, 0.0, 1.0)
-			if weight > 0.0:
-				active += 1
-				image.set_pixel(x, z, Color(weight, 0.0, 0.0))
-	stats = {"width": width, "height": height, "active_cells": active, "excluded_cells": excluded, "clearance_queries": queries}
+	var tile_queries := 0
+	var skipped_cells := 0
+	# One extra texel margin prevents bilinear leakage into protected triangles.
+	var half := step * 1.5
+	for tz in range(0, height, TILE_CELLS):
+		for tx in range(0, width, TILE_CELLS):
+			var end_x := mini(tx + TILE_CELLS, width)
+			var end_z := mini(tz + TILE_CELLS, height)
+			if use_tiles:
+				# Enclose all child-cell query AABBs, including their largest margin.
+				var first := region.position + (Vector2(tx, tz) + Vector2(0.5, 0.5)) * step
+				var last := region.position + (Vector2(end_x - 1, end_z - 1) + Vector2(0.5, 0.5)) * step
+				var tile_half := (last - first) * 0.5 + half + Vector2.ONE * BROADPHASE_PAD_M
+				tile_queries += 1
+				if not clearance.overlaps(_column((first + last) * 0.5, tile_half), MAX_MARGIN_M, true):
+					skipped_cells += (end_x - tx) * (end_z - tz)
+					continue
+			for z in range(tz, end_z):
+				for x in range(tx, end_x):
+					var center := region.position + (Vector2(x, z) + Vector2(0.5, 0.5)) * step
+					var box := _column(center, half)
+					queries += 1
+					if clearance.overlaps(box, 0.0, true):
+						excluded += 1
+						continue
+					var weight := 0.0
+					for i in range(1, 5):
+						queries += 1
+						if clearance.overlaps(box, float(i), true):
+							weight = 1.0 - float(i - 1) / MAX_MARGIN_M
+							break
+					# Fade the raster edge, avoiding a visible rectangle.
+					var edge := minf(minf(center.x - region.position.x, region.end.x - center.x),
+						minf(center.y - region.position.y, region.end.y - center.y))
+					weight *= clampf((edge - 1.0) / 5.0, 0.0, 1.0)
+					# Count actual stored nonzero R8 values, not sub-quantization weights.
+					var byte_value := roundi(weight * 255.0)
+					if byte_value > 0:
+						active += 1
+						image.set_pixel(x, z, Color(float(byte_value) / 255.0, 0.0, 0.0))
+	stats = {"width": width, "height": height, "active_cells": active, "excluded_cells": excluded,
+		"clearance_queries": queries + tile_queries, "cell_queries": queries, "tile_queries": tile_queries,
+		"skipped_cells": skipped_cells, "generation_ms": float(Time.get_ticks_usec() - started) / 1000.0}
 	status = "ready" if active > 0 else "no roadside transition in region"
 	return image
