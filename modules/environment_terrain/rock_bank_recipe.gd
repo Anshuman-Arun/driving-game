@@ -28,8 +28,10 @@ func prepare(world: Node) -> bool:
 	var roadworks: Variant = world.get("roadworks")
 	if not roadworks is Dictionary or not roadworks.get("waters") is Array:
 		return false
+	if not FileAccess.file_exists(LAKE):
+		return false
 	var lake: Variant = JSON.parse_string(FileAccess.get_file_as_string(LAKE))
-	if not lake is Dictionary or lake.get("schema_version") != 1 or lake.get("origin_x") != ORIGIN or lake.get("origin_z") != ORIGIN or lake.get("spacing_m") != GRID:
+	if not lake is Dictionary or lake.get("schema_version") != 1 or lake.get("origin_x") != ORIGIN or lake.get("origin_z") != ORIGIN or lake.get("spacing_m") != GRID or not (lake.get("water_height_m") is float or lake.get("water_height_m") is int) or not is_finite(float(lake.water_height_m)):
 		return false
 	if not _add_cells(lake.get("cells")):
 		return false
@@ -83,7 +85,7 @@ func accepts(frame: Transform3D, local_bounds: AABB) -> bool:
 		return false
 	# Reject all deck columns rather than only the vehicle-height clearance slab.
 	var column := AABB(Vector3(bounds.position.x, -10000.0, bounds.position.z), Vector3(bounds.size.x, 20000.0, bounds.size.z))
-	if clearance.overlaps(column, MARGIN, true):
+	if clearance.call("overlaps", column, MARGIN, true):
 		return false
 	# Water geometry is the union of 4m cells in the actual rendered data.
 	var x0 := floori((bounds.position.x - MARGIN - ORIGIN) / GRID - 0.000001)
