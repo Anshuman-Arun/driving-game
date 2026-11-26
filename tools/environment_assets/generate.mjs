@@ -1,0 +1,12 @@
+import {fileURLToPath} from 'node:url';
+import {generate} from './geometry.mjs';
+import {validate} from './validate.mjs';
+import {selfTest} from './test_validation.mjs';
+import {stageFiles,readFiles} from './staging.mjs';
+const root=fileURLToPath(new URL('../../',import.meta.url));
+const mode=process.argv[2]||'--verify';
+if(process.argv.length>3||!['--stage','--verify','--self-test'].includes(mode))throw Error('Use --stage, --verify or --self-test');
+const expected=generate(), result=selfTest(expected);
+if(mode==='--stage')result.changed_files=stageFiles(root,expected);
+if(mode!=='--self-test')validate(readFiles(root,expected));
+console.log(JSON.stringify(result,null,2));

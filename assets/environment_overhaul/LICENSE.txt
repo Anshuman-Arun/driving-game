@@ -1,0 +1,1 @@
+Original procedural vegetation created for Aster Valley. No external textures, models or source archives used. Generated asset payloads are offered under CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/ . Generator and tests remain project code. No endorsement of any third-party asset is implied.

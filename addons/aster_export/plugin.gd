@@ -14,6 +14,15 @@ class RuntimeScripts extends EditorExportPlugin:
 				var path: String = folder.path_join(filename)
 				add_file(path, FileAccess.get_file_as_bytes(path), false)
 
+		# Imported glTFs are remapped in PCKs, so preserve exact CC0 source bytes
+		# at a separate non-resource path for the pilot's SHA/declaration checks.
+		for species: String in ["fern", "shrub", "sapling", "reed", "wildflower"]:
+			for lod in 2:
+				var filename := "%s_lod%d.gltf" % [species, lod]
+				var source := "res://assets/environment_overhaul/" + filename
+				if FileAccess.file_exists(source):
+					add_file("res://assets/environment_overhaul/source_bytes/" + filename + ".json", FileAccess.get_file_as_bytes(source), false)
+
 var _runtime := RuntimeScripts.new()
 
 func _enter_tree() -> void:

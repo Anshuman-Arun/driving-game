@@ -33,6 +33,8 @@ var _leaf_life := PackedFloat32Array()
 var _rng := RandomNumberGenerator.new()
 var _quality := 1
 var clearance_report: Dictionary = {}
+var _pilot_chunks: Dictionary = {}
+var _pilot_bounds := Rect2()
 
 func build(world: Node, preset: String) -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
@@ -217,7 +219,10 @@ func _sync_cells(position: Vector3) -> void:
 					continue
 				wanted[key] = true
 				if not _visible_ground.has(key):
-					var batch := _make_batch(_ground[key], species)
+					var offsets: Array = _pilot_offsets(key)
+					if offsets.is_empty():
+						continue
+					var batch := _make_batch(offsets, species)
 					batch.visibility_range_end = GROUND_RANGES[_quality]
 					batch.visibility_range_end_margin = 26.0
 					_visible_ground[key] = batch
@@ -225,6 +230,70 @@ func _sync_cells(position: Vector3) -> void:
 		if not wanted.has(key):
 			(_visible_ground[key] as Node3D).queue_free()
 			_visible_ground.erase(key)
+
+# A owns a cell only after its bounded job has published. Keep the original
+# offsets and all other species unchanged; restore on eviction/failure.
+func _pilot_offsets(key: Vector3i) -> Array:
+	var source: Array = _ground.get(key, [])
+	if key.z != 2 or _pilot_chunks.is_empty():
+		return source
+	var result: Array = []
+	for offset: int in source:
+		var pos := Vector2(_placements[offset], _placements[offset + 2])
+		var chunk := Vector2i(floori(pos.x / 16.0), floori(pos.y / 16.0))
+		if not _pilot_bounds.has_point(pos) or not _pilot_chunks.has(chunk):
+			result.append(offset)
+	return result
+
+func set_pilot_coverage(bounds: Rect2, chunks: Dictionary) -> void:
+	if bounds == _pilot_bounds and chunks == _pilot_chunks:
+		return
+	var changed: Dictionary = {}
+	for key: Vector2i in _pilot_chunks:
+		if not chunks.has(key) or bounds != _pilot_bounds:
+			changed[Vector3i(floori(float(key.x) / 3.0), floori(float(key.y) / 3.0), 2)] = true
+	for key: Vector2i in chunks:
+		if not _pilot_chunks.has(key) or bounds != _pilot_bounds:
+			changed[Vector3i(floori(float(key.x) / 3.0), floori(float(key.y) / 3.0), 2)] = true
+	_pilot_bounds = bounds
+	_pilot_chunks = chunks.duplicate()
+	var radius := _quality + 1
+	for key: Vector3i in changed:
+		if _visible_ground.has(key):
+			var old: Node3D = _visible_ground[key]
+			old.hide()
+			old.queue_free()
+			_visible_ground.erase(key)
+		if abs(key.x - _ground_center.x) > radius or abs(key.y - _ground_center.y) > radius:
+			continue
+		var offsets := _pilot_offsets(key)
+		if offsets.is_empty():
+			continue
+		var batch := _make_batch(offsets, 2)
+		batch.visibility_range_end = GROUND_RANGES[_quality]
+		batch.visibility_range_end_margin = 26.0
+		_visible_ground[key] = batch
+
+# Exact existing non-grass footprints for understory deduplication. Preserve
+# mature canopy shade space by using only a conservative trunk core.
+func pilot_obstacles(bounds: Rect2) -> Array[Rect2]:
+	var result: Array[Rect2] = []
+	for at in range(0, _placements.size(), STRIDE):
+		var kind := int(_placements[at + 5])
+		if kind == 2 or kind < 0 or kind >= _meshes.size():
+			continue
+		var pos := Vector2(_placements[at], _placements[at + 2])
+		if not bounds.grow(12.0).has_point(pos):
+			continue
+		if kind < 2:
+			var radius := maxf(0.5, _placements[at + 4] * 0.45)
+			result.append(Rect2(pos - Vector2.ONE * radius, Vector2.ONE * radius * 2.0))
+		else:
+			var origin := Vector3(pos.x, _placements[at + 1], pos.y)
+			var frame := _instance_frame(origin, _placements[at + 3], _placements[at + 4], _placements[at + 6])
+			var box := frame * _meshes[kind].get_aabb()
+			result.append(Rect2(Vector2(box.position.x, box.position.z), Vector2(box.size.x, box.size.z)))
+	return result
 
 func _rock_mesh(material: ShaderMaterial) -> ArrayMesh:
 	var asset := BOULDER.instantiate()

@@ -51,9 +51,79 @@ static func fit(asset: String, limit: Vector3, largest_part_only := false) -> Ar
 		var tool: SurfaceTool = entry.tool
 		tool.set_material(entry.material)
 		tool.index()
-		tool.commit(result)
+		if asset == "fir" and entry.material is StandardMaterial3D and entry.material.normal_enabled:
+			# Repair only nonorthogonal tangent frames on this existing scan;
+			# leave vertex positions, UVs, indices, normals, signs and material intact.
+			var arrays := tool.commit_to_arrays()
+			_orthogonalize_tangents(arrays)
+			_stabilize_encoded_tangents(arrays)
+			result.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+			result.surface_set_material(result.get_surface_count() - 1, entry.material)
+		else:
+			tool.commit(result)
 	model.free()
 	return result if result.get_surface_count() > 0 else null
+
+static func _orthogonalize_tangents(arrays: Array) -> void:
+	if not arrays[Mesh.ARRAY_NORMAL] is PackedVector3Array or not arrays[Mesh.ARRAY_TANGENT] is PackedFloat32Array:
+		return
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	var tangents: PackedFloat32Array = arrays[Mesh.ARRAY_TANGENT]
+	if tangents.size() != normals.size() * 4:
+		return
+	for i in normals.size():
+		var n := normals[i].normalized()
+		var t := Vector3(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2])
+		if not n.is_finite() or not t.is_finite() or n.is_zero_approx() or absf(t.dot(n)) < 0.025:
+			continue
+		var projected := t - n * t.dot(n)
+		if projected.length_squared() < 0.00000001:
+			# Use a stable perpendicular only for a truly degenerate source frame.
+			projected = n.cross(Vector3.RIGHT if absf(n.x) < 0.9 else Vector3.UP)
+		projected = projected.normalized()
+		tangents[i * 4] = projected.x
+		tangents[i * 4 + 1] = projected.y
+		tangents[i * 4 + 2] = projected.z
+	arrays[Mesh.ARRAY_TANGENT] = tangents
+
+## ArrayMesh encodes normal/tangent vectors; a few nearly singular fir frames
+## remain nonorthogonal after the first correction. Verify real encoded
+## readback and perturb only those frames within their normal plane.
+static func _stabilize_encoded_tangents(arrays: Array) -> void:
+	if not arrays[Mesh.ARRAY_NORMAL] is PackedVector3Array or not arrays[Mesh.ARRAY_TANGENT] is PackedFloat32Array:
+		return
+	var source: PackedFloat32Array = arrays[Mesh.ARRAY_TANGENT].duplicate()
+	var repaired: PackedFloat32Array = source.duplicate()
+	for attempt in 6:
+		var encoded := ArrayMesh.new()
+		encoded.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		var readback := encoded.surface_get_arrays(0)
+		var normals: PackedVector3Array = readback[Mesh.ARRAY_NORMAL]
+		var tangents: PackedFloat32Array = readback[Mesh.ARRAY_TANGENT]
+		if tangents.size() != normals.size() * 4 or repaired.size() != tangents.size():
+			return
+		var bad := 0
+		for i in normals.size():
+			var n := normals[i].normalized()
+			var decoded := Vector3(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2])
+			if decoded.is_finite() and absf(decoded.dot(n)) < 0.075 and absf(decoded.length() - 1.0) < 0.025:
+				continue
+			bad += 1
+			var t := Vector3(source[i * 4], source[i * 4 + 1], source[i * 4 + 2])
+			var projected := t - n * t.dot(n)
+			if not projected.is_finite() or projected.length_squared() < 0.00000001:
+				projected = n.cross(Vector3.RIGHT if absf(n.x) < 0.9 else Vector3.UP)
+			# The original basis is preserved as closely as possible; a bounded
+			# alternating rotation avoids the encoder's singular directions.
+			var angle := float(attempt + 1) * 0.015 * (1.0 if attempt % 2 == 0 else -1.0)
+			projected = projected.normalized().rotated(n, angle).normalized()
+			repaired[i * 4] = projected.x
+			repaired[i * 4 + 1] = projected.y
+			repaired[i * 4 + 2] = projected.z
+		if bad == 0:
+			return
+		print("Fir tangent encoded readback: ", bad, " repairs on iteration ", attempt + 1)
+		arrays[Mesh.ARRAY_TANGENT] = repaired
 
 static func _collect(node: Node, frame: Transform3D, parts: Array[Dictionary]) -> void:
 	if node is Node3D:
