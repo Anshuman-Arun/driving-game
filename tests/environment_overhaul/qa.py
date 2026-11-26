@@ -25,6 +25,14 @@ PROTECTED = ["data/world", "content/scenery/vegetation.bin",
              "content/scenery/premium_foliage.bin"]
 ERROR = re.compile(r"SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error|^FAIL(?:ED)?(?:\s|:)", re.M | re.I)
 AGENT_TESTS = [
+    ("modules/ground_cover/tests/test_gate_selftest.sh", ["bash","modules/ground_cover/tests/test_gate_selftest.sh"]),
+    ("modules/ground_cover/tests/verify_numeric_source.mjs", ["node","modules/ground_cover/tests/verify_numeric_source.mjs"]),
+    ("modules/ground_cover/tests/numeric_engine.gd", ["@godot","--headless","--path",".","--script","res://modules/ground_cover/tests/numeric_engine.gd"]),
+    ("modules/ground_cover/tests/mask_production.gd", ["@godot","--headless","--path",".","--script","res://modules/ground_cover/tests/mask_production.gd"]),
+    ("tools/environment_assets/verify_headless.py", ["@python","tools/environment_assets/verify_headless.py","--data-only"]),
+    ("tools/environment_assets/test_existing.gd", ["@godot","--headless","--path",".","--script","res://tools/environment_assets/test_existing.gd"]),
+    ("content/scenery/environment_overhaul/verify_package.py", ["@python","content/scenery/environment_overhaul/verify_package.py","--project",".","--mask-dir","content/scenery/environment_overhaul/masks"]),
+    ("modules/environment_terrain/tests/verify_contract.cjs", ["node","modules/environment_terrain/tests/verify_contract.cjs","--check-lfs"]),
     ("modules/ground_cover/tests/run_tests.gd", ["@godot","--headless","--path",".","--fixed-fps","60","--script","res://modules/ground_cover/tests/run_tests.gd"]),
     ("modules/ground_cover/tests/real_world_smoke.gd", ["@godot","--headless","--path",".","--fixed-fps","60","--script","res://modules/ground_cover/tests/real_world_smoke.gd"]),
     ("tools/environment_assets/generate.mjs", ["node","tools/environment_assets/generate.mjs","--self-test"]),
@@ -32,7 +40,7 @@ AGENT_TESTS = [
     ("tools/environment_assets/test_import.gd", ["@godot","--headless","--path",".","--script","res://tools/environment_assets/test_import.gd"]),
     ("content/scenery/environment_overhaul/test_biomes.py", ["@python","-m","unittest","discover","-s","content/scenery/environment_overhaul","-p","test_biomes.py","-v"]),
     ("content/scenery/environment_overhaul/test_surface.gd", ["@godot","--headless","--path",".","--script","res://content/scenery/environment_overhaul/test_surface.gd"]),
-    ("modules/environment_terrain/tests/run_tests.gd", ["@godot","--headless","--path",".","--script","res://modules/environment_terrain/tests/run_tests.gd"]),
+    ("modules/environment_terrain/tests/run_tests.gd", ["@godot","--headless","--path",".","--script","res://modules/environment_terrain/tests/run_tests.gd","--","--production"]),
     ("modules/environment_rendering/tests/render_profile_test.gd", ["@godot","--headless","--path",".","--script","res://modules/environment_rendering/tests/render_profile_test.gd"]),
     ("modules/environment_rendering/tests/live_root_test.gd", ["@godot","--headless","--path",".","--script","res://modules/environment_rendering/tests/live_root_test.gd"]),
 ]

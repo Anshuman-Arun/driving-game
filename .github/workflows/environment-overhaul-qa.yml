@@ -136,6 +136,29 @@ jobs:
           args=(--mode "$QA_MODE" --out "$RUNNER_TEMP/environment-qa")
           if [[ "$QA_MODE" == integrated ]]; then args+=(--prepare-mask); fi
           python3 tests/environment_overhaul/qa.py "${args[@]}"
+      - name: Export PCK and verify offline production pilot
+        if: ${{ !cancelled() && (inputs.integrated || github.head_ref == 'feat/env-integration') }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          out="$RUNNER_TEMP/environment-qa"
+          mkdir -p "$out" "$RUNNER_TEMP/isolated-pack"
+          pack="$RUNNER_TEMP/isolated-pack/AsterValley.pck"
+          timeout 600 godot --headless --path . --export-pack "Windows Desktop" "$pack" 2>&1 | tee "$out/export-pack.log"
+          test -s "$pack"
+          if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error' "$out/export-pack.log"; then exit 1; fi
+          script_root="$PWD/tests"
+          cd "$RUNNER_TEMP/isolated-pack"
+          for script in integration/packaged_smoke.gd environment_overhaul/packaged_pilot.gd; do
+            log="$out/$(basename "$script" .gd).log"
+            timeout 240 godot --headless --main-pack "$pack" --fixed-fps 60 --script "$script_root/$script" 2>&1 | tee "$log"
+            if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script|Shader compilation failed|Shader error|^FAIL |^PACK_MISSING|^PACK_BOOT_FAILED|^PACK_INCLUDES_SOURCE_PAYLOAD' "$log"; then exit 1; fi
+            if [[ "$script" == environment_overhaul/* ]]; then
+              grep -Fx 'PACK_ENVIRONMENT failures=0' "$log"
+            else
+              grep -F 'PACK_FREE_ROAM ok=true' "$log"
+            fi
+          done
       - name: Retain generated canonical mask package and QA logs
         if: ${{ always() && (inputs.integrated || github.head_ref == 'feat/env-integration') }}
         uses: actions/upload-artifact@v4
