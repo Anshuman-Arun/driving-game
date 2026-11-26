@@ -34,6 +34,7 @@ def main():
         raise RuntimeError("requires Godot 4.7.2 stable")
     run([args.node, "tools/environment_assets/test_staging.mjs"], 60, "Staging filesystem checks passed:")
     run([args.node, "tools/environment_assets/generate.mjs", "--verify"], 120, '"negative_fixtures": 24')
+    run([sys.executable, "tools/environment_assets/test_audit_existing.py"], 60)
     if args.existing:
         run([sys.executable, "tools/environment_assets/audit_existing.py"], 60)
     common = [args.godot, "--headless", "--path", "."]
