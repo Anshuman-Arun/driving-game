@@ -5,6 +5,15 @@ extends RefCounted
 ## Only direct named nodes or explicit descendants are accepted.
 
 const PAINT_SHADER := "res://shaders/car_paint.gdshader"
+# Explicit contract for the pinned paint shader. The headless dummy renderer may
+# not enumerate shader uniforms during Resource.duplicate().
+const PAINT_UNIFORMS := [
+	"base_color", "grazing_color", "fresnel_power", "metallic", "roughness",
+	"specular", "flake_intensity", "flake_scale", "flake_color",
+	"clearcoat", "clearcoat_roughness", "albedo_texture", "normal_texture", "normal_scale",
+]
+const MIN_SPLIT_GAP := 0.01
+const MAX_PAINT_SURFACES := 512
 const PRESETS := {
 	"low": {"shadow_distance": 135.0, "ssao": false, "glow": false},
 	"medium": {"shadow_distance": 220.0, "ssao": false, "glow": true},
@@ -95,21 +104,33 @@ static func validate_profile(preset: String, options: Dictionary = {}) -> Dictio
 				return {"ok": false, "error": "SSR steps must be integral"}
 			value = int(n) if key == "ssr_steps" else n
 		p[key] = value
-	if not (p["split_1"] < p["split_2"] and p["split_2"] < p["split_3"]):
-		return {"ok": false, "error": "Shadow splits must be strictly increasing"}
+	if float(p["split_2"]) - float(p["split_1"]) < MIN_SPLIT_GAP - 0.000000001 or float(p["split_3"]) - float(p["split_2"]) < MIN_SPLIT_GAP - 0.000000001:
+		return {"ok": false, "error": "Shadow splits require at least 0.01 separation"}
 	return {"ok": true, "values": p}
 
 static func _within(root: Node, node: Node) -> bool:
 	if not is_instance_valid(node) or not node.is_inside_tree() or node.get_viewport() != root.get_viewport():
 		return false
 	var cursor: Node = node
+	var found_root := false
 	while cursor != null:
 		if cursor.is_queued_for_deletion():
 			return false
 		if cursor == root:
-			return true
+			found_root = true
 		cursor = cursor.get_parent()
-	return false
+	return found_root
+
+static func _sole_world_environment(world: World3D, target: WorldEnvironment) -> bool:
+	# Resource equality alone is ambiguous if two WorldEnvironment nodes share it.
+	# Reject competing non-null environments without depending on engine-private groups.
+	if world.environment != target.environment:
+		return false
+	for node in target.get_tree().root.find_children("*", "WorldEnvironment", true, false):
+		var other := node as WorldEnvironment
+		if other != target and other.environment != null and other.is_inside_tree() and other.get_viewport().find_world_3d() == world:
+			return false
+	return true
 
 static func _live_object(value: Variant) -> bool:
 	return typeof(value) == TYPE_OBJECT and is_instance_valid(value)
@@ -121,16 +142,14 @@ func _owned_by_other(world_id: int) -> bool:
 ## Recovery if the integration loses its handle. Only the exact owning root can
 ## release the lease; a sibling root sharing the World3D cannot do so.
 static func restore_for_root(root: Node) -> bool:
-	if not is_instance_valid(root) or not root.is_inside_tree():
+	if not Thread.is_main_thread() or not is_instance_valid(root):
 		return false
-	var world: World3D = root.get_viewport().find_world_3d()
-	if world == null:
-		return false
-	var owner: Variant = _world_owners.get(world.get_instance_id())
-	if owner == null or owner._preview_root != root:
-		return false
-	owner.restore()
-	return true
+	# Search by root identity, not its *current* world (a SubViewport can change worlds).
+	for owner in _world_owners.values():
+		if owner._preview_root == root:
+			owner.restore()
+			return true
+	return false
 
 func _on_target_exiting() -> void:
 	# Keep the script alive through callback/restore even if the caller dropped
@@ -149,6 +168,8 @@ func _reject(reason: String) -> bool:
 	return false
 
 func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bool:
+	if not Thread.is_main_thread():
+		return false
 	var validated := validate_profile(preset, options)
 	if not validated["ok"]:
 		return _reject(str(validated["error"]))
@@ -165,13 +186,15 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	var world: World3D = root.get_viewport().find_world_3d()
 	if world == null or _owned_by_other(world.get_instance_id()):
 		return _reject("World3D missing or already has an active render preview")
-	if world.environment != world_env.environment:
-		return _reject("Supplied WorldEnvironment is not active in this World3D")
+	if not _sole_world_environment(world, world_env):
+		return _reject("Supplied WorldEnvironment is not the sole active environment in this World3D")
 	var world_id := world.get_instance_id()
 	var p: Dictionary = validated["values"]
 	var requested: Variant = options.get("paint_surfaces", [])
 	if not requested is Array:
 		return _reject("paint_surfaces must be an array of mesh/surface dictionaries")
+	if requested.size() > MAX_PAINT_SURFACES:
+		return _reject("Too many paint surfaces for a preview")
 	var prepared: Array[Dictionary] = []
 	var seen: Dictionary = {}
 	var previous_by_key: Dictionary = {}
@@ -226,6 +249,12 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 				standard.clearcoat_roughness = p["paint_clearcoat_roughness"]
 			else:
 				var shader_mat := copy as ShaderMaterial
+				# Copy explicitly set values even when the renderer exposes no uniform
+				# property list. Null means unset: keep the shader default.
+				for uniform in PAINT_UNIFORMS:
+					var saved: Variant = shader_source.get_shader_parameter(uniform)
+					if saved != null:
+						shader_mat.set_shader_parameter(uniform, saved)
 				for uniform in ["roughness", "metallic", "clearcoat", "clearcoat_roughness"]:
 					shader_mat.set_shader_parameter(uniform, float(p["paint_" + uniform]))
 			copies[material_id] = copy
@@ -244,7 +273,7 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	candidate.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	candidate.ambient_light_color = p["ambient_color"]
 	candidate.ambient_light_energy = p["ambient_energy"]
-	candidate.ambient_light_sky_contribution = 0.68
+	candidate.ambient_light_sky_contribution = 0.68 if candidate.sky != null else 0.0
 	candidate.tonemap_exposure = p["exposure"]
 	candidate.fog_density = p["fog_density"]
 	candidate.adjustment_enabled = true
@@ -324,6 +353,8 @@ func apply_candidate(root: Node, preset: String, options: Dictionary = {}) -> bo
 	return true
 
 func restore() -> void:
+	if not Thread.is_main_thread():
+		return
 	var _keep_alive: RefCounted = self
 	for node in _watched_nodes:
 		if is_instance_valid(node) and node.tree_exiting.is_connected(_on_target_exiting):
@@ -358,13 +389,17 @@ func restore() -> void:
 	_status = {"active": false}
 
 func get_status() -> Dictionary:
+	if not Thread.is_main_thread():
+		return {"active": false, "last_error": "Status must be queried on the main thread"}
 	var status := _status.duplicate(true)
 	if status["active"]:
 		status["environment_attached"] = is_instance_valid(_world_env) and _world_env.environment == _candidate_env
 		var environment_changed := false
 		if status["environment_attached"]:
 			var world: World3D = _world_env.get_viewport().find_world_3d()
-			status["environment_attached"] = world != null and world.environment == _candidate_env
+			status["environment_attached"] = world != null and world.get_instance_id() == _world_id and world.environment == _candidate_env
+			var current_camera := _world_env.get_viewport().get_camera_3d()
+			status["camera_environment_override"] = current_camera != null and current_camera.environment != null
 			for property in _env_applied:
 				if _candidate_env.get(property) != _env_applied[property]:
 					environment_changed = true
