@@ -6,7 +6,7 @@ const Render := preload("res://modules/environment_rendering/render_profile.gd")
 const Understory := preload("environment_understory.gd")
 const MASK := "res://content/scenery/environment_overhaul/masks"
 # Anchored to the QA's actual centered Cedar and Valley route starts.
-const REGIONS := {"cedar": Rect2(-1000, -380, 360, 450), "valley": Rect2(-110, -40, 420, 430)}
+const REGIONS := {"cedar": Rect2(-990, -274, 240, 240), "valley": Rect2(-48, 50, 240, 240)}
 var bounds := Rect2()
 var cover: Cover
 var terrain: Terrain

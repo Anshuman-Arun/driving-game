@@ -147,7 +147,8 @@ func build(drive: Node, bounds: Rect2, mask_dir: String) -> bool:
 			report.unsafe += 1
 			continue
 		var frame := Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3.ONE * scale), Vector3(point.x, y, point.y))
-		var box: AABB = frame * (species[id].bounds as AABB)
+		var local_bounds: AABB = species[id].bounds
+		var box: AABB = frame * local_bounds
 		var footprint := Rect2(Vector2(box.position.x, box.position.z), Vector2(box.size.x, box.size.z))
 		if not bounds.encloses(footprint) or not _free_footprint(footprint.grow(0.15)) or bool(index.call("overlaps", box, 0.12, true)):
 			report.unsafe += 1
@@ -179,7 +180,8 @@ func build(drive: Node, bounds: Rect2, mask_dir: String) -> bool:
 				mm.mesh = part.mesh
 				mm.instance_count = frames.size()
 				for i in frames.size():
-					var instance: Transform3D = frames[i] * (part.frame as Transform3D)
+					var part_frame: Transform3D = part.frame
+					var instance: Transform3D = frames[i] * part_frame
 					instance.origin -= origin
 					mm.set_instance_transform(i, instance)
 				var draw := MultiMeshInstance3D.new()

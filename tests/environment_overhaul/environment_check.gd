@@ -543,6 +543,69 @@ func preview_test(path: String, target: Node, rendering: bool) -> void:
 	elif not preview is RefCounted:
 		preview.free()
 
+func production_pilot_test(drive: Node, world: Node) -> void:
+	# Test the real coordinator, not a separate fixture adapter. Default remains
+	# baseline; every toggle and retained source batch must survive restoration.
+	var plant: Node = drive.vegetation
+	var ground: Dictionary = plant.get("_ground").duplicate(true)
+	var terrain_before := material_snapshot(world, true)
+	var env: WorldEnvironment = drive.get_node("WorldEnvironment")
+	var original_env := env.environment
+	check(drive.environment_pilot == null, "pilot defaults off")
+	var saved: Dictionary = {}
+	for name: String in ["ASTER_ENV_GRASS", "ASTER_ENV_TERRAIN", "ASTER_ENV_UNDERSTORY", "ASTER_ENV_RENDERING", "ASTER_ENV_BEND"]:
+		saved[name] = OS.get_environment(name)
+		OS.set_environment(name, "0" if name == "ASTER_ENV_BEND" else "1")
+	for site: String in ["cedar", "valley"]:
+		var start := Vector3(-870, 0, -154) if site == "cedar" else Vector3(72, 0, 170)
+		var heading := Vector3(1, 0, -1) if site == "cedar" else Vector3.RIGHT
+		var pose: Variant = drive.find_road_pose(start, heading)
+		check(pose != null, "pilot road pose " + site)
+		if pose == null:
+			continue
+		drive._spawn_vehicle("mclaren_senna", pose)
+		for tick in 90:
+			await physics_frame
+		drive.camera.snap_to_vehicle()
+		drive.vehicle_body.freeze = true
+		check(drive.configure_environment_pilot(site), "configure pilot " + site)
+		var pilot: Node = drive.environment_pilot
+		if pilot == null:
+			continue
+		check(bool(pilot.status.grass), "real grass build " + site)
+		check(bool(pilot.status.terrain), "real terrain apply " + site)
+		check(bool(pilot.status.understory), "real understory placement " + site)
+		for frame in 300:
+			await process_frame
+			if is_instance_valid(pilot.cover) and int(pilot.cover.get_stats().active_instances) > 0:
+				break
+		check(bool(pilot.status.rendering), "real rendering apply " + site)
+		if is_instance_valid(pilot.cover):
+			var chunks: Dictionary = pilot.cover.get_coverage_chunks()
+			check(not chunks.is_empty(), "published pilot chunks " + site)
+			check(int(pilot.cover.get_stats().active_instances) > 0, "nonempty pilot grass " + site)
+			check(plant.get("_pilot_chunks") == chunks, "legacy ownership matches published chunks")
+			var reduced := 0
+			for key: Vector3i in ground:
+				var offsets: Array = plant._pilot_offsets(key)
+				if key.z == 2:
+					reduced += ground[key].size() - offsets.size()
+				else:
+					check(offsets == ground[key], "non-grass species unchanged")
+			check(reduced > 0, "legacy grass replaced only inside published pilot")
+		check(plant.get("_ground") == ground, "retained legacy offsets unchanged")
+		check(material_snapshot(world, true) != terrain_before, "production terrain material changed")
+		check(env.environment != original_env, "production light environment changed")
+		drive.stop_environment_pilot()
+		check(plant.get("_pilot_chunks").is_empty() and plant.get("_ground") == ground, "legacy grass restored")
+		check(material_snapshot(world, true) == terrain_before, "production terrain restored")
+		check(env.environment == original_env, "production environment restored")
+		drive.vehicle_body.freeze = false
+		await process_frame
+	for name: String in saved:
+		OS.set_environment(name, str(saved[name]))
+	print("PRODUCTION_PILOT exercised Cedar and Valley")
+
 func run() -> void:
 	fixture()
 	strict_stats = "integrated" in OS.get_cmdline_user_args()
@@ -596,6 +659,8 @@ func run() -> void:
 		preview_test(TERRAIN,world,false)
 	if render_present:
 		preview_test(RENDER,drive,true)
+	if strict_stats:
+		await production_pilot_test(drive, world)
 	game.queue_free()
 	await process_frame
 	for suffix in ["",".tmp",".bak",".backup"]:

@@ -124,3 +124,9 @@ Updated: 2026-11-23. Machine-readable catalog and hash ledger: `assets/audio/rec
 ## Hero supercar audition recordings (private-build)
 
 The two new hero engine manifests at `assets/audio/recorded/payload/engines/aventador_svj/manifest.json` and `assets/audio/recorded/payload/engines/mclaren_senna/manifest.json` include all original creator credits, source URLs, declared CC BY 3.0 licenses, upstream processing details, and per-file Git blob identity. Commons independent review remains pending. The Senna uses related McLaren V8 recordings, not a measured Senna bank. See [HERO_SUPERCAR_AUDIO.md](HERO_SUPERCAR_AUDIO.md) for limitations and audition plan.
+
+## Environment overhaul original candidates (draft PR #52)
+
+| Asset | Source | Author | License | Verification / changes |
+| --- | --- | --- | --- | --- |
+| Original procedural shrub, fern, sapling, reed and wildflower; two LODs each | `local://tools/environment_assets/generate.mjs` | Aster Valley project original procedural geometry | CC0-1.0; `assets/environment_overhaul/LICENSE.txt` | `assets/environment_overhaul/manifest.json` has exact per-resource SHA-256; original metre-scale Y-up opaque geometry, no external textures or models. Native B data checks passed; integrated import and local visual selection pending. |
