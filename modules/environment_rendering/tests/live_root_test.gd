@@ -38,7 +38,8 @@ func _run() -> void:
 	check(vehicle.get_meta("vehicle_id") == "mclaren_senna", "actual Senna selected")
 	var paint_targets: Array[Dictionary] = []
 	var paint_originals: Array[Material] = []
-	var roughness_originals: Array[float] = []
+	var uniform_originals: Array[Dictionary] = []
+	var other_surfaces: Array[Dictionary] = []
 	for node in vehicle.find_children("*", "MeshInstance3D", true, false):
 		var mesh := node as MeshInstance3D
 		if mesh.mesh == null or mesh.material_override != null:
@@ -48,8 +49,16 @@ func _run() -> void:
 			if material != null and material.shader != null and material.shader.resource_path == Profile.PAINT_SHADER:
 				paint_targets.append({"mesh": mesh, "surface": surface})
 				paint_originals.append(mesh.get_surface_override_material(surface))
-				roughness_originals.append(float(material.get_shader_parameter("roughness")))
+				var saved: Dictionary = {}
+				for uniform in Profile.PAINT_UNIFORMS:
+					var value: Variant = material.get_shader_parameter(uniform)
+					if value != null:
+						saved[uniform] = value
+				uniform_originals.append(saved)
+			else:
+				other_surfaces.append({"mesh": mesh, "surface": surface, "material": mesh.get_active_material(surface)})
 	check(not paint_targets.is_empty(), "real imported Senna paint surfaces found")
+	check(not other_surfaces.is_empty(), "non-paint surfaces available for isolation check")
 	var profile := Profile.new()
 	var camera: Camera3D = drive.camera
 	var viewport_scale := root.scaling_3d_scale
@@ -72,7 +81,14 @@ func _run() -> void:
 		var candidate := mesh.get_surface_override_material(item["surface"]) as ShaderMaterial
 		check(candidate != null and candidate != paint_originals[i], "paint copied")
 		if candidate != null:
-			check(is_equal_approx(float(candidate.get_shader_parameter("roughness")), 0.24), "real paint uniform applied")
+			for uniform in ["roughness", "metallic", "clearcoat", "clearcoat_roughness"]:
+				check(is_equal_approx(float(candidate.get_shader_parameter(uniform)), float(Profile.DEFAULTS["paint_" + uniform])), "real paint uniform applied: " + uniform)
+			for uniform in uniform_originals[i]:
+				if uniform not in ["roughness", "metallic", "clearcoat", "clearcoat_roughness"]:
+					check(candidate.get_shader_parameter(uniform) == uniform_originals[i][uniform], "untuned real paint parameter preserved: " + uniform)
+	for item in other_surfaces:
+		var mesh: MeshInstance3D = item["mesh"]
+		check(mesh.get_active_material(item["surface"]) == item["material"], "non-paint surface unchanged")
 	await process_frame
 	profile.restore()
 	check(env.environment == original and is_equal_approx(sun.light_energy, energy), "real environment restored")
@@ -81,7 +97,13 @@ func _run() -> void:
 		var mesh: MeshInstance3D = item["mesh"]
 		check(mesh.get_surface_override_material(item["surface"]) == paint_originals[i], "real paint restored")
 		var restored := mesh.get_active_material(item["surface"]) as ShaderMaterial
-		check(restored != null and is_equal_approx(float(restored.get_shader_parameter("roughness")), roughness_originals[i]), "original paint uniform unchanged")
+		check(restored != null, "original shader material present after restore")
+		if restored != null:
+			for uniform in uniform_originals[i]:
+				check(restored.get_shader_parameter(uniform) == uniform_originals[i][uniform], "original paint uniform unchanged: " + uniform)
+	for item in other_surfaces:
+		var mesh: MeshInstance3D = item["mesh"]
+		check(mesh.get_active_material(item["surface"]) == item["material"], "non-paint surface unchanged after restore")
 	drive.queue_free()
 	await process_frame
 	print("LIVE_RENDER_PROFILE_RESULT failures=", failures, " paint_surfaces=", paint_targets.size())
