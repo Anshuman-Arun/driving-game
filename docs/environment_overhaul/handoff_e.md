@@ -25,7 +25,7 @@ print(rendering_preview.get_status())
 rendering_preview.restore()
 ```
 
-Explicit alternate nodes can be passed as `world_environment` and `sun` options; both must be descendants of the supplied live root. No implicit tree-wide discovery. Use a single instance per drive and call from the main thread. Restore before external quality changes (which mutate the live environment and sun), replacing meshes or unloading a scene. Reapply after the base graphics preset has settled, and after the real new car is mounted. Restore is idempotent and tolerates freed nodes. Invalid requests do not tear down a valid active candidate. Environment identity and previous surface override identity (including null) are restored. Shared Sky/Shader/Texture/Mesh resources are read-only; the candidate duplicates Environment and the selected Material instances. The adapter doesn't manage a global singleton or save settings.
+Explicit alternate nodes can be passed as `world_environment` and `sun`; targets must be live descendants of the supplied root in the same viewport, with no queued deletion in their ancestry up to the root. The supplied environment must be active in its World3D. No implicit tree-wide discovery. Only one active preview per World3D (independent owned SubViewports are independent). Use the main thread. Restore before external quality changes or replacing meshes; the entire preview also restores automatically when any watched target or root exits the tree. Reapply after base graphics and car mounting settle. Invalid requests leave the current preview intact. Restore is idempotent. Environment identity and prior surface override identity, including null, are restored unless superseded externally. Shared Sky/Shader/Texture/Mesh resources are read-only; copy one Environment and one Material per distinct selected source, preserving shared-material batching. The module holds a strong active lease until restore or target exit; dropping the caller handle does not abandon mutated resources. Recover a lost handle with `RenderProfile.restore_for_root(drive)` (exact owning root only). This avoids relying on RefCounted PREDELETE instance methods, which have a documented crash history (https://github.com/godotengine/godot/issues/80834). No global rendering settings or persistence.
 
 For Senna, coordinator/local UI must explicitly select verified paint surfaces; no automatic paint mutation. Example after the car is mounted:
 
@@ -43,9 +43,9 @@ if drive.active_vehicle_id == "mclaren_senna":
 rendering_preview.apply_candidate(drive, "medium", {"paint_surfaces": paint})
 ```
 
-Explicitly supplied StandardMaterial3D surfaces are also supported; caller must identify body paint correctly, since generic material type alone cannot identify paint. Unknown shaders, whole-mesh overrides, repeated target entries, invalid indices and out-of-root nodes are rejected. The adapter cannot change other systems' materials. Restore does not overwrite an externally replaced environment/paint override. Sun properties are restored to the captured values, so restore before a separate quality controller modifies them.
+Explicitly supplied StandardMaterial3D surfaces are also supported; caller must identify body paint correctly, since generic material type alone cannot identify paint. Unknown shaders, whole-mesh overrides, repeated target entries, invalid indices and out-of-root nodes are rejected. The adapter cannot change other systems' materials. Restore does not overwrite an externally replaced environment/paint override. Sun restoration compares against the values actually applied and only restores properties still owned by the preview; later differing values are preserved. If a mesh resource has changed while our override is attached, restore clears that stale override instead of installing the original override from old geometry. Restore before external edits: equal-valued concurrent changes cannot be distinguished, and in-place external edits of candidate resources are discarded on restore.
 
-`validate_profile(preset, options)` returns ok/values or error; unknown keys, bad types, non-finite numbers, out-of-range settings and non-increasing split ratios are rejected. `get_status()` reports active preset, renderer, headless flag, requested values, enabled effects, unavailable feature reasons, paint count, and last_error for a rejected request. A successful headless apply is property/lifecycle evidence only. Headless, non-Forward+ AO/SSR requests are disabled and reported. Glow is off in headless and conservatively disabled in Compatibility. Existing disabled sun shadows are never enabled. Sky absence is reported; no invented HDRI. Existing sky rotation, sun orientation/angular diameter, shadow mode, reflection source, fog switch and camera attributes remain unchanged. SDFGI, SSIL and volumetric fog are off in every candidate; SSR off unless explicitly requested.
+`validate_profile(preset, options)` returns ok/values or error; unknown keys, bad types, non-finite numbers, out-of-range settings and non-increasing split ratios are rejected. `get_status()` reports active preset, renderer, headless flag, requested values, effective effect flags, unavailable reasons, paint surface/material counts, attached count, environment attachment, detectable environment/sun/paint attachment drift, and last_error. Camera environment overrides are reported, not modified. Shared subresource and paint uniform edits are not exhaustively monitored. `sun_color` and `ambient_color` accept finite Color RGB in [0,1] and alpha 1. Numeric bounds are inclusive 64-bit scalar values rather than Vector2 components. A successful headless apply is property/lifecycle evidence only. Headless, non-Forward+ AO/SSR requests are disabled and reported. Glow is off in headless and conservatively disabled in Compatibility. Existing disabled sun shadows are never enabled. Sky absence is reported; no invented HDRI. Existing sky rotation, sun orientation/angular diameter, shadow mode, reflection source, fog switch and camera attributes remain unchanged. SDFGI, SSIL and volumetric fog are off in every candidate; SSR off unless explicitly requested.
 
 ## Local tuning sheet
 
@@ -54,9 +54,9 @@ All proposed values are hypotheses, not visual results. Set underlying quality b
 | Knob | Existing Medium | Candidate | Sweep / rationale |
 |---|---:|---:|---|
 | sun_energy | 1.92 | 1.75 | 1.55, 1.75, 1.92; less hot road/paint |
-| sun color | 1,.94,.82 | 1,.96,.89 | fixed warm but less orange |
+| sun_color | 1,.94,.82 | 1,.96,.89 | less orange; Color RGB override |
 | ambient_energy | .62 | .60 | .50,.60,.68; keep woods legible |
-| ambient color | .61,.72,.90 | .68,.78,.94 | fixed cooler fill without extreme blue |
+| ambient_color | .61,.72,.90 | .68,.78,.94 | cooler fill; Color RGB override |
 | exposure | .96 | 1.0 | .90,.96,1.0,1.06; avoid clipping |
 | contrast/saturation | 1.09/1.12 | 1.04/1.02 | 1.0–1.09 / 1.0–1.08 |
 | shadow_distance | 270 m | 220 m (Low 135, High 300) | 160/220/270; improve near texel density |
@@ -79,10 +79,18 @@ Local tuning sequence: baseline fixed pose Senna in Cedar Woods and Green Valley
 
 ## Tests and reproducible commands
 
-Written but not executed in connector-only environment:
-- `modules/environment_rendering/tests/render_profile_test.gd`: synthetic fixture, all presets, invalid values/nodes, original shared resources, repeated applies, shader and standard paint copy/restore, explicit unsupported feature reporting, disabled shadow preservation, viewport/settings unchanged, freed-root lifecycle.
+GDScript suites written but not executed (Godot unavailable). Shell runner independently verified with mocked processes:
+- `modules/environment_rendering/tests/render_profile_test.gd`: synthetic fixture, all presets, invalid values/nodes, original shared resources, repeated applies, shader and standard paint copy/restore, explicit unsupported feature reporting, disabled shadow preservation, viewport/settings unchanged, freed-root lifecycle, inclusive numeric bounds and color validation, queued/freed targets, cross-viewport rejection, overlapping and independent world leases, external replacements/drift, shared material reuse, mesh swap, lost-handle recovery, camera override reporting, and target/root exit.
 - `modules/environment_rendering/tests/live_root_test.gd`: actual free-roam scene and selected imported Senna paint, checks actual shared sky/material identity, light and camera isolation; requires real LFS assets.
-- `modules/environment_rendering/tests/run_headless.sh`: pinned engine version check, timeout, import and failure-log scanning, both owned tests and relevant existing suites in full mode. Does not weaken tests.
+- `modules/environment_rendering/tests/run_headless.sh`: pinned engine version check, timeout with kill grace, isolated fixture import, explicit nonempty success markers, failure-log scanning, LFS fsck/pointer checks and relevant existing suites in full mode. `--owned` stages only the fixture, adapter and text shader into a temporary project; no binary world assets or root import needed.
+
+- `modules/environment_rendering/tests/test_runner.sh`: **16/16 mock-process cases passed** (including wrong version, zero-exit parse/shader errors, missing/duplicate/empty/inconsistent completion markers, assertion, nonzero exit, simulated timeout exit, LFS errors/pointers, empty live paint count and continued regression execution after a failure). Bash syntax checks passed. Exact Git blobs tested: runner e0fca233ae6904c1722b30c9eecc37892ef61592 and mock test 5b927da98f789192faeb922a12c2d58468f2049d. This proves shell runner control flow only.
+
+Without LFS:
+```bash
+bash modules/environment_rendering/tests/test_runner.sh
+GODOT_BIN=/absolute/path/to/godot bash modules/environment_rendering/tests/run_headless.sh --owned
+```
 
 On complete checkout (Linux/WSL with timeout):
 ```bash
@@ -107,10 +115,10 @@ Baseline CI is manual on this feature branch. With authorized GitHub CLI:
 gh workflow run map-regression.yml --ref feat/env-e-rendering
 gh run list --branch feat/env-e-rendering --workflow map-regression.yml
 ```
-Existing map workflow includes branch-specific width checks; inspect any inherited failures against the identical base. It does not invoke our tests; use the owned runner or F's later integrated workflow. No workflow edits permitted. Connector has no dispatch or shell/LFS execution action, so no headless import, GDScript parser or CI pass is claimed. Actual Windows graphical acceptance, shader/GPU compilation, shadows, Senna paint appearance and performance remain unverified. No generated screenshots.
+Existing map workflow includes branch-specific width checks; inspect any inherited failures against the identical base. It does not invoke our tests; use the owned runner or F's later integrated workflow. No workflow edits permitted. Connector has no workflow dispatch action. Local search found neither Godot nor gh; official engine release download failed DNS resolution (curl exit 6). Shell mock tests ran locally, but no headless import, GDScript parser or CI pass is claimed. Actual Windows graphical acceptance, shader/GPU compilation, shadows, Senna paint appearance and performance remain unverified. No generated screenshots.
 
 ## Coordinator ledger entries
 
 ASSET_LICENSES: no additions (original GDScript/shell; references existing assets and shaders without modifying them).
 
-PROJECT_STATUS proposed entry: Agent E `feat/env-e-rendering` from pinned 67023539 implements opt-in reversible daylight/quality and explicitly selected paint preview adapter, owned synthetic/real-root regression scripts and headless runner. Production root/global settings unchanged. Connector published code; Godot import, tests, CI and real GPU acceptance not yet executed. Next: run owned and base regression suites, integrate feature flag and compare matched local captures before accepting.
+PROJECT_STATUS proposed entry: Agent E `feat/env-e-rendering` from pinned 67023539 implements opt-in reversible daylight/quality and explicitly selected paint preview adapter, owned synthetic/real-root regression scripts and headless runner. Production root/global settings unchanged. Connector published code; hardened edge cases and verified 16/16 shell runner fault-injection cases. Godot import, GDScript runtime tests, CI and real GPU acceptance not yet executed. Next: run owned and base regression suites, integrate feature flag and compare matched local captures before accepting.
