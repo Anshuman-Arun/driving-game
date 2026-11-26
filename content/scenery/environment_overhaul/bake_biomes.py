@@ -17,6 +17,10 @@ CELL = 2
 CELL_RADIUS = np.sqrt(2.0)
 # Provisional footprint envelope; the coordinator must still validate actual asset AABBs.
 UNDERSTORY_RADIUS_M = 2.0
+# Conservative planar envelopes for root runtime adopted meshes/colliders.
+# These are authoring bounds, not measured runtime AABBs.
+ADOPTED_RADII = {"house":7.5,"barn":9.4,"garage":8.7,"pier":9.1,"quarry":10.8,
+                 "arch":4.8,"rock":3.8,"shrub":1.8,"pine":4.2,"broadleaf":5.5}
 CHANNELS = ["grass_suitability", "woodland_weight", "moisture", "exposed_rock_weight"]
 BOUNDS = dict(min_x=-1000, max_x=1000, min_z=-1000, max_z=1000)
 SPECIES = ("fern", "shrub", "sapling", "reed", "wildflower")
@@ -247,15 +251,22 @@ def scenery_masks(src,x,z):
         for item in placements:
             p = np.asarray(item["position"])[[0,2]]
             asset = manifest["assets"][item["asset"]]
-            radius = float(asset["r"])*float(item.get("scale",1))
+            kind = item["asset"]
+            scale = checked_number(item.get("scale",1),"scenery scale",.0001)
+            radius = max(checked_number(asset["r"],"scenery radius",.0001),
+                         ADOPTED_RADII.get(kind,0))*scale
             require(np.isfinite(p).all() and np.isfinite(radius) and radius>0,"Invalid scenery footprint")
-            capsule(props,x,z,p,p,radius+UNDERSTORY_RADIUS_M)
-            if item["asset"] in ("boulder","rock","hay"):
+            if kind in ("pine","broadleaf"):
+                # Canopy and physical trunk are different habitats. Allow low
+                # understory beneath crowns but not saplings or trunk overlaps.
+                capsule(trees,x,z,p,p,radius)
+                capsule(props,x,z,p,p,.85*scale)
+            else:
+                # Roadworks may relocate guardrails by up to 3 m.
+                capsule(props,x,z,p,p,radius+(3 if kind=="guardrail" else 0))
                 capsule(protected,x,z,p,p,radius)
-            if asset["kind"]=="architecture" or item["asset"] in ("arch","overlook","pier","quarry"):
-                capsule(protected,x,z,p,p,max(11,radius+4))
-            if item["asset"] in ("pine","broadleaf"):
-                capsule(trees,x,z,p,p,radius+1)
+                if asset["kind"] in ("architecture","landmark"):
+                    capsule(protected,x,z,p,p,max(11,radius+4))
     # Existing live vegetation and optional legacy premium cache are read-only.
     for filename in ("vegetation.bin","premium_foliage.bin"):
         rel = "data/world/"+filename
@@ -276,10 +287,14 @@ def scenery_masks(src,x,z):
             px,_,pz,_,scale,kind,_ = row
             p = [px,pz]
             # Skip dense grass in both formats (live class 2, premium class 5).
-            radius = max(1.5,float(scale)*(3.5 if kind in (0,1) else 1.5))
-            capsule(props,x,z,p,p,radius+UNDERSTORY_RADIUS_M)
             if kind in (0,1) and filename=="vegetation.bin":
+                radius = float(scale)*(4.2 if kind==0 else 5.5)
                 capsule(trees,x,z,p,p,radius)
+                capsule(props,x,z,p,p,.85*float(scale))
+            else:
+                # Non-live premium cache remains a conservative duplicate guard.
+                radius = max(1.5,float(scale)*(3.5 if kind in (0,1) else 1.5))
+                capsule(props,x,z,p,p,radius)
     return protected,props,trees
 
 
@@ -317,6 +332,7 @@ def bake(root, seed, tuning=None):
     road_dist,water_dist = clearance_lower_bound(road),clearance_lower_bound(wet)
     prop_dist = clearance_lower_bound(props|protected)
     water_center_dist = distance(wet)
+    canopy_dist = clearance_lower_bound(trees)
     canopy = gaussian_filter(trees.astype(float),sigma=4)
     rng = np.random.default_rng(seed)
     # Smooth multi-scale noise, deterministic with pinned NumPy/SciPy.
@@ -368,7 +384,8 @@ def bake(root, seed, tuning=None):
             rejected["exclusion"]+=1
             continue
         g,w,m,k = grass[j,i],woodland[j,i],moisture[j,i],rock[j,i]
-        probabilities = np.array([w*m, w*.65, w*.22*(1-town[j,i]),
+        probabilities = np.array([w*m*(.8+.8*canopy[j,i]), w*.65,
+                                 w*.22*(1-town[j,i])*float(canopy_dist[j,i]>UNDERSTORY_RADIUS_M),
                                  float(water_dist[j,i]>=4 and water_center_dist[j,i]+CELL_RADIUS<=18)*m*(1-k),
                                  g*meadow[j,i]*(1-w)])
         total = probabilities.sum()
@@ -393,7 +410,7 @@ def bake(root, seed, tuning=None):
     placements.sort(key=lambda p:(p["z"],p["x"]))
     raw = mask.tobytes(order="C")
     stats = dict(lane_alignment_max_m=lane_error, exclusions={k:int(v.sum()) for k,v in
-                 dict(road=road,water=wet,protected=protected,combined=excluded,props=props).items()},
+                 dict(road=road,water=wet,protected=protected,combined=excluded,props=props,canopy=trees).items()},
                  rejection=rejected, species={s:sum(p["species_id"]==s for p in placements) for s in SPECIES},
                  regions={})
     dominant = np.argmax(np.stack(list(weights.values())),axis=0)
