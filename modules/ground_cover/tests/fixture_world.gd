@@ -4,6 +4,7 @@ const Clearance = preload("res://modules/world_runtime/src/road_clearance.gd")
 var road_clearance: Clearance = Clearance.new()
 var bad_height := false
 var steep := false
+var crest_x := INF
 
 func _init() -> void:
 	add_strip(Rect2(-3,-60,6,120),0.0,false)
@@ -29,6 +30,8 @@ func add_strip(rect: Rect2, y: float, shoulder: bool) -> void:
 func get_surface_height_at(x: float, z: float) -> float:
 	if bad_height:
 		return NAN
+	if is_finite(crest_x):
+		return 1.2*absf(x-crest_x)
 	return x * 1.2 if steep else 0.04*sin(x*0.13)*sin(z*0.13)
 
 func sample_mask(x: float, z: float) -> Vector4:
